@@ -1,5 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+secrets.txt
+
 .env
 .env.local
 
@@ -47,3 +49,5 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+/src/generated/prisma

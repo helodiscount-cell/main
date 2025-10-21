@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
@@ -8,5 +9,9 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  return <div>Dashboard</div>;
+  return (
+    <div>
+      Dashboard <Link href="/user">User</Link>
+    </div>
+  );
 }
