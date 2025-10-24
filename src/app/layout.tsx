@@ -32,7 +32,7 @@ export default function RootLayout({
       <html lang="en">
         <link rel="icon" href="/logo.jpg" type="image/jpg" />
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased `}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <ThemeProvider
             attribute="class"

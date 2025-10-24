@@ -10,7 +10,7 @@ import {
 
 const Header = () => {
   return (
-    <div className="bg-background/50 backdrop-blur-sm flex items-center justify-end gap-4 p-4">
+    <div className="container mx-auto bg-background/50 backdrop-blur-sm flex items-center justify-end gap-4 p-4">
       <div className="flex items-center gap-4">
         <SignedOut>
           <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
