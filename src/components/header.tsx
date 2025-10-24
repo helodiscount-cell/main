@@ -14,12 +14,12 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <SignedOut>
           <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
-            <button className="px-4 py-2 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
+            <button className="px-4 py-2 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors cursor-pointer">
               Sign In
             </button>
           </SignInButton>
           <SignUpButton mode="modal" fallbackRedirectUrl="/dashboard">
-            <button className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors">
+            <button className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors cursor-pointer">
               Sign Up
             </button>
           </SignUpButton>

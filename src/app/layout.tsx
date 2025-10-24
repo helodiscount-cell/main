@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/contexts/theme";
+import { ThemeProvider } from "@/providers/theme";
 import Header from "@/components/header";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -32,7 +32,7 @@ export default function RootLayout({
       <html lang="en">
         <link rel="icon" href="/logo.jpg" type="image/jpg" />
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased container m-auto`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased `}
         >
           <ThemeProvider
             attribute="class"
