@@ -1,185 +1,199 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LucideInstagram, RefreshCw, CheckCircle } from "lucide-react";
-
-interface ConnectionStatus {
-  connected: boolean;
-  username?: string;
-  connectedAt?: string;
-}
-
-interface InstagramPost {
-  id: string;
-  caption: string;
-  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
-  media_url: string;
-  permalink: string;
-  timestamp: string;
-  like_count?: number;
-  comments_count?: number;
-}
+import {
+  LucideInstagram,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { useApi } from "@/hooks/use-api";
+import { useUser } from "@clerk/nextjs";
+import {
+  InstagramStatusConnectedResponse,
+  InstagramConnectRequestBody,
+  InstagramConnectSuccessResponse,
+  InstagramPostsSuccessResponse,
+  InstagramPost,
+  BeErrorResponse,
+  InstagramStatusDisconnectedResponse,
+} from "@/types";
+import { InstagramConnectRequestSchema } from "@/types/instagram";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
+import InstagramConnect from "@/components/instagram/connect";
+import PostCard from "@/components/instagram/PostCard";
 
 export default function DashboardPage() {
-  const [status, setStatus] = useState<ConnectionStatus>({ connected: false });
-  const [posts, setPosts] = useState<InstagramPost[]>([]);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { user: clerkUser } = useUser();
 
-  // Check connection status on mount
+  // Status: /instagram/status
+  const {
+    execute: getInstaConnectionStatus,
+    loading: isCheckingStatus,
+    error: checkStatusError,
+    data: statusData,
+  } = useApi<
+    InstagramStatusConnectedResponse | InstagramStatusDisconnectedResponse
+  >();
+
+  // Connect: /instagram/connect
+  const {
+    execute: connectInstagram,
+    loading: isConnecting,
+    error: connectError,
+    data: connectData,
+  } = useApi<InstagramConnectSuccessResponse>();
+
+  // Posts: /instagram/posts
+  const {
+    execute: fetchPosts,
+    loading: isFetchingPosts,
+    error: fetchPostsError,
+    data: postsData,
+  } = useApi<InstagramPostsSuccessResponse>();
+
+  // Extracts posts array safely from response
+  const posts: InstagramPost[] = postsData?.posts ?? [];
+
+  // Determines connection status safely
+  const isConnected = statusData && statusData.connected === true;
+  const connectedStatus = isConnected
+    ? (statusData as InstagramStatusConnectedResponse)
+    : null;
+
+  // Computes error message for unified display
+  const errorBanner =
+    checkStatusError || connectError || fetchPostsError
+      ? getErrorMessage(checkStatusError || connectError || fetchPostsError)
+      : null;
+
+  // Handles Instagram connect using zod validation
+  const handleConnectInstagram = async () => {
+    try {
+      // Creates raw data from Clerk user
+      const bodyRaw = {
+        fullName: clerkUser?.firstName,
+        email: clerkUser?.emailAddresses[0]?.emailAddress ?? undefined,
+        imageUrl: clerkUser?.imageUrl ?? null,
+      };
+
+      // Validates request body using zod schema to guarantee type-safety
+      const parseResult = InstagramConnectRequestSchema.safeParse(bodyRaw);
+      if (!parseResult.success) {
+        // Shows validation error if input does not pass zod schema
+        toast.error("Validation error. Please check your input.");
+        return;
+      }
+
+      // Calls connect API with valid data
+      const result = await connectInstagram("/instagram/connect", "POST", {
+        body: parseResult.data,
+      });
+
+      if (result) {
+        toast.success(`Successfully connected @${result.data.username}!`);
+        // Refreshes connection status after successful connection
+        await getInstaConnectionStatus("/instagram/status", "GET");
+      }
+    } catch (err) {
+      // Handles unexpected errors during connection
+      toast.error("Failed to connect Instagram. Please try again.");
+    }
+  };
+
+  const handleFetchPosts = async () => {
+    try {
+      const result = await fetchPosts("/instagram/posts", "GET");
+      if (result && result.posts) {
+        toast.success(`Loaded ${result.posts.length} posts successfully!`);
+      }
+    } catch (err) {
+      // Handles unexpected errors during fetch
+      toast.error("Failed to fetch posts. Please try again.");
+    }
+  };
+
+  // Fetches Instagram connection status on mount
   useEffect(() => {
-    checkConnectionStatus();
+    getInstaConnectionStatus("/instagram/status", "GET");
+    // Does not prefetch posts to keep new connections fresh
   }, []);
 
-  const checkConnectionStatus = async () => {
-    setIsCheckingStatus(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/instagram/status");
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus(data);
-      }
-    } catch (err) {
-      console.error("Error checking status:", err);
-    } finally {
-      setIsCheckingStatus(false);
+  // Refetches status after successful connection
+  useEffect(() => {
+    if (connectData) {
+      getInstaConnectionStatus("/instagram/status", "GET");
     }
-  };
+  }, [connectData]);
 
-  const handleConnectInstagram = async () => {
-    setIsConnecting(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/instagram/connect", {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setStatus({
-          connected: true,
-          username: data.username,
-          connectedAt: data.connectedAt,
-        });
-        // Auto-fetch posts after connecting
-        fetchPosts();
-      } else {
-        setError(data.error || "Failed to connect Instagram");
-      }
-    } catch (err) {
-      console.error("Error connecting Instagram:", err);
-      setError("Failed to connect Instagram");
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const fetchPosts = async () => {
-    setIsFetchingPosts(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/instagram/posts");
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setPosts(data.posts);
-      } else {
-        setError(data.error || "Failed to fetch posts");
-      }
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-      setError("Failed to fetch posts");
-    } finally {
-      setIsFetchingPosts(false);
-    }
-  };
-
-  // Loading state
+  // Loading state for status check
   if (isCheckingStatus) {
     return (
       <div className="container mx-auto">
         <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          <Spinner className="size-8" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto p-6 max-w-6xl min-h-[80vh]">
       {/* Error Banner */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Not Connected State */}
-      {!status.connected && (
-        <div className="flex justify-center items-center min-h-[70vh]">
-          <div className="text-center">
-            <div className="bg-gradient-to-br from-purple-100 to-pink-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LucideInstagram className="text-purple-600" size={40} />
-            </div>
-            <h1 className="text-2xl font-bold mb-2">Connect Your Instagram</h1>
-            <p className="text-gray-600 mb-6 max-w-md">
-              Connect your Instagram account to fetch posts and set up
-              automations
-            </p>
-            <Button
-              onClick={handleConnectInstagram}
-              disabled={isConnecting}
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-            >
-              {isConnecting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <LucideInstagram className="mr-2" />
-                  Connect Instagram
-                </>
-              )}
-            </Button>
+      {errorBanner && (
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 flex items-start gap-3">
+          <AlertCircle className="size-5 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium">Error</p>
+            <p className="text-sm mt-1">{errorBanner}</p>
           </div>
         </div>
       )}
 
-      {/* Connected State */}
-      {status.connected && (
+      {/* Shows Instagram connect panel when not connected */}
+      {!isConnected && (
+        <InstagramConnect
+          handleConnectInstagram={handleConnectInstagram}
+          isConnecting={isConnecting}
+        />
+      )}
+
+      {/* Shows Instagram posts when connected */}
+      {isConnected && connectedStatus && (
         <div>
           {/* Header */}
-          <div className="flex justify-between items-center mb-6 pb-4 border-b">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b dark:border-gray-800">
             <div className="flex items-center gap-3">
-              <CheckCircle className="text-green-600" size={24} />
+              <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
+                <CheckCircle
+                  className="text-green-600 dark:text-green-400"
+                  size={20}
+                />
+              </div>
               <div>
-                <h1 className="text-xl font-bold">@{status.username}</h1>
-                <p className="text-sm text-gray-500">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  @{connectedStatus.username}
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Connected on{" "}
-                  {new Date(status.connectedAt!).toLocaleDateString()}
+                  {new Date(connectedStatus.connectedAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
 
+            {/* Fetch Posts Button */}
             <Button
-              onClick={fetchPosts}
+              onClick={handleFetchPosts}
               disabled={isFetchingPosts}
               variant="outline"
+              className="w-full sm:w-auto"
             >
               {isFetchingPosts ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2" />
+                  <Spinner className="size-4 mr-2" />
                   Loading...
                 </>
               ) : (
@@ -191,54 +205,31 @@ export default function DashboardPage() {
             </Button>
           </div>
 
-          {/* Posts Grid */}
+          {/* Shows Instagram posts grid when posts are loaded */}
           {posts.length > 0 && (
             <div>
-              <p className="text-sm text-gray-600 mb-4">
-                {posts.length} posts loaded
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {posts.length} {posts.length === 1 ? "post" : "posts"} loaded
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-                  >
-                    <div className="relative">
-                      <img
-                        src={post.media_url}
-                        alt={post.caption || "Instagram post"}
-                        className="w-full h-64 object-cover"
-                      />
-                      <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                        {post.media_type === "VIDEO"
-                          ? "🎥"
-                          : post.media_type === "CAROUSEL_ALBUM"
-                          ? "📸"
-                          : "🖼️"}
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-sm line-clamp-2 mb-2 text-gray-700">
-                        {post.caption || "No caption"}
-                      </p>
-                      <div className="flex gap-4 text-xs text-gray-500">
-                        <span>❤️ {post.like_count?.toLocaleString() || 0}</span>
-                        <span>💬 {post.comments_count || 0}</span>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {new Date(post.timestamp).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
+                  <PostCard key={post.id} post={post as InstagramPost} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Empty State */}
+          {/* Shows empty state when no posts are loaded */}
           {posts.length === 0 && !isFetchingPosts && (
-            <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
-              <p>Click "Fetch Posts" to load your Instagram posts</p>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+              <LucideInstagram
+                className="mx-auto mb-4 text-gray-400 dark:text-gray-600"
+                size={48}
+              />
+              <p className="text-lg font-medium mb-2">No posts yet</p>
+              <p className="text-sm">
+                Click "Fetch Posts" to load your Instagram posts
+              </p>
             </div>
           )}
         </div>

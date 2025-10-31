@@ -1,5 +1,10 @@
 "use client";
 
+// Example component - currently disabled as it references hooks that don't exist
+// TODO: Implement useApiQuery, useApiMutation, useApiCall, useInvalidateQueries hooks
+// or update this component to use the existing useApi hook
+
+/*
 import {
   useApiQuery,
   useApiMutation,
@@ -108,6 +113,16 @@ export default function ApiExample() {
           Invalidate Users Cache
         </button>
       </div>
+    </div>
+  );
+}
+*/
+
+export default function ApiExample() {
+  return (
+    <div className="p-6 space-y-4">
+      <h2 className="text-2xl font-bold">API System Examples</h2>
+      <p className="text-gray-500">This component is currently disabled.</p>
     </div>
   );
 }

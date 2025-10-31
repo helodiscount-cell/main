@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { ModeToggle } from "./ui/mode-toggle";
 import {
@@ -10,7 +12,7 @@ import {
 
 const Header = () => {
   return (
-    <div className="container mx-auto bg-background/50 backdrop-blur-sm flex items-center justify-end gap-4 p-4">
+    <div className="container mx-auto bg-background/50 backdrop-blur-sm flex items-center justify-end gap-4 p-4 sticky top-0 z-50">
       <div className="flex items-center gap-4">
         <SignedOut>
           <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">

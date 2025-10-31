@@ -1,43 +1,58 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import {
+  BeErrorResponse,
+  InstagramPost,
+  InstagramPostsSuccessResponse,
+} from "@/types";
 
 export async function GET() {
   try {
+    // Gets current authenticated user
     const { userId: clerkId } = await auth();
 
     if (!clerkId) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      // Returns error if authentication fails
+      const res: BeErrorResponse = {
+        success: false,
+        error:
+          "You need to be signed in to view your Instagram posts. Please login and try again.",
+      };
+      return NextResponse.json(res, { status: 401 });
     }
 
-    // Get user with Instagram account
+    // Gets the user record with possible Instagram account
     const user = await prisma.user.findUnique({
       where: { clerkId },
-      include: {
-        instaAccount: true,
-      },
+      include: { instaAccount: true },
     });
 
     if (!user || !user.instaAccount) {
-      return NextResponse.json(
-        { error: "Instagram not connected" },
-        { status: 400 }
-      );
+      // Returns error if Instagram is not connected
+      const res: BeErrorResponse = {
+        success: false,
+        error:
+          "Instagram is not connected for your account. Please connect Instagram and try again.",
+      };
+      return NextResponse.json(res, { status: 400 });
     }
 
-    // Get access token from environment
+    // Gets access token from environment for API calls
     const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-
     if (!accessToken) {
-      return NextResponse.json(
-        { error: "Instagram access token not configured" },
-        { status: 500 }
-      );
+      // Returns error if access token is missing
+      const res: BeErrorResponse = {
+        success: false,
+        error:
+          "Instagram integration is not configured. Please contact support.",
+      };
+      return NextResponse.json(res, { status: 500 });
     }
 
     const { instagramUserId, username } = user.instaAccount;
 
-    // Fetch posts from Instagram Graph API
+    // Prepares fields to fetch from Instagram Graph API
     const fields = [
       "id",
       "caption",
@@ -51,40 +66,101 @@ export async function GET() {
 
     const postsUrl = `https://graph.instagram.com/${instagramUserId}/media?fields=${fields}&limit=25&access_token=${accessToken}`;
 
-    const response = await fetch(postsUrl);
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Instagram API error:", data.error);
-      return NextResponse.json(
-        {
-          error: "Failed to fetch posts",
-          details: data.error.message,
-        },
-        { status: 400 }
-      );
+    let response: Response;
+    try {
+      // Fetches posts from Instagram Graph API
+      response = await fetch(postsUrl);
+    } catch (networkErr) {
+      // Returns error if network error occurs
+      const res: BeErrorResponse = {
+        success: false,
+        error:
+          "Could not connect to Instagram. Please check your network connection and try again.",
+      };
+      return NextResponse.json(res, { status: 502 });
     }
 
-    // Update last synced time
-    await prisma.instaAccount.update({
-      where: { id: user.instaAccount.id },
-      data: { lastSyncedAt: new Date() },
-    });
+    // Handles possible invalid JSON or non-200 status
+    if (!response.ok) {
+      // Reads error body if provided
+      let instagramError: any;
+      try {
+        instagramError = await response.json();
+      } catch {
+        instagramError = {};
+      }
+      const mainError =
+        instagramError.error?.message ||
+        "Instagram returned an unexpected error while fetching your posts.";
+      const res: BeErrorResponse = {
+        success: false,
+        error: mainError,
+      };
+      return NextResponse.json(res, { status: 400 });
+    }
 
-    return NextResponse.json(
-      {
-        success: true,
-        posts: data.data || [],
-        username: username,
-        paging: data.paging,
-      },
-      { status: 200 }
-    );
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      // Handles non-JSON response
+      const res: BeErrorResponse = {
+        success: false,
+        error:
+          "Unexpected response from Instagram. Please try again later or contact support.",
+      };
+      return NextResponse.json(res, { status: 502 });
+    }
+
+    // Handles Instagram API error object
+    if (data.error) {
+      // Logs Instagram error for diagnostics
+      console.error("Instagram API error:", data.error);
+      // Maps some known codes to user-readable messages
+      let readableError =
+        "Instagram failed to return your posts. Please try reconnecting your account.";
+      if (
+        typeof data.error.message === "string" &&
+        data.error.message.length > 0
+      ) {
+        readableError = data.error.message;
+      }
+      const res: BeErrorResponse = {
+        success: false,
+        error: readableError,
+        details: `Instagram error: ${
+          data.error.type || data.error.code || ""
+        }`.trim(),
+      };
+      return NextResponse.json(res, { status: 400 });
+    }
+
+    // Checks for missing data
+    if (!Array.isArray(data.data)) {
+      const res: BeErrorResponse = {
+        success: false,
+        error:
+          "Instagram returned data in an unexpected format. Please refresh or try again later.",
+      };
+      return NextResponse.json(res, { status: 502 });
+    }
+
+    // Returns posts with success
+    const res: InstagramPostsSuccessResponse = {
+      success: true,
+      posts: data.data as InstagramPost[],
+      username: username,
+      paging: data.paging,
+    };
+    return NextResponse.json(res, { status: 200 });
   } catch (error) {
+    // Logs unknown errors and sends user-friendly error
     console.error("Error fetching posts:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    const res: BeErrorResponse = {
+      success: false,
+      error:
+        "An unexpected server error occurred while fetching your Instagram posts. Please try again.",
+    };
+    return NextResponse.json(res, { status: 500 });
   }
 }

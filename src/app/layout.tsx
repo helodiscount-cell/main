@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/providers/theme";
 import Header from "@/components/header";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
-import EnsureUser from "@/components/ensure-user";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +40,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Header />
-            <EnsureUser />
+            {/* <EnsureUser /> */}
             {children}
             <Toaster />
           </ThemeProvider>
