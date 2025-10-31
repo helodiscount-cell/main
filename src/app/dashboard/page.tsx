@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   LucideInstagram,
@@ -13,21 +13,22 @@ import { useApi } from "@/hooks/use-api";
 import { useUser } from "@clerk/nextjs";
 import {
   InstagramStatusConnectedResponse,
-  InstagramConnectRequestBody,
   InstagramConnectSuccessResponse,
   InstagramPostsSuccessResponse,
   InstagramPost,
-  BeErrorResponse,
   InstagramStatusDisconnectedResponse,
 } from "@/types";
-import { InstagramConnectRequestSchema } from "@/types/instagram";
+import { InstagramConnectRequestSchema } from "@/types/zod";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import InstagramConnect from "@/components/instagram/connect";
 import PostCard from "@/components/instagram/PostCard";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user: clerkUser } = useUser();
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
 
   // Status: /instagram/status
   const {
@@ -55,9 +56,6 @@ export default function DashboardPage() {
     data: postsData,
   } = useApi<InstagramPostsSuccessResponse>();
 
-  // Extracts posts array safely from response
-  const posts: InstagramPost[] = postsData?.posts ?? [];
-
   // Determines connection status safely
   const isConnected = statusData && statusData.connected === true;
   const connectedStatus = isConnected
@@ -83,7 +81,6 @@ export default function DashboardPage() {
       // Validates request body using zod schema to guarantee type-safety
       const parseResult = InstagramConnectRequestSchema.safeParse(bodyRaw);
       if (!parseResult.success) {
-        // Shows validation error if input does not pass zod schema
         toast.error("Validation error. Please check your input.");
         return;
       }
@@ -99,28 +96,56 @@ export default function DashboardPage() {
         await getInstaConnectionStatus("/instagram/status", "GET");
       }
     } catch (err) {
-      // Handles unexpected errors during connection
       toast.error("Failed to connect Instagram. Please try again.");
     }
   };
 
+  // Fetches posts from API and stores them in localStorage
   const handleFetchPosts = async () => {
     try {
       const result = await fetchPosts("/instagram/posts", "GET");
-      if (result && result.posts) {
+      if (result?.posts) {
+        setPosts(result.posts);
+        localStorage.setItem("instagram_posts", JSON.stringify(result.posts));
         toast.success(`Loaded ${result.posts.length} posts successfully!`);
       }
     } catch (err) {
-      // Handles unexpected errors during fetch
       toast.error("Failed to fetch posts. Please try again.");
     }
+  };
+
+  // Navigates to the individual post detail page using the post ID
+  const handlePostClick = (post: InstagramPost) => {
+    router.push(`/posts/${post.id}`);
   };
 
   // Fetches Instagram connection status on mount
   useEffect(() => {
     getInstaConnectionStatus("/instagram/status", "GET");
-    // Does not prefetch posts to keep new connections fresh
   }, []);
+
+  // Loads posts from localStorage when connection status is confirmed
+  useEffect(() => {
+    if (isConnected) {
+      try {
+        const storedPosts = localStorage.getItem("instagram_posts");
+        if (storedPosts) {
+          const parsedPosts = JSON.parse(storedPosts);
+          // Validates that parsed data is an array
+          if (Array.isArray(parsedPosts)) {
+            setPosts(parsedPosts);
+          }
+        }
+      } catch (err) {
+        // Clears invalid localStorage data
+        localStorage.removeItem("instagram_posts");
+        console.error("Failed to parse stored posts:", err);
+      }
+    } else {
+      // Clears posts when disconnected
+      setPosts([]);
+    }
+  }, [isConnected]);
 
   // Refetches status after successful connection
   useEffect(() => {
@@ -128,6 +153,13 @@ export default function DashboardPage() {
       getInstaConnectionStatus("/instagram/status", "GET");
     }
   }, [connectData]);
+
+  // Updates posts state when new data is fetched
+  useEffect(() => {
+    if (postsData?.posts) {
+      setPosts(postsData.posts);
+    }
+  }, [postsData]);
 
   // Loading state for status check
   if (isCheckingStatus) {
@@ -213,7 +245,13 @@ export default function DashboardPage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {posts.map((post) => (
-                  <PostCard key={post.id} post={post as InstagramPost} />
+                  <div
+                    key={post.id}
+                    className="cursor-pointer"
+                    onClick={() => handlePostClick(post)}
+                  >
+                    <PostCard post={post} />
+                  </div>
                 ))}
               </div>
             </div>

@@ -3,11 +3,12 @@
 import { useState, useCallback } from "react";
 import { apiClient } from "@/services/api/api-client";
 import { AxiosError, AxiosRequestConfig } from "axios";
+import { BeErrorResponse } from "@/types";
 
 interface UseApiState<T> {
   data: T | null;
   loading: boolean;
-  error: string | null;
+  error: BeErrorResponse | null;
 }
 
 interface ApiOptions {
@@ -62,9 +63,20 @@ export function useApi<T = any>(): UseApiReturn<T> {
         return response.data;
       } catch (err) {
         const error = err as AxiosError;
-        const errorMessage = error.message || "An error occurred";
+        const errorMessage =
+          (error.response?.data as BeErrorResponse).error ||
+          "An error occurred";
         console.log(errorMessage);
-        setState({ data: null, loading: false, error: errorMessage as string });
+
+        setState({
+          data: null,
+          loading: false,
+          error: {
+            error: errorMessage,
+            success: false,
+            details: (error.response?.data as BeErrorResponse).details,
+          },
+        });
         return null;
       }
     },

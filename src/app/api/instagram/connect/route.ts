@@ -7,7 +7,7 @@ import {
   InstagramConnectRequestBody,
   InstagramConnectSuccessResponse,
 } from "@/types";
-import { InstagramConnectRequestSchema } from "@/types/instagram";
+import { InstagramConnectRequestSchema } from "@/types/zod";
 
 // Defines the response structure for an error
 

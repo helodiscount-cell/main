@@ -61,3 +61,10 @@ export interface InstagramConnectSuccessResponse {
     connectedAt: Date;
   };
 }
+
+// Defines the request body schema type for auto reply comment automation
+export interface AutoReplyCommentAutomationRequestBody {
+  triggers: string[];
+  replyWith: string;
+  postId: string;
+}
