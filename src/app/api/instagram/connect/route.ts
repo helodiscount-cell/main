@@ -1,3 +1,14 @@
+/**
+ * Describes the Instagram connect POST flow:
+ * - Authenticates user via Clerk.
+ * - Parses and validates request body with zod.
+ * - Fetches Instagram user data using access token.
+ * - Handles API, auth, and validation errors with detail.
+ * - Finds or creates user in database.
+ * - Updates or creates linked Instagram account.
+ * - Returns username and connection timestamp on success.
+ */
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
@@ -9,8 +20,7 @@ import {
 } from "@/types";
 import { InstagramConnectRequestSchema } from "@/types/zod";
 
-// Defines the response structure for an error
-
+// Defines the response structure for an error or success
 type InstagramConnectResponse =
   | InstagramConnectSuccessResponse
   | BeErrorResponse;

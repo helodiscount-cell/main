@@ -1,0 +1,4 @@
+# Prisma ignore file
+# Ignore config file during Prisma 6 operations
+prisma.config.ts
+
