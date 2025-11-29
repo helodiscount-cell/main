@@ -15,7 +15,6 @@ import { AutoReplyCommentAutomationRequestBody, InstagramPost } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { AutoReplyCommentsSchema } from "@/types/zod";
 import { useApi } from "@/hooks/use-api";
@@ -37,7 +36,6 @@ export default function PostPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for triggers input (tags) and reply
   const [triggers, setTriggers] = useState<string[]>([]);
   const [triggerInput, setTriggerInput] = useState("");
   const [reply, setReply] = useState("");
@@ -50,6 +48,13 @@ export default function PostPage() {
     data: dataAddAutomation,
   } = useApi();
 
+  const {
+    execute: executeFetchComments,
+    loading: loadingFetchComments,
+    error: errorFetchComments,
+    data: dataFetchComments,
+  } = useApi();
+
   // Fetches post data and comments from localStorage
   useEffect(() => {
     try {
@@ -60,6 +65,7 @@ export default function PostPage() {
 
         if (foundPost) {
           setPost(foundPost);
+          executeFetchComments(`/instagram/comments?postId=${postId}`, "GET");
         } else {
           setError("Post not found");
         }
@@ -76,24 +82,10 @@ export default function PostPage() {
 
   // Fetches comments from Instagram Graph API
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const response = await fetch(
-          `/api/instagram/comments?postId=${postId}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setComments(data.comments || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch comments:", err);
-      }
-    };
-
-    if (post) {
-      fetchComments();
+    if (dataFetchComments) {
+      setComments(dataFetchComments.comments || []);
     }
-  }, [post, postId]);
+  }, [dataFetchComments]);
 
   // Navigates back to dashboard
   const handleBack = () => {
@@ -333,7 +325,19 @@ export default function PostPage() {
         </div>
         {/* Shows comments section */}
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-950">
-          {comments.length === 0 ? (
+          {loadingFetchComments ? (
+            <div className="text-center py-8">
+              <Spinner className="mx-auto mb-2 size-8" />
+              <p className="text-gray-500 dark:text-gray-400">
+                Loading comments...
+              </p>
+            </div>
+          ) : errorFetchComments ? (
+            <div className="text-center py-8 text-red-500 dark:text-red-400 border border-dashed border-red-300 dark:border-red-700 rounded-lg">
+              <MessageCircle className="mx-auto mb-2 size-8 text-red-400 dark:text-red-600" />
+              <p>{errorFetchComments.error}</p>
+            </div>
+          ) : comments.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
               <MessageCircle className="mx-auto mb-2 size-8 text-gray-400 dark:text-gray-600" />
               <p>No comments yet</p>
