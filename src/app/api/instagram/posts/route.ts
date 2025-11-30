@@ -6,6 +6,7 @@ import {
   InstagramPost,
   InstagramPostsSuccessResponse,
 } from "@/types";
+import { getValidAccessToken } from "@/lib/instagram/token-manager";
 
 export async function GET() {
   try {
@@ -38,19 +39,21 @@ export async function GET() {
       return NextResponse.json(res, { status: 400 });
     }
 
-    // Gets access token from environment for API calls
-    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-    if (!accessToken) {
-      // Returns error if access token is missing
+    const { instagramUserId, username } = user.instaAccount;
+
+    // Gets valid access token (refreshes if needed)
+    let accessToken: string;
+    try {
+      accessToken = await getValidAccessToken(user.instaAccount.id);
+    } catch (error) {
+      // Returns error if token refresh fails
       const res: BeErrorResponse = {
         success: false,
         error:
-          "Instagram integration is not configured. Please contact support.",
+          "Failed to refresh Instagram access token. Please reconnect your account.",
       };
-      return NextResponse.json(res, { status: 500 });
+      return NextResponse.json(res, { status: 401 });
     }
-
-    const { instagramUserId, username } = user.instaAccount;
 
     // Prepares fields to fetch from Instagram Graph API
     const fields = [

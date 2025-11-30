@@ -19,26 +19,19 @@ import { Badge } from "@/components/ui/badge";
 import { AutoReplyCommentsSchema } from "@/types/zod";
 import { useApi } from "@/hooks/use-api";
 
-type Comment = {
-  id: string;
-  username: string;
-  text: string;
-  timestamp: string;
-};
-
 export default function PostPage() {
   const params = useParams();
   const router = useRouter();
   const postId = params.id as string;
 
   const [post, setPost] = useState<InstagramPost | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [triggers, setTriggers] = useState<string[]>([]);
   const [triggerInput, setTriggerInput] = useState("");
   const [reply, setReply] = useState("");
+  const [actionType, setActionType] = useState<"DM" | "COMMENT_REPLY">("COMMENT_REPLY");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -48,14 +41,7 @@ export default function PostPage() {
     data: dataAddAutomation,
   } = useApi();
 
-  const {
-    execute: executeFetchComments,
-    loading: loadingFetchComments,
-    error: errorFetchComments,
-    data: dataFetchComments,
-  } = useApi();
-
-  // Fetches post data and comments from localStorage
+  // Fetches post data from localStorage
   useEffect(() => {
     try {
       const storedPosts = localStorage.getItem("instagram_posts");
@@ -65,7 +51,6 @@ export default function PostPage() {
 
         if (foundPost) {
           setPost(foundPost);
-          executeFetchComments(`/instagram/comments?postId=${postId}`, "GET");
         } else {
           setError("Post not found");
         }
@@ -80,12 +65,22 @@ export default function PostPage() {
     }
   }, [postId]);
 
-  // Fetches comments from Instagram Graph API
+  // Handles automation creation success
   useEffect(() => {
-    if (dataFetchComments) {
-      setComments(dataFetchComments.comments || []);
+    if (dataAddAutomation) {
+      toast.success("Automation created successfully!");
+      // Clears form
+      setTriggers([]);
+      setReply("");
     }
-  }, [dataFetchComments]);
+  }, [dataAddAutomation]);
+
+  // Handles automation creation error
+  useEffect(() => {
+    if (errorAddAutomation) {
+      toast.error(errorAddAutomation.error || "Failed to create automation");
+    }
+  }, [errorAddAutomation]);
 
   // Navigates back to dashboard
   const handleBack = () => {
@@ -95,29 +90,29 @@ export default function PostPage() {
   // Handles add automation button click
   const handleAutoReplyCommentAutomation = () => {
     // Composes payload for submission
-    const payload: AutoReplyCommentAutomationRequestBody = {
-      triggers: triggers.map((t) => t.trim()).filter(Boolean),
-      replyWith: reply.trim(),
+    const payload = {
       postId,
+      postCaption: post?.caption,
+      triggers: triggers.map((t) => t.trim()).filter(Boolean),
+      actionType,
+      replyMessage: reply.trim(),
     };
 
-    // Validates payload using zod
-    const result = AutoReplyCommentsSchema.safeParse(payload);
-
-    if (result.success) {
-      // Logs the valid payload to console for dev
-      toast.success("Automation config is valid! Sending to server...");
-      executeAddAutomation("/automations/comments", "POST", {
-        body: payload,
-      });
-    } else {
-      // Picks first zod error and shows toast
-      const firstErr =
-        Array.isArray(result.error.issues) && result.error.issues.length > 0
-          ? result.error.issues[0].message
-          : "Invalid input";
-      toast.error(firstErr);
+    // Validates payload
+    if (payload.triggers.length === 0) {
+      toast.error("At least one trigger is required");
+      return;
     }
+
+    if (!payload.replyMessage) {
+      toast.error("Reply message is required");
+      return;
+    }
+
+    // Sends to server
+    executeAddAutomation("/automations/create", "POST", {
+      body: payload,
+    });
   };
 
   // Handles trigger/tag input on keydown
@@ -299,15 +294,47 @@ export default function PostPage() {
               </div>
               <div>
                 <label className="block text-base font-mono text-gray-700 dark:text-gray-200 mb-3">
-                  Reply with-
+                  Then-
+                </label>
+                <div className="flex gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setActionType("COMMENT_REPLY")}
+                    className={`flex-1 px-4 py-3 rounded-md font-mono text-sm transition ${
+                      actionType === "COMMENT_REPLY"
+                        ? "bg-blue-600 text-white border-2 border-blue-600"
+                        : "bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-400"
+                    }`}
+                  >
+                    Reply to comment
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActionType("DM")}
+                    className={`flex-1 px-4 py-3 rounded-md font-mono text-sm transition ${
+                      actionType === "DM"
+                        ? "bg-blue-600 text-white border-2 border-blue-600"
+                        : "bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-400"
+                    }`}
+                  >
+                    Send DM
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-base font-mono text-gray-700 dark:text-gray-200 mb-3">
+                  Message-
                 </label>
                 <input
                   type="text"
-                  placeholder="Some message"
+                  placeholder="Your automated message (use {username} for their name)"
                   className="w-full px-4 py-2 text-base font-mono rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                 />
+                <div className="mt-2 text-xs text-gray-400 dark:text-gray-500 font-mono">
+                  Variables: {"{username}"}, {"{comment_text}"}
+                </div>
               </div>
               <Button
                 className="w-full mt-2"
@@ -322,46 +349,6 @@ export default function PostPage() {
               </Button>
             </div>
           </div>
-        </div>
-        {/* Shows comments section */}
-        <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-950">
-          {loadingFetchComments ? (
-            <div className="text-center py-8">
-              <Spinner className="mx-auto mb-2 size-8" />
-              <p className="text-gray-500 dark:text-gray-400">
-                Loading comments...
-              </p>
-            </div>
-          ) : errorFetchComments ? (
-            <div className="text-center py-8 text-red-500 dark:text-red-400 border border-dashed border-red-300 dark:border-red-700 rounded-lg">
-              <MessageCircle className="mx-auto mb-2 size-8 text-red-400 dark:text-red-600" />
-              <p>{errorFetchComments.error}</p>
-            </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-              <MessageCircle className="mx-auto mb-2 size-8 text-gray-400 dark:text-gray-600" />
-              <p>No comments yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-              {comments.map((comment) => (
-                <div
-                  key={comment.id}
-                  className="border border-gray-200 dark:border-gray-800 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
-                >
-                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                    @{comment.username}
-                  </p>
-                  <p className="text-gray-700 dark:text-gray-300 mt-1 text-sm">
-                    {comment.text}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                    {new Date(comment.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -23,12 +23,14 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import InstagramConnect from "@/components/instagram/connect";
 import PostCard from "@/components/instagram/PostCard";
+import AutomationCard from "@/components/automations/AutomationCard";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user: clerkUser } = useUser();
   const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [automations, setAutomations] = useState<any[]>([]);
 
   // Status: /instagram/status
   const {
@@ -56,6 +58,26 @@ export default function DashboardPage() {
     data: postsData,
   } = useApi<InstagramPostsSuccessResponse>();
 
+  // Automations: /automations/list
+  const {
+    execute: fetchAutomations,
+    loading: isFetchingAutomations,
+    error: fetchAutomationsError,
+    data: automationsData,
+  } = useApi<any>();
+
+  // Update automation: /automations/[id]
+  const {
+    execute: updateAutomation,
+    loading: isUpdatingAutomation,
+  } = useApi<any>();
+
+  // Delete automation: /automations/[id]
+  const {
+    execute: deleteAutomation,
+    loading: isDeletingAutomation,
+  } = useApi<any>();
+
   // Determines connection status safely
   const isConnected = statusData && statusData.connected === true;
   const connectedStatus = isConnected
@@ -68,36 +90,11 @@ export default function DashboardPage() {
       ? getErrorMessage(checkStatusError || connectError || fetchPostsError)
       : null;
 
-  // Handles Instagram connect using zod validation
-  const handleConnectInstagram = async () => {
-    try {
-      // Creates raw data from Clerk user
-      const bodyRaw = {
-        fullName: clerkUser?.firstName,
-        email: clerkUser?.emailAddresses[0]?.emailAddress ?? undefined,
-        imageUrl: clerkUser?.imageUrl ?? null,
-      };
-
-      // Validates request body using zod schema to guarantee type-safety
-      const parseResult = InstagramConnectRequestSchema.safeParse(bodyRaw);
-      if (!parseResult.success) {
-        toast.error("Validation error. Please check your input.");
-        return;
-      }
-
-      // Calls connect API with valid data
-      const result = await connectInstagram("/instagram/connect", "POST", {
-        body: parseResult.data,
-      });
-
-      if (result) {
-        toast.success(`Successfully connected @${result.data.username}!`);
-        // Refreshes connection status after successful connection
-        await getInstaConnectionStatus("/instagram/status", "GET");
-      }
-    } catch (err) {
-      toast.error("Failed to connect Instagram. Please try again.");
-    }
+  // Handles Instagram connect using OAuth flow
+  const handleConnectInstagram = () => {
+    // Redirects to OAuth authorize endpoint
+    // The callback will return to dashboard with status
+    window.location.href = "/api/instagram/oauth/authorize?returnUrl=/dashboard";
   };
 
   // Fetches posts from API and stores them in localStorage
@@ -118,6 +115,34 @@ export default function DashboardPage() {
   const handlePostClick = (post: InstagramPost) => {
     router.push(`/posts/${post.id}`);
   };
+
+  // Handles OAuth callback parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("connected");
+    const error = params.get("error");
+
+    if (connected === "true") {
+      toast.success("Instagram connected successfully!");
+      // Cleans up URL
+      window.history.replaceState({}, "", "/dashboard");
+    } else if (error) {
+      const errorMessages: Record<string, string> = {
+        oauth_declined: "You declined the Instagram authorization.",
+        oauth_invalid: "Invalid OAuth response from Instagram.",
+        oauth_invalid_state: "OAuth security check failed. Please try again.",
+        invalid_account_type:
+          "Please use an Instagram Business or Creator account.",
+        oauth_failed: "Failed to connect Instagram. Please try again.",
+      };
+
+      toast.error(
+        errorMessages[error] || "Failed to connect Instagram. Please try again."
+      );
+      // Cleans up URL
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, []);
 
   // Fetches Instagram connection status on mount
   useEffect(() => {
@@ -160,6 +185,53 @@ export default function DashboardPage() {
       setPosts(postsData.posts);
     }
   }, [postsData]);
+
+  // Fetches automations when connected
+  useEffect(() => {
+    if (isConnected) {
+      fetchAutomations("/automations/list?status=ACTIVE", "GET");
+    }
+  }, [isConnected]);
+
+  // Updates automations state when new data is fetched
+  useEffect(() => {
+    if (automationsData?.automations) {
+      setAutomations(automationsData.automations);
+    }
+  }, [automationsData]);
+
+  // Handles automation toggle
+  const handleToggleAutomation = async (
+    id: string,
+    newStatus: "ACTIVE" | "PAUSED"
+  ) => {
+    try {
+      await updateAutomation(`/automations/${id}`, "PATCH", {
+        body: { status: newStatus },
+      });
+      toast.success(`Automation ${newStatus.toLowerCase()}`);
+      // Refetches automations
+      fetchAutomations("/automations/list?status=ACTIVE", "GET");
+    } catch (err) {
+      toast.error("Failed to update automation");
+    }
+  };
+
+  // Handles automation deletion
+  const handleDeleteAutomation = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this automation?")) {
+      return;
+    }
+
+    try {
+      await deleteAutomation(`/automations/${id}`, "DELETE");
+      toast.success("Automation deleted");
+      // Refetches automations
+      fetchAutomations("/automations/list?status=ACTIVE", "GET");
+    } catch (err) {
+      toast.error("Failed to delete automation");
+    }
+  };
 
   // Loading state for status check
   if (isCheckingStatus) {
@@ -270,6 +342,36 @@ export default function DashboardPage() {
               </p>
             </div>
           )}
+
+          {/* Shows active automations section */}
+          <div className="mt-12">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Active Automations
+            </h2>
+            {isFetchingAutomations ? (
+              <div className="flex justify-center py-8">
+                <Spinner className="size-6" />
+              </div>
+            ) : automations.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {automations.map((automation) => (
+                  <AutomationCard
+                    key={automation.id}
+                    automation={automation}
+                    onToggleStatus={handleToggleAutomation}
+                    onDelete={handleDeleteAutomation}
+                    onViewDetails={(id) => router.push(`/posts/${automation.postId}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                <p className="text-sm">
+                  No active automations yet. Click on a post to create one.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

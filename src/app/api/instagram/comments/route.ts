@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger-backend";
+import { prisma } from "@/lib/db";
 import {
   GRAPH_API,
   GRAPH_API_FIELDS,
   buildGraphApiUrl,
   addQueryParams,
-  getAccessToken,
   ERROR_MESSAGES,
 } from "@/config/instagram.config";
+import { getValidAccessToken } from "@/lib/instagram/token-manager";
 
 // Defines zod schema for validating postId query parameter
 const PostIdQuerySchema = z.object({
@@ -17,6 +19,35 @@ const PostIdQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Gets current authenticated user
+    const { userId: clerkId } = await auth();
+
+    if (!clerkId) {
+      logger.apiRoute("GET", "/api/instagram/comments", {
+        error: "Unauthorized",
+      });
+      return NextResponse.json(
+        { success: false, error: ERROR_MESSAGES.AUTH.NO_USER },
+        { status: 401 }
+      );
+    }
+
+    // Gets the user record with Instagram account
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      include: { instaAccount: true },
+    });
+
+    if (!user || !user.instaAccount) {
+      logger.apiRoute("GET", "/api/instagram/comments", {
+        error: "Instagram not connected",
+      });
+      return NextResponse.json(
+        { success: false, error: ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT },
+        { status: 400 }
+      );
+    }
+
     // Extracts postId from query parameters
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("postId");
@@ -41,18 +72,20 @@ export async function GET(request: NextRequest) {
 
     const validatedData = validationResult.data;
 
-    // Gets access token from environment
-    const accessToken = getAccessToken();
-    if (!accessToken) {
+    // Gets valid access token (refreshes if needed)
+    let accessToken: string;
+    try {
+      accessToken = await getValidAccessToken(user.instaAccount.id);
+    } catch (error) {
       logger.apiRoute("GET", "/api/instagram/comments", {
-        error: "Missing access token",
+        error: "Token refresh failed",
       });
       return NextResponse.json(
         {
           success: false,
-          error: "Instagram integration is not configured properly",
+          error: ERROR_MESSAGES.AUTH.TOKEN_EXPIRED,
         },
-        { status: 500 }
+        { status: 401 }
       );
     }
 

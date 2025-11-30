@@ -11,7 +11,32 @@ export const GRAPH_API = {
     USER_MEDIA: (userId: string) => `${userId}/media`,
     POST_COMMENTS: (postId: string) => `${postId}/comments`,
     USER_INFO: (userId: string) => `${userId}`,
+    SEND_MESSAGE: (igUserId: string) => `${igUserId}/messages`,
+    REPLY_COMMENT: (commentId: string) => `${commentId}/replies`,
   },
+} as const;
+
+// OAuth configuration
+export const INSTAGRAM_OAUTH = {
+  SCOPES: [
+    "instagram_basic",
+    "instagram_manage_comments",
+    "instagram_manage_messages",
+    "pages_show_list",
+    "pages_read_engagement",
+    "business_management",
+  ].join(","),
+  AUTHORIZE_URL: "https://www.facebook.com/v24.0/dialog/oauth",
+  TOKEN_URL: "https://graph.facebook.com/v24.0/oauth/access_token",
+  GRAPH_TOKEN_URL: `https://graph.facebook.com/v24.0/oauth/access_token`,
+  REFRESH_URL: `https://graph.instagram.com/refresh_access_token`,
+} as const;
+
+// Messaging constraints
+export const MESSAGING_CONSTRAINTS = {
+  WINDOW_HOURS: 24,
+  RATE_LIMIT_PER_HOUR: 100,
+  MESSAGE_MAX_LENGTH: 1000,
 } as const;
 
 // Field configurations for different endpoints
@@ -45,6 +70,11 @@ export const ERROR_MESSAGES = {
       "Instagram is not connected for your account. Please connect Instagram and try again.",
     NO_ACCESS_TOKEN:
       "Instagram integration is not configured. Please contact support.",
+    OAUTH_FAILED: "Failed to authorize Instagram account. Please try again.",
+    TOKEN_EXPIRED: "Your Instagram connection has expired. Please reconnect.",
+    INVALID_ACCOUNT_TYPE:
+      "Please use an Instagram Business or Creator account.",
+    NO_FACEBOOK_PAGE: "Please link your Instagram account to a Facebook Page.",
   },
   NETWORK: {
     CONNECTION_FAILED:
@@ -64,6 +94,12 @@ export const ERROR_MESSAGES = {
   VALIDATION: {
     INVALID_POST_ID: "Invalid or missing post ID",
     INVALID_USER_ID: "Invalid or missing user ID",
+  },
+  MESSAGING: {
+    WINDOW_EXPIRED:
+      "Cannot send message: 24-hour messaging window has expired.",
+    RATE_LIMIT_EXCEEDED: "Message rate limit exceeded. Please try again later.",
+    MESSAGE_TOO_LONG: "Message exceeds maximum length of 1000 characters.",
   },
 } as const;
 
@@ -95,9 +131,33 @@ export function addQueryParams(url: URL, params: Record<string, string>): URL {
 }
 
 /**
- * Gets access token from environment with validation
+ * Gets access token from environment with validation (legacy - for migration)
  */
 export function getAccessToken(): string | null {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   return token || null;
+}
+
+/**
+ * Gets OAuth app credentials from environment
+ */
+export function getOAuthCredentials(): {
+  appId: string | null;
+  appSecret: string | null;
+  redirectUri: string | null;
+} {
+  return {
+    appId: process.env.APP_ID || process.env.INSTAGRAM_APP_ID || null,
+    appSecret:
+      process.env.APP_SECRET || process.env.INSTAGRAM_APP_SECRET || null,
+    redirectUri: process.env.INSTAGRAM_REDIRECT_URI || null,
+  };
+}
+
+/**
+ * Validates OAuth configuration is complete
+ */
+export function validateOAuthConfig(): boolean {
+  const { appId, appSecret, redirectUri } = getOAuthCredentials();
+  return Boolean(appId && appSecret && redirectUri);
 }
