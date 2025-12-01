@@ -53,7 +53,6 @@ export function matchComment(
           const regex = new RegExp(trigger, "i"); // Case insensitive
           isMatch = regex.test(comment.text);
         } catch (error) {
-          console.error("Invalid regex pattern:", trigger, error);
           isMatch = false;
         }
         break;

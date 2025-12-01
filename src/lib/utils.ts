@@ -7,8 +7,6 @@ export function cn(...inputs: ClassValue[]) {
 
 // Helper to get error message consistently (supports string or Error object)
 export function getErrorMessage(err: unknown) {
-  console.log("from getErrorMessage", err);
-
   if (typeof err === "string") return err;
   if (
     err &&

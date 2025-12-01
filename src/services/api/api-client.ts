@@ -38,7 +38,10 @@ class ApiClient {
 
     // Response interceptor
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log(response.data);
+        return response;
+      },
       (error) => {
         // Handle common errors
         if (error.response?.status === 401) {

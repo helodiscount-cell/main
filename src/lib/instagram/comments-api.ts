@@ -3,7 +3,11 @@
  * Handles comment replies via Instagram
  */
 
-import { logger } from "@/lib/logger-backend";
+import {
+  GRAPH_API,
+  ERROR_MESSAGES,
+  buildGraphApiUrl,
+} from "@/config/instagram.config";
 
 export interface ReplyToCommentOptions {
   commentId: string;
@@ -24,9 +28,11 @@ export async function replyToComment(
   options: ReplyToCommentOptions
 ): Promise<ReplyToCommentResult> {
   try {
-    const url = `https://graph.facebook.com/v24.0/${options.commentId}/replies`;
+    const url = buildGraphApiUrl(
+      GRAPH_API.ENDPOINTS.REPLY_COMMENT(options.commentId)
+    );
 
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -40,39 +46,22 @@ export async function replyToComment(
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
 
-      logger.apiRoute("COMMENTS", "reply_failed", {
-        commentId: options.commentId,
-        error: error.error?.message,
-        code: error.error?.code,
-      });
-
       return {
         success: false,
-        error: error.error?.message || "Failed to reply to comment",
+        error: error.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR,
       };
     }
 
     const data = await response.json();
-
-    logger.apiRoute("COMMENTS", "reply_success", {
-      commentId: options.commentId,
-      replyId: data.id,
-    });
 
     return {
       success: true,
       replyId: data.id,
     };
   } catch (error) {
-    console.error("Error replying to comment:", error);
-    logger.apiRoute("COMMENTS", "reply_error", {
-      commentId: options.commentId,
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }
@@ -125,7 +114,9 @@ export async function deleteComment(
   accessToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const url = `https://graph.facebook.com/v24.0/${commentId}?access_token=${accessToken}`;
+    const url =
+      process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
+      `/${commentId}?access_token=${accessToken}`;
 
     const response = await fetch(url, {
       method: "DELETE",
@@ -143,7 +134,7 @@ export async function deleteComment(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }
@@ -157,7 +148,7 @@ export async function hideComment(
   hide: boolean = true
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const url = `https://graph.facebook.com/v24.0/${commentId}`;
+    const url = process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL + `/${commentId}`;
 
     const response = await fetch(url, {
       method: "POST",
@@ -182,8 +173,7 @@ export async function hideComment(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }
-

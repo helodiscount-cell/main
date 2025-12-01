@@ -28,8 +28,8 @@ export const INSTAGRAM_OAUTH = {
   ].join(","),
   AUTHORIZE_URL: "https://www.facebook.com/v24.0/dialog/oauth",
   TOKEN_URL: "https://graph.facebook.com/v24.0/oauth/access_token",
-  GRAPH_TOKEN_URL: `https://graph.facebook.com/v24.0/oauth/access_token`,
-  REFRESH_URL: `https://graph.instagram.com/refresh_access_token`,
+  GRAPH_TOKEN_URL: "https://graph.facebook.com/v24.0/oauth/access_token",
+  REFRESH_URL: "https://graph.facebook.com/v24.0/refresh_access_token",
 } as const;
 
 // Messaging constraints

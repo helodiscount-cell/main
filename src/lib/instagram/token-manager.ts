@@ -4,7 +4,13 @@
  */
 
 import { prisma } from "@/lib/db";
-import { INSTAGRAM_OAUTH, getOAuthCredentials } from "@/config/instagram.config";
+import {
+  INSTAGRAM_OAUTH,
+  GRAPH_API,
+  ERROR_MESSAGES,
+  getOAuthCredentials,
+  buildGraphApiUrl,
+} from "@/config/instagram.config";
 
 export interface RefreshTokenResponse {
   access_token: string;
@@ -24,13 +30,13 @@ export async function refreshAccessToken(
   });
 
   if (!account) {
-    throw new Error("Instagram account not found");
+    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
   }
 
   const { appSecret } = getOAuthCredentials();
 
   if (!appSecret) {
-    throw new Error("OAuth configuration missing");
+    throw new Error(ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN);
   }
 
   // Refreshes the token using Instagram Graph API
@@ -47,9 +53,7 @@ export async function refreshAccessToken(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.error?.message || "Failed to refresh access token"
-    );
+    throw new Error(error.error?.message || ERROR_MESSAGES.AUTH.TOKEN_EXPIRED);
   }
 
   const data: RefreshTokenResponse = await response.json();
@@ -76,7 +80,10 @@ export async function refreshAccessToken(
 /**
  * Checks if a token is expired or will expire soon
  */
-export function isTokenExpiringSoon(expiresAt: Date, daysThreshold: number = 7): boolean {
+export function isTokenExpiringSoon(
+  expiresAt: Date,
+  daysThreshold: number = 7
+): boolean {
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
 
@@ -92,7 +99,7 @@ export async function getValidAccessToken(accountId: string): Promise<string> {
   });
 
   if (!account) {
-    throw new Error("Instagram account not found");
+    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
   }
 
   // Checks if token needs refresh (within 7 days of expiry)
@@ -107,7 +114,9 @@ export async function getValidAccessToken(accountId: string): Promise<string> {
 /**
  * Finds all accounts with expiring tokens
  */
-export async function findExpiringTokens(daysThreshold: number = 7): Promise<string[]> {
+export async function findExpiringTokens(
+  daysThreshold: number = 7
+): Promise<string[]> {
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
 
@@ -152,16 +161,20 @@ export async function batchRefreshTokens(accountIds: string[]): Promise<{
 }
 
 /**
- * Validates token by making a test API call
+ * Validates token by making a test API call using Facebook Graph API
  */
-export async function validateToken(accessToken: string): Promise<boolean> {
+export async function validateToken(
+  accessToken: string,
+  instagramUserId: string
+): Promise<boolean> {
   try {
-    const response = await fetch(
-      `https://graph.instagram.com/me?fields=id&access_token=${accessToken}`
-    );
+    const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_INFO(instagramUserId));
+    url.searchParams.set("fields", "id");
+    url.searchParams.set("access_token", accessToken);
+
+    const response = await fetch(url.toString());
     return response.ok;
   } catch {
     return false;
   }
 }
-

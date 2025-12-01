@@ -25,20 +25,12 @@ export function verifyWebhookSignature(
       .update(payload)
       .digest("hex");
 
-    console.log("Webhook signature verification:", {
-      receivedSignature: cleanSignature.substring(0, 20) + "...",
-      expectedSignature: expectedSignature.substring(0, 20) + "...",
-      match: cleanSignature === expectedSignature,
-      payloadLength: payload.length,
-    });
-
     // Uses timing-safe comparison to prevent timing attacks
     return crypto.timingSafeEqual(
       Buffer.from(cleanSignature, "utf8"),
       Buffer.from(expectedSignature, "utf8")
     );
   } catch (error) {
-    console.error("Error verifying webhook signature:", error);
     return false;
   }
 }
@@ -47,11 +39,7 @@ export function verifyWebhookSignature(
  * Gets webhook verify token from environment
  */
 export function getWebhookVerifyToken(): string | null {
-  const token = process.env.NEXT_PUBLIC_INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
-  console.log(
-    "process.env.NEXT_PUBLIC_INSTAGRAM_WEBHOOK_VERIFY_TOKEN",
-    token ? "Token found (length: " + token.length + ")" : "undefined"
-  );
+  const token = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
   return token || null;
 }
 

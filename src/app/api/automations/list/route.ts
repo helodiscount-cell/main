@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
-import { logger } from "@/lib/logger-backend";
+import { AutomationListQuerySchema } from "@/server/schemas/automation.schema";
+import { listAutomations } from "@/server/services/automation.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,9 +15,6 @@ export async function GET(request: NextRequest) {
     const { userId: clerkId } = await auth();
 
     if (!clerkId) {
-      logger.apiRoute("GET", "/api/automations/list", {
-        error: "Unauthorized",
-      });
       return NextResponse.json(
         { success: false, error: "You must be logged in" },
         { status: 401 }
@@ -35,72 +33,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Gets query parameters for filtering
+    // Gets and validates query parameters
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get("status");
-    const postId = searchParams.get("postId");
-
-    // Builds filter conditions
-    const where: any = {
-      userId: user.id,
-    };
-
-    if (status && ["ACTIVE", "PAUSED", "DELETED"].includes(status)) {
-      where.status = status;
-    }
-
-    if (postId) {
-      where.postId = postId;
-    }
-
-    // Fetches automations
-    const automations = await prisma.automation.findMany({
-      where,
-      include: {
-        _count: {
-          select: {
-            executions: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+    const queryValidation = AutomationListQuerySchema.safeParse({
+      status: searchParams.get("status"),
+      postId: searchParams.get("postId"),
     });
 
-    logger.apiRoute("GET", "/api/automations/list", {
-      count: automations.length,
-      filters: { status, postId },
-    });
+    const filters = queryValidation.success ? queryValidation.data : undefined;
+
+    // Calls service layer
+    const automations = await listAutomations(user.id, filters);
 
     return NextResponse.json(
       {
         success: true,
-        automations: automations.map((automation) => ({
-          id: automation.id,
-          postId: automation.postId,
-          postCaption: automation.postCaption,
-          triggers: automation.triggers,
-          matchType: automation.matchType,
-          actionType: automation.actionType,
-          replyMessage: automation.replyMessage,
-          status: automation.status,
-          timesTriggered: automation.timesTriggered,
-          lastTriggeredAt: automation.lastTriggeredAt,
-          createdAt: automation.createdAt,
-          updatedAt: automation.updatedAt,
-          executionsCount: automation._count.executions,
-        })),
+        automations,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error listing automations:", error);
-    logger.apiRoute("GET", "/api/automations/list", {
-      error: "Internal error",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-
     return NextResponse.json(
       {
         success: false,

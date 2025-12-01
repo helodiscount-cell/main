@@ -16,7 +16,7 @@ interface ApiOptions {
   config?: AxiosRequestConfig;
 }
 
-type ApiMethod = "GET" | "POST";
+type ApiMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 interface UseApiReturn<T> extends UseApiState<T> {
   execute: (

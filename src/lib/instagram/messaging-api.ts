@@ -3,8 +3,11 @@
  * Handles direct message sending via Instagram
  */
 
-import { MESSAGING_CONSTRAINTS } from "@/config/instagram.config";
-import { logger } from "@/lib/logger-backend";
+import {
+  MESSAGING_CONSTRAINTS,
+  ERROR_MESSAGES,
+  buildGraphApiUrl,
+} from "@/config/instagram.config";
 
 export interface SendMessageOptions {
   recipientId: string;
@@ -32,11 +35,11 @@ export async function sendDirectMessage(
     if (options.message.length > MESSAGING_CONSTRAINTS.MESSAGE_MAX_LENGTH) {
       return {
         success: false,
-        error: `Message exceeds maximum length of ${MESSAGING_CONSTRAINTS.MESSAGE_MAX_LENGTH} characters`,
+        error: ERROR_MESSAGES.MESSAGING.MESSAGE_TOO_LONG,
       };
     }
 
-    const url = `https://graph.facebook.com/v24.0/me/messages`;
+    const url = buildGraphApiUrl("me/messages");
 
     const requestBody: any = {
       recipient: options.commentId
@@ -63,12 +66,6 @@ export async function sendDirectMessage(
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
 
-      logger.apiRoute("MESSAGING", "send_dm_failed", {
-        recipientId: options.recipientId,
-        error: error.error?.message,
-        code: error.error?.code,
-      });
-
       // Checks for 24-hour window error
       if (
         error.error?.code === 10 ||
@@ -76,37 +73,26 @@ export async function sendDirectMessage(
       ) {
         return {
           success: false,
-          error: "Cannot send message: 24-hour messaging window has expired.",
+          error: ERROR_MESSAGES.MESSAGING.WINDOW_EXPIRED,
         };
       }
 
       return {
         success: false,
-        error: error.error?.message || "Failed to send direct message",
+        error: error.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR,
       };
     }
 
     const data = await response.json();
-
-    logger.apiRoute("MESSAGING", "send_dm_success", {
-      recipientId: options.recipientId,
-      messageId: data.message_id,
-    });
 
     return {
       success: true,
       messageId: data.message_id,
     };
   } catch (error) {
-    console.error("Error sending direct message:", error);
-    logger.apiRoute("MESSAGING", "send_dm_error", {
-      recipientId: options.recipientId,
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }
@@ -120,7 +106,9 @@ export async function checkMessagingWindow(
 ): Promise<boolean> {
   try {
     // Gets conversation info
-    const url = `https://graph.facebook.com/v24.0/${recipientId}?fields=last_message_time&access_token=${accessToken}`;
+    const url =
+      process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
+      `/${recipientId}?fields=last_message_time&access_token=${accessToken}`;
 
     const response = await fetch(url);
 
@@ -142,7 +130,6 @@ export async function checkMessagingWindow(
 
     return hoursDiff <= MESSAGING_CONSTRAINTS.WINDOW_HOURS;
   } catch (error) {
-    console.error("Error checking messaging window:", error);
     return false;
   }
 }
@@ -186,4 +173,3 @@ export async function sendDirectMessageWithRetry(
     error: `Failed after ${maxRetries} attempts: ${lastError}`,
   };
 }
-

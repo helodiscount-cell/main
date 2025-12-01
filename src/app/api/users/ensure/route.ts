@@ -1,7 +1,11 @@
+/**
+ * Ensure User Endpoint
+ * Creates or updates user in database from Clerk data
+ */
+
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { logger } from "@/lib/logger-backend";
+import { ensureUser } from "@/server/services/user.service";
 
 export async function POST() {
   try {
@@ -11,7 +15,7 @@ export async function POST() {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Fetch user info from Clerk using server SDK
+    // Fetches user info from Clerk using server SDK
     const clerkUser = await (await clerkClient()).users.getUser(userId);
 
     const email = clerkUser.emailAddresses?.[0]?.emailAddress ?? "";
@@ -19,28 +23,11 @@ export async function POST() {
       clerkUser.lastName ?? ""
     }`.trim();
 
-    // Perform database operation with logging
-    const user = await prisma.user.upsert({
-      where: { clerkId: clerkUser.id },
-      update: {
-        fullName,
-        email,
-        imageUrl: clerkUser.imageUrl ?? null,
-      },
-      create: {
-        clerkId: clerkUser.id,
-        fullName,
-        email,
-        imageUrl: clerkUser.imageUrl ?? null,
-      },
-    });
-
-    // Log database changes
-    logger.dbChange("UPSERT", "User", {
-      clerkId: clerkUser.id,
+    // Calls service layer
+    const user = await ensureUser(clerkUser.id, {
       email,
       fullName,
-      imageUrl: clerkUser.imageUrl,
+      imageUrl: clerkUser.imageUrl ?? null,
     });
 
     return NextResponse.json({ id: user.id }, { status: 200 });

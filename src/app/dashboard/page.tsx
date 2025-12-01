@@ -67,16 +67,12 @@ export default function DashboardPage() {
   } = useApi<any>();
 
   // Update automation: /automations/[id]
-  const {
-    execute: updateAutomation,
-    loading: isUpdatingAutomation,
-  } = useApi<any>();
+  const { execute: updateAutomation, loading: isUpdatingAutomation } =
+    useApi<any>();
 
   // Delete automation: /automations/[id]
-  const {
-    execute: deleteAutomation,
-    loading: isDeletingAutomation,
-  } = useApi<any>();
+  const { execute: deleteAutomation, loading: isDeletingAutomation } =
+    useApi<any>();
 
   // Determines connection status safely
   const isConnected = statusData && statusData.connected === true;
@@ -94,7 +90,8 @@ export default function DashboardPage() {
   const handleConnectInstagram = () => {
     // Redirects to OAuth authorize endpoint
     // The callback will return to dashboard with status
-    window.location.href = "/api/instagram/oauth/authorize?returnUrl=/dashboard";
+    window.location.href =
+      "/api/instagram/oauth/authorize?returnUrl=/dashboard";
   };
 
   // Fetches posts from API and stores them in localStorage
@@ -360,7 +357,9 @@ export default function DashboardPage() {
                     automation={automation}
                     onToggleStatus={handleToggleAutomation}
                     onDelete={handleDeleteAutomation}
-                    onViewDetails={(id) => router.push(`/posts/${automation.postId}`)}
+                    onViewDetails={(id) =>
+                      router.push(`/posts/${automation.postId}`)
+                    }
                   />
                 ))}
               </div>

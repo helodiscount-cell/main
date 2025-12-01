@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme";
 import Header from "@/components/header";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 
-const poppins = Poppins({
-  variable: "--font-poppins",
+// Loads Geist Sans font and assigns to a CSS variable (looks modern and cool)
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
@@ -26,7 +27,8 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <link rel="icon" href="/logo.jpg" type="image/jpg" />
-        <body className={`${poppins.variable} antialiased`}>
+        {/* Applies Geist Sans font variable and enables antialiasing */}
+        <body className={`${geistSans.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

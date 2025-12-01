@@ -3,7 +3,7 @@
  * Registers webhooks with Instagram/Facebook Graph API
  */
 
-import { getOAuthCredentials } from "@/config/instagram.config";
+import { getOAuthCredentials, buildGraphApiUrl } from "@/config/instagram.config";
 import { prisma } from "@/lib/db";
 
 export interface WebhookSubscription {
@@ -36,33 +36,29 @@ export async function subscribeToWebhooks(
     }
 
     // Subscribes to Instagram webhooks via the Page
-    const subscribeUrl = `https://graph.facebook.com/v24.0/${pageId}/subscribed_apps`;
+    const url = buildGraphApiUrl(`${pageId}/subscribed_apps`);
 
-    const response = await fetch(subscribeUrl, {
+    const response = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        subscribed_fields: [
-          "comments",
-          "messages",
-          "messaging_postbacks",
-        ].join(","),
+        subscribed_fields: ["comments", "messages", "messaging_postbacks"].join(
+          ","
+        ),
         access_token: accessToken,
       }),
     });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error("Failed to subscribe to webhooks:", error);
       return false;
     }
 
     const data = await response.json();
     return data.success === true;
   } catch (error) {
-    console.error("Error subscribing to webhooks:", error);
     return false;
   }
 }
@@ -75,21 +71,20 @@ export async function unsubscribeFromWebhooks(
   pageId: string
 ): Promise<boolean> {
   try {
-    const unsubscribeUrl = `https://graph.facebook.com/v24.0/${pageId}/subscribed_apps?access_token=${accessToken}`;
+    const url = buildGraphApiUrl(`${pageId}/subscribed_apps`);
+    url.searchParams.set("access_token", accessToken);
 
-    const response = await fetch(unsubscribeUrl, {
+    const response = await fetch(url.toString(), {
       method: "DELETE",
     });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error("Failed to unsubscribe from webhooks:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Error unsubscribing from webhooks:", error);
     return false;
   }
 }
@@ -120,7 +115,9 @@ export async function getWebhookSubscriptionStatus(
   fields: string[];
 }> {
   try {
-    const statusUrl = `https://graph.facebook.com/v24.0/${pageId}/subscribed_apps?access_token=${accessToken}`;
+    const statusUrl =
+      process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
+      `/${pageId}/subscribed_apps?access_token=${accessToken}`;
 
     const response = await fetch(statusUrl);
 
@@ -147,8 +144,6 @@ export async function getWebhookSubscriptionStatus(
 
     return { subscribed: false, fields: [] };
   } catch (error) {
-    console.error("Error getting webhook status:", error);
     return { subscribed: false, fields: [] };
   }
 }
-

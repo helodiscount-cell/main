@@ -4,7 +4,6 @@
  */
 
 import { prisma } from "@/lib/db";
-import { logger } from "@/lib/logger-backend";
 import { CommentData, replaceVariables } from "./matcher";
 import {
   sendDirectMessageWithRetry,
@@ -134,11 +133,6 @@ export async function executeAutomation(
         actionError instanceof Error
           ? actionError.message
           : "Unknown error executing action";
-      logger.apiRoute("AUTOMATION", "execution_failed", {
-        automationId,
-        commentId: comment.id,
-        error: errorMessage,
-      });
     }
 
     // Records the execution
@@ -169,26 +163,12 @@ export async function executeAutomation(
       },
     });
 
-    logger.apiRoute("AUTOMATION", "executed", {
-      automationId,
-      executionId: execution.id,
-      actionType: automation.actionType,
-      status: executionStatus,
-    });
-
     return {
       success: executionStatus === "SUCCESS",
       executionId: execution.id,
       error: errorMessage || undefined,
     };
   } catch (error) {
-    console.error("Error executing automation:", error);
-    logger.apiRoute("AUTOMATION", "execution_error", {
-      automationId,
-      commentId: comment.id,
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

@@ -5,8 +5,11 @@
 
 import {
   INSTAGRAM_OAUTH,
+  GRAPH_API,
+  ERROR_MESSAGES,
   getOAuthCredentials,
   validateOAuthConfig,
+  buildGraphApiUrl,
 } from "@/config/instagram.config";
 
 export interface OAuthState {
@@ -48,7 +51,7 @@ export interface FacebookPagesResponse {
  */
 export function generateAuthorizationUrl(state: OAuthState): string {
   if (!validateOAuthConfig()) {
-    throw new Error("OAuth configuration is incomplete");
+    throw new Error(ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN);
   }
 
   const { appId, redirectUri } = getOAuthCredentials();
@@ -75,7 +78,7 @@ export function decodeState(encodedState: string): OAuthState {
     const decoded = Buffer.from(encodedState, "base64").toString("utf-8");
     return JSON.parse(decoded);
   } catch (error) {
-    throw new Error("Invalid state parameter");
+    throw new Error(ERROR_MESSAGES.AUTH.OAUTH_FAILED);
   }
 }
 
@@ -105,14 +108,14 @@ export async function exchangeCodeForToken(
     throw new Error(
       error.error_message ||
         error.error?.message ||
-        "Failed to exchange code for token"
+        ERROR_MESSAGES.AUTH.OAUTH_FAILED
     );
   }
 
   const data = await response.json();
 
   // Facebook OAuth returns access_token but not user_id directly
-  // We'll need to fetch user ID separately if needed
+  // We have to fetch user ID separately if needed
   return {
     access_token: data.access_token,
     user_id: data.user_id || 0, // Will be fetched later from Graph API
@@ -142,37 +145,34 @@ export async function getLongLivedToken(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || "Failed to get long-lived token");
+    throw new Error(error.error?.message || ERROR_MESSAGES.AUTH.TOKEN_EXPIRED);
   }
 
   return await response.json();
 }
 
 /**
- * Fetches Instagram user data
+ * Fetches Instagram user data using Facebook Graph API
  */
 export async function fetchInstagramUserData(
   accessToken: string,
-  instagramAccountId?: string
+  instagramAccountId: string
 ): Promise<InstagramUserData> {
-  // For Instagram Business accounts, we only have id, username, and name fields
-  // account_type is not available, so we'll default to BUSINESS
+  // For Instagram Business accounts, we fetch data through Facebook Graph API
   const fields = ["id", "username", "name", "profile_picture_url"].join(",");
 
-  // Uses Instagram Business Account ID if provided, otherwise tries /me endpoint
-  const endpoint = instagramAccountId
-    ? `https://graph.facebook.com/v24.0/${instagramAccountId}`
-    : `https://graph.instagram.com/me`;
+  // Always uses Facebook Graph API with the Instagram Business Account ID
+  const url = buildGraphApiUrl(
+    GRAPH_API.ENDPOINTS.USER_INFO(instagramAccountId)
+  );
+  url.searchParams.set("fields", fields);
+  url.searchParams.set("access_token", accessToken);
 
-  const url = `${endpoint}?fields=${fields}&access_token=${accessToken}`;
-
-  const response = await fetch(url);
+  const response = await fetch(url.toString());
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.error?.message || "Failed to fetch Instagram user data"
-    );
+    throw new Error(error.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR);
   }
 
   const data = await response.json();
@@ -198,13 +198,18 @@ export async function fetchFacebookPages(
     "access_token",
     "instagram_business_account",
   ].join(",");
-  const url = `https://graph.facebook.com/v24.0/me/accounts?fields=${fields}&access_token=${accessToken}`;
 
-  const response = await fetch(url);
+  const url = buildGraphApiUrl("me/accounts");
+  url.searchParams.set("fields", fields);
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url.toString());
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || "Failed to fetch Facebook pages");
+    throw new Error(
+      error.error?.message || ERROR_MESSAGES.AUTH.NO_FACEBOOK_PAGE
+    );
   }
 
   return await response.json();
@@ -220,8 +225,7 @@ export function validateInstagramAccount(userData: InstagramUserData): {
   if (userData.account_type === "PERSONAL") {
     return {
       valid: false,
-      error:
-        "Personal accounts are not supported. Please use a Business or Creator account.",
+      error: ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE,
     };
   }
 

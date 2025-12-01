@@ -4,7 +4,6 @@
  */
 
 import { prisma } from "@/lib/db";
-import { logger } from "@/lib/logger-backend";
 import {
   validateCommentData,
   findMatchingAutomations,
@@ -60,7 +59,6 @@ export async function processWebhookEvent(
       }
     }
   } catch (error) {
-    console.error("Error processing webhook event:", error);
     throw error;
   }
 }
@@ -73,11 +71,6 @@ async function processChange(
   change: { field: string; value: any }
 ): Promise<void> {
   const { field, value } = change;
-
-  logger.apiRoute("WEBHOOK", "process_change", {
-    field,
-    instagramUserId,
-  });
 
   // Stores the event in database for processing
   await prisma.webhookEvent.create({
@@ -99,7 +92,8 @@ async function processChange(
       await handleMessageEvent(instagramUserId, value);
       break;
     default:
-      logger.apiRoute("WEBHOOK", "unknown_field", { field });
+      // Unknown field type
+      break;
   }
 }
 
@@ -110,10 +104,6 @@ async function processMessagingEvent(
   instagramUserId: string,
   messagingEvent: any
 ): Promise<void> {
-  logger.apiRoute("WEBHOOK", "process_messaging", {
-    instagramUserId,
-  });
-
   // Stores the event in database
   await prisma.webhookEvent.create({
     data: {
@@ -138,15 +128,9 @@ async function handleCommentEvent(
   instagramUserId: string,
   commentData: any
 ): Promise<void> {
-  logger.apiRoute("WEBHOOK", "handle_comment", {
-    instagramUserId,
-    commentId: commentData.id,
-  });
-
   // Validates comment data
   const comment = validateCommentData(commentData);
   if (!comment) {
-    logger.apiRoute("WEBHOOK", "invalid_comment_data", { commentData });
     return;
   }
 
@@ -154,7 +138,6 @@ async function handleCommentEvent(
   const postId = commentData.media?.id || commentData.media_id;
 
   if (!postId) {
-    logger.apiRoute("WEBHOOK", "no_post_id", { commentId: comment.id });
     return;
   }
 
@@ -170,7 +153,6 @@ async function handleCommentEvent(
   });
 
   if (!instaAccount) {
-    logger.apiRoute("WEBHOOK", "no_account_found", { instagramUserId });
     return;
   }
 
@@ -184,14 +166,8 @@ async function handleCommentEvent(
   });
 
   if (relevantAutomations.length === 0) {
-    logger.apiRoute("WEBHOOK", "no_automations_for_post", { postId });
     return;
   }
-
-  logger.apiRoute("WEBHOOK", "found_automations", {
-    count: relevantAutomations.length,
-    postId,
-  });
 
   // Converts to AutomationRule format
   const automationRules: AutomationRule[] = relevantAutomations.map((auto) => ({
@@ -207,25 +183,14 @@ async function handleCommentEvent(
   const matches = findMatchingAutomations(comment, automationRules);
 
   if (matches.length === 0) {
-    logger.apiRoute("WEBHOOK", "no_matches", {
-      commentText: comment.text,
-    });
     return;
   }
-
-  logger.apiRoute("WEBHOOK", "found_matches", {
-    count: matches.length,
-    commentId: comment.id,
-  });
 
   // Gets valid access token
   let accessToken: string;
   try {
     accessToken = await getValidAccessToken(instaAccount.id);
   } catch (error) {
-    logger.apiRoute("WEBHOOK", "token_error", {
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
     return;
   }
 
@@ -239,10 +204,6 @@ async function handleCommentEvent(
     );
 
     if (alreadyProcessed) {
-      logger.apiRoute("WEBHOOK", "already_processed", {
-        commentId: comment.id,
-        automationId: match.automation.id,
-      });
       continue;
     }
 
@@ -258,11 +219,6 @@ async function handleIncomingMessage(
   instagramUserId: string,
   messagingEvent: any
 ): Promise<void> {
-  logger.apiRoute("WEBHOOK", "handle_message", {
-    instagramUserId,
-    messageId: messagingEvent.message?.mid,
-  });
-
   // TODO: Phase 4 will implement message handling
   // For now, we just log that we received the event
 }
@@ -274,11 +230,7 @@ async function handleMessageEvent(
   instagramUserId: string,
   messageData: any
 ): Promise<void> {
-  logger.apiRoute("WEBHOOK", "handle_message_event", {
-    instagramUserId,
-  });
-
-  // TODO: Implement message event handling
+  // TODO: Implements message event handling
 }
 
 /**
