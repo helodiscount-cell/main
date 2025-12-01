@@ -110,8 +110,10 @@ export async function executeAutomation(
 
         // Sends DM with retry
         // Note: If user hasn't messaged before, DM will go to their "Message Requests" folder
+        // We use the commentId to reply privately to the comment which bypasses the 24h window for the first message
         const result = await sendDirectMessageWithRetry({
           recipientId: comment.userId,
+          commentId: comment.id,
           message: finalMessage,
           accessToken,
         });

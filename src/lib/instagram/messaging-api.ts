@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger-backend";
 
 export interface SendMessageOptions {
   recipientId: string;
+  commentId?: string;
   message: string;
   accessToken: string;
   messagingType?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
@@ -38,7 +39,9 @@ export async function sendDirectMessage(
     const url = `https://graph.facebook.com/v24.0/me/messages`;
 
     const requestBody: any = {
-      recipient: { id: options.recipientId },
+      recipient: options.commentId
+        ? { comment_id: options.commentId }
+        : { id: options.recipientId },
       message: { text: options.message },
       messaging_type: options.messagingType || "RESPONSE",
       access_token: options.accessToken,
