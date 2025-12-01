@@ -81,6 +81,7 @@ model Automation {
 
   @@index([userId, status])
   @@index([postId, status])
+  @@index([userId, postId, status])
   @@map("automations")
 }
 
@@ -105,6 +106,7 @@ model AutomationExecution {
   executedAt DateTime @default(now())
 
   @@index([automationId, status])
+  @@index([commentId, automationId])
   @@map("automation_executions")
 }
 

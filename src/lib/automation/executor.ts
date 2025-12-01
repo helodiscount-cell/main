@@ -8,7 +8,6 @@ import { logger } from "@/lib/logger-backend";
 import { CommentData, replaceVariables } from "./matcher";
 import {
   sendDirectMessageWithRetry,
-  checkMessagingWindow,
 } from "@/lib/instagram/messaging-api";
 import { replyToCommentWithRetry } from "@/lib/instagram/comments-api";
 import {
@@ -109,19 +108,8 @@ export async function executeAutomation(
           throw new Error("Rate limit exceeded for direct messages");
         }
 
-        // Checks 24-hour messaging window
-        const canMessage = await checkMessagingWindow(
-          comment.userId,
-          accessToken
-        );
-
-        if (!canMessage) {
-          throw new Error(
-            "Cannot send DM: 24-hour messaging window has expired"
-          );
-        }
-
         // Sends DM with retry
+        // Note: If user hasn't messaged before, DM will go to their "Message Requests" folder
         const result = await sendDirectMessageWithRetry({
           recipientId: comment.userId,
           message: finalMessage,

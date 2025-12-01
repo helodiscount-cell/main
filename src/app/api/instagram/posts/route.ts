@@ -67,7 +67,8 @@ export async function GET() {
       "comments_count",
     ].join(",");
 
-    const postsUrl = `https://graph.instagram.com/${instagramUserId}/media?fields=${fields}&limit=25&access_token=${accessToken}`;
+    // Uses Facebook Graph API for Instagram Business accounts
+    const postsUrl = `https://graph.facebook.com/v24.0/${instagramUserId}/media?fields=${fields}&limit=25&access_token=${accessToken}`;
 
     let response: Response;
     try {
@@ -92,6 +93,14 @@ export async function GET() {
       } catch {
         instagramError = {};
       }
+
+      // Logs the full error for debugging
+      console.error("Instagram API error (posts):", {
+        status: response.status,
+        statusText: response.statusText,
+        error: instagramError,
+      });
+
       const mainError =
         instagramError.error?.message ||
         "Instagram returned an unexpected error while fetching your posts.";

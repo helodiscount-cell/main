@@ -150,19 +150,22 @@ async function handleCommentEvent(
     return;
   }
 
-  // Finds automations for this Instagram user
+  // Gets postId early for optimized query
+  const postId = commentData.media?.id || commentData.media_id;
+
+  if (!postId) {
+    logger.apiRoute("WEBHOOK", "no_post_id", { commentId: comment.id });
+    return;
+  }
+
+  // Optimized: Queries directly for automations on this specific post
+  // This avoids fetching all automations and filtering in memory
   const instaAccount = await prisma.instaAccount.findUnique({
     where: { instagramUserId },
-    include: {
-      user: {
-        include: {
-          automations: {
-            where: {
-              status: "ACTIVE",
-            },
-          },
-        },
-      },
+    select: {
+      id: true,
+      userId: true,
+      accessToken: true,
     },
   });
 
@@ -171,11 +174,14 @@ async function handleCommentEvent(
     return;
   }
 
-  // Filters automations for the commented post
-  const postId = commentData.media?.id || commentData.media_id;
-  const relevantAutomations = instaAccount.user.automations.filter(
-    (automation) => automation.postId === postId
-  );
+  // Fetches only active automations for this specific post
+  const relevantAutomations = await prisma.automation.findMany({
+    where: {
+      userId: instaAccount.userId,
+      postId: postId,
+      status: "ACTIVE",
+    },
+  });
 
   if (relevantAutomations.length === 0) {
     logger.apiRoute("WEBHOOK", "no_automations_for_post", { postId });
