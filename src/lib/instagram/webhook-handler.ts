@@ -3,7 +3,6 @@
  * Processes incoming webhook events from Instagram
  */
 
-import { prisma } from "@/lib/db";
 import {
   validateCommentData,
   findMatchingAutomations,
@@ -12,6 +11,8 @@ import {
 } from "@/lib/automation/matcher";
 import { executeAutomation } from "@/lib/automation/executor";
 import { getValidAccessToken } from "@/lib/instagram/token-manager";
+import { logger } from "@/lib/utils/logger";
+import { prisma } from "@/lib/db";
 
 export interface WebhookEntry {
   id: string;
@@ -42,24 +43,85 @@ export interface InstagramWebhookPayload {
 export async function processWebhookEvent(
   payload: InstagramWebhookPayload
 ): Promise<void> {
-  try {
-    for (const entry of payload.entry) {
-      // Processes changes (comments, etc.)
-      if (entry.changes) {
-        for (const change of entry.changes) {
-          await processChange(entry.id, change);
-        }
-      }
+  const webhookId = payload.entry?.[0]?.id || "unknown";
+  const entryCount = payload.entry?.length || 0;
 
-      // Processes messaging events (DMs)
-      if (entry.messaging) {
-        for (const messagingEvent of entry.messaging) {
-          await processMessagingEvent(entry.id, messagingEvent);
+  try {
+    logger.info("Processing webhook event", {
+      webhookId,
+      object: payload.object,
+      entryCount,
+    });
+
+    for (const entry of payload.entry) {
+      try {
+        // Processes changes (comments, etc.)
+        if (entry.changes) {
+          for (const change of entry.changes) {
+            try {
+              await processChange(entry.id, change);
+            } catch (error) {
+              logger.error(
+                "Failed to process webhook change event",
+                error instanceof Error ? error : new Error(String(error)),
+                {
+                  webhookId: entry.id,
+                  field: change.field,
+                  changeValue: JSON.stringify(change.value).substring(0, 200), // Log first 200 chars
+                }
+              );
+              // Continues processing other changes
+            }
+          }
         }
+
+        // Processes messaging events (DMs)
+        if (entry.messaging) {
+          for (const messagingEvent of entry.messaging) {
+            try {
+              await processMessagingEvent(entry.id, messagingEvent);
+            } catch (error) {
+              logger.error(
+                "Failed to process webhook messaging event",
+                error instanceof Error ? error : new Error(String(error)),
+                {
+                  webhookId: entry.id,
+                  senderId: messagingEvent.sender?.id,
+                  recipientId: messagingEvent.recipient?.id,
+                }
+              );
+              // Continues processing other messaging events
+            }
+          }
+        }
+      } catch (error) {
+        logger.error(
+          "Failed to process webhook entry",
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            webhookId: entry.id,
+            entryTime: entry.time,
+          }
+        );
+        // Continues processing other entries
       }
     }
+
+    logger.info("Webhook event processing completed", {
+      webhookId,
+      entryCount,
+    });
   } catch (error) {
-    throw error;
+    logger.error(
+      "Critical error processing webhook event",
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        webhookId,
+        object: payload.object,
+        entryCount,
+      }
+    );
+    throw error; // Re-throws to be caught by webhook service
   }
 }
 
@@ -73,15 +135,27 @@ async function processChange(
   const { field, value } = change;
 
   // Stores the event in database for processing
-  await prisma.webhookEvent.create({
-    data: {
-      eventType: field,
-      instagramUserId,
-      payload: value,
-      processed: false,
-      receivedAt: new Date(),
-    },
-  });
+  try {
+    await prisma.webhookEvent.create({
+      data: {
+        eventType: field,
+        instagramUserId,
+        payload: value,
+        processed: false,
+        receivedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    logger.error(
+      "Failed to store webhook event in database",
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        eventType: field,
+        instagramUserId,
+      }
+    );
+    // Continues processing even if storage fails
+  }
 
   // Handles different event types
   switch (field) {
@@ -105,15 +179,27 @@ async function processMessagingEvent(
   messagingEvent: any
 ): Promise<void> {
   // Stores the event in database
-  await prisma.webhookEvent.create({
-    data: {
-      eventType: "messaging",
-      instagramUserId,
-      payload: messagingEvent,
-      processed: false,
-      receivedAt: new Date(),
-    },
-  });
+  try {
+    await prisma.webhookEvent.create({
+      data: {
+        eventType: "messaging",
+        instagramUserId,
+        payload: messagingEvent,
+        processed: false,
+        receivedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    logger.error(
+      "Failed to store messaging event in database",
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        instagramUserId,
+        senderId: messagingEvent.sender?.id,
+      }
+    );
+    // Continues processing even if storage fails
+  }
 
   // Processes the message
   if (messagingEvent.message) {
@@ -128,42 +214,48 @@ async function handleCommentEvent(
   instagramUserId: string,
   commentData: any
 ): Promise<void> {
-  // Validates comment data
-  const comment = validateCommentData(commentData);
-  if (!comment) {
-    return;
-  }
+  try {
+    // Validates comment data
+    const comment = validateCommentData(commentData);
+    if (!comment) {
+      logger.warn("Invalid comment data in webhook", {
+        instagramUserId,
+        commentData: JSON.stringify(commentData).substring(0, 200),
+      });
+      return;
+    }
 
-  // Gets postId early for optimized query
-  const postId = commentData.media?.id || commentData.media_id;
+    // Gets postId early for optimized query
+    const postId = commentData.media?.id || commentData.media_id;
 
-  if (!postId) {
-    return;
-  }
+    if (!postId) {
+      logger.warn("Missing postId in comment event", {
+        instagramUserId,
+        commentId: comment.id,
+      });
+      return;
+    }
 
   // Optimized: Queries directly for automations on this specific post
   // This avoids fetching all automations and filtering in memory
-  const instaAccount = await prisma.instaAccount.findUnique({
-    where: { instagramUserId },
-    select: {
-      id: true,
-      userId: true,
-      accessToken: true,
-    },
-  });
+  const { findInstaAccountByInstagramUserId } = await import(
+    "@/server/repositories/insta-account.repository"
+  );
+  const { findActiveAutomationsByPost } = await import(
+    "@/server/repositories/automation.repository"
+  );
+
+  const instaAccount = await findInstaAccountByInstagramUserId(instagramUserId);
 
   if (!instaAccount) {
     return;
   }
 
   // Fetches only active automations for this specific post
-  const relevantAutomations = await prisma.automation.findMany({
-    where: {
-      userId: instaAccount.userId,
-      postId: postId,
-      status: "ACTIVE",
-    },
-  });
+  const relevantAutomations = await findActiveAutomationsByPost(
+    instaAccount.userId,
+    postId
+  );
 
   if (relevantAutomations.length === 0) {
     return;
@@ -180,35 +272,78 @@ async function handleCommentEvent(
   }));
 
   // Finds matching automations
-  const matches = findMatchingAutomations(comment, automationRules);
+  const matches = await findMatchingAutomations(comment, automationRules);
 
   if (matches.length === 0) {
     return;
   }
 
-  // Gets valid access token
-  let accessToken: string;
-  try {
-    accessToken = await getValidAccessToken(instaAccount.id);
-  } catch (error) {
-    return;
-  }
-
-  // Executes each matching automation
-  for (const match of matches) {
-    // Checks if already processed
-    const alreadyProcessed = await isCommentProcessed(
-      comment.id,
-      match.automation.id,
-      prisma
-    );
-
-    if (alreadyProcessed) {
-      continue;
+    // Gets valid access token
+    let accessToken: string;
+    try {
+      accessToken = await getValidAccessToken(instaAccount.id);
+    } catch (error) {
+      logger.error(
+        "Failed to get valid access token for webhook processing",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          instagramUserId,
+          instaAccountId: instaAccount.id,
+        }
+      );
+      return;
     }
 
-    // Executes the automation
-    await executeAutomation(match.automation.id, comment, accessToken);
+    // Executes each matching automation
+    for (const match of matches) {
+      try {
+        // Checks if already processed
+        const alreadyProcessed = await isCommentProcessed(
+          comment.id,
+          match.automation.id
+        );
+
+        if (alreadyProcessed) {
+          logger.debug("Comment already processed", {
+            commentId: comment.id,
+            automationId: match.automation.id,
+          });
+          continue;
+        }
+
+        // Executes the automation
+        await executeAutomation(match.automation.id, comment, accessToken);
+
+        logger.info("Automation executed successfully", {
+          commentId: comment.id,
+          automationId: match.automation.id,
+          actionType: match.automation.actionType,
+        });
+      } catch (error) {
+        logger.error(
+          "Failed to execute automation for comment",
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            commentId: comment.id,
+            automationId: match.automation.id,
+            actionType: match.automation.actionType,
+          }
+        );
+        // Continues processing other automations
+      }
+    }
+  } catch (error) {
+    logger.error(
+      "Error handling comment event",
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        instagramUserId,
+        commentId: commentData.id,
+        postId: commentData.media?.id || commentData.media_id,
+      }
+    );
+    // Re-throws to be caught by processChange
+    throw error;
   }
 }
 

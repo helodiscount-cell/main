@@ -24,7 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+    // Configures Clerk with security settings for CSRF protection
+    // SameSite cookies are handled by Clerk automatically
+    // Additional CSRF validation is done in middleware
+    >
       <html lang="en">
         <link rel="icon" href="/logo.jpg" type="image/jpg" />
         {/* Applies Geist Sans font variable and enables antialiasing */}

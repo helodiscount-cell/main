@@ -4,6 +4,10 @@
  */
 
 import { z } from "zod";
+import {
+  isValidObjectId,
+  sanitizeQueryParam,
+} from "@/lib/utils/validation";
 
 // Instagram post schema
 export const InstagramPostSchema = z.object({
@@ -42,7 +46,17 @@ export const InstagramCommentSchema = z.object({
 
 // Comments query parameters
 export const CommentsQuerySchema = z.object({
-  postId: z.string().min(1, "Post ID is required"),
+  postId: z
+    .string()
+    .min(1, "Post ID is required")
+    .max(24, "Post ID must be 24 characters")
+    .refine(
+      (val) => isValidObjectId(val),
+      {
+        message: "Post ID must be a valid MongoDB ObjectId (24 hexadecimal characters)",
+      }
+    )
+    .transform((val) => sanitizeQueryParam(val, 24)),
 });
 
 // Comments success response

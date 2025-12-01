@@ -11,6 +11,8 @@ import {
   validateOAuthConfig,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
+import { createSecureState, validateSecureState } from "./oauth-state";
+import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 export interface OAuthState {
   clerkId: string;
@@ -48,6 +50,7 @@ export interface FacebookPagesResponse {
 
 /**
  * Generates the Instagram OAuth authorization URL
+ * Uses secure state with HMAC signature to prevent CSRF attacks
  */
 export function generateAuthorizationUrl(state: OAuthState): string {
   if (!validateOAuthConfig()) {
@@ -56,8 +59,11 @@ export function generateAuthorizationUrl(state: OAuthState): string {
 
   const { appId, redirectUri } = getOAuthCredentials();
 
-  // Encodes state as base64
-  const encodedState = Buffer.from(JSON.stringify(state)).toString("base64");
+  // Creates secure, signed state with expiration and nonce
+  const encodedState = createSecureState({
+    clerkId: state.clerkId,
+    returnUrl: state.returnUrl,
+  });
 
   const params = new URLSearchParams({
     client_id: appId!,
@@ -71,14 +77,21 @@ export function generateAuthorizationUrl(state: OAuthState): string {
 }
 
 /**
- * Decodes the OAuth state parameter
+ * Validates and decodes the OAuth state parameter
+ * Verifies HMAC signature, expiration, and prevents replay attacks
  */
 export function decodeState(encodedState: string): OAuthState {
   try {
-    const decoded = Buffer.from(encodedState, "base64").toString("utf-8");
-    return JSON.parse(decoded);
+    // Validates secure state (signature, expiration, structure)
+    const validatedState = validateSecureState(encodedState);
+    return validatedState;
   } catch (error) {
-    throw new Error(ERROR_MESSAGES.AUTH.OAUTH_FAILED);
+    // Re-throws with appropriate error message
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.AUTH.OAUTH_FAILED
+    );
   }
 }
 
@@ -99,27 +112,27 @@ export async function exchangeCodeForToken(
 
   const url = `${INSTAGRAM_OAUTH.TOKEN_URL}?${params.toString()}`;
 
-  const response = await fetch(url, {
-    method: "GET",
-  });
+  try {
+    const result = await fetchWithTimeout<OAuthTokenResponse>(url, {
+      method: "GET",
+      timeout: 15000, // 15 seconds for OAuth token exchange
+      retries: 2,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.error_message ||
-        error.error?.message ||
-        ERROR_MESSAGES.AUTH.OAUTH_FAILED
-    );
+    // Facebook OAuth returns access_token but not user_id directly
+    // We have to fetch user ID separately if needed
+    return {
+      access_token: result.data.access_token,
+      user_id: result.data.user_id || 0, // Will be fetched later from Graph API
+    };
+  } catch (error) {
+    // Handles timeout and other errors
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.AUTH.OAUTH_FAILED;
+    throw new Error(errorMessage);
   }
-
-  const data = await response.json();
-
-  // Facebook OAuth returns access_token but not user_id directly
-  // We have to fetch user ID separately if needed
-  return {
-    access_token: data.access_token,
-    user_id: data.user_id || 0, // Will be fetched later from Graph API
-  };
 }
 
 /**
@@ -139,16 +152,21 @@ export async function getLongLivedToken(
 
   const url = `${INSTAGRAM_OAUTH.GRAPH_TOKEN_URL}?${params.toString()}`;
 
-  const response = await fetch(url, {
-    method: "GET",
-  });
+  try {
+    const result = await fetchWithTimeout<LongLivedTokenResponse>(url, {
+      method: "GET",
+      timeout: 15000, // 15 seconds for token exchange
+      retries: 2,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || ERROR_MESSAGES.AUTH.TOKEN_EXPIRED);
+    return result.data;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.AUTH.TOKEN_EXPIRED;
+    throw new Error(errorMessage);
   }
-
-  return await response.json();
 }
 
 /**
@@ -168,22 +186,29 @@ export async function fetchInstagramUserData(
   url.searchParams.set("fields", fields);
   url.searchParams.set("access_token", accessToken);
 
-  const response = await fetch(url.toString());
+  try {
+    const result = await fetchWithTimeout<any>(url.toString(), {
+      method: "GET",
+      timeout: 20000, // 20 seconds for user data fetch
+      retries: 2,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR);
+    const data = result.data;
+
+    // Instagram Business accounts are always BUSINESS type
+    return {
+      id: data.id,
+      username: data.username,
+      account_type: "BUSINESS",
+      media_count: undefined, // Not available in initial fetch
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.API.GENERIC_ERROR;
+    throw new Error(errorMessage);
   }
-
-  const data = await response.json();
-
-  // Instagram Business accounts are always BUSINESS type
-  return {
-    id: data.id,
-    username: data.username,
-    account_type: "BUSINESS",
-    media_count: undefined, // Not available in initial fetch
-  };
 }
 
 /**
@@ -203,16 +228,21 @@ export async function fetchFacebookPages(
   url.searchParams.set("fields", fields);
   url.searchParams.set("access_token", accessToken);
 
-  const response = await fetch(url.toString());
+  try {
+    const result = await fetchWithTimeout<FacebookPagesResponse>(url.toString(), {
+      method: "GET",
+      timeout: 20000, // 20 seconds for pages fetch
+      retries: 2,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.error?.message || ERROR_MESSAGES.AUTH.NO_FACEBOOK_PAGE
-    );
+    return result.data;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.AUTH.NO_FACEBOOK_PAGE;
+    throw new Error(errorMessage);
   }
-
-  return await response.json();
 }
 
 /**

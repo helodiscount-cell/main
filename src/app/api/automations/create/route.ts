@@ -5,9 +5,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
 import { CreateAutomationSchema } from "@/server/schemas/automation.schema";
 import { createAutomation } from "@/server/services/automation.service";
+import {
+  parseRequestBodySafely,
+  REQUEST_SIZE_LIMITS,
+} from "@/lib/utils/request-limits";
+import { findUserByClerkId } from "@/server/repositories/user.repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Gets the user record
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
+    const user = await findUserByClerkId(clerkId);
 
     if (!user) {
       return NextResponse.json(
@@ -33,8 +35,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parses and validates request body
-    const body = await request.json();
+    // Parses and validates request body with size limits
+    const body = await parseRequestBodySafely(
+      request,
+      REQUEST_SIZE_LIMITS.API_DEFAULT
+    );
     const validation = CreateAutomationSchema.safeParse(body);
 
     if (!validation.success) {
@@ -69,4 +74,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

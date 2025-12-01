@@ -38,26 +38,26 @@ export async function subscribeToWebhooks(
     // Subscribes to Instagram webhooks via the Page
     const url = buildGraphApiUrl(`${pageId}/subscribed_apps`);
 
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        subscribed_fields: ["comments", "messages", "messaging_postbacks"].join(
-          ","
-        ),
-        access_token: accessToken,
-      }),
-    });
+    try {
+      const result = await fetchWithTimeout<any>(url.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subscribed_fields: ["comments", "messages", "messaging_postbacks"].join(
+            ","
+          ),
+          access_token: accessToken,
+        }),
+        timeout: 20000, // 20 seconds for webhook subscription
+        retries: 2,
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
+      return result.data.success === true;
+    } catch (error) {
       return false;
     }
-
-    const data = await response.json();
-    return data.success === true;
   } catch (error) {
     return false;
   }
@@ -74,14 +74,11 @@ export async function unsubscribeFromWebhooks(
     const url = buildGraphApiUrl(`${pageId}/subscribed_apps`);
     url.searchParams.set("access_token", accessToken);
 
-    const response = await fetch(url.toString(), {
+    await fetchWithTimeout(url.toString(), {
       method: "DELETE",
+      timeout: 15000, // 15 seconds for webhook unsubscription
+      retries: 1,
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      return false;
-    }
 
     return true;
   } catch (error) {
@@ -119,13 +116,14 @@ export async function getWebhookSubscriptionStatus(
       process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
       `/${pageId}/subscribed_apps?access_token=${accessToken}`;
 
-    const response = await fetch(statusUrl);
+    try {
+      const result = await fetchWithTimeout<any>(statusUrl, {
+        method: "GET",
+        timeout: 15000, // 15 seconds for webhook status check
+        retries: 1,
+      });
 
-    if (!response.ok) {
-      return { subscribed: false, fields: [] };
-    }
-
-    const data = await response.json();
+      const data = result.data;
 
     if (data.data && data.data.length > 0) {
       // Checks if our app is subscribed

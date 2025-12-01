@@ -3,13 +3,25 @@
  * Contains business logic for automation management
  */
 
-import { prisma } from "@/lib/db";
 import { ERROR_MESSAGES } from "@/config/instagram.config";
 import type {
   CreateAutomationInput,
   UpdateAutomationInput,
   AutomationListQuery,
 } from "@insta-auto/common-types";
+import {
+  findUserByIdWithInstaAccount,
+} from "@/server/repositories/user.repository";
+import {
+  createAutomation as createAutomationRecord,
+  findAutomationById,
+  findAutomationByIdAndUserId,
+  findAutomationByIdAndUserIdForUpdate,
+  findAutomations,
+  countAutomations,
+  updateAutomation as updateAutomationRecord,
+  softDeleteAutomation,
+} from "@/server/repositories/automation.repository";
 
 /**
  * Creates a new automation for a user
@@ -19,10 +31,7 @@ export async function createAutomation(
   input: CreateAutomationInput
 ) {
   // Gets the user record with Instagram account
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { instaAccount: true },
-  });
+  const user = await findUserByIdWithInstaAccount(userId);
 
   if (!user) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
@@ -33,18 +42,16 @@ export async function createAutomation(
   }
 
   // Creates the automation
-  const automation = await prisma.automation.create({
-    data: {
-      userId: user.id,
-      postId: input.postId,
-      postCaption: input.postCaption,
-      triggers: input.triggers,
-      matchType: input.matchType,
-      actionType: input.actionType,
-      replyMessage: input.replyMessage,
-      useVariables: input.useVariables,
-      status: "ACTIVE",
-    },
+  const automation = await createAutomationRecord({
+    userId: user.id,
+    postId: input.postId,
+    postCaption: input.postCaption,
+    triggers: input.triggers,
+    matchType: input.matchType,
+    actionType: input.actionType,
+    replyMessage: input.replyMessage,
+    useVariables: input.useVariables,
+    status: "ACTIVE",
   });
 
   return {
@@ -59,32 +66,16 @@ export async function createAutomation(
 
 /**
  * Gets a specific automation by ID
+ * Uses authorized query to prevent information disclosure
  */
 export async function getAutomation(userId: string, automationId: string) {
-  const automation = await prisma.automation.findUnique({
-    where: { id: automationId },
-    include: {
-      executions: {
-        orderBy: {
-          executedAt: "desc",
-        },
-        take: 10,
-      },
-      _count: {
-        select: {
-          executions: true,
-        },
-      },
-    },
-  });
+  // Checks ownership in the database query to prevent information disclosure
+  // Returns null if automation doesn't exist OR user doesn't own it
+  const automation = await findAutomationByIdAndUserId(automationId, userId);
 
   if (!automation) {
-    throw new Error(ERROR_MESSAGES.VALIDATION.INVALID_POST_ID);
-  }
-
-  // Verifies ownership
-  if (automation.userId !== userId) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
+    // Generic error message that doesn't reveal if resource exists
+    throw new Error("Automation not found or access denied");
   }
 
   return {
@@ -106,83 +97,90 @@ export async function getAutomation(userId: string, automationId: string) {
 }
 
 /**
- * Lists all automations for a user with optional filters
+ * Lists all automations for a user with optional filters and pagination
  */
 export async function listAutomations(
   userId: string,
   filters?: AutomationListQuery
 ) {
   // Builds filter conditions
-  const where: any = {
+  const repositoryFilters: any = {
     userId: userId,
   };
 
   if (filters?.status && ["ACTIVE", "PAUSED", "DELETED"].includes(filters.status)) {
-    where.status = filters.status;
+    repositoryFilters.status = filters.status;
   }
 
   if (filters?.postId) {
-    where.postId = filters.postId;
+    repositoryFilters.postId = filters.postId;
   }
 
-  // Fetches automations
-  const automations = await prisma.automation.findMany({
-    where,
-    include: {
-      _count: {
-        select: {
-          executions: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  // Pagination parameters
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 20;
+  const skip = (page - 1) * limit;
 
-  return automations.map((automation) => ({
-    id: automation.id,
-    postId: automation.postId,
-    postCaption: automation.postCaption,
-    triggers: automation.triggers,
-    matchType: automation.matchType,
-    actionType: automation.actionType,
-    replyMessage: automation.replyMessage,
-    status: automation.status,
-    timesTriggered: automation.timesTriggered,
-    lastTriggeredAt: automation.lastTriggeredAt,
-    createdAt: automation.createdAt,
-    updatedAt: automation.updatedAt,
-    executionsCount: automation._count.executions,
-  }));
+  repositoryFilters.skip = skip;
+  repositoryFilters.take = limit;
+
+  // Fetches automations with pagination
+  const [automations, total] = await Promise.all([
+    findAutomations(repositoryFilters),
+    countAutomations(repositoryFilters),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: automations.map((automation) => ({
+      id: automation.id,
+      postId: automation.postId,
+      postCaption: automation.postCaption,
+      triggers: automation.triggers,
+      matchType: automation.matchType,
+      actionType: automation.actionType,
+      replyMessage: automation.replyMessage,
+      status: automation.status,
+      timesTriggered: automation.timesTriggered,
+      lastTriggeredAt: automation.lastTriggeredAt,
+      createdAt: automation.createdAt,
+      updatedAt: automation.updatedAt,
+      executionsCount: automation._count.executions,
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasMore: page < totalPages,
+    },
+  };
 }
 
 /**
  * Updates an existing automation
+ * Uses authorized query to prevent information disclosure
  */
 export async function updateAutomation(
   userId: string,
   automationId: string,
   input: UpdateAutomationInput
 ) {
-  // Verifies automation exists and user owns it
-  const existingAutomation = await prisma.automation.findUnique({
-    where: { id: automationId },
-  });
+  // Checks ownership in the database query to prevent information disclosure
+  // Returns null if automation doesn't exist OR user doesn't own it
+  const existingAutomation = await findAutomationByIdAndUserIdForUpdate(
+    automationId,
+    userId
+  );
 
   if (!existingAutomation) {
-    throw new Error("Automation not found");
-  }
-
-  if (existingAutomation.userId !== userId) {
-    throw new Error("Unauthorized");
+    // Generic error message that doesn't reveal if resource exists
+    throw new Error("Automation not found or access denied");
   }
 
   // Updates the automation
-  const updatedAutomation = await prisma.automation.update({
-    where: { id: automationId },
-    data: input,
-  });
+  const updatedAutomation = await updateAutomationRecord(automationId, input);
 
   return {
     id: updatedAutomation.id,
@@ -198,26 +196,23 @@ export async function updateAutomation(
 
 /**
  * Deletes an automation (soft delete)
+ * Uses authorized query to prevent information disclosure
  */
 export async function deleteAutomation(userId: string, automationId: string) {
-  // Verifies automation exists and user owns it
-  const existingAutomation = await prisma.automation.findUnique({
-    where: { id: automationId },
-  });
+  // Checks ownership in the database query to prevent information disclosure
+  // Returns null if automation doesn't exist OR user doesn't own it
+  const existingAutomation = await findAutomationByIdAndUserIdForUpdate(
+    automationId,
+    userId
+  );
 
   if (!existingAutomation) {
-    throw new Error(ERROR_MESSAGES.VALIDATION.INVALID_POST_ID);
-  }
-
-  if (existingAutomation.userId !== userId) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
+    // Generic error message that doesn't reveal if resource exists
+    throw new Error("Automation not found or access denied");
   }
 
   // Soft delete: mark as DELETED instead of actually deleting
-  await prisma.automation.update({
-    where: { id: automationId },
-    data: { status: "DELETED" },
-  });
+  await softDeleteAutomation(automationId);
 
   return {
     message: "Automation deleted successfully",

@@ -8,6 +8,7 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
+import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 export interface ReplyToCommentOptions {
   commentId: string;
@@ -32,7 +33,7 @@ export async function replyToComment(
       GRAPH_API.ENDPOINTS.REPLY_COMMENT(options.commentId)
     );
 
-    const response = await fetch(url.toString(), {
+    const result = await fetchWithTimeout<any>(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -41,27 +42,21 @@ export async function replyToComment(
         message: options.message,
         access_token: options.accessToken,
       }),
+      timeout: 20000, // 20 seconds for comment reply
+      retries: 2,
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-
-      return {
-        success: false,
-        error: error.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR,
-      };
-    }
-
-    const data = await response.json();
 
     return {
       success: true,
-      replyId: data.id,
+      replyId: result.data.id,
     };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
+      error:
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }
@@ -118,23 +113,20 @@ export async function deleteComment(
       process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
       `/${commentId}?access_token=${accessToken}`;
 
-    const response = await fetch(url, {
+    await fetchWithTimeout(url, {
       method: "DELETE",
+      timeout: 15000, // 15 seconds for delete
+      retries: 1,
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      return {
-        success: false,
-        error: error.error?.message || "Failed to delete comment",
-      };
-    }
 
     return { success: true };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
+      error:
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }
@@ -150,7 +142,7 @@ export async function hideComment(
   try {
     const url = process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL + `/${commentId}`;
 
-    const response = await fetch(url, {
+    await fetchWithTimeout(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -159,21 +151,18 @@ export async function hideComment(
         hide,
         access_token: accessToken,
       }),
+      timeout: 15000, // 15 seconds for hide/unhide
+      retries: 1,
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      return {
-        success: false,
-        error: error.error?.message || "Failed to hide comment",
-      };
-    }
 
     return { success: true };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
+      error:
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }

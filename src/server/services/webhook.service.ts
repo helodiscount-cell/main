@@ -10,6 +10,7 @@ import {
 } from "@/lib/instagram/webhook-validator";
 import { processWebhookEvent as processEvent } from "@/lib/instagram/webhook-handler";
 import type { WebhookPayload } from "@insta-auto/common-types";
+import { logger } from "@/lib/utils/logger";
 
 /**
  * Verifies webhook registration from Instagram
@@ -64,9 +65,30 @@ export async function processWebhookEvent(payload: string, signature: string) {
 
   // Processes the webhook event asynchronously
   // Don't await - respond quickly to Instagram
-  processEvent(parsedPayload).catch(() => {
-    // Silently fail - already acknowledged to Instagram
+  processEvent(parsedPayload).catch((error) => {
+    // Logs error for monitoring - already acknowledged to Instagram
+    logger.logWebhook(
+      parsedPayload.object || "unknown",
+      "instagram",
+      false,
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        payloadType: parsedPayload.object,
+        entryCount: Array.isArray(parsedPayload.entry) ? parsedPayload.entry.length : 0,
+      }
+    );
   });
+
+  logger.logWebhook(
+    parsedPayload.object || "unknown",
+    "instagram",
+    true,
+    undefined,
+    {
+      payloadType: parsedPayload.object,
+      entryCount: Array.isArray(parsedPayload.entry) ? parsedPayload.entry.length : 0,
+    }
+  );
 
   return { success: true as const };
 }

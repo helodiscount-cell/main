@@ -3,7 +3,6 @@
  * Executes automation actions (DM or comment reply)
  */
 
-import { prisma } from "@/lib/db";
 import { CommentData, replaceVariables } from "./matcher";
 import {
   sendDirectMessageWithRetry,
@@ -15,6 +14,13 @@ import {
   createMessagingRateLimitKey,
   createCommentsRateLimitKey,
 } from "@/lib/instagram/rate-limiter";
+import { logger } from "@/lib/utils/logger";
+import {
+  findAutomationById,
+} from "@/server/repositories/automation.repository";
+import {
+  findInstaAccountByAutomationId,
+} from "@/server/repositories/insta-account.repository";
 
 export interface ExecutionResult {
   success: boolean;
@@ -32,11 +38,10 @@ export async function executeAutomation(
 ): Promise<ExecutionResult> {
   try {
     // Gets the automation
-    const automation = await prisma.automation.findUnique({
-      where: { id: automationId },
-    });
+    const automation = await findAutomationById(automationId);
 
     if (!automation) {
+      logger.warn("Automation not found", { automationId });
       return {
         success: false,
         error: "Automation not found",
@@ -54,17 +59,7 @@ export async function executeAutomation(
     let errorMessage: string | null = null;
 
     // Gets Instagram user ID for rate limiting
-    const instaAccount = await prisma.instaAccount.findFirst({
-      where: {
-        user: {
-          automations: {
-            some: {
-              id: automationId,
-            },
-          },
-        },
-      },
-    });
+    const instaAccount = await findInstaAccountByAutomationId(automationId);
 
     if (!instaAccount) {
       return {
@@ -133,35 +128,79 @@ export async function executeAutomation(
         actionError instanceof Error
           ? actionError.message
           : "Unknown error executing action";
+
+      logger.error(
+        "Failed to execute automation action",
+        actionError instanceof Error ? actionError : new Error(String(actionError)),
+        {
+          automationId,
+          actionType: automation.actionType,
+          commentId: comment.id,
+        }
+      );
     }
 
-    // Records the execution
-    const execution = await prisma.automationExecution.create({
-      data: {
-        automationId,
-        commentId: comment.id,
-        commentText: comment.text,
-        commentUsername: comment.username,
-        commentUserId: comment.userId,
-        actionType: automation.actionType,
-        sentMessage: finalMessage,
-        status: executionStatus,
-        errorMessage,
-        instagramMessageId,
-        executedAt: new Date(),
-      },
-    });
+    // Records the execution and updates stats in a transaction
+    // Ensures execution record and stats are updated atomically
+    const { executeTransaction } = await import(
+      "@/server/repositories/repository-utils"
+    );
+    const { prisma } = await import("@/lib/db");
 
-    // Updates automation stats
-    await prisma.automation.update({
-      where: { id: automationId },
-      data: {
-        timesTriggered: {
-          increment: 1,
-        },
-        lastTriggeredAt: new Date(),
+    const execution = await executeTransaction(
+      async (tx) => {
+        // Creates execution record
+        const execution = await tx.automationExecution.create({
+          data: {
+            automationId,
+            commentId: comment.id,
+            commentText: comment.text,
+            commentUsername: comment.username,
+            commentUserId: comment.userId,
+            actionType: automation.actionType,
+            sentMessage: finalMessage,
+            status: executionStatus,
+            errorMessage,
+            instagramMessageId,
+            executedAt: new Date(),
+          },
+        });
+
+        // Updates automation stats
+        await tx.automation.update({
+          where: { id: automationId },
+          data: {
+            timesTriggered: {
+              increment: 1,
+            },
+            lastTriggeredAt: new Date(),
+          },
+        });
+
+        return execution;
       },
-    });
+      {
+        operation: "executeAutomation",
+        models: ["AutomationExecution", "Automation"],
+      }
+    );
+
+    // Logs execution result
+    if (executionStatus === "SUCCESS") {
+      logger.info("Automation executed successfully", {
+        automationId,
+        executionId: execution.id,
+        actionType: automation.actionType,
+        commentId: comment.id,
+      });
+    } else {
+      logger.warn("Automation execution failed", {
+        automationId,
+        executionId: execution.id,
+        actionType: automation.actionType,
+        error: errorMessage,
+      });
+    }
 
     return {
       success: executionStatus === "SUCCESS",
@@ -169,6 +208,14 @@ export async function executeAutomation(
       error: errorMessage || undefined,
     };
   } catch (error) {
+    logger.error(
+      "Error in executeAutomation",
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        automationId,
+        commentId: comment.id,
+      }
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

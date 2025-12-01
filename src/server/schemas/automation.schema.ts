@@ -4,33 +4,114 @@
  */
 
 import { z } from "zod";
+import {
+  sanitizeReplyMessage,
+  sanitizeTriggers,
+  sanitizePostCaption,
+  sanitizeTrigger,
+  MAX_LENGTHS,
+} from "@/lib/utils/sanitize";
+import {
+  isValidObjectId,
+  sanitizeQueryParam,
+  validateAndSanitizeObjectId,
+} from "@/lib/utils/validation";
 
 // Input schema for creating a new automation
 export const CreateAutomationSchema = z.object({
-  postId: z.string().min(1, "Post ID is required"),
-  postCaption: z.string().optional(),
+  postId: z
+    .string()
+    .min(1, "Post ID is required")
+    .max(24, "Post ID must be 24 characters")
+    .refine(
+      (val) => isValidObjectId(val),
+      {
+        message: "Post ID must be a valid MongoDB ObjectId (24 hexadecimal characters)",
+      }
+    )
+    .transform((val) => sanitizeQueryParam(val, 24)),
+  postCaption: z
+    .string()
+    .max(MAX_LENGTHS.POST_CAPTION, `Post caption must be no more than ${MAX_LENGTHS.POST_CAPTION} characters`)
+    .optional()
+    .transform((val) => (val ? sanitizePostCaption(val) : null)),
   triggers: z
-    .array(z.string().min(1))
-    .min(1, "At least one trigger is required"),
+    .array(
+      z
+        .string()
+        .min(1, "Trigger cannot be empty")
+        .max(MAX_LENGTHS.TRIGGER, `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`)
+        .transform((val) => sanitizeTrigger(val))
+    )
+    .min(1, "At least one trigger is required")
+    .max(MAX_LENGTHS.TRIGGERS_ARRAY, `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`)
+    .transform((val) => sanitizeTriggers(val)),
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]).default("CONTAINS"),
   actionType: z.enum(["DM", "COMMENT_REPLY"]),
-  replyMessage: z.string().min(1, "Reply message is required"),
+  replyMessage: z
+    .string()
+    .min(1, "Reply message is required")
+    .max(MAX_LENGTHS.REPLY_MESSAGE, `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`)
+    .transform((val) => sanitizeReplyMessage(val)),
   useVariables: z.boolean().default(true),
 });
 
 // Input schema for updating an existing automation
 export const UpdateAutomationSchema = z.object({
-  triggers: z.array(z.string().min(1)).optional(),
+  triggers: z
+    .array(
+      z
+        .string()
+        .min(1, "Trigger cannot be empty")
+        .max(MAX_LENGTHS.TRIGGER, `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`)
+        .transform((val) => sanitizeTrigger(val))
+    )
+    .max(MAX_LENGTHS.TRIGGERS_ARRAY, `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`)
+    .transform((val) => sanitizeTriggers(val))
+    .optional(),
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]).optional(),
   actionType: z.enum(["DM", "COMMENT_REPLY"]).optional(),
-  replyMessage: z.string().min(1).optional(),
+  replyMessage: z
+    .string()
+    .min(1, "Reply message cannot be empty")
+    .max(MAX_LENGTHS.REPLY_MESSAGE, `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`)
+    .transform((val) => sanitizeReplyMessage(val))
+    .optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 
 // Query parameters for listing automations
 export const AutomationListQuerySchema = z.object({
-  status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
-  postId: z.string().optional(),
+  status: z
+    .enum(["ACTIVE", "PAUSED", "DELETED"])
+    .optional()
+    .transform((val) => (val ? sanitizeQueryParam(val, 20) : undefined)),
+  postId: z
+    .string()
+    .optional()
+    .transform((val) => (val ? sanitizeQueryParam(val, 24) : undefined))
+    .refine(
+      (val) => !val || isValidObjectId(val),
+      {
+        message: "postId must be a valid MongoDB ObjectId (24 hexadecimal characters)",
+      }
+    ),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const page = val ? parseInt(val, 10) : 1;
+      return Math.max(1, isNaN(page) ? 1 : page);
+    }),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      const limit = val ? parseInt(val, 10) : 20;
+      const parsed = isNaN(limit) ? 20 : limit;
+      // Enforces maximum page size of 100
+      return Math.min(100, Math.max(1, parsed));
+    }),
 });
 
 // Single automation response schema

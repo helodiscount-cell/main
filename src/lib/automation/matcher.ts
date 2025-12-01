@@ -3,6 +3,13 @@
  * Matches comments against automation triggers
  */
 
+import {
+  sanitizeCommentText,
+  sanitizeUsername,
+  sanitizeText,
+} from "@/lib/utils/sanitize";
+import { safeRegexMatch } from "@/lib/utils/safe-regex";
+
 export interface CommentData {
   id: string;
   text: string;
@@ -28,11 +35,12 @@ export interface MatchResult {
 
 /**
  * Checks if a comment matches an automation's triggers
+ * Uses safe regex execution to prevent ReDoS attacks
  */
-export function matchComment(
+export async function matchComment(
   comment: CommentData,
   automation: AutomationRule
-): MatchResult {
+): Promise<MatchResult> {
   const commentText = comment.text.toLowerCase().trim();
 
   for (const trigger of automation.triggers) {
@@ -49,12 +57,8 @@ export function matchComment(
         break;
 
       case "REGEX":
-        try {
-          const regex = new RegExp(trigger, "i"); // Case insensitive
-          isMatch = regex.test(comment.text);
-        } catch (error) {
-          isMatch = false;
-        }
+        // Uses safe regex execution with timeout and validation
+        isMatch = await safeRegexMatch(trigger, comment.text, "i");
         break;
 
       default:
@@ -78,14 +82,17 @@ export function matchComment(
 
 /**
  * Finds all automations that match a comment
+ * Uses safe regex execution to prevent ReDoS attacks
  */
-export function findMatchingAutomations(
+export async function findMatchingAutomations(
   comment: CommentData,
   automations: AutomationRule[]
-): MatchResult[] {
-  return automations
-    .map((automation) => matchComment(comment, automation))
-    .filter((result) => result.matched);
+): Promise<MatchResult[]> {
+  const matchPromises = automations.map((automation) =>
+    matchComment(comment, automation)
+  );
+  const results = await Promise.all(matchPromises);
+  return results.filter((result) => result.matched);
 }
 
 /**
@@ -93,45 +100,49 @@ export function findMatchingAutomations(
  */
 export async function isCommentProcessed(
   commentId: string,
-  automationId: string,
-  prisma: any
+  automationId: string
 ): Promise<boolean> {
-  const existing = await prisma.automationExecution.findFirst({
-    where: {
-      commentId,
-      automationId,
-    },
-  });
-
-  return !!existing;
+  const { isCommentProcessed: checkProcessed } = await import(
+    "@/server/repositories/automation-execution.repository"
+  );
+  return checkProcessed(commentId, automationId);
 }
 
 /**
  * Replaces variables in the reply message
+ * Sanitizes all user-generated content before insertion to prevent XSS
  */
 export function replaceVariables(
   message: string,
   comment: CommentData
 ): string {
+  // Sanitizes comment data before variable replacement
+  const sanitizedUsername = sanitizeUsername(comment.username);
+  const sanitizedCommentText = sanitizeCommentText(comment.text);
+  const sanitizedCommentId = sanitizeText(comment.id, 100); // Comment IDs are typically short
+
+  // Replaces variables with sanitized values
   return message
-    .replace(/{username}/g, comment.username)
-    .replace(/{comment_text}/g, comment.text)
-    .replace(/{comment_id}/g, comment.id);
+    .replace(/{username}/g, sanitizedUsername)
+    .replace(/{comment_text}/g, sanitizedCommentText)
+    .replace(/{comment_id}/g, sanitizedCommentId);
 }
 
 /**
- * Validates comment data
+ * Validates and sanitizes comment data from Instagram webhook
+ * Ensures all external input is properly sanitized before use
  */
 export function validateCommentData(data: any): CommentData | null {
   if (!data.id || !data.text) {
     return null;
   }
 
+  // Sanitizes all comment data from external source (Instagram API)
   return {
-    id: data.id,
-    text: data.text,
-    username: data.username || data.from?.username || "unknown",
-    userId: data.from?.id || data.user?.id || "",
+    id: sanitizeText(String(data.id), 100), // Comment IDs are typically short
+    text: sanitizeCommentText(data.text),
+    username: sanitizeUsername(data.username || data.from?.username || "unknown"),
+    userId: sanitizeText(String(data.from?.id || data.user?.id || ""), 100),
     timestamp: data.timestamp || new Date().toISOString(),
   };
 }

@@ -5,13 +5,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
 import { UpdateAutomationSchema } from "@/server/schemas/automation.schema";
 import {
   getAutomation,
   updateAutomation,
   deleteAutomation,
 } from "@/server/services/automation.service";
+import { findUserByClerkId } from "@/server/repositories/user.repository";
+import { isValidObjectId, sanitizeQueryParam } from "@/lib/utils/validation";
 
 /**
  * GET - Retrieves a specific automation
@@ -30,9 +31,7 @@ export async function GET(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
+    const user = await findUserByClerkId(clerkId);
 
     if (!user) {
       return NextResponse.json(
@@ -42,7 +41,16 @@ export async function GET(
     }
 
     const resolvedParams = await params;
-    const automationId = resolvedParams.id;
+    let automationId = resolvedParams.id;
+
+    // Validates and sanitizes automation ID
+    automationId = sanitizeQueryParam(automationId, 24);
+    if (!isValidObjectId(automationId)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid automation ID format" },
+        { status: 400 }
+      );
+    }
 
     // Calls service layer
     const automation = await getAutomation(user.id, automationId);
@@ -55,12 +63,13 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
+    // Uses generic error message to prevent information disclosure
+    // Returns 404 for both "not found" and "unauthorized" cases
     const statusCode =
-      error instanceof Error && error.message === "Automation not found"
+      error instanceof Error &&
+      error.message === "Automation not found or access denied"
         ? 404
-        : error instanceof Error && error.message === "Unauthorized"
-          ? 403
-          : 500;
+        : 500;
     return NextResponse.json(
       {
         success: false,
@@ -91,9 +100,7 @@ export async function PATCH(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
+    const user = await findUserByClerkId(clerkId);
 
     if (!user) {
       return NextResponse.json(
@@ -133,12 +140,13 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error) {
+    // Uses generic error message to prevent information disclosure
+    // Returns 404 for both "not found" and "unauthorized" cases
     const statusCode =
-      error instanceof Error && error.message === "Automation not found"
+      error instanceof Error &&
+      error.message === "Automation not found or access denied"
         ? 404
-        : error instanceof Error && error.message === "Unauthorized"
-          ? 403
-          : 500;
+        : 500;
     return NextResponse.json(
       {
         success: false,
@@ -169,9 +177,7 @@ export async function DELETE(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
+    const user = await findUserByClerkId(clerkId);
 
     if (!user) {
       return NextResponse.json(
@@ -194,12 +200,13 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
+    // Uses generic error message to prevent information disclosure
+    // Returns 404 for both "not found" and "unauthorized" cases
     const statusCode =
-      error instanceof Error && error.message === "Automation not found"
+      error instanceof Error &&
+      error.message === "Automation not found or access denied"
         ? 404
-        : error instanceof Error && error.message === "Unauthorized"
-          ? 403
-          : 500;
+        : 500;
     return NextResponse.json(
       {
         success: false,

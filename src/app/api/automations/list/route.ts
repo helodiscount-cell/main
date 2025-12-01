@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
 import { AutomationListQuerySchema } from "@/server/schemas/automation.schema";
 import { listAutomations } from "@/server/services/automation.service";
+import { findUserByClerkId } from "@/server/repositories/user.repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,9 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Gets the user record
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-    });
+    const user = await findUserByClerkId(clerkId);
 
     if (!user) {
       return NextResponse.json(
@@ -38,17 +36,29 @@ export async function GET(request: NextRequest) {
     const queryValidation = AutomationListQuerySchema.safeParse({
       status: searchParams.get("status"),
       postId: searchParams.get("postId"),
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
     });
 
-    const filters = queryValidation.success ? queryValidation.data : undefined;
+    if (!queryValidation.success) {
+      const errorMessage =
+        queryValidation.error.issues[0]?.message || "Invalid query parameters";
+      return NextResponse.json(
+        { success: false, error: errorMessage },
+        { status: 400 }
+      );
+    }
+
+    const filters = queryValidation.data;
 
     // Calls service layer
-    const automations = await listAutomations(user.id, filters);
+    const result = await listAutomations(user.id, filters);
 
     return NextResponse.json(
       {
         success: true,
-        automations,
+        automations: result.data,
+        pagination: result.pagination,
       },
       { status: 200 }
     );

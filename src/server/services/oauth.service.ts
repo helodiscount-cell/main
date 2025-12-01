@@ -3,7 +3,6 @@
  * Contains business logic for Instagram OAuth flow
  */
 
-import { prisma } from "@/lib/db";
 import {
   generateAuthorizationUrl,
   decodeState,
@@ -24,6 +23,15 @@ import {
   markWebhooksEnabled,
 } from "@/lib/instagram/webhook-registration";
 import { refreshAccessToken as refreshToken } from "@/lib/instagram/token-manager";
+import {
+  findUserByClerkId,
+  createUser,
+  findUserWithInstaAccount,
+} from "@/server/repositories/user.repository";
+import {
+  upsertInstaAccount,
+  deleteInstaAccount,
+} from "@/server/repositories/insta-account.repository";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -88,59 +96,74 @@ export async function handleOAuthCallback(code: string, state: string) {
     );
   }
 
-  // Find or create user in database
-  let user = await prisma.user.findUnique({
-    where: { clerkId },
-  });
-
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        clerkId,
-        fullName: "",
-        email: "",
-      },
-    });
-  }
-
   // Calculate token expiration
   const tokenExpiresAt = calculateTokenExpiration(longLivedToken.expires_in);
-
-  // Upsert Instagram account (using page access token)
   const grantedScopes = INSTAGRAM_OAUTH.SCOPES.split(",");
 
-  const instaAccount = await prisma.instaAccount.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      instagramUserId: instagramUser.id,
-      username: instagramUser.username,
-      accountType: instagramUser.account_type,
-      accessToken: pageAccessToken,
-      refreshToken: null,
-      tokenExpiresAt,
-      grantedScopes,
-      facebookPageId,
-      facebookPageName,
-      connectedAt: new Date(),
-      lastSyncedAt: new Date(),
-      webhooksEnabled: false,
-      isActive: true,
+  // Wraps user creation and Instagram account linking in a transaction
+  // Ensures atomicity: either both succeed or both fail
+  const { executeTransaction } = await import(
+    "@/server/repositories/repository-utils"
+  );
+  const { prisma } = await import("@/lib/db");
+
+  const { user, instaAccount } = await executeTransaction(
+    async (tx) => {
+      // Finds or creates user
+      let user = await tx.user.findUnique({
+        where: { clerkId },
+      });
+
+      if (!user) {
+        user = await tx.user.create({
+          data: {
+            clerkId,
+            fullName: "",
+            email: "",
+          },
+        });
+      }
+
+      // Upserts Instagram account
+      const instaAccount = await tx.instaAccount.upsert({
+        where: { userId: user.id },
+        update: {
+          instagramUserId: instagramUser.id,
+          username: instagramUser.username,
+          accountType: instagramUser.account_type,
+          accessToken: pageAccessToken,
+          refreshToken: null,
+          tokenExpiresAt,
+          grantedScopes,
+          facebookPageId,
+          facebookPageName,
+          lastSyncedAt: new Date(),
+          webhooksEnabled: false,
+          isActive: true,
+        },
+        create: {
+          userId: user.id,
+          instagramUserId: instagramUser.id,
+          username: instagramUser.username,
+          accountType: instagramUser.account_type,
+          accessToken: pageAccessToken,
+          refreshToken: null,
+          tokenExpiresAt,
+          grantedScopes,
+          facebookPageId,
+          facebookPageName,
+          webhooksEnabled: false,
+          isActive: true,
+        },
+      });
+
+      return { user, instaAccount };
     },
-    update: {
-      instagramUserId: instagramUser.id,
-      username: instagramUser.username,
-      accountType: instagramUser.account_type,
-      accessToken: pageAccessToken,
-      tokenExpiresAt,
-      grantedScopes,
-      facebookPageId,
-      facebookPageName,
-      connectedAt: new Date(),
-      lastSyncedAt: new Date(),
-      isActive: true,
-    },
-  });
+    {
+      operation: "handleOAuthCallback",
+      models: ["User", "InstaAccount"],
+    }
+  );
 
   // Register webhooks
   try {
@@ -168,10 +191,7 @@ export async function handleOAuthCallback(code: string, state: string) {
  */
 export async function refreshAccessToken(clerkId: string) {
   // Finds user with Instagram account
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    include: { instaAccount: true },
-  });
+  const user = await findUserWithInstaAccount(clerkId);
 
   if (!user || !user.instaAccount) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
@@ -191,19 +211,14 @@ export async function refreshAccessToken(clerkId: string) {
  */
 export async function disconnectAccount(clerkId: string) {
   // Finds user with Instagram account
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    include: { instaAccount: true },
-  });
+  const user = await findUserWithInstaAccount(clerkId);
 
   if (!user || !user.instaAccount) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
   }
 
   // Deletes the Instagram account (cascade will delete automations)
-  await prisma.instaAccount.delete({
-    where: { id: user.instaAccount.id },
-  });
+  await deleteInstaAccount(user.instaAccount.id);
 
   return {
     message: "Instagram account disconnected successfully",

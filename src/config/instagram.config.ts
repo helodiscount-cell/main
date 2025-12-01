@@ -71,6 +71,8 @@ export const ERROR_MESSAGES = {
     NO_ACCESS_TOKEN:
       "Instagram integration is not configured. Please contact support.",
     OAUTH_FAILED: "Failed to authorize Instagram account. Please try again.",
+    OAUTH_STATE_INVALID:
+      "OAuth authorization request is invalid or expired. Please try again.",
     TOKEN_EXPIRED: "Your Instagram connection has expired. Please reconnect.",
     INVALID_ACCOUNT_TYPE:
       "Please use an Instagram Business or Creator account.",
@@ -152,6 +154,19 @@ export function getOAuthCredentials(): {
       process.env.APP_SECRET || process.env.INSTAGRAM_APP_SECRET || null,
     redirectUri: process.env.INSTAGRAM_REDIRECT_URI || null,
   };
+}
+
+/**
+ * Gets OAuth state secret for signing state parameters
+ * Uses dedicated OAUTH_STATE_SECRET if available, otherwise falls back to app secret
+ */
+export function getOAuthStateSecret(): string | null {
+  return (
+    process.env.OAUTH_STATE_SECRET ||
+    process.env.INSTAGRAM_APP_SECRET ||
+    process.env.APP_SECRET ||
+    null
+  );
 }
 
 /**

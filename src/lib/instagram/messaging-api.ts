@@ -8,6 +8,7 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
+import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 export interface SendMessageOptions {
   recipientId: string;
@@ -55,22 +56,28 @@ export async function sendDirectMessage(
       requestBody.tag = options.tag;
     }
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      const result = await fetchWithTimeout<any>(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+        timeout: 20000, // 20 seconds for message sending
+        retries: 2,
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
+      return {
+        success: true,
+        messageId: result.data.message_id,
+      };
+    } catch (error) {
+      // Handles timeout and other errors
+      const errorMessage =
+        error instanceof Error ? error.message : ERROR_MESSAGES.API.GENERIC_ERROR;
 
-      // Checks for 24-hour window error
-      if (
-        error.error?.code === 10 ||
-        error.error?.message?.includes("window")
-      ) {
+      // Checks for 24-hour window error in error message
+      if (errorMessage.includes("window") || errorMessage.includes("24-hour")) {
         return {
           success: false,
           error: ERROR_MESSAGES.MESSAGING.WINDOW_EXPIRED,
@@ -79,16 +86,9 @@ export async function sendDirectMessage(
 
       return {
         success: false,
-        error: error.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR,
+        error: errorMessage,
       };
     }
-
-    const data = await response.json();
-
-    return {
-      success: true,
-      messageId: data.message_id,
-    };
   } catch (error) {
     return {
       success: false,
@@ -110,13 +110,13 @@ export async function checkMessagingWindow(
       process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
       `/${recipientId}?fields=last_message_time&access_token=${accessToken}`;
 
-    const response = await fetch(url);
+    const result = await fetchWithTimeout<any>(url, {
+      method: "GET",
+      timeout: 10000, // 10 seconds for window check
+      retries: 1,
+    });
 
-    if (!response.ok) {
-      return false;
-    }
-
-    const data = await response.json();
+    const data = result.data;
 
     if (!data.last_message_time) {
       return false;

@@ -3,8 +3,8 @@
  * Contains business logic for Instagram-related operations
  */
 
-import { prisma } from "@/lib/db";
 import { getValidAccessToken } from "@/lib/instagram/token-manager";
+import { findUserWithInstaAccount } from "@/server/repositories/user.repository";
 import {
   GRAPH_API,
   GRAPH_API_FIELDS,
@@ -13,16 +13,14 @@ import {
   buildGraphApiUrl,
 } from "@/config/instagram.config";
 import type { InstagramPost, InstagramComment } from "@insta-auto/common-types";
+import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 /**
  * Gets Instagram posts for a user
  */
 export async function getUserPosts(clerkId: string) {
   // Gets the user record with possible Instagram account
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    include: { instaAccount: true },
-  });
+  const user = await findUserWithInstaAccount(clerkId);
 
   if (!user || !user.instaAccount) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
@@ -40,42 +38,41 @@ export async function getUserPosts(clerkId: string) {
   url.searchParams.set("access_token", accessToken);
 
   // Fetches posts from Instagram Graph API
-  const response = await fetch(url.toString());
+  try {
+    const result = await fetchWithTimeout<any>(url.toString(), {
+      method: "GET",
+      timeout: 30000, // 30 seconds for posts fetch
+      retries: 2,
+    });
 
-  if (!response.ok) {
-    let instagramError: any;
-    try {
-      instagramError = await response.json();
-    } catch {
-      instagramError = {};
+    const data = result.data;
+
+    // Handles Instagram API error object
+    if (data.error) {
+      const readableError =
+        data.error.message && typeof data.error.message === "string"
+          ? data.error.message
+          : ERROR_MESSAGES.API.GENERIC_ERROR;
+      throw new Error(readableError);
     }
 
-    const mainError =
-      instagramError.error?.message || ERROR_MESSAGES.API.GENERIC_ERROR;
-    throw new Error(mainError);
-  }
+    // Checks for missing data
+    if (!Array.isArray(data.data)) {
+      throw new Error(ERROR_MESSAGES.API.INVALID_RESPONSE);
+    }
 
-  const data = await response.json();
-
-  // Handles Instagram API error object
-  if (data.error) {
-    const readableError =
-      data.error.message && typeof data.error.message === "string"
-        ? data.error.message
+    return {
+      posts: data.data as InstagramPost[],
+      username: username,
+      paging: data.paging,
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
         : ERROR_MESSAGES.API.GENERIC_ERROR;
-    throw new Error(readableError);
+    throw new Error(errorMessage);
   }
-
-  // Checks for missing data
-  if (!Array.isArray(data.data)) {
-    throw new Error(ERROR_MESSAGES.API.INVALID_RESPONSE);
-  }
-
-  return {
-    posts: data.data as InstagramPost[],
-    username: username,
-    paging: data.paging,
-  };
 }
 
 /**
@@ -83,10 +80,7 @@ export async function getUserPosts(clerkId: string) {
  */
 export async function getPostComments(clerkId: string, postId: string) {
   // Gets the user record with Instagram account
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    include: { instaAccount: true },
-  });
+  const user = await findUserWithInstaAccount(clerkId);
 
   if (!user || !user.instaAccount) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
@@ -101,26 +95,35 @@ export async function getPostComments(clerkId: string, postId: string) {
   url.searchParams.set("access_token", accessToken);
 
   // Fetches comments from Facebook Graph API
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    const result = await fetchWithTimeout<any>(url.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 30000, // 30 seconds for comments fetch
+      retries: 2,
+    });
 
-  // Parses response
-  const data = await response.json();
+    const data = result.data;
 
-  // Checks for Graph API errors
-  if (data.error) {
-    throw new Error(data.error.message || ERROR_MESSAGES.API.GENERIC_ERROR);
+    // Checks for Graph API errors
+    if (data.error) {
+      throw new Error(data.error.message || ERROR_MESSAGES.API.GENERIC_ERROR);
+    }
+
+    return {
+      postId: postId,
+      comments: (data.data || []) as InstagramComment[],
+      paging: data.paging,
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : ERROR_MESSAGES.API.GENERIC_ERROR;
+    throw new Error(errorMessage);
   }
-
-  return {
-    postId: postId,
-    comments: (data.data || []) as InstagramComment[],
-    paging: data.paging,
-  };
 }
 
 /**
@@ -128,12 +131,7 @@ export async function getPostComments(clerkId: string, postId: string) {
  */
 export async function getConnectionStatus(clerkId: string) {
   // Finds user with Instagram account
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    include: {
-      instaAccount: true,
-    },
-  });
+  const user = await findUserWithInstaAccount(clerkId);
 
   // Returns disconnected status if user or account is not found
   if (!user || !user.instaAccount) {
