@@ -71,7 +71,7 @@ export const WebhookProcessingResponseSchema = z.object({
   success: z.literal(true),
 });
 
-// Error response schema
-export const ErrorResponseSchema = z.object({
-  error: z.string(),
-});
+// Error response schema (removed to avoid duplicates)
+// export const ErrorResponseSchema = z.object({
+//   error: z.string(),
+// });

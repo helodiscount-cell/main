@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useApi } from "@/hooks/use-api";
-import { useUser } from "@clerk/nextjs";
 import {
   InstagramStatusConnectedResponse,
   InstagramConnectSuccessResponse,
@@ -18,7 +17,6 @@ import {
   InstagramPost,
   InstagramStatusDisconnectedResponse,
 } from "@/types";
-import { InstagramConnectRequestSchema } from "@/types/zod";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import InstagramConnect from "@/components/instagram/connect";
@@ -28,7 +26,6 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user: clerkUser } = useUser();
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [automations, setAutomations] = useState<any[]>([]);
 

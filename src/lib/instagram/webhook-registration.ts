@@ -3,8 +3,12 @@
  * Registers webhooks with Instagram/Facebook Graph API
  */
 
-import { getOAuthCredentials, buildGraphApiUrl } from "@/config/instagram.config";
+import {
+  getOAuthCredentials,
+  buildGraphApiUrl,
+} from "@/config/instagram.config";
 import { prisma } from "@/lib/db";
+import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 export interface WebhookSubscription {
   object: string;
@@ -45,9 +49,11 @@ export async function subscribeToWebhooks(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          subscribed_fields: ["comments", "messages", "messaging_postbacks"].join(
-            ","
-          ),
+          subscribed_fields: [
+            "comments",
+            "messages",
+            "messaging_postbacks",
+          ].join(","),
           access_token: accessToken,
         }),
         timeout: 20000, // 20 seconds for webhook subscription
@@ -125,22 +131,25 @@ export async function getWebhookSubscriptionStatus(
 
       const data = result.data;
 
-    if (data.data && data.data.length > 0) {
-      // Checks if our app is subscribed
-      const subscription = data.data.find((sub: any) => {
-        const appId = getOAuthCredentials().appId;
-        return sub.id === appId || sub.name;
-      });
+      if (data.data && data.data.length > 0) {
+        // Checks if our app is subscribed
+        const subscription = data.data.find((sub: any) => {
+          const appId = getOAuthCredentials().appId;
+          return sub.id === appId || sub.name;
+        });
 
-      if (subscription) {
-        return {
-          subscribed: true,
-          fields: subscription.subscribed_fields || [],
-        };
+        if (subscription) {
+          return {
+            subscribed: true,
+            fields: subscription.subscribed_fields || [],
+          };
+        }
       }
-    }
 
-    return { subscribed: false, fields: [] };
+      return { subscribed: false, fields: [] };
+    } catch (error) {
+      return { subscribed: false, fields: [] };
+    }
   } catch (error) {
     return { subscribed: false, fields: [] };
   }

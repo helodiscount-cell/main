@@ -10,12 +10,12 @@ import {
   sanitizePostCaption,
   sanitizeTrigger,
   MAX_LENGTHS,
-} from "@/lib/utils/sanitize";
+} from "../lib/utils/sanitize";
 import {
   isValidObjectId,
   sanitizeQueryParam,
   validateAndSanitizeObjectId,
-} from "@/lib/utils/validation";
+} from "../lib/utils/validation";
 
 // Input schema for creating a new automation
 export const CreateAutomationSchema = z.object({

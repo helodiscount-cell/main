@@ -7,7 +7,7 @@ import { z } from "zod";
 import {
   isValidObjectId,
   sanitizeQueryParam,
-} from "@/lib/utils/validation";
+} from "../lib/utils/validation";
 
 // Instagram post schema
 export const InstagramPostSchema = z.object({
@@ -172,9 +172,9 @@ export const InstagramConnectResponseSchema = z.object({
   }),
 });
 
-// Error response schema
-export const ErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.string(),
-  details: z.string().optional(),
-});
+// Error response schema (removed to avoid duplicates)
+// export const ErrorResponseSchema = z.object({
+//   success: z.literal(false),
+//   error: z.string(),
+//   details: z.string().optional(),
+// });

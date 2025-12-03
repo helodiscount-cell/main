@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { UpdateAutomationSchema } from "@/server/schemas/automation.schema";
+import { UpdateAutomationSchema } from "@insta-auto/common-types";
 import {
   getAutomation,
   updateAutomation,

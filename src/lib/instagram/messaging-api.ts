@@ -55,9 +55,9 @@ export async function sendDirectMessage(
     if (options.messagingType === "MESSAGE_TAG" && options.tag) {
       requestBody.tag = options.tag;
     }
-
+    // Converts URL object to string for fetch compatibility
     try {
-      const result = await fetchWithTimeout<any>(url, {
+      const result = await fetchWithTimeout<any>(url.toString(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +74,9 @@ export async function sendDirectMessage(
     } catch (error) {
       // Handles timeout and other errors
       const errorMessage =
-        error instanceof Error ? error.message : ERROR_MESSAGES.API.GENERIC_ERROR;
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.API.GENERIC_ERROR;
 
       // Checks for 24-hour window error in error message
       if (errorMessage.includes("window") || errorMessage.includes("24-hour")) {
@@ -92,7 +94,10 @@ export async function sendDirectMessage(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
+      error:
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.SERVER.INTERNAL_ERROR,
     };
   }
 }

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { AutomationListQuerySchema } from "@/server/schemas/automation.schema";
+import { AutomationListQuerySchema } from "@insta-auto/common-types";
 import { listAutomations } from "@/server/services/automation.service";
 import { findUserByClerkId } from "@/server/repositories/user.repository";
 

@@ -6,10 +6,10 @@
 import { z } from "zod";
 
 // Re-export all schemas
-export * from "../../../src/server/schemas/automation.schema";
-export * from "../../../src/server/schemas/instagram.schema";
-export * from "../../../src/server/schemas/webhook.schema";
-export * from "../../../src/server/schemas/user.schema";
+export * from "./schemas/automation.schema";
+export * from "./schemas/instagram.schema";
+export * from "./schemas/webhook.schema";
+export * from "./schemas/user.schema";
 
 // Import schemas for type inference
 import {
@@ -23,7 +23,7 @@ import {
   UpdateAutomationResponseSchema,
   DeleteAutomationResponseSchema,
   ExecutionRecordSchema,
-} from "../../../src/server/schemas/automation.schema";
+} from "./schemas/automation.schema";
 
 import {
   InstagramPostSchema,
@@ -45,7 +45,7 @@ import {
   DisconnectResponseSchema,
   InstagramConnectRequestSchema,
   InstagramConnectResponseSchema,
-} from "../../../src/server/schemas/instagram.schema";
+} from "./schemas/instagram.schema";
 
 import {
   WebhookVerificationQuerySchema,
@@ -56,12 +56,12 @@ import {
   WebhookPayloadSchema,
   WebhookVerificationResponseSchema,
   WebhookProcessingResponseSchema,
-} from "../../../src/server/schemas/webhook.schema";
+} from "./schemas/webhook.schema";
 
 import {
   EnsureUserResponseSchema,
   ClerkUserDataSchema,
-} from "../../../src/server/schemas/user.schema";
+} from "./schemas/user.schema";
 
 // Automation Types
 export type CreateAutomationInput = z.infer<typeof CreateAutomationSchema>;

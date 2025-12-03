@@ -25,7 +25,7 @@ export const ClerkUserDataSchema = z.object({
   imageUrl: z.string().nullable().optional(),
 });
 
-// Error response schema
-export const ErrorResponseSchema = z.object({
-  error: z.string(),
-});
+// Error response schema (removed to avoid duplicates)
+// export const ErrorResponseSchema = z.object({
+//   error: z.string(),
+// });

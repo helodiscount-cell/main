@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { apiClient } from "@/services/api/api-client";
+import { apiClient } from "@/api/api-client";
 import { AxiosError, AxiosRequestConfig } from "axios";
 import { BeErrorResponse } from "@/types";
 
