@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "scontent-sin11-2.cdninstagram.com",
       },
+      {
+        protocol: "https",
+        hostname: "scontent-atl3-3.cdninstagram.com",
+      },
     ],
   },
   // Configures API route body size limits

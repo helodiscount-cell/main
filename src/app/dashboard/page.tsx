@@ -1,33 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  LucideInstagram,
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useApi } from "@/hooks/use-api";
 import {
-  InstagramStatusConnectedResponse,
-  InstagramConnectSuccessResponse,
-  InstagramPostsSuccessResponse,
+  InstagramStatusResponse,
+  InstagramPostsResponse,
   InstagramPost,
-  InstagramStatusDisconnectedResponse,
-} from "@/types";
+  AutomationListResponse,
+  AutomationResponse,
+} from "@insta-auto/common-types";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import InstagramConnect from "@/components/instagram/connect";
-import PostCard from "@/components/instagram/PostCard";
-import AutomationCard from "@/components/automations/AutomationCard";
 import { useRouter } from "next/navigation";
+import { handleInstagramOAuthCallback } from "@/hooks/use-instagram-oauth-callback";
+import { ConnectionStatusHeader } from "@/components/dashboard/connection-status-header";
+import { ErrorBanner } from "@/components/dashboard/error-banner";
+import { PostsSection } from "@/components/dashboard/posts-section";
+import { AutomationsSection } from "@/components/dashboard/automations-section";
 
+// Handles Instagram connection redirect
+const handleConnectInstagram = () => {
+  window.location.href = "/api/instagram/oauth/authorize?returnUrl=/dashboard";
+};
+
+// Main dashboard page component
 export default function DashboardPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<InstagramPost[]>([]);
-  const [automations, setAutomations] = useState<any[]>([]);
+  const [automations, setAutomations] = useState<AutomationResponse[]>([]);
+
+  // Handles OAuth callback
+  handleInstagramOAuthCallback();
 
   // Status: /instagram/status
   const {
@@ -35,17 +40,7 @@ export default function DashboardPage() {
     loading: isCheckingStatus,
     error: checkStatusError,
     data: statusData,
-  } = useApi<
-    InstagramStatusConnectedResponse | InstagramStatusDisconnectedResponse
-  >();
-
-  // Connect: /instagram/connect
-  const {
-    execute: connectInstagram,
-    loading: isConnecting,
-    error: connectError,
-    data: connectData,
-  } = useApi<InstagramConnectSuccessResponse>();
+  } = useApi<InstagramStatusResponse>();
 
   // Posts: /instagram/posts
   const {
@@ -53,7 +48,7 @@ export default function DashboardPage() {
     loading: isFetchingPosts,
     error: fetchPostsError,
     data: postsData,
-  } = useApi<InstagramPostsSuccessResponse>();
+  } = useApi<InstagramPostsResponse>();
 
   // Automations: /automations/list
   const {
@@ -61,35 +56,28 @@ export default function DashboardPage() {
     loading: isFetchingAutomations,
     error: fetchAutomationsError,
     data: automationsData,
-  } = useApi<any>();
+  } = useApi<AutomationListResponse>();
 
   // Update automation: /automations/[id]
-  const { execute: updateAutomation, loading: isUpdatingAutomation } =
-    useApi<any>();
+  const { execute: updateAutomation } = useApi<any>();
 
   // Delete automation: /automations/[id]
-  const { execute: deleteAutomation, loading: isDeletingAutomation } =
-    useApi<any>();
+  const { execute: deleteAutomation } = useApi<any>();
 
   // Determines connection status safely
-  const isConnected = statusData && statusData.connected === true;
+  const isConnected =
+    statusData && "connected" in statusData && statusData.connected === true;
   const connectedStatus = isConnected
-    ? (statusData as InstagramStatusConnectedResponse)
+    ? (statusData as Extract<InstagramStatusResponse, { connected: true }>)
     : null;
 
   // Computes error message for unified display
   const errorBanner =
-    checkStatusError || connectError || fetchPostsError
-      ? getErrorMessage(checkStatusError || connectError || fetchPostsError)
+    checkStatusError || fetchPostsError || fetchAutomationsError
+      ? getErrorMessage(
+          checkStatusError || fetchPostsError || fetchAutomationsError
+        )
       : null;
-
-  // Handles Instagram connect using OAuth flow
-  const handleConnectInstagram = () => {
-    // Redirects to OAuth authorize endpoint
-    // The callback will return to dashboard with status
-    window.location.href =
-      "/api/instagram/oauth/authorize?returnUrl=/dashboard";
-  };
 
   // Fetches posts from API and stores them in localStorage
   const handleFetchPosts = async () => {
@@ -110,34 +98,6 @@ export default function DashboardPage() {
     router.push(`/posts/${post.id}`);
   };
 
-  // Handles OAuth callback parameters
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const connected = params.get("connected");
-    const error = params.get("error");
-
-    if (connected === "true") {
-      toast.success("Instagram connected successfully!");
-      // Cleans up URL
-      window.history.replaceState({}, "", "/dashboard");
-    } else if (error) {
-      const errorMessages: Record<string, string> = {
-        oauth_declined: "You declined the Instagram authorization.",
-        oauth_invalid: "Invalid OAuth response from Instagram.",
-        oauth_invalid_state: "OAuth security check failed. Please try again.",
-        invalid_account_type:
-          "Please use an Instagram Business or Creator account.",
-        oauth_failed: "Failed to connect Instagram. Please try again.",
-      };
-
-      toast.error(
-        errorMessages[error] || "Failed to connect Instagram. Please try again."
-      );
-      // Cleans up URL
-      window.history.replaceState({}, "", "/dashboard");
-    }
-  }, []);
-
   // Fetches Instagram connection status on mount
   useEffect(() => {
     getInstaConnectionStatus("/instagram/status", "GET");
@@ -150,28 +110,18 @@ export default function DashboardPage() {
         const storedPosts = localStorage.getItem("instagram_posts");
         if (storedPosts) {
           const parsedPosts = JSON.parse(storedPosts);
-          // Validates that parsed data is an array
           if (Array.isArray(parsedPosts)) {
             setPosts(parsedPosts);
           }
         }
       } catch (err) {
-        // Clears invalid localStorage data
         localStorage.removeItem("instagram_posts");
         console.error("Failed to parse stored posts:", err);
       }
     } else {
-      // Clears posts when disconnected
       setPosts([]);
     }
   }, [isConnected]);
-
-  // Refetches status after successful connection
-  useEffect(() => {
-    if (connectData) {
-      getInstaConnectionStatus("/instagram/status", "GET");
-    }
-  }, [connectData]);
 
   // Updates posts state when new data is fetched
   useEffect(() => {
@@ -185,7 +135,7 @@ export default function DashboardPage() {
     if (isConnected) {
       fetchAutomations("/automations/list?status=ACTIVE", "GET");
     }
-  }, [isConnected]);
+  }, [isConnected, fetchAutomations]);
 
   // Updates automations state when new data is fetched
   useEffect(() => {
@@ -204,7 +154,6 @@ export default function DashboardPage() {
         body: { status: newStatus },
       });
       toast.success(`Automation ${newStatus.toLowerCase()}`);
-      // Refetches automations
       fetchAutomations("/automations/list?status=ACTIVE", "GET");
     } catch (err) {
       toast.error("Failed to update automation");
@@ -220,7 +169,6 @@ export default function DashboardPage() {
     try {
       await deleteAutomation(`/automations/${id}`, "DELETE");
       toast.success("Automation deleted");
-      // Refetches automations
       fetchAutomations("/automations/list?status=ACTIVE", "GET");
     } catch (err) {
       toast.error("Failed to delete automation");
@@ -230,146 +178,67 @@ export default function DashboardPage() {
   // Loading state for status check
   if (isCheckingStatus) {
     return (
-      <div className="container mx-auto">
-        <div className="flex justify-center items-center h-screen">
-          <Spinner className="size-8" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Spinner className="size-8 mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl min-h-[80vh]">
-      {/* Error Banner */}
-      {errorBanner && (
-        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6 flex items-start gap-3">
-          <AlertCircle className="size-5 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-medium">Error</p>
-            <p className="text-sm mt-1">{errorBanner}</p>
+    <div className="min-h-screen overflow-hidden relative">
+      {/* Background gradients & blurs for effect */}
+      <div className="absolute inset-0 bg-linear-to-br from-fuchsia-500/5 via-transparent to-cyan-500/5 dark:from-fuchsia-500/10 dark:to-cyan-500/10 pointer-events-none" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-linear-to-r from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-linear-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse animation-delay-2000 pointer-events-none" />
+
+      <div className="container mx-auto p-6 max-w-7xl min-h-screen relative z-10">
+        {/* Error Banner */}
+        {errorBanner && <ErrorBanner message={errorBanner} />}
+
+        {/* Shows Instagram connect panel when not connected */}
+        {!isConnected && (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <InstagramConnect
+              handleConnectInstagram={handleConnectInstagram}
+              isConnecting={false}
+            />
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Shows Instagram connect panel when not connected */}
-      {!isConnected && (
-        <InstagramConnect
-          handleConnectInstagram={handleConnectInstagram}
-          isConnecting={isConnecting}
-        />
-      )}
+        {/* Shows Instagram posts when connected */}
+        {isConnected && connectedStatus && (
+          <div className="animate-fade-in">
+            <ConnectionStatusHeader
+              status={connectedStatus}
+              onFetchPosts={handleFetchPosts}
+              isFetchingPosts={isFetchingPosts}
+              postsCount={posts.length}
+            />
 
-      {/* Shows Instagram posts when connected */}
-      {isConnected && connectedStatus && (
-        <div>
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b dark:border-gray-800">
-            <div className="flex items-center gap-3">
-              <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
-                <CheckCircle
-                  className="text-green-600 dark:text-green-400"
-                  size={20}
-                />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  @{connectedStatus.username}
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Connected on{" "}
-                  {new Date(connectedStatus.connectedAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
+            <PostsSection posts={posts} onPostClick={handlePostClick} />
 
-            {/* Fetch Posts Button */}
-            <Button
-              onClick={handleFetchPosts}
-              disabled={isFetchingPosts}
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              {isFetchingPosts ? (
-                <>
-                  <Spinner className="size-4 mr-2" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2" size={16} />
-                  {posts.length > 0 ? "Refresh Posts" : "Fetch Posts"}
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Shows Instagram posts grid when posts are loaded */}
-          {posts.length > 0 && (
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {posts.length} {posts.length === 1 ? "post" : "posts"} loaded
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="cursor-pointer"
-                    onClick={() => handlePostClick(post)}
-                  >
-                    <PostCard post={post} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Shows empty state when no posts are loaded */}
-          {posts.length === 0 && !isFetchingPosts && (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900/50">
-              <LucideInstagram
-                className="mx-auto mb-4 text-gray-400 dark:text-gray-600"
-                size={48}
+            {/* Shows active automations section */}
+            <div className="mt-12">
+              <AutomationsSection
+                automations={automations}
+                isFetching={isFetchingAutomations}
+                onToggleStatus={handleToggleAutomation}
+                onDelete={handleDeleteAutomation}
+                onViewDetails={(id) =>
+                  router.push(
+                    `/posts/${
+                      automations.find((a) => a.id === id)?.postId || ""
+                    }`
+                  )
+                }
               />
-              <p className="text-lg font-medium mb-2">No posts yet</p>
-              <p className="text-sm">
-                Click "Fetch Posts" to load your Instagram posts
-              </p>
             </div>
-          )}
-
-          {/* Shows active automations section */}
-          <div className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Active Automations
-            </h2>
-            {isFetchingAutomations ? (
-              <div className="flex justify-center py-8">
-                <Spinner className="size-6" />
-              </div>
-            ) : automations.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {automations.map((automation) => (
-                  <AutomationCard
-                    key={automation.id}
-                    automation={automation}
-                    onToggleStatus={handleToggleAutomation}
-                    onDelete={handleDeleteAutomation}
-                    onViewDetails={(id) =>
-                      router.push(`/posts/${automation.postId}`)
-                    }
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900/50">
-                <p className="text-sm">
-                  No active automations yet. Click on a post to create one.
-                </p>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

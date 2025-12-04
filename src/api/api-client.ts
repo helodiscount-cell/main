@@ -70,6 +70,21 @@ class ApiClient {
   ): Promise<AxiosResponse<T>> {
     return this.client.post<T>(url, data, config);
   }
+
+  async patch<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
+    return this.client.patch<T>(url, data, config);
+  }
+
+  async delete<T = any>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
+    return this.client.delete<T>(url, config);
+  }
 }
 
 export const apiClient = new ApiClient();

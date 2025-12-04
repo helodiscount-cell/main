@@ -53,8 +53,14 @@ export function useApi<T = any>(): UseApiReturn<T> {
             options?.body,
             options?.config
           );
-
-          console.log(response.data);
+        } else if (method === "PATCH") {
+          response = await apiClient.patch<T>(
+            url,
+            options?.body,
+            options?.config
+          );
+        } else if (method === "DELETE") {
+          response = await apiClient.delete<T>(url, options?.config);
         } else {
           throw new Error(`Unsupported method: ${method}`);
         }

@@ -8,20 +8,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Zap, Pause, Play, Trash2 } from "lucide-react";
+import { AutomationResponse } from "@insta-auto/common-types";
 
 interface AutomationCardProps {
-  automation: {
-    id: string;
-    postId: string;
-    postCaption?: string;
-    triggers: string[];
-    actionType: string;
-    replyMessage: string;
-    status: string;
-    timesTriggered: number;
-    lastTriggeredAt?: Date | string | null;
-    createdAt: Date | string;
-  };
+  automation: AutomationResponse;
   onToggleStatus?: (id: string, newStatus: "ACTIVE" | "PAUSED") => void;
   onDelete?: (id: string) => void;
   onViewDetails?: (id: string) => void;
