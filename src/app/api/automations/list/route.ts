@@ -34,10 +34,10 @@ export async function GET(request: NextRequest) {
     // Gets and validates query parameters
     const searchParams = request.nextUrl.searchParams;
     const queryValidation = AutomationListQuerySchema.safeParse({
-      status: searchParams.get("status"),
-      postId: searchParams.get("postId"),
-      page: searchParams.get("page"),
-      limit: searchParams.get("limit"),
+      status: searchParams.get("status") || undefined,
+      postId: searchParams.get("postId") || undefined,
+      page: searchParams.get("page") || undefined,
+      limit: searchParams.get("limit") || undefined,
     });
 
     if (!queryValidation.success) {

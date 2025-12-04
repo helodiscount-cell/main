@@ -188,19 +188,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden relative">
-      {/* Background gradients & blurs for effect */}
-      <div className="absolute inset-0 bg-linear-to-br from-fuchsia-500/5 via-transparent to-cyan-500/5 dark:from-fuchsia-500/10 dark:to-cyan-500/10 pointer-events-none" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-linear-to-r from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-linear-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse animation-delay-2000 pointer-events-none" />
-
-      <div className="container mx-auto p-6 max-w-7xl min-h-screen relative z-10">
-        {/* Error Banner */}
+    <div className="min-h-screen relative bg-background">
+      <div className="w-full min-h-screen relative z-10 flex flex-col px-4 sm:px-8 md:px-16 py-12 max-w-5xl mx-auto">
+        {/* Shows error banner if needed */}
         {errorBanner && <ErrorBanner message={errorBanner} />}
 
-        {/* Shows Instagram connect panel when not connected */}
+        {/* Shows connect panel if not connected */}
         {!isConnected && (
-          <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-1 items-center justify-center">
             <InstagramConnect
               handleConnectInstagram={handleConnectInstagram}
               isConnecting={false}
@@ -208,9 +203,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Shows Instagram posts when connected */}
+        {/* Shows main dashboard sections when connected */}
         {isConnected && connectedStatus && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in flex flex-col gap-8">
             <ConnectionStatusHeader
               status={connectedStatus}
               onFetchPosts={handleFetchPosts}
@@ -220,22 +215,17 @@ export default function DashboardPage() {
 
             <PostsSection posts={posts} onPostClick={handlePostClick} />
 
-            {/* Shows active automations section */}
-            <div className="mt-12">
-              <AutomationsSection
-                automations={automations}
-                isFetching={isFetchingAutomations}
-                onToggleStatus={handleToggleAutomation}
-                onDelete={handleDeleteAutomation}
-                onViewDetails={(id) =>
-                  router.push(
-                    `/posts/${
-                      automations.find((a) => a.id === id)?.postId || ""
-                    }`
-                  )
-                }
-              />
-            </div>
+            <AutomationsSection
+              automations={automations}
+              isFetching={isFetchingAutomations}
+              onToggleStatus={handleToggleAutomation}
+              onDelete={handleDeleteAutomation}
+              onViewDetails={(id) =>
+                router.push(
+                  `/posts/${automations.find((a) => a.id === id)?.postId || ""}`
+                )
+              }
+            />
           </div>
         )}
       </div>

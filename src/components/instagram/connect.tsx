@@ -14,16 +14,12 @@ const InstagramConnect: React.FC<InstagramConnectProps> = ({
   isConnecting,
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="relative overflow-hidden rounded-3xl bg-card border border-border/50 p-12 md:p-16 w-full max-w-lg flex flex-col items-center text-center animate-fade-in">
+    <div className="flex flex-col items-center justify-center w-full">
+      <div className="relative overflow-hidden p-12">
         {/* Shows patterned overlay for connection area */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-size-[40px_40px]" />
+        <div className="w-full border absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-size-[40px_40px]" />
 
         <div className="relative z-10 w-full">
-          <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-linear-to-br from-fuchsia-500/10 to-cyan-500/10 border border-fuchsia-500/20 mb-6">
-            <LucideInstagram className="size-10 text-fuchsia-500 dark:text-fuchsia-400" />
-          </div>
-
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400">
             <Sparkles className="size-4" />
             <span>Connect Your Instagram Account</span>
@@ -36,7 +32,7 @@ const InstagramConnect: React.FC<InstagramConnectProps> = ({
             </span>
           </h2>
 
-          <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
+          <p className="text-muted-foreground mb-8 text-lg max-w-md">
             Connects your Instagram Business or Creator account to import and
             manage your posts conveniently from one place.
           </p>

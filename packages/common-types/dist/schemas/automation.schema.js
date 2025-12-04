@@ -13,11 +13,8 @@ exports.CreateAutomationSchema = zod_1.z.object({
     postId: zod_1.z
         .string()
         .min(1, "Post ID is required")
-        .max(24, "Post ID must be 24 characters")
-        .refine((val) => (0, validation_1.isValidObjectId)(val), {
-        message: "Post ID must be a valid MongoDB ObjectId (24 hexadecimal characters)",
-    })
-        .transform((val) => (0, validation_1.sanitizeQueryParam)(val, 24)),
+        .max(100, "Post ID must be no more than 100 characters")
+        .transform((val) => (0, validation_1.sanitizeQueryParam)(val, 100)),
     postCaption: zod_1.z
         .string()
         .max(sanitize_1.MAX_LENGTHS.POST_CAPTION, `Post caption must be no more than ${sanitize_1.MAX_LENGTHS.POST_CAPTION} characters`)
@@ -71,10 +68,7 @@ exports.AutomationListQuerySchema = zod_1.z.object({
     postId: zod_1.z
         .string()
         .optional()
-        .transform((val) => (val ? (0, validation_1.sanitizeQueryParam)(val, 24) : undefined))
-        .refine((val) => !val || (0, validation_1.isValidObjectId)(val), {
-        message: "postId must be a valid MongoDB ObjectId (24 hexadecimal characters)",
-    }),
+        .transform((val) => (val ? (0, validation_1.sanitizeQueryParam)(val, 100) : undefined)),
     page: zod_1.z
         .string()
         .optional()

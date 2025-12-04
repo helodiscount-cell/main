@@ -3,23 +3,15 @@ import type { NextConfig } from "next";
 // Defines Next.js configuration
 const nextConfig: NextConfig = {
   images: {
-    // Allows loading images from the specified external hostnames
+    // Allows loading images from Instagram CDN (uses wildcard for dynamic hostnames)
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "scontent-bom5-1.cdninstagram.com",
+        hostname: "*.cdninstagram.com",
       },
       {
         protocol: "https",
-        hostname: "scontent-sin2-3.cdninstagram.com",
-      },
-      {
-        protocol: "https",
-        hostname: "scontent-sin11-2.cdninstagram.com",
-      },
-      {
-        protocol: "https",
-        hostname: "scontent-atl3-3.cdninstagram.com",
+        hostname: "scontent-*.cdninstagram.com",
       },
     ],
   },
