@@ -74,7 +74,9 @@ export async function processWebhookEvent(payload: string, signature: string) {
       error instanceof Error ? error : new Error(String(error)),
       {
         payloadType: parsedPayload.object,
-        entryCount: Array.isArray(parsedPayload.entry) ? parsedPayload.entry.length : 0,
+        entryCount: Array.isArray(parsedPayload.entry)
+          ? parsedPayload.entry.length
+          : 0,
       }
     );
   });
@@ -86,10 +88,11 @@ export async function processWebhookEvent(payload: string, signature: string) {
     undefined,
     {
       payloadType: parsedPayload.object,
-      entryCount: Array.isArray(parsedPayload.entry) ? parsedPayload.entry.length : 0,
+      entryCount: Array.isArray(parsedPayload.entry)
+        ? parsedPayload.entry.length
+        : 0,
     }
   );
 
   return { success: true as const };
 }
-
