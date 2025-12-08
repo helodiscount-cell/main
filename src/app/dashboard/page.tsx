@@ -20,18 +20,15 @@ import { ErrorBanner } from "@/components/dashboard/error-banner";
 import { PostsSection } from "@/components/dashboard/posts-section";
 import { AutomationsSection } from "@/components/dashboard/automations-section";
 
-// Handles Instagram connection redirect
 const handleConnectInstagram = () => {
   window.location.href = "/api/instagram/oauth/authorize?returnUrl=/dashboard";
 };
 
-// Main dashboard page component
 export default function DashboardPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [automations, setAutomations] = useState<AutomationResponse[]>([]);
 
-  // Handles OAuth callback
   handleInstagramOAuthCallback();
 
   // Status: /instagram/status
@@ -64,14 +61,18 @@ export default function DashboardPage() {
   // Delete automation: /automations/[id]
   const { execute: deleteAutomation } = useApi<any>();
 
-  // Determines connection status safely
+  // Disconnect Instagram: /instagram/oauth/disconnect
+  const {
+    execute: disconnectInstagram,
+    loading: isDisconnecting,
+  } = useApi<{ success: boolean; message: string }>();
+
   const isConnected =
     statusData && "connected" in statusData && statusData.connected === true;
   const connectedStatus = isConnected
     ? (statusData as Extract<InstagramStatusResponse, { connected: true }>)
     : null;
 
-  // Computes error message for unified display
   const errorBanner =
     checkStatusError || fetchPostsError || fetchAutomationsError
       ? getErrorMessage(
@@ -93,7 +94,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Navigates to the individual post detail page using the post ID
   const handlePostClick = (post: InstagramPost) => {
     router.push(`/posts/${post.id}`);
   };
@@ -123,28 +123,24 @@ export default function DashboardPage() {
     }
   }, [isConnected]);
 
-  // Updates posts state when new data is fetched
   useEffect(() => {
     if (postsData?.posts) {
       setPosts(postsData.posts);
     }
   }, [postsData]);
 
-  // Fetches automations when connected
   useEffect(() => {
     if (isConnected) {
       fetchAutomations("/automations/list?status=ACTIVE", "GET");
     }
   }, [isConnected, fetchAutomations]);
 
-  // Updates automations state when new data is fetched
   useEffect(() => {
     if (automationsData?.automations) {
       setAutomations(automationsData.automations);
     }
   }, [automationsData]);
 
-  // Handles automation toggle
   const handleToggleAutomation = async (
     id: string,
     newStatus: "ACTIVE" | "PAUSED"
@@ -160,7 +156,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Handles automation deletion
   const handleDeleteAutomation = async (id: string) => {
     if (!confirm("Are you sure you want to delete this automation?")) {
       return;
@@ -175,7 +170,32 @@ export default function DashboardPage() {
     }
   };
 
-  // Loading state for status check
+  const handleDisconnectInstagram = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to disconnect your Instagram account? All automations will be removed."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const result = await disconnectInstagram(
+        "/instagram/oauth/disconnect",
+        "POST"
+      );
+      if (result?.success) {
+        toast.success("Instagram account disconnected");
+        localStorage.removeItem("instagram_posts");
+        setPosts([]);
+        setAutomations([]);
+        getInstaConnectionStatus("/instagram/status", "GET");
+      }
+    } catch (err) {
+      toast.error("Failed to disconnect Instagram account");
+    }
+  };
+
   if (isCheckingStatus) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -190,10 +210,8 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen relative bg-background">
       <div className="w-full min-h-screen relative z-10 flex flex-col px-4 sm:px-8 md:px-16 py-12 max-w-5xl mx-auto">
-        {/* Shows error banner if needed */}
         {errorBanner && <ErrorBanner message={errorBanner} />}
 
-        {/* Shows connect panel if not connected */}
         {!isConnected && (
           <div className="flex flex-1 items-center justify-center">
             <InstagramConnect
@@ -203,7 +221,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Shows main dashboard sections when connected */}
         {isConnected && connectedStatus && (
           <div className="animate-fade-in flex flex-col gap-8">
             <ConnectionStatusHeader
@@ -211,6 +228,8 @@ export default function DashboardPage() {
               onFetchPosts={handleFetchPosts}
               isFetchingPosts={isFetchingPosts}
               postsCount={posts.length}
+              onDisconnect={handleDisconnectInstagram}
+              isDisconnecting={isDisconnecting}
             />
 
             <PostsSection posts={posts} onPostClick={handlePostClick} />

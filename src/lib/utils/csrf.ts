@@ -10,7 +10,7 @@ function getAllowedOrigin(): string {
   const origin =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXT_PUBLIC_VERCEL_URL ||
-    "http://localhost:3000";
+    "http://localhost:3001";
 
   // Removes protocol if present and normalizes
   return origin.replace(/^https?:\/\//, "").split("/")[0];
@@ -35,8 +35,8 @@ export function validateOrigin(origin: string | null): {
   // Validates exact match or localhost variations
   if (
     originHost === allowedOrigin ||
-    originHost === `localhost:3000` ||
-    originHost === `127.0.0.1:3000` ||
+    originHost === `localhost:3001` ||
+    originHost === `127.0.0.1:3001` ||
     (allowedOrigin.includes("localhost") && originHost.includes("localhost"))
   ) {
     return { valid: true };
@@ -74,15 +74,18 @@ export function validateReferer(referer: string | null): {
     // Validates host matches allowed origin
     if (
       refererHost === allowedOrigin ||
-      refererHost === `localhost:3000` ||
-      refererHost === `127.0.0.1:3000` ||
+      refererHost === `localhost:3001` ||
+      refererHost === `127.0.0.1:3001` ||
       (allowedOrigin.includes("localhost") && refererHost.includes("localhost"))
     ) {
       return { valid: true };
     }
 
     // Allows ngrok and similar development tunnels
-    if (process.env.NODE_ENV === "development" && refererHost.includes("ngrok")) {
+    if (
+      process.env.NODE_ENV === "development" &&
+      refererHost.includes("ngrok")
+    ) {
       return { valid: true };
     }
 
@@ -137,4 +140,3 @@ export function validateCsrfProtection(request: Request): {
   // Origin is present but invalid
   return originValidation;
 }
-

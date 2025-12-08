@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { CheckCircle, RefreshCw } from "lucide-react";
+import { CheckCircle, RefreshCw, Unlink } from "lucide-react";
 import type { InstagramStatusConnected } from "@dm-broo/common-types";
 
 interface ConnectionStatusHeaderProps {
@@ -10,14 +10,17 @@ interface ConnectionStatusHeaderProps {
   onFetchPosts: () => void;
   isFetchingPosts: boolean;
   postsCount: number;
+  onDisconnect: () => void;
+  isDisconnecting: boolean;
 }
 
-// Renders connection status header with username and connection date
 export const ConnectionStatusHeader = ({
   status,
   onFetchPosts,
   isFetchingPosts,
   postsCount,
+  onDisconnect,
+  isDisconnecting,
 }: ConnectionStatusHeaderProps) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-border/50">
@@ -39,24 +42,45 @@ export const ConnectionStatusHeader = ({
           </p>
         </div>
       </div>
-      <Button
-        onClick={onFetchPosts}
-        disabled={isFetchingPosts}
-        variant="instagram"
-        size="lg"
-      >
-        {isFetchingPosts ? (
-          <>
-            <Spinner className="size-4 mr-2" />
-            Loading...
-          </>
-        ) : (
-          <>
-            <RefreshCw className="mr-2 size-4 group-hover:rotate-180 transition-transform duration-500" />
-            {postsCount > 0 ? "Refresh Posts" : "Fetch Posts"}
-          </>
-        )}
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          onClick={onFetchPosts}
+          disabled={isFetchingPosts || isDisconnecting}
+          variant="instagram"
+          size="lg"
+        >
+          {isFetchingPosts ? (
+            <>
+              <Spinner className="size-4 mr-2" />
+              Loading...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 size-4 group-hover:rotate-180 transition-transform duration-500" />
+              {postsCount > 0 ? "Refresh Posts" : "Fetch Posts"}
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={onDisconnect}
+          disabled={isDisconnecting || isFetchingPosts}
+          variant="outline"
+          size="lg"
+          className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          {isDisconnecting ? (
+            <>
+              <Spinner className="size-4 mr-2" />
+              Disconnecting...
+            </>
+          ) : (
+            <>
+              <Unlink className="mr-2 size-4" />
+              Disconnect
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

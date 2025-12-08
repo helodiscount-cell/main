@@ -152,7 +152,10 @@ export function getOAuthCredentials(): {
     appId: process.env.APP_ID || process.env.INSTAGRAM_APP_ID || null,
     appSecret:
       process.env.APP_SECRET || process.env.INSTAGRAM_APP_SECRET || null,
-    redirectUri: process.env.INSTAGRAM_REDIRECT_URI || null,
+    redirectUri:
+      process.env.INSTAGRAM_REDIRECT_URI ||
+      process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ||
+      null,
   };
 }
 
