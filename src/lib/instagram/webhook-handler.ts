@@ -236,47 +236,51 @@ async function handleCommentEvent(
       return;
     }
 
-  // Optimized: Queries directly for automations on this specific post
-  // This avoids fetching all automations and filtering in memory
-  const { findInstaAccountByInstagramUserId } = await import(
-    "@/server/repositories/insta-account.repository"
-  );
-  const { findActiveAutomationsByPost } = await import(
-    "@/server/repositories/automation.repository"
-  );
+    // Optimized: Queries directly for automations on this specific post
+    // This avoids fetching all automations and filtering in memory
+    const { findInstaAccountByInstagramUserId } = await import(
+      "@/server/repositories/dm-broo-account.repository"
+    );
+    const { findActiveAutomationsByPost } = await import(
+      "@/server/repositories/automation.repository"
+    );
 
-  const instaAccount = await findInstaAccountByInstagramUserId(instagramUserId);
+    const instaAccount = await findInstaAccountByInstagramUserId(
+      instagramUserId
+    );
 
-  if (!instaAccount) {
-    return;
-  }
+    if (!instaAccount) {
+      return;
+    }
 
-  // Fetches only active automations for this specific post
-  const relevantAutomations = await findActiveAutomationsByPost(
-    instaAccount.userId,
-    postId
-  );
+    // Fetches only active automations for this specific post
+    const relevantAutomations = await findActiveAutomationsByPost(
+      instaAccount.userId,
+      postId
+    );
 
-  if (relevantAutomations.length === 0) {
-    return;
-  }
+    if (relevantAutomations.length === 0) {
+      return;
+    }
 
-  // Converts to AutomationRule format
-  const automationRules: AutomationRule[] = relevantAutomations.map((auto) => ({
-    id: auto.id,
-    triggers: auto.triggers,
-    matchType: auto.matchType as "CONTAINS" | "EXACT" | "REGEX",
-    actionType: auto.actionType,
-    replyMessage: auto.replyMessage,
-    useVariables: auto.useVariables,
-  }));
+    // Converts to AutomationRule format
+    const automationRules: AutomationRule[] = relevantAutomations.map(
+      (auto) => ({
+        id: auto.id,
+        triggers: auto.triggers,
+        matchType: auto.matchType as "CONTAINS" | "EXACT" | "REGEX",
+        actionType: auto.actionType,
+        replyMessage: auto.replyMessage,
+        useVariables: auto.useVariables,
+      })
+    );
 
-  // Finds matching automations
-  const matches = await findMatchingAutomations(comment, automationRules);
+    // Finds matching automations
+    const matches = await findMatchingAutomations(comment, automationRules);
 
-  if (matches.length === 0) {
-    return;
-  }
+    if (matches.length === 0) {
+      return;
+    }
 
     // Gets valid access token
     let accessToken: string;
@@ -388,7 +392,9 @@ export async function markEventProcessed(
 /**
  * Gets unprocessed webhook events
  */
-export async function getUnprocessedEvents(limit: number = 100): Promise<any[]> {
+export async function getUnprocessedEvents(
+  limit: number = 100
+): Promise<any[]> {
   return await prisma.webhookEvent.findMany({
     where: {
       processed: false,
@@ -399,4 +405,3 @@ export async function getUnprocessedEvents(limit: number = 100): Promise<any[]> 
     take: limit,
   });
 }
-

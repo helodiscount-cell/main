@@ -3,7 +3,7 @@
 import { Spinner } from "@/components/ui/spinner";
 import AutomationCard from "@/components/automations/AutomationCard";
 import { Zap } from "lucide-react";
-import type { AutomationResponse } from "@insta-auto/common-types";
+import type { AutomationResponse } from "@dm-broo-auto/common-types";
 
 interface AutomationsSectionProps {
   automations: AutomationResponse[];
@@ -63,5 +63,3 @@ export const AutomationsSection = ({
     </div>
   );
 };
-
-

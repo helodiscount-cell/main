@@ -9,7 +9,7 @@ import {
   InstagramPost,
   AutomationListResponse,
   AutomationResponse,
-} from "@insta-auto/common-types";
+} from "@dm-broo/common-types";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import InstagramConnect from "@/components/instagram/connect";

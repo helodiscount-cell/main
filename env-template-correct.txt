@@ -7,7 +7,7 @@ CLERK_SECRET_KEY=sk_test_x1ddwiH4PVJlPYrXU6nCZcFQj6x1ZecABDkRlHlQ0L
 # =============================================================================
 # DATABASE
 # =============================================================================
-DATABASE_URL="mongodb+srv://devpalwar06_db_user:faTV0qTYm9NRl0rk@cluster0.8sfy2in.mongodb.net/insta-auto?retryWrites=true&w=majority&appName=Cluster0"
+DATABASE_URL="mongodb+srv://devpalwar06_db_user:faTV0qTYm9NRl0rk@cluster0.8sfy2in.mongodb.net/dm-broo-auto?retryWrites=true&w=majority&appName=Cluster0"
 
 # =============================================================================
 # META/FACEBOOK APP CREDENTIALS

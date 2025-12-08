@@ -8,10 +8,8 @@ import type {
   CreateAutomationInput,
   UpdateAutomationInput,
   AutomationListQuery,
-} from "@insta-auto/common-types";
-import {
-  findUserByIdWithInstaAccount,
-} from "@/server/repositories/user.repository";
+} from "@dm-broo-auto/common-types";
+import { findUserByIdWithInstaAccount } from "@/server/repositories/user.repository";
 import {
   createAutomation as createAutomationRecord,
   findAutomationById,
@@ -108,7 +106,10 @@ export async function listAutomations(
     userId: userId,
   };
 
-  if (filters?.status && ["ACTIVE", "PAUSED", "DELETED"].includes(filters.status)) {
+  if (
+    filters?.status &&
+    ["ACTIVE", "PAUSED", "DELETED"].includes(filters.status)
+  ) {
     repositoryFilters.status = filters.status;
   }
 

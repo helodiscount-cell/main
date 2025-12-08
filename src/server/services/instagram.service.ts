@@ -12,7 +12,10 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
-import type { InstagramPost, InstagramComment } from "@insta-auto/common-types";
+import type {
+  InstagramPost,
+  InstagramComment,
+} from "@dm-broo-auto/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 /**
@@ -68,9 +71,7 @@ export async function getUserPosts(clerkId: string) {
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error
-        ? error.message
-        : ERROR_MESSAGES.API.GENERIC_ERROR;
+      error instanceof Error ? error.message : ERROR_MESSAGES.API.GENERIC_ERROR;
     throw new Error(errorMessage);
   }
 }
@@ -119,9 +120,7 @@ export async function getPostComments(clerkId: string, postId: string) {
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error
-        ? error.message
-        : ERROR_MESSAGES.API.GENERIC_ERROR;
+      error instanceof Error ? error.message : ERROR_MESSAGES.API.GENERIC_ERROR;
     throw new Error(errorMessage);
   }
 }

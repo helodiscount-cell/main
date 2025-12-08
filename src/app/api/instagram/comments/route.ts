@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { CommentsQuerySchema } from "@insta-auto/common-types";
+import { CommentsQuerySchema } from "@dm-broo/common-types";
 import { getPostComments } from "@/server/services/instagram.service";
 
 export async function GET(request: NextRequest) {

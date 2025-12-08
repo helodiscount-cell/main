@@ -4,9 +4,7 @@
  */
 
 import { CommentData, replaceVariables } from "./matcher";
-import {
-  sendDirectMessageWithRetry,
-} from "@/lib/instagram/messaging-api";
+import { sendDirectMessageWithRetry } from "@/lib/instagram/messaging-api";
 import { replyToCommentWithRetry } from "@/lib/instagram/comments-api";
 import {
   isRateLimited,
@@ -15,12 +13,8 @@ import {
   createCommentsRateLimitKey,
 } from "@/lib/instagram/rate-limiter";
 import { logger } from "@/lib/utils/logger";
-import {
-  findAutomationById,
-} from "@/server/repositories/automation.repository";
-import {
-  findInstaAccountByAutomationId,
-} from "@/server/repositories/insta-account.repository";
+import { findAutomationById } from "@/server/repositories/automation.repository";
+import { findInstaAccountByAutomationId } from "@/server/repositories/dm-broo-account.repository";
 
 export interface ExecutionResult {
   success: boolean;
@@ -131,7 +125,9 @@ export async function executeAutomation(
 
       logger.error(
         "Failed to execute automation action",
-        actionError instanceof Error ? actionError : new Error(String(actionError)),
+        actionError instanceof Error
+          ? actionError
+          : new Error(String(actionError)),
         {
           automationId,
           actionType: automation.actionType,
@@ -223,7 +219,6 @@ export async function executeAutomation(
   }
 }
 
-
 /**
  * Batch executes multiple automations for a comment
  */
@@ -241,4 +236,3 @@ export async function batchExecuteAutomations(
 
   return results;
 }
-

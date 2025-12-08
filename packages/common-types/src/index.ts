@@ -1,6 +1,6 @@
 /**
  * Common Types Package
- * Exports all shared types for the insta-auto application
+ * Exports all shared types for the dm-broo application
  */
 
 import { z } from "zod";

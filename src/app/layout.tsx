@@ -7,7 +7,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "InstaAuto - Instagram Automation Made Simple",
+  title: "DmBroo - Instagram Automation Made Simple",
   description:
     "Automate your Instagram engagement with smart comment replies and DMs. Built for creators and businesses to grow their audience effortlessly.",
   keywords: [

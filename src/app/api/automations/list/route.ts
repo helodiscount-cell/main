@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { AutomationListQuerySchema } from "@insta-auto/common-types";
+import { AutomationListQuerySchema } from "@dm-broo/common-types";
 import { listAutomations } from "@/server/services/automation.service";
 import { findUserByClerkId } from "@/server/repositories/user.repository";
 
@@ -72,4 +72,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

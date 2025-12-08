@@ -1,5 +1,5 @@
 {
-  "name": "@insta-auto/common-types",
+  "name": "@dm-broo/common-types",
   "version": "1.0.0",
   "private": true,
   "main": "./dist/index.js",

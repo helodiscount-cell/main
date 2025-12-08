@@ -10,10 +10,10 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <MainLogo />
-            <span className="font-bold text-lg">InstaAuto</span>
+            <span className="font-bold text-lg">DmBroo</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} InstaAuto. All rights reserved.
+            © {new Date().getFullYear()} DmBroo. All rights reserved.
           </p>
         </div>
       </div>

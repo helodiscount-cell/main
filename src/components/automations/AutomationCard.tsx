@@ -8,7 +8,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Zap, Pause, Play, Trash2 } from "lucide-react";
-import { AutomationResponse } from "@insta-auto/common-types";
+import { AutomationResponse } from "@dm-broo-auto/common-types";
 
 interface AutomationCardProps {
   automation: AutomationResponse;
@@ -80,10 +80,7 @@ export default function AutomationCard({
               variant="ghost"
               size="sm"
               onClick={() =>
-                onToggleStatus(
-                  automation.id,
-                  isActive ? "PAUSED" : "ACTIVE"
-                )
+                onToggleStatus(automation.id, isActive ? "PAUSED" : "ACTIVE")
               }
               className="h-8 w-8 p-0"
               title={isActive ? "Pause" : "Activate"}
@@ -153,9 +150,7 @@ export default function AutomationCard({
             </span>{" "}
             executions
           </div>
-          <div>
-            Last: {formatDate(automation.lastTriggeredAt)}
-          </div>
+          <div>Last: {formatDate(automation.lastTriggeredAt)}</div>
         </div>
         {onViewDetails && (
           <Button
@@ -171,4 +166,3 @@ export default function AutomationCard({
     </div>
   );
 }
-

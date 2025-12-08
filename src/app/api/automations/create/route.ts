@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { CreateAutomationSchema } from "@insta-auto/common-types";
+import { CreateAutomationSchema } from "@dm-broo/common-types";
 import { createAutomation } from "@/server/services/automation.service";
 import {
   parseRequestBodySafely,

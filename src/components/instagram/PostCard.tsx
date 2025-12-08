@@ -1,5 +1,5 @@
 import React from "react";
-import { InstagramPost } from "@insta-auto/common-types";
+import { InstagramPost } from "@dm-broo-auto/common-types";
 
 interface PostCardProps {
   post: InstagramPost;

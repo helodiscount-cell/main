@@ -2,7 +2,7 @@
 
 import { LucideInstagram } from "lucide-react";
 import PostCard from "@/components/instagram/PostCard";
-import type { InstagramPost } from "@insta-auto/common-types";
+import type { InstagramPost } from "@dm-broo-auto/common-types";
 
 interface PostsSectionProps {
   posts: InstagramPost[];
@@ -53,5 +53,3 @@ export const PostsSection = ({ posts, onPostClick }: PostsSectionProps) => {
     </div>
   );
 };
-
-
