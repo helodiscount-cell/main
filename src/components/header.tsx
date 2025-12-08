@@ -15,8 +15,9 @@ import Link from "next/link";
 const Header = () => {
   return (
     <div className="w-full flex items-center gap-4 p-4 fixed top-0 z-50 justify-between">
-      <Link href="/" className="mx-8">
+      <Link href="/" className="mx-8 flex items-center gap-2">
         <MainLogo />
+        <span className="font-bold text-lg">DmBroo</span>
       </Link>
       <div className="flex gap-4 mx-8">
         <div className="flex items-center gap-4">

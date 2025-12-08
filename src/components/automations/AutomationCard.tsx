@@ -8,7 +8,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Zap, Pause, Play, Trash2 } from "lucide-react";
-import { AutomationResponse } from "@dm-broo-auto/common-types";
+import { AutomationResponse } from "@dm-broo/common-types";
 
 interface AutomationCardProps {
   automation: AutomationResponse;

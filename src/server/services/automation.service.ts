@@ -8,7 +8,7 @@ import type {
   CreateAutomationInput,
   UpdateAutomationInput,
   AutomationListQuery,
-} from "@dm-broo-auto/common-types";
+} from "@dm-broo/common-types";
 import { findUserByIdWithInstaAccount } from "@/server/repositories/user.repository";
 import {
   createAutomation as createAutomationRecord,

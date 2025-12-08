@@ -2,7 +2,7 @@
 
 import { LucideInstagram } from "lucide-react";
 import PostCard from "@/components/instagram/PostCard";
-import type { InstagramPost } from "@dm-broo-auto/common-types";
+import type { InstagramPost } from "@dm-broo/common-types";
 
 interface PostsSectionProps {
   posts: InstagramPost[];

@@ -31,7 +31,7 @@ import {
 import {
   upsertInstaAccount,
   deleteInstaAccount,
-} from "@/server/repositories/dm-broo-account.repository";
+} from "@/server/repositories/insta-account.repository";
 
 /**
  * Initiates the OAuth flow by generating authorization URL

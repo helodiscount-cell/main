@@ -21,7 +21,7 @@ import { useApi } from "@/hooks/use-api";
 import type {
   InstagramPost,
   CreateAutomationInput,
-} from "@dm-broo-auto/common-types";
+} from "@dm-broo/common-types";
 
 export default function PostPage() {
   const params = useParams();

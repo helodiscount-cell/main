@@ -15,7 +15,7 @@ import {
 import type {
   InstagramPost,
   InstagramComment,
-} from "@dm-broo-auto/common-types";
+} from "@dm-broo/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 /**

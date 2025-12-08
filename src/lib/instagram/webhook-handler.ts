@@ -239,7 +239,7 @@ async function handleCommentEvent(
     // Optimized: Queries directly for automations on this specific post
     // This avoids fetching all automations and filtering in memory
     const { findInstaAccountByInstagramUserId } = await import(
-      "@/server/repositories/dm-broo-account.repository"
+      "@/server/repositories/insta-account.repository"
     );
     const { findActiveAutomationsByPost } = await import(
       "@/server/repositories/automation.repository"

@@ -14,7 +14,7 @@ import {
 } from "@/lib/instagram/rate-limiter";
 import { logger } from "@/lib/utils/logger";
 import { findAutomationById } from "@/server/repositories/automation.repository";
-import { findInstaAccountByAutomationId } from "@/server/repositories/dm-broo-account.repository";
+import { findInstaAccountByAutomationId } from "@/server/repositories/insta-account.repository";
 
 export interface ExecutionResult {
   success: boolean;

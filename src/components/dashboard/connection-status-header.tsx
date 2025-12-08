@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { CheckCircle, RefreshCw } from "lucide-react";
-import type { InstagramStatusConnected } from "@dm-broo-auto/common-types";
+import type { InstagramStatusConnected } from "@dm-broo/common-types";
 
 interface ConnectionStatusHeaderProps {
   status: InstagramStatusConnected;
