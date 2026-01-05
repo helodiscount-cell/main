@@ -1,6 +1,7 @@
 /**
  * Instagram Service
  * Contains business logic for Instagram-related operations
+ * Uses Instagram Graph API (graph.instagram.com)
  */
 
 import { getValidAccessToken } from "@/lib/instagram/token-manager";
@@ -34,7 +35,7 @@ export async function getUserPosts(clerkId: string) {
   // Gets valid access token (refreshes if needed)
   const accessToken = await getValidAccessToken(user.instaAccount.id);
 
-  // Uses Facebook Graph API for Instagram Business accounts
+  // Uses Instagram Graph API directly
   const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_MEDIA(instagramUserId));
   url.searchParams.set("fields", GRAPH_API_FIELDS.POSTS.join(","));
   url.searchParams.set("limit", RATE_LIMITS.POSTS_PER_REQUEST.toString());
@@ -95,7 +96,7 @@ export async function getPostComments(clerkId: string, postId: string) {
   url.searchParams.set("fields", GRAPH_API_FIELDS.COMMENTS.join(","));
   url.searchParams.set("access_token", accessToken);
 
-  // Fetches comments from Facebook Graph API
+  // Fetches comments from Instagram Graph API
   try {
     const result = await fetchWithTimeout<any>(url.toString(), {
       method: "GET",

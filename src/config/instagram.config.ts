@@ -1,12 +1,13 @@
 /**
- * Instagram/Facebook Graph API Configuration
- * Centralized configuration for all Instagram integration endpoints
+ * Instagram Graph API Configuration
+ * Centralized configuration for Instagram API with Instagram Login
+ * Uses graph.instagram.com (not graph.facebook.com)
  */
 
-// Graph API configuration
+// Graph API configuration - uses Instagram Graph API directly
 export const GRAPH_API = {
-  VERSION: "v24.0",
-  BASE_URL: "https://graph.facebook.com",
+  VERSION: "v21.0",
+  BASE_URL: "https://graph.instagram.com",
   ENDPOINTS: {
     USER_MEDIA: (userId: string) => `${userId}/media`,
     POST_COMMENTS: (postId: string) => `${postId}/comments`,
@@ -16,20 +17,24 @@ export const GRAPH_API = {
   },
 } as const;
 
-// OAuth configuration
+// OAuth configuration - uses Instagram Login (Business Login for Instagram)
 export const INSTAGRAM_OAUTH = {
+  // Scopes for Instagram API with Instagram Login
   SCOPES: [
-    "instagram_basic",
-    "instagram_manage_comments",
-    "instagram_manage_messages",
-    "pages_show_list",
-    "pages_read_engagement",
-    "business_management",
+    "instagram_business_basic",
+    "instagram_business_manage_messages",
+    "instagram_business_manage_comments",
+    "instagram_business_content_publish",
+    "instagram_business_manage_insights",
   ].join(","),
-  AUTHORIZE_URL: "https://www.facebook.com/v24.0/dialog/oauth",
-  TOKEN_URL: "https://graph.facebook.com/v24.0/oauth/access_token",
-  GRAPH_TOKEN_URL: "https://graph.facebook.com/v24.0/oauth/access_token",
-  REFRESH_URL: "https://graph.facebook.com/v24.0/refresh_access_token",
+  // Instagram authorization URL (not Facebook)
+  AUTHORIZE_URL: "https://www.instagram.com/oauth/authorize",
+  // Short-lived token exchange endpoint
+  TOKEN_URL: "https://api.instagram.com/oauth/access_token",
+  // Long-lived token exchange endpoint
+  LONG_LIVED_TOKEN_URL: "https://graph.instagram.com/access_token",
+  // Token refresh endpoint
+  REFRESH_URL: "https://graph.instagram.com/refresh_access_token",
 } as const;
 
 // Messaging constraints
@@ -142,6 +147,7 @@ export function getAccessToken(): string | null {
 
 /**
  * Gets OAuth app credentials from environment
+ * Uses Instagram App ID and Secret (from Instagram API setup, not Facebook)
  */
 export function getOAuthCredentials(): {
   appId: string | null;
@@ -149,9 +155,11 @@ export function getOAuthCredentials(): {
   redirectUri: string | null;
 } {
   return {
-    appId: process.env.APP_ID || process.env.INSTAGRAM_APP_ID || null,
+    // Instagram App ID (from Instagram > API setup with Instagram login)
+    appId: process.env.INSTAGRAM_APP_ID || process.env.APP_ID || null,
+    // Instagram App Secret (from Instagram > API setup with Instagram login)
     appSecret:
-      process.env.FACEBOOK_APP_SECRET ||
+      process.env.INSTAGRAM_APP_SECRET ||
       process.env.FACEBOOK_APP_SECRET ||
       null,
     redirectUri:
@@ -168,7 +176,7 @@ export function getOAuthCredentials(): {
 export function getOAuthStateSecret(): string | null {
   return (
     process.env.OAUTH_STATE_SECRET ||
-    process.env.FACEBOOK_APP_SECRET ||
+    process.env.INSTAGRAM_APP_SECRET ||
     process.env.FACEBOOK_APP_SECRET ||
     null
   );

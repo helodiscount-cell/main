@@ -1,6 +1,7 @@
 /**
  * Instagram OAuth Helper Functions
- * Handles OAuth flow for Instagram Business accounts
+ * Handles OAuth flow using Instagram Login (Business Login for Instagram)
+ * Uses graph.instagram.com API endpoints (not Facebook)
  */
 
 import {
@@ -19,33 +20,29 @@ export interface OAuthState {
   returnUrl?: string;
 }
 
+// Response from Instagram short-lived token exchange
 export interface OAuthTokenResponse {
   access_token: string;
   user_id: number;
 }
 
+// Response from Instagram long-lived token exchange
 export interface LongLivedTokenResponse {
   access_token: string;
   token_type: string;
   expires_in: number;
 }
 
+// Instagram user profile data
 export interface InstagramUserData {
   id: string;
   username: string;
-  account_type: "BUSINESS" | "CREATOR" | "PERSONAL";
+  account_type: "BUSINESS" | "MEDIA_CREATOR" | "PERSONAL";
+  name?: string;
+  profile_picture_url?: string;
+  followers_count?: number;
+  follows_count?: number;
   media_count?: number;
-}
-
-export interface FacebookPagesResponse {
-  data: Array<{
-    id: string;
-    name: string;
-    access_token: string;
-    instagram_business_account?: {
-      id: string;
-    };
-  }>;
 }
 
 /**
@@ -97,36 +94,42 @@ export function decodeState(encodedState: string): OAuthState {
 
 /**
  * Exchanges authorization code for short-lived access token
+ * Uses Instagram's token endpoint (api.instagram.com)
  */
 export async function exchangeCodeForToken(
   code: string
 ): Promise<OAuthTokenResponse> {
   const { appId, appSecret, redirectUri } = getOAuthCredentials();
 
-  const params = new URLSearchParams({
+  // Instagram token exchange uses POST with form data
+  const formData = new URLSearchParams({
     client_id: appId!,
     client_secret: appSecret!,
+    grant_type: "authorization_code",
     redirect_uri: redirectUri!,
     code,
   });
 
-  const url = `${INSTAGRAM_OAUTH.TOKEN_URL}?${params.toString()}`;
-
   try {
-    const result = await fetchWithTimeout<OAuthTokenResponse>(url, {
-      method: "GET",
-      timeout: 15000, // 15 seconds for OAuth token exchange
-      retries: 2,
-    });
+    const result = await fetchWithTimeout<OAuthTokenResponse>(
+      INSTAGRAM_OAUTH.TOKEN_URL,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData.toString(),
+        timeout: 15000,
+        retries: 2,
+      }
+    );
 
-    // Facebook OAuth returns access_token but not user_id directly
-    // We have to fetch user ID separately if needed
+    // Instagram Login returns both access_token and user_id
     return {
       access_token: result.data.access_token,
-      user_id: result.data.user_id || 0, // Will be fetched later from Graph API
+      user_id: result.data.user_id,
     };
   } catch (error) {
-    // Handles timeout and other errors
     const errorMessage =
       error instanceof Error
         ? error.message
@@ -137,25 +140,25 @@ export async function exchangeCodeForToken(
 
 /**
  * Exchanges short-lived token for long-lived token (60 days)
+ * Uses graph.instagram.com/access_token endpoint
  */
 export async function getLongLivedToken(
   shortLivedToken: string
 ): Promise<LongLivedTokenResponse> {
-  const { appId, appSecret } = getOAuthCredentials();
+  const { appSecret } = getOAuthCredentials();
 
   const params = new URLSearchParams({
-    grant_type: "fb_exchange_token",
-    client_id: appId!,
+    grant_type: "ig_exchange_token",
     client_secret: appSecret!,
-    fb_exchange_token: shortLivedToken,
+    access_token: shortLivedToken,
   });
 
-  const url = `${INSTAGRAM_OAUTH.GRAPH_TOKEN_URL}?${params.toString()}`;
+  const url = `${INSTAGRAM_OAUTH.LONG_LIVED_TOKEN_URL}?${params.toString()}`;
 
   try {
     const result = await fetchWithTimeout<LongLivedTokenResponse>(url, {
       method: "GET",
-      timeout: 15000, // 15 seconds for token exchange
+      timeout: 15000,
       retries: 2,
     });
 
@@ -170,37 +173,48 @@ export async function getLongLivedToken(
 }
 
 /**
- * Fetches Instagram user data using Facebook Graph API
+ * Fetches Instagram user data using Instagram Graph API
+ * Uses /me endpoint or user_id from token exchange
  */
 export async function fetchInstagramUserData(
   accessToken: string,
-  instagramAccountId: string
+  instagramUserId?: string | number
 ): Promise<InstagramUserData> {
-  // For Instagram Business accounts, we fetch data through Facebook Graph API
-  const fields = ["id", "username", "name", "profile_picture_url"].join(",");
+  // Uses /me endpoint or specific user ID
+  const endpoint = instagramUserId ? `${instagramUserId}` : "me";
+  const fields = [
+    "id",
+    "username",
+    "account_type",
+    "name",
+    "profile_picture_url",
+    "followers_count",
+    "follows_count",
+    "media_count",
+  ].join(",");
 
-  // Always uses Facebook Graph API with the Instagram Business Account ID
-  const url = buildGraphApiUrl(
-    GRAPH_API.ENDPOINTS.USER_INFO(instagramAccountId)
-  );
+  const url = buildGraphApiUrl(endpoint);
   url.searchParams.set("fields", fields);
   url.searchParams.set("access_token", accessToken);
 
   try {
     const result = await fetchWithTimeout<any>(url.toString(), {
       method: "GET",
-      timeout: 20000, // 20 seconds for user data fetch
+      timeout: 20000,
       retries: 2,
     });
 
     const data = result.data;
 
-    // Instagram Business accounts are always BUSINESS type
     return {
       id: data.id,
       username: data.username,
-      account_type: "BUSINESS",
-      media_count: undefined, // Not available in initial fetch
+      account_type: data.account_type || "BUSINESS",
+      name: data.name,
+      profile_picture_url: data.profile_picture_url,
+      followers_count: data.followers_count,
+      follows_count: data.follows_count,
+      media_count: data.media_count,
     };
   } catch (error) {
     const errorMessage =
@@ -212,47 +226,17 @@ export async function fetchInstagramUserData(
 }
 
 /**
- * Fetches Facebook Pages connected to the user
- */
-export async function fetchFacebookPages(
-  accessToken: string
-): Promise<FacebookPagesResponse> {
-  const fields = [
-    "id",
-    "name",
-    "access_token",
-    "instagram_business_account",
-  ].join(",");
-
-  const url = buildGraphApiUrl("me/accounts");
-  url.searchParams.set("fields", fields);
-  url.searchParams.set("access_token", accessToken);
-
-  try {
-    const result = await fetchWithTimeout<FacebookPagesResponse>(url.toString(), {
-      method: "GET",
-      timeout: 20000, // 20 seconds for pages fetch
-      retries: 2,
-    });
-
-    return result.data;
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : ERROR_MESSAGES.AUTH.NO_FACEBOOK_PAGE;
-    throw new Error(errorMessage);
-  }
-}
-
-/**
  * Validates that the Instagram account meets requirements
+ * Accepts BUSINESS or MEDIA_CREATOR accounts (not PERSONAL)
  */
 export function validateInstagramAccount(userData: InstagramUserData): {
   valid: boolean;
   error?: string;
 } {
-  if (userData.account_type === "PERSONAL") {
+  // Instagram Login only works with professional accounts
+  const validTypes = ["BUSINESS", "MEDIA_CREATOR"];
+
+  if (!validTypes.includes(userData.account_type)) {
     return {
       valid: false,
       error: ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE,

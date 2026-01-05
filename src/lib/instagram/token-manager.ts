@@ -1,6 +1,6 @@
 /**
  * Instagram Token Management
- * Handles token refresh and validation
+ * Handles token refresh and validation using Instagram Graph API
  */
 
 import { prisma } from "@/lib/db";
@@ -20,6 +20,7 @@ export interface RefreshTokenResponse {
 
 /**
  * Refreshes an Instagram access token
+ * Uses graph.instagram.com/refresh_access_token endpoint
  */
 export async function refreshAccessToken(
   accountId: string
@@ -33,13 +34,8 @@ export async function refreshAccessToken(
     throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
   }
 
-  const { appSecret } = getOAuthCredentials();
-
-  if (!appSecret) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN);
-  }
-
   // Refreshes the token using Instagram Graph API
+  // Uses ig_refresh_token grant type for long-lived token refresh
   const params = new URLSearchParams({
     grant_type: "ig_refresh_token",
     access_token: account.accessToken,
@@ -52,7 +48,7 @@ export async function refreshAccessToken(
   try {
     const result = await fetchWithTimeout<RefreshTokenResponse>(url, {
       method: "GET",
-      timeout: 15000, // 15 seconds for token refresh
+      timeout: 15000,
       retries: 2,
     });
 
@@ -168,7 +164,7 @@ export async function batchRefreshTokens(accountIds: string[]): Promise<{
 }
 
 /**
- * Validates token by making a test API call using Facebook Graph API
+ * Validates token by making a test API call using Instagram Graph API
  */
 export async function validateToken(
   accessToken: string,

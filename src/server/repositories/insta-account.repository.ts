@@ -1,6 +1,7 @@
 /**
  * Instagram Account Repository
  * Data access layer for InstaAccount model operations
+ * Supports Instagram Login (no Facebook Page required)
  */
 
 import { prisma } from "@/lib/db";
@@ -15,8 +16,9 @@ export interface CreateInstaAccountData {
   refreshToken?: string | null;
   tokenExpiresAt: Date;
   grantedScopes: string[];
-  facebookPageId?: string;
-  facebookPageName?: string;
+  // Facebook Page fields - no longer required with Instagram Login
+  facebookPageId?: string | null;
+  facebookPageName?: string | null;
   webhooksEnabled?: boolean;
 }
 
@@ -24,11 +26,12 @@ export interface UpdateInstaAccountData {
   username?: string;
   accountType?: string;
   accessToken?: string;
-  refreshToken?: string;
+  refreshToken?: string | null;
   tokenExpiresAt?: Date;
   grantedScopes?: string[];
-  facebookPageId?: string;
-  facebookPageName?: string;
+  // Facebook Page fields - no longer required with Instagram Login
+  facebookPageId?: string | null;
+  facebookPageName?: string | null;
   lastSyncedAt?: Date;
   webhooksEnabled?: boolean;
   isActive?: boolean;
