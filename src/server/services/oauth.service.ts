@@ -105,7 +105,6 @@ export async function handleOAuthCallback(code: string, state: string) {
   const { executeTransaction } = await import(
     "@/server/repositories/repository-utils"
   );
-  const { prisma } = await import("@/lib/db");
 
   const { user, instaAccount } = await executeTransaction(
     async (tx) => {
