@@ -47,12 +47,6 @@ export async function processWebhookEvent(
   const entryCount = payload.entry?.length || 0;
 
   try {
-    logger.info("Processing webhook event", {
-      webhookId,
-      object: payload.object,
-      entryCount,
-    });
-
     for (const entry of payload.entry) {
       try {
         // Processes changes (comments, etc.)
@@ -106,11 +100,6 @@ export async function processWebhookEvent(
         // Continues processing other entries
       }
     }
-
-    logger.info("Webhook event processing completed", {
-      webhookId,
-      entryCount,
-    });
   } catch (error) {
     logger.error(
       "Critical error processing webhook event",
@@ -134,9 +123,15 @@ async function processChange(
 ): Promise<void> {
   const { field, value } = change;
 
-  // Stores the event in database for processing
-  try {
-    await prisma.webhookEvent.create({
+  console.log("processChange - Process change event:", {
+    instagramUserId,
+    field,
+    value,
+  });
+
+  // Fire and forget: store + process
+  Promise.all([
+    prisma.webhookEvent.create({
       data: {
         eventType: field,
         instagramUserId,
@@ -144,31 +139,34 @@ async function processChange(
         processed: false,
         receivedAt: new Date(),
       },
-    });
-  } catch (error) {
-    logger.error(
-      "Failed to store webhook event in database",
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        eventType: field,
-        instagramUserId,
-      }
-    );
-    // Continues processing even if storage fails
-  }
+    }),
 
-  // Handles different event types
-  switch (field) {
-    case "comments":
-      await handleCommentEvent(instagramUserId, value);
-      break;
-    case "messages":
-      await handleMessageEvent(instagramUserId, value);
-      break;
-    default:
-      // Unknown field type
-      break;
-  }
+    // Process event with timeout
+    Promise.race([
+      (async () => {
+        switch (field) {
+          case "comments":
+            await handleCommentEvent(instagramUserId, value);
+            break;
+          case "messages":
+            await handleMessageEvent(instagramUserId, value);
+            break;
+          default:
+            logger.warn("Unknown webhook field", { field });
+        }
+      })(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Handler timeout")), 4000)
+      ),
+    ]),
+  ]).catch((error) => {
+    logger.error("processChange - Webhook processing failed", error, {
+      field,
+      instagramUserId,
+    });
+  });
+
+  // Returns immediately - don't await the Promise.all
 }
 
 /**
@@ -217,6 +215,7 @@ async function handleCommentEvent(
   try {
     // Validates comment data
     const comment = validateCommentData(commentData);
+    console.log("comment in handleCommentEvent", comment);
     if (!comment) {
       logger.warn("Invalid comment data in webhook", {
         instagramUserId,
@@ -226,7 +225,10 @@ async function handleCommentEvent(
     }
 
     // Gets postId early for optimized query
+    console.log("commentData in handleCommentEvent", commentData);
     const postId = commentData.media?.id || commentData.media_id;
+
+    console.log("postId in handleCommentEvent", postId);
 
     if (!postId) {
       logger.warn("Missing postId in comment event", {
@@ -245,11 +247,20 @@ async function handleCommentEvent(
       "@/server/repositories/automation.repository"
     );
 
+    console.log("handleCommentEvent - Looking for account with ID:", {
+      instagramUserId,
+      type: typeof instagramUserId,
+      asString: String(instagramUserId),
+    });
+
     const instaAccount = await findInstaAccountByInstagramUserId(
-      instagramUserId
+      String(instagramUserId) // Ensures it's a string
     );
 
+    console.log("instaAccount in handleCommentEvent", instaAccount);
+
     if (!instaAccount) {
+      console.log("instaAccount not found in handleCommentEvent");
       return;
     }
 
@@ -360,6 +371,11 @@ async function handleIncomingMessage(
 ): Promise<void> {
   // TODO: Phase 4 will implement message handling
   // For now, we just log that we received the event
+
+  logger.info("handleIncomingMessage", {
+    instagramUserId,
+    messagingEvent,
+  });
 }
 
 /**
@@ -370,6 +386,11 @@ async function handleMessageEvent(
   messageData: any
 ): Promise<void> {
   // TODO: Implements message event handling
+
+  logger.info("handleMessageEvent", {
+    instagramUserId,
+    messageData,
+  });
 }
 
 /**

@@ -6,6 +6,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleOAuthCallback } from "@/server/services/oauth.service";
 
+enum RedirectUrls {
+  SUCCESS = "/dashboard?connected=true",
+  ERROR_OAUTH_DECLINED = "/dashboard?error=oauth_declined",
+  ERROR_OAUTH_INVALID = "/dashboard?error=oauth_invalid",
+  ERROR_OAUTH_FAILED = "/dashboard?error=oauth_failed",
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -14,14 +21,18 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get("error");
 
     // Handles user declining authorization
-    if (error) {
-      const returnUrl = "/dashboard?error=oauth_declined";
+    if (
+      error?.toLowerCase() === "access_denied" ||
+      error?.toLowerCase() === "access_denied_by_user" ||
+      error?.toLowerCase() === "oauth_declined"
+    ) {
+      const returnUrl = RedirectUrls.ERROR_OAUTH_DECLINED;
       return NextResponse.redirect(new URL(returnUrl, request.url));
     }
 
     // Validates required parameters
     if (!code || !state) {
-      const returnUrl = "/dashboard?error=oauth_invalid";
+      const returnUrl = RedirectUrls.ERROR_OAUTH_INVALID;
       return NextResponse.redirect(new URL(returnUrl, request.url));
     }
 
@@ -42,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
-    const errorUrl = "/dashboard?error=oauth_failed";
+    const errorUrl = RedirectUrls.ERROR_OAUTH_FAILED;
     const redirectUrl = new URL(errorUrl, request.url);
 
     // Fixes protocol for localhost (dev environment)

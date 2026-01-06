@@ -27,6 +27,7 @@ model InstaAccount {
 
   // Instagram account details
   instagramUserId String  @unique
+  webhookUserId   String? @unique
   username        String
   accountType     String? // BUSINESS, CREATOR, PERSONAL
 

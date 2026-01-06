@@ -17,9 +17,9 @@ export interface CreateInstaAccountData {
   tokenExpiresAt: Date;
   grantedScopes: string[];
   // Facebook Page fields - no longer required with Instagram Login
-  facebookPageId?: string | null;
-  facebookPageName?: string | null;
-  webhooksEnabled?: boolean;
+  // facebookPageId?: string | null;
+  // facebookPageName?: string | null;
+  // webhooksEnabled?: boolean;
 }
 
 export interface UpdateInstaAccountData {
@@ -40,24 +40,70 @@ export interface UpdateInstaAccountData {
 /**
  * Finds an Instagram account by Instagram user ID
  */
-export async function findInstaAccountByInstagramUserId(instagramUserId: string) {
-  return executeWithErrorHandling(
-    () =>
-      prisma.instaAccount.findUnique({
-        where: { instagramUserId },
-        select: {
-          id: true,
-          userId: true,
-          accessToken: true,
-        },
-      }),
-    {
-      operation: "findInstaAccountByInstagramUserId",
-      model: "InstaAccount",
-      fallback: null,
-      retries: 1,
-    }
-  );
+export async function findInstaAccountByInstagramUserId(
+  instagramUserId: string
+) {
+  // Ensures Instagram user ID is a string for consistent querying
+  const userIdString = String(instagramUserId);
+
+  console.log("findInstaAccountByInstagramUserId in repository", {
+    input: instagramUserId,
+    normalized: userIdString,
+    type: typeof userIdString,
+  });
+
+  // Tries exact match first
+  let instaAccount = await prisma.instaAccount.findUnique({
+    where: { instagramUserId: userIdString },
+    select: {
+      id: true,
+      userId: true,
+      accessToken: true,
+      instagramUserId: true,
+    },
+  });
+
+  // If not found, tries to find all accounts and log them for debugging
+  if (!instaAccount) {
+    console.log("Account not found with exact match, checking all accounts...");
+    const allAccounts = await prisma.instaAccount.findMany({
+      select: {
+        id: true,
+        instagramUserId: true,
+        username: true,
+      },
+    });
+    console.log("All stored Instagram accounts:", allAccounts);
+    console.log("Looking for:", userIdString);
+    console.log(
+      "Type comparison:",
+      allAccounts.map((acc) => ({
+        stored: acc.instagramUserId,
+        storedType: typeof acc.instagramUserId,
+        matches: acc.instagramUserId === userIdString,
+      }))
+    );
+  }
+
+  console.log("instaAccount in repository", instaAccount);
+  return instaAccount;
+  // return executeWithErrorHandling(
+  //   () =>
+  //     prisma.instaAccount.findUnique({
+  //       where: { instagramUserId },
+  //       select: {
+  //         id: true,
+  //         userId: true,
+  //         accessToken: true,
+  //       },
+  //     }),
+  //   {
+  //     operation: "findInstaAccountByInstagramUserId",
+  //     model: "InstaAccount",
+  //     fallback: null,
+  //     retries: 1,
+  //   }
+  // );
 }
 
 /**
@@ -141,10 +187,7 @@ export async function upsertInstaAccount(
           refreshToken: data.refreshToken,
           tokenExpiresAt: data.tokenExpiresAt,
           grantedScopes: data.grantedScopes,
-          facebookPageId: data.facebookPageId,
-          facebookPageName: data.facebookPageName,
           lastSyncedAt: new Date(),
-          webhooksEnabled: data.webhooksEnabled ?? false,
           isActive: true,
         },
         create: {
@@ -156,9 +199,6 @@ export async function upsertInstaAccount(
           refreshToken: data.refreshToken,
           tokenExpiresAt: data.tokenExpiresAt,
           grantedScopes: data.grantedScopes,
-          facebookPageId: data.facebookPageId,
-          facebookPageName: data.facebookPageName,
-          webhooksEnabled: data.webhooksEnabled ?? false,
           isActive: true,
         },
       }),
@@ -226,4 +266,3 @@ export async function deleteInstaAccount(id: string) {
     }
   );
 }
-

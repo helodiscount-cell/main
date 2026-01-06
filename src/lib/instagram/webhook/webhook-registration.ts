@@ -11,12 +11,12 @@ import {
 import { prisma } from "@/lib/db";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
-export interface WebhookSubscription {
-  object: string;
-  callback_url: string;
-  fields: string[];
-  verify_token: string;
-}
+// export interface WebhookSubscription {
+//   object: string;
+//   callback_url: string;
+//   fields: string[];
+//   verify_token: string;
+// }
 
 /**
  * Subscribes to Instagram webhooks
@@ -63,19 +63,6 @@ export async function subscribeToWebhooks(
   } catch (error) {
     return false;
   }
-}
-
-/**
- * Unsubscribes from Instagram webhooks
- * With Instagram Login, this is handled at the app level
- */
-export async function unsubscribeFromWebhooks(
-  accessToken: string,
-  instagramUserId: string
-): Promise<boolean> {
-  // With Instagram Login, webhook subscriptions are managed at the app level
-  // Individual user unsubscription happens when account is disconnected
-  return true;
 }
 
 /**

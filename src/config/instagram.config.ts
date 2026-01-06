@@ -14,6 +14,7 @@ export const GRAPH_API = {
     USER_INFO: (userId: string) => `${userId}`,
     SEND_MESSAGE: (igUserId: string) => `${igUserId}/messages`,
     REPLY_COMMENT: (commentId: string) => `${commentId}/replies`,
+    SUBSCRIBED_APPS: (oauthUserId: string) => `${oauthUserId}/subscribed_apps`,
   },
 } as const;
 
@@ -183,9 +184,26 @@ export function getOAuthStateSecret(): string | null {
 }
 
 /**
- * Validates OAuth configuration is complete
+ * Validates instagram OAuth configuration
  */
 export function validateOAuthConfig(): boolean {
   const { appId, appSecret, redirectUri } = getOAuthCredentials();
   return Boolean(appId && appSecret && redirectUri);
 }
+
+/**
+ * Gets webhook related secrets like verify token and callback URL from environment
+ */
+
+export const getWebhookConfigSecrets = () => {
+  const verifyToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+  const callbackUrl = process.env.INSTAGRAM_WEBHOOK_CALLBACK_URL;
+
+  if (!verifyToken || !callbackUrl) {
+    throw new Error(
+      "Webhook verify token or callback URL not configured in environment variables"
+    );
+  }
+
+  return { verifyToken, callbackUrl };
+};

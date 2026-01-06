@@ -62,10 +62,10 @@ export default function DashboardPage() {
   const { execute: deleteAutomation } = useApi<any>();
 
   // Disconnect Instagram: /instagram/oauth/disconnect
-  const {
-    execute: disconnectInstagram,
-    loading: isDisconnecting,
-  } = useApi<{ success: boolean; message: string }>();
+  const { execute: disconnectInstagram, loading: isDisconnecting } = useApi<{
+    success: boolean;
+    message: string;
+  }>();
 
   const isConnected =
     statusData && "connected" in statusData && statusData.connected === true;

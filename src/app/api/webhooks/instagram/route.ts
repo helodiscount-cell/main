@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
     const challenge = searchParams.get("hub.challenge");
 
     if (!mode || !token || !challenge) {
-      return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid parameters" },
+        { status: 400 }
+      );
     }
 
     // Calls service layer
@@ -37,10 +40,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : "Internal server error",
       },
-      { status: error instanceof Error && error.message === "Invalid mode" ? 403 : 500 }
+      {
+        status:
+          error instanceof Error && error.message === "Invalid mode"
+            ? 403
+            : 500,
+      }
     );
   }
 }
@@ -54,6 +61,8 @@ export async function POST(request: NextRequest) {
     // Gets the raw body for signature verification
     const bodyText = await request.text();
 
+    console.log("bodyText", bodyText);
+
     // Gets the signature header
     const signature = request.headers.get("x-hub-signature-256") || "";
 
@@ -65,10 +74,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : "Internal server error",
       },
-      { status: error instanceof Error && error.message === "Invalid signature" ? 403 : 500 }
+      {
+        status:
+          error instanceof Error && error.message === "Invalid signature"
+            ? 403
+            : 500,
+      }
     );
   }
 }
