@@ -119,6 +119,7 @@ export const InstagramUserDataSchema = z.object({
   profile_picture_url: z.string().optional(),
   followers_count: z.number().optional(),
   follows_count: z.number().optional(),
+  webhookUserId: z.string().optional(),
 });
 
 // Facebook pages response schema

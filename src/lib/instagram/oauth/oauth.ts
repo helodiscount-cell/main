@@ -65,22 +65,50 @@ export async function fetchInstagramUserData(
 
   // Uses the exact format: https://graph.instagram.com/v21.0/me?fields=...&access_token=...
 
-  const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_INFO("me"));
+  let url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_INFO("me"));
   url.searchParams.set("fields", fields);
   url.searchParams.set("access_token", accessToken);
 
-  const { data: userData, status } = await fetchWithTimeout<InstagramUserData>(
-    url.toString(),
-    {
+  console.log("url", url.toString());
+
+  const { data: userData, status: instagramUserDataStatus } =
+    await fetchWithTimeout<InstagramUserData>(url.toString(), {
       method: "GET",
       timeout: 10000,
       retries: 1,
-    }
-  );
+    });
 
-  if (status !== 200) {
-    throw new Error(`Failed to fetch Instagram user data: ${status}`);
+  console.log("userData", userData);
+
+  if (instagramUserDataStatus !== 200) {
+    throw new Error(
+      `Failed to fetch Instagram user data: ${instagramUserDataStatus}`
+    );
   }
+
+  url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.SUBSCRIBED_APPS(userData.id));
+  url.searchParams.set("access_token", accessToken);
+
+  console.log("url", url.toString());
+
+  // const { data: webhookUserIdData, status: webhookUserIdStatus } =
+  //   await fetchWithTimeout<{
+  //     data: { id: string; subscribed_fields: string[] }[];
+  //   }>(url.toString(), {
+  //     method: "GET",
+  //     timeout: 10000,
+  //     retries: 1,
+  //   });
+
+  // console.log("webhookUserIdData", webhookUserIdData);
+
+  // if (webhookUserIdStatus !== 200) {
+  //   throw new Error(`Failed to fetch webhook user id: ${webhookUserIdStatus}`);
+  // }
+
+  // const webhookUserId = webhookUserIdData.data[0].id;
+
+  // console.log("webhookUserId", webhookUserId);
 
   return {
     id: userData.id,
@@ -91,6 +119,8 @@ export async function fetchInstagramUserData(
     followers_count: userData.followers_count,
     follows_count: userData.follows_count,
     media_count: userData.media_count,
+    // because webhook only works for authrized persons on the console
+    // webhookUserId: webhookUserId.length > 0 ? webhookUserId : "",
   };
 }
 

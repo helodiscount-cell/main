@@ -52,7 +52,13 @@ export async function initiateOAuth(clerkId: string, returnUrl?: string) {
  * Uses Instagram Login - no Facebook Pages required
  */
 export async function handleOAuthCallback(code: string, state: string) {
-  const user = await getServerUser();
+  const serverUser = await getServerUser();
+  if (!serverUser) {
+    throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
+  }
+  const { fullName, emailAddresses, imageUrl } = serverUser;
+
+  console.log("serverUser", serverUser);
 
   try {
     // Decodes and validates state
@@ -61,10 +67,14 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Exchanges code for short-lived token (returns user_id too)
     const shortLivedToken = await exchangeCodeForToken(code);
 
+    console.log("shortLivedToken", shortLivedToken);
+
     // Exchanges for long-lived token (60 days)
     const longLivedToken = await getLongLivedToken(
       shortLivedToken.access_token
     );
+
+    console.log("longLivedToken", longLivedToken);
 
     // Fetches Instagram user data using the token
     // Passes user_id from token exchange for direct access
@@ -72,8 +82,11 @@ export async function handleOAuthCallback(code: string, state: string) {
       longLivedToken.access_token
     );
 
+    console.log("instagramUser", instagramUser);
+
     // Validates account type (must be BUSINESS or MEDIA_CREATOR)
     const validation = validateInstagramAccount(instagramUser);
+    console.log("validation", validation);
     if (!validation.valid) {
       throw new Error(
         validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE
@@ -82,12 +95,17 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     // Calculates token expiration
     const tokenExpiresAt = calculateTokenExpiration(longLivedToken.expires_in);
+    console.log("tokenExpiresAt", tokenExpiresAt);
     const grantedScopes = INSTAGRAM_OAUTH.SCOPES.split(",");
+
+    console.log("grantedScopes", grantedScopes);
 
     // Wraps user creation and Instagram account linking in a transaction
     const { executeTransaction } = await import(
       "@/server/repositories/repository-utils"
     );
+
+    console.log("before executeTransaction", instagramUser);
 
     const { user, instaAccount } = await executeTransaction(
       async (tx) => {
@@ -100,8 +118,9 @@ export async function handleOAuthCallback(code: string, state: string) {
           user = await tx.user.create({
             data: {
               clerkId,
-              fullName: user.name ?? "",
-              email: user.email ?? "",
+              fullName: fullName ?? "",
+              email: emailAddresses ?? "",
+              imageUrl: imageUrl ?? "",
             },
           });
         }
@@ -116,6 +135,7 @@ export async function handleOAuthCallback(code: string, state: string) {
             instagramUserId: instagramUserIdString,
             username: instagramUser.username,
             accountType: instagramUser.account_type,
+            webhookUserId: instagramUser.webhookUserId,
             accessToken: longLivedToken.access_token,
             refreshToken: null,
             tokenExpiresAt,
@@ -132,6 +152,7 @@ export async function handleOAuthCallback(code: string, state: string) {
             instagramUserId: instagramUserIdString,
             username: instagramUser.username,
             accountType: instagramUser.account_type,
+            webhookUserId: instagramUser.webhookUserId,
             accessToken: longLivedToken.access_token,
             refreshToken: null,
             tokenExpiresAt,

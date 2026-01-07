@@ -46,20 +46,15 @@ export async function findInstaAccountByInstagramUserId(
   // Ensures Instagram user ID is a string for consistent querying
   const userIdString = String(instagramUserId);
 
-  console.log("findInstaAccountByInstagramUserId in repository", {
-    input: instagramUserId,
-    normalized: userIdString,
-    type: typeof userIdString,
-  });
-
   // Tries exact match first
   let instaAccount = await prisma.instaAccount.findUnique({
-    where: { instagramUserId: userIdString },
+    where: { instagramUserId: "25065051563178108" },
     select: {
       id: true,
       userId: true,
       accessToken: true,
       instagramUserId: true,
+      webhookUserId: true,
     },
   });
 
@@ -70,6 +65,7 @@ export async function findInstaAccountByInstagramUserId(
       select: {
         id: true,
         instagramUserId: true,
+        webhookUserId: true,
         username: true,
       },
     });
@@ -78,7 +74,7 @@ export async function findInstaAccountByInstagramUserId(
     console.log(
       "Type comparison:",
       allAccounts.map((acc) => ({
-        stored: acc.instagramUserId,
+        stored: acc.webhookUserId,
         storedType: typeof acc.instagramUserId,
         matches: acc.instagramUserId === userIdString,
       }))

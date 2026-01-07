@@ -215,6 +215,8 @@ async function handleCommentEvent(
   try {
     // Validates comment data
     const comment = validateCommentData(commentData);
+
+    console.log("data in handleCommentEvent", instagramUserId);
     console.log("comment in handleCommentEvent", comment);
     if (!comment) {
       logger.warn("Invalid comment data in webhook", {
