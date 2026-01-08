@@ -8,6 +8,7 @@ import {
   verifyWebhook,
   processWebhookEvent,
 } from "@/server/services/webhook.service";
+import { logger } from "@/lib/utils/logger";
 
 /**
  * GET handler for webhook verification
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Gets the raw body for signature verification
     const bodyText = await request.text();
 
-    console.log("bodyText", bodyText);
+    logger.info("bodyText", { bodyText });
 
     // Gets the signature header
     const signature = request.headers.get("x-hub-signature-256") || "";

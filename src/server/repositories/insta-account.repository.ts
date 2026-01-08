@@ -48,7 +48,7 @@ export async function findInstaAccountByInstagramUserId(
 
   // Tries exact match first
   let instaAccount = await prisma.instaAccount.findUnique({
-    where: { instagramUserId: "25065051563178108" },
+    where: { webhookUserId: userIdString },
     select: {
       id: true,
       userId: true,

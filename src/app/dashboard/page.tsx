@@ -67,11 +67,8 @@ export default function DashboardPage() {
     message: string;
   }>();
 
-  const isConnected =
+  const connectedStatus =
     statusData && "connected" in statusData && statusData.connected === true;
-  const connectedStatus = isConnected
-    ? (statusData as Extract<InstagramStatusResponse, { connected: true }>)
-    : null;
 
   const errorBanner =
     checkStatusError || fetchPostsError || fetchAutomationsError
@@ -105,7 +102,7 @@ export default function DashboardPage() {
 
   // Loads posts from localStorage when connection status is confirmed
   useEffect(() => {
-    if (isConnected) {
+    if (connectedStatus) {
       try {
         const storedPosts = localStorage.getItem("instagram_posts");
         if (storedPosts) {
@@ -121,7 +118,7 @@ export default function DashboardPage() {
     } else {
       setPosts([]);
     }
-  }, [isConnected]);
+  }, [connectedStatus]);
 
   useEffect(() => {
     if (postsData?.posts) {
@@ -130,10 +127,10 @@ export default function DashboardPage() {
   }, [postsData]);
 
   useEffect(() => {
-    if (isConnected) {
+    if (connectedStatus) {
       fetchAutomations("/automations/list?status=ACTIVE", "GET");
     }
-  }, [isConnected, fetchAutomations]);
+  }, [connectedStatus, fetchAutomations]);
 
   useEffect(() => {
     if (automationsData?.automations) {
@@ -212,7 +209,7 @@ export default function DashboardPage() {
       <div className="w-full min-h-screen relative z-10 flex flex-col px-4 sm:px-8 md:px-16 py-12 max-w-5xl mx-auto">
         {errorBanner && <ErrorBanner message={errorBanner} />}
 
-        {!isConnected && (
+        {!connectedStatus && (
           <div className="flex flex-1 items-center justify-center">
             <InstagramConnect
               handleConnectInstagram={handleConnectInstagram}
@@ -221,10 +218,10 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {isConnected && connectedStatus && (
+        {connectedStatus && (
           <div className="animate-fade-in flex flex-col gap-8">
             <ConnectionStatusHeader
-              status={connectedStatus}
+              status={statusData}
               onFetchPosts={handleFetchPosts}
               isFetchingPosts={isFetchingPosts}
               postsCount={posts.length}

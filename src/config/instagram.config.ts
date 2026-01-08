@@ -14,7 +14,6 @@ export const GRAPH_API = {
     USER_INFO: (userId: string) => `${userId}`,
     SEND_MESSAGE: (igUserId: string) => `${igUserId}/messages`,
     REPLY_COMMENT: (commentId: string) => `${commentId}/replies`,
-    SUBSCRIBED_APPS: (oauthUserId: string) => `${oauthUserId}/subscribed_apps`,
   },
 } as const;
 
@@ -58,7 +57,18 @@ export const GRAPH_API_FIELDS = {
     "comments_count",
   ],
   COMMENTS: ["id", "text", "timestamp", "username", "like_count", "user"],
-  USER: ["id", "username", "account_type", "media_count"],
+  USER: [
+    "id",
+    "username",
+    "user_id",
+    "account_type",
+    "name",
+    "profile_picture_url",
+    "followers_count",
+    "follows_count",
+    "media_count",
+    "biography",
+  ],
 } as const;
 
 // Rate limiting configuration

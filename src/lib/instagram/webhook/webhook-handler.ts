@@ -123,12 +123,6 @@ async function processChange(
 ): Promise<void> {
   const { field, value } = change;
 
-  console.log("processChange - Process change event:", {
-    instagramUserId,
-    field,
-    value,
-  });
-
   // Fire and forget: store + process
   Promise.all([
     prisma.webhookEvent.create({
@@ -216,8 +210,6 @@ async function handleCommentEvent(
     // Validates comment data
     const comment = validateCommentData(commentData);
 
-    console.log("data in handleCommentEvent", instagramUserId);
-    console.log("comment in handleCommentEvent", comment);
     if (!comment) {
       logger.warn("Invalid comment data in webhook", {
         instagramUserId,
@@ -227,10 +219,7 @@ async function handleCommentEvent(
     }
 
     // Gets postId early for optimized query
-    console.log("commentData in handleCommentEvent", commentData);
     const postId = commentData.media?.id || commentData.media_id;
-
-    console.log("postId in handleCommentEvent", postId);
 
     if (!postId) {
       logger.warn("Missing postId in comment event", {
@@ -249,20 +238,12 @@ async function handleCommentEvent(
       "@/server/repositories/automation.repository"
     );
 
-    console.log("handleCommentEvent - Looking for account with ID:", {
-      instagramUserId,
-      type: typeof instagramUserId,
-      asString: String(instagramUserId),
-    });
-
     const instaAccount = await findInstaAccountByInstagramUserId(
       String(instagramUserId) // Ensures it's a string
     );
 
-    console.log("instaAccount in handleCommentEvent", instaAccount);
-
     if (!instaAccount) {
-      console.log("instaAccount not found in handleCommentEvent");
+      // ignore and avoid crashing the webhook
       return;
     }
 

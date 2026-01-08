@@ -26,10 +26,15 @@ model InstaAccount {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Instagram account details
-  instagramUserId String  @unique
-  webhookUserId   String? @unique
-  username        String
-  accountType     String? // BUSINESS, CREATOR, PERSONAL
+  instagramUserId   String  @unique //  // Instagram User ID (for API calls)
+  webhookUserId     String? @unique // Instagram Business Account ID (for webhooks)
+  username          String
+  profilePictureUrl String?
+  biography         String?
+  followersCount    Int?
+  followsCount      Int?
+  mediaCount        Int?
+  accountType       String? // BUSINESS, CREATOR, PERSONAL
 
   // OAuth tokens (encrypted in production)
   accessToken    String   @default("")
@@ -38,8 +43,8 @@ model InstaAccount {
   grantedScopes  String[] @default([])
 
   // Facebook Page (required for messaging)
-  facebookPageId   String?
-  facebookPageName String?
+  // facebookPageId   String?
+  // facebookPageName String?
 
   // Connection metadata
   connectedAt     DateTime @default(now())

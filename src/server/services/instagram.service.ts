@@ -13,10 +13,7 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
-import type {
-  InstagramPost,
-  InstagramComment,
-} from "@dm-broo/common-types";
+import type { InstagramPost, InstagramComment } from "@dm-broo/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 /**
@@ -145,6 +142,12 @@ export async function getConnectionStatus(clerkId: string) {
   return {
     connected: true as const,
     username: user.instaAccount.username,
+    profilePictureUrl: user.instaAccount.profilePictureUrl,
+    biography: user.instaAccount.biography,
+    followersCount: user.instaAccount.followersCount,
+    followsCount: user.instaAccount.followsCount,
+    mediaCount: user.instaAccount.mediaCount,
+    accountType: user.instaAccount.accountType,
     connectedAt: user.instaAccount.connectedAt,
     lastSyncedAt: user.instaAccount.lastSyncedAt,
   };

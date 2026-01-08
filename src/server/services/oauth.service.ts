@@ -86,7 +86,7 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     // Validates account type (must be BUSINESS or MEDIA_CREATOR)
     const validation = validateInstagramAccount(instagramUser);
-    console.log("validation", validation);
+
     if (!validation.valid) {
       throw new Error(
         validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE
@@ -95,19 +95,14 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     // Calculates token expiration
     const tokenExpiresAt = calculateTokenExpiration(longLivedToken.expires_in);
-    console.log("tokenExpiresAt", tokenExpiresAt);
     const grantedScopes = INSTAGRAM_OAUTH.SCOPES.split(",");
-
-    console.log("grantedScopes", grantedScopes);
 
     // Wraps user creation and Instagram account linking in a transaction
     const { executeTransaction } = await import(
       "@/server/repositories/repository-utils"
     );
 
-    console.log("before executeTransaction", instagramUser);
-
-    const { user, instaAccount } = await executeTransaction(
+    const { instaAccount } = await executeTransaction(
       async (tx) => {
         // Finds or creates user
         let user = await tx.user.findUnique({
@@ -135,15 +130,16 @@ export async function handleOAuthCallback(code: string, state: string) {
             instagramUserId: instagramUserIdString,
             username: instagramUser.username,
             accountType: instagramUser.account_type,
-            webhookUserId: instagramUser.webhookUserId,
+            webhookUserId: instagramUser.user_id,
+            profilePictureUrl: instagramUser.profile_picture_url,
+            biography: instagramUser.biography,
+            followersCount: instagramUser.followers_count,
+            followsCount: instagramUser.follows_count,
+            mediaCount: instagramUser.media_count,
             accessToken: longLivedToken.access_token,
             refreshToken: null,
             tokenExpiresAt,
             grantedScopes,
-            // Facebook Page fields no longer needed with Instagram Login
-            facebookPageId: null,
-            facebookPageName: null,
-            lastSyncedAt: new Date(),
             webhooksEnabled: false,
             isActive: true,
           },
@@ -152,15 +148,18 @@ export async function handleOAuthCallback(code: string, state: string) {
             instagramUserId: instagramUserIdString,
             username: instagramUser.username,
             accountType: instagramUser.account_type,
-            webhookUserId: instagramUser.webhookUserId,
+            webhookUserId: instagramUser.user_id,
+            profilePictureUrl: instagramUser.profile_picture_url,
+            biography: instagramUser.biography,
+            followersCount: instagramUser.followers_count,
+            followsCount: instagramUser.follows_count,
+            mediaCount: instagramUser.media_count,
             accessToken: longLivedToken.access_token,
             refreshToken: null,
-            tokenExpiresAt,
-            grantedScopes,
-            facebookPageId: null,
-            facebookPageName: null,
-            webhooksEnabled: false,
             isActive: true,
+            tokenExpiresAt,
+            webhooksEnabled: false,
+            grantedScopes,
           },
         });
 
