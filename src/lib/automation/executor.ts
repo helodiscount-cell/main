@@ -182,14 +182,7 @@ export async function executeAutomation(
     );
 
     // Logs execution result
-    if (executionStatus === "SUCCESS") {
-      logger.info("Automation executed successfully", {
-        automationId,
-        executionId: execution.id,
-        actionType: automation.actionType,
-        commentId: comment.id,
-      });
-    } else {
+    if (executionStatus !== "SUCCESS") {
       logger.warn("Automation execution failed", {
         automationId,
         executionId: execution.id,
@@ -197,7 +190,6 @@ export async function executeAutomation(
         error: errorMessage,
       });
     }
-
     return {
       success: executionStatus === "SUCCESS",
       executionId: execution.id,

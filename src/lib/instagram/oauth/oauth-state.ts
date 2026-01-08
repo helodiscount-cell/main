@@ -79,9 +79,7 @@ export function createSecureState(data: {
  * Validates and decodes a secure OAuth state
  * Verifies HMAC signature, expiration, and prevents replay attacks
  */
-export function validateSecureState(
-  encodedState: string
-): {
+export function validateSecureState(encodedState: string): {
   clerkId: string;
   returnUrl: string;
 } {
@@ -158,4 +156,3 @@ export function validateSecureState(
     throw new Error("Failed to validate OAuth state. Please try again.");
   }
 }
-

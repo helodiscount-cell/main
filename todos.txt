@@ -1,0 +1,2 @@
+- webhooks only work for authrized persons on the console.
+- webhook instagram user id and actual instagram user id and subscribed apps id mismatch.

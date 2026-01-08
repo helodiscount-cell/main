@@ -1,3 +1,5 @@
+// url from frontend: http://localhost:3000/api/instagram/oauth/authorize?returnUrl=/dashboard
+
 /**
  * Instagram OAuth Authorization Endpoint
  * Initiates OAuth flow by redirecting to Instagram
@@ -6,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { initiateOAuth } from "@/server/services/oauth.service";
+import { ERROR_MESSAGES } from "@/config/instagram.config";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     if (!clerkId) {
       return NextResponse.json(
-        { success: false, error: "You must be logged in to connect Instagram" },
+        { success: false, error: ERROR_MESSAGES.AUTH.NO_USER },
         { status: 401 }
       );
     }
@@ -35,7 +38,7 @@ export async function GET(request: NextRequest) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to initiate Instagram authorization",
+            : ERROR_MESSAGES.AUTH.OAUTH_FAILED,
       },
       { status: 500 }
     );

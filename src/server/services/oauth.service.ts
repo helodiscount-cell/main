@@ -1,18 +1,14 @@
 /**
  * OAuth Service
- * Contains business logic for Instagram OAuth flow
+ * Contains business logic for Instagram OAuth flow using Instagram Login
+ * No Facebook Pages required - uses Instagram User access token directly
  */
 
 import {
   generateAuthorizationUrl,
-  decodeState,
-  exchangeCodeForToken,
-  getLongLivedToken,
   fetchInstagramUserData,
-  fetchFacebookPages,
   validateInstagramAccount,
-  calculateTokenExpiration,
-} from "@/lib/instagram/oauth";
+} from "@/lib/instagram/oauth/oauth";
 import {
   INSTAGRAM_OAUTH,
   ERROR_MESSAGES,
@@ -21,17 +17,17 @@ import {
 import {
   subscribeToWebhooks,
   markWebhooksEnabled,
-} from "@/lib/instagram/webhook-registration";
+} from "@/lib/instagram/webhook/webhook-registration";
 import { refreshAccessToken as refreshToken } from "@/lib/instagram/token-manager";
+import { findUserWithInstaAccount } from "@/server/repositories/user.repository";
+import { deleteInstaAccount } from "@/server/repositories/insta-account.repository";
+import { validateSecureState } from "@/lib/instagram/oauth/oauth-state";
 import {
-  findUserByClerkId,
-  createUser,
-  findUserWithInstaAccount,
-} from "@/server/repositories/user.repository";
-import {
-  upsertInstaAccount,
-  deleteInstaAccount,
-} from "@/server/repositories/insta-account.repository";
+  exchangeCodeForToken,
+  calculateTokenExpiration,
+  getLongLivedToken,
+} from "@/lib/instagram/token-manager";
+import { getServerUser } from "@/lib/auth/get-server-user";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -53,136 +49,150 @@ export async function initiateOAuth(clerkId: string, returnUrl?: string) {
 
 /**
  * Handles the OAuth callback from Instagram
+ * Uses Instagram Login - no Facebook Pages required
  */
 export async function handleOAuthCallback(code: string, state: string) {
-  // Decodes and validates state
-  const oauthState = decodeState(state);
-  const { clerkId, returnUrl } = oauthState;
-
-  // Exchange code for short-lived token
-  const shortLivedToken = await exchangeCodeForToken(code);
-
-  // Exchange for long-lived token (60 days)
-  const longLivedToken = await getLongLivedToken(shortLivedToken.access_token);
-
-  // Fetch Facebook Pages (needed to get Instagram Business Account)
-  const pages = await fetchFacebookPages(longLivedToken.access_token);
-
-  // Finds page with linked Instagram Business Account
-  const linkedPage = pages.data.find(
-    (page) => page.instagram_business_account?.id
-  );
-
-  if (!linkedPage || !linkedPage.instagram_business_account) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_FACEBOOK_PAGE);
+  const serverUser = await getServerUser();
+  if (!serverUser) {
+    throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
   }
+  const { fullName, emailAddresses, imageUrl } = serverUser;
 
-  const instagramAccountId = linkedPage.instagram_business_account.id;
-  const facebookPageId = linkedPage.id;
-  const facebookPageName = linkedPage.name;
-  const pageAccessToken = linkedPage.access_token;
+  console.log("serverUser", serverUser);
 
-  // Fetch Instagram user data using page access token
-  const instagramUser = await fetchInstagramUserData(
-    pageAccessToken,
-    instagramAccountId
-  );
+  try {
+    // Decodes and validates state
+    const { clerkId, returnUrl } = validateSecureState(state);
 
-  // Validate account type
-  const validation = validateInstagramAccount(instagramUser);
-  if (!validation.valid) {
-    throw new Error(
-      validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE
+    // Exchanges code for short-lived token (returns user_id too)
+    const shortLivedToken = await exchangeCodeForToken(code);
+
+    console.log("shortLivedToken", shortLivedToken);
+
+    // Exchanges for long-lived token (60 days)
+    const longLivedToken = await getLongLivedToken(
+      shortLivedToken.access_token
     );
-  }
 
-  // Calculate token expiration
-  const tokenExpiresAt = calculateTokenExpiration(longLivedToken.expires_in);
-  const grantedScopes = INSTAGRAM_OAUTH.SCOPES.split(",");
+    console.log("longLivedToken", longLivedToken);
 
-  // Wraps user creation and Instagram account linking in a transaction
-  // Ensures atomicity: either both succeed or both fail
-  const { executeTransaction } = await import(
-    "@/server/repositories/repository-utils"
-  );
+    // Fetches Instagram user data using the token
+    // Passes user_id from token exchange for direct access
+    const instagramUser = await fetchInstagramUserData(
+      longLivedToken.access_token
+    );
 
-  const { user, instaAccount } = await executeTransaction(
-    async (tx) => {
-      // Finds or creates user
-      let user = await tx.user.findUnique({
-        where: { clerkId },
-      });
+    console.log("instagramUser", instagramUser);
 
-      if (!user) {
-        user = await tx.user.create({
-          data: {
-            clerkId,
-            fullName: "",
-            email: "",
+    // Validates account type (must be BUSINESS or MEDIA_CREATOR)
+    const validation = validateInstagramAccount(instagramUser);
+
+    if (!validation.valid) {
+      throw new Error(
+        validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE
+      );
+    }
+
+    // Calculates token expiration
+    const tokenExpiresAt = calculateTokenExpiration(longLivedToken.expires_in);
+    const grantedScopes = INSTAGRAM_OAUTH.SCOPES.split(",");
+
+    // Wraps user creation and Instagram account linking in a transaction
+    const { executeTransaction } = await import(
+      "@/server/repositories/repository-utils"
+    );
+
+    const { instaAccount } = await executeTransaction(
+      async (tx) => {
+        // Finds or creates user
+        let user = await tx.user.findUnique({
+          where: { clerkId },
+        });
+
+        if (!user) {
+          user = await tx.user.create({
+            data: {
+              clerkId,
+              fullName: fullName ?? "",
+              email: emailAddresses ?? "",
+              imageUrl: imageUrl ?? "",
+            },
+          });
+        }
+
+        // Upserts Instagram account (no Facebook Page needed anymore)
+        // Ensures Instagram user ID is stored as a string
+        const instagramUserIdString = String(instagramUser.id);
+
+        const instaAccount = await tx.instaAccount.upsert({
+          where: { userId: user.id },
+          update: {
+            instagramUserId: instagramUserIdString,
+            username: instagramUser.username,
+            accountType: instagramUser.account_type,
+            webhookUserId: instagramUser.user_id,
+            profilePictureUrl: instagramUser.profile_picture_url,
+            biography: instagramUser.biography,
+            followersCount: instagramUser.followers_count,
+            followsCount: instagramUser.follows_count,
+            mediaCount: instagramUser.media_count,
+            accessToken: longLivedToken.access_token,
+            refreshToken: null,
+            tokenExpiresAt,
+            grantedScopes,
+            webhooksEnabled: false,
+            isActive: true,
+          },
+          create: {
+            userId: user.id,
+            instagramUserId: instagramUserIdString,
+            username: instagramUser.username,
+            accountType: instagramUser.account_type,
+            webhookUserId: instagramUser.user_id,
+            profilePictureUrl: instagramUser.profile_picture_url,
+            biography: instagramUser.biography,
+            followersCount: instagramUser.followers_count,
+            followsCount: instagramUser.follows_count,
+            mediaCount: instagramUser.media_count,
+            accessToken: longLivedToken.access_token,
+            refreshToken: null,
+            isActive: true,
+            tokenExpiresAt,
+            webhooksEnabled: false,
+            grantedScopes,
           },
         });
+
+        return { user, instaAccount };
+      },
+      {
+        operation: "handleOAuthCallback",
+        models: ["User", "InstaAccount"],
       }
-
-      // Upserts Instagram account
-      const instaAccount = await tx.instaAccount.upsert({
-        where: { userId: user.id },
-        update: {
-          instagramUserId: instagramUser.id,
-          username: instagramUser.username,
-          accountType: instagramUser.account_type,
-          accessToken: pageAccessToken,
-          refreshToken: null,
-          tokenExpiresAt,
-          grantedScopes,
-          facebookPageId,
-          facebookPageName,
-          lastSyncedAt: new Date(),
-          webhooksEnabled: false,
-          isActive: true,
-        },
-        create: {
-          userId: user.id,
-          instagramUserId: instagramUser.id,
-          username: instagramUser.username,
-          accountType: instagramUser.account_type,
-          accessToken: pageAccessToken,
-          refreshToken: null,
-          tokenExpiresAt,
-          grantedScopes,
-          facebookPageId,
-          facebookPageName,
-          webhooksEnabled: false,
-          isActive: true,
-        },
-      });
-
-      return { user, instaAccount };
-    },
-    {
-      operation: "handleOAuthCallback",
-      models: ["User", "InstaAccount"],
-    }
-  );
-
-  // Register webhooks
-  try {
-    const webhookRegistered = await subscribeToWebhooks(
-      pageAccessToken,
-      facebookPageId
     );
 
-    if (webhookRegistered) {
-      await markWebhooksEnabled(instaAccount.id, true);
-    }
-  } catch (webhookError) {
-    // Non-fatal: user can still use the app without webhooks
-  }
+    // Registers webhooks using Instagram user ID
+    try {
+      const webhookRegistered = await subscribeToWebhooks(
+        longLivedToken.access_token,
+        instagramUser.id
+      );
 
-  return {
-    returnUrl: returnUrl || "/dashboard",
-    username: instagramUser.username,
-    accountType: instagramUser.account_type,
-  };
+      if (webhookRegistered) {
+        await markWebhooksEnabled(instaAccount.id, true);
+      }
+    } catch (webhookError) {
+      // Non-fatal: user can still use the app without webhooks
+    }
+
+    return {
+      returnUrl: returnUrl || "/dashboard",
+      username: instagramUser.username,
+      accountType: instagramUser.account_type,
+    };
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**

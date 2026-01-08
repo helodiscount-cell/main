@@ -7,8 +7,8 @@ import {
   verifyWebhookSignature,
   getWebhookVerifyToken,
   getWebhookSecret,
-} from "@/lib/instagram/webhook-validator";
-import { processWebhookEvent as processEvent } from "@/lib/instagram/webhook-handler";
+} from "@/lib/instagram/webhook/webhook-validator";
+import { processWebhookEvent as processEvent } from "@/lib/instagram/webhook/webhook-handler";
 import type { WebhookPayload } from "@dm-broo/common-types";
 import { logger } from "@/lib/utils/logger";
 

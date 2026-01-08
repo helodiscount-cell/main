@@ -4,10 +4,7 @@
  */
 
 import { z } from "zod";
-import {
-  isValidObjectId,
-  sanitizeQueryParam,
-} from "../lib/utils/validation";
+import { isValidObjectId, sanitizeQueryParam } from "../lib/utils/validation";
 
 // Instagram post schema
 export const InstagramPostSchema = z.object({
@@ -50,12 +47,10 @@ export const CommentsQuerySchema = z.object({
     .string()
     .min(1, "Post ID is required")
     .max(24, "Post ID must be 24 characters")
-    .refine(
-      (val) => isValidObjectId(val),
-      {
-        message: "Post ID must be a valid MongoDB ObjectId (24 hexadecimal characters)",
-      }
-    )
+    .refine((val) => isValidObjectId(val), {
+      message:
+        "Post ID must be a valid MongoDB ObjectId (24 hexadecimal characters)",
+    })
     .transform((val) => sanitizeQueryParam(val, 24)),
 });
 
@@ -71,6 +66,8 @@ export const CommentsResponseSchema = z.object({
 export const InstagramStatusConnectedSchema = z.object({
   connected: z.literal(true),
   username: z.string(),
+  profilePictureUrl: z.string().nullable(),
+  accountType: z.enum(["BUSINESS", "CREATOR", "PERSONAL"]),
   connectedAt: z.date(),
   lastSyncedAt: z.date().nullable(),
 });
@@ -118,8 +115,14 @@ export const LongLivedTokenResponseSchema = z.object({
 export const InstagramUserDataSchema = z.object({
   id: z.string(),
   username: z.string(),
+  user_id: z.string(),
   account_type: z.enum(["BUSINESS", "CREATOR", "PERSONAL"]),
   media_count: z.number().optional(),
+  name: z.string().optional(),
+  profile_picture_url: z.string().optional(),
+  followers_count: z.number().optional(),
+  follows_count: z.number().optional(),
+  biography: z.string().optional(),
 });
 
 // Facebook pages response schema

@@ -1,12 +1,13 @@
 /**
  * Instagram Messaging API
- * Handles direct message sending via Instagram
+ * Handles direct message sending via Instagram Graph API
  */
 
 import {
   MESSAGING_CONSTRAINTS,
   ERROR_MESSAGES,
   buildGraphApiUrl,
+  GRAPH_API,
 } from "@/config/instagram.config";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
@@ -110,14 +111,14 @@ export async function checkMessagingWindow(
   accessToken: string
 ): Promise<boolean> {
   try {
-    // Gets conversation info
-    const url =
-      process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
-      `/${recipientId}?fields=last_message_time&access_token=${accessToken}`;
+    // Gets conversation info from Instagram Graph API
+    const url = buildGraphApiUrl(recipientId);
+    url.searchParams.set("fields", "last_message_time");
+    url.searchParams.set("access_token", accessToken);
 
-    const result = await fetchWithTimeout<any>(url, {
+    const result = await fetchWithTimeout<any>(url.toString(), {
       method: "GET",
-      timeout: 10000, // 10 seconds for window check
+      timeout: 10000,
       retries: 1,
     });
 

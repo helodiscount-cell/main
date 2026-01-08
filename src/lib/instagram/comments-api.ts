@@ -109,13 +109,12 @@ export async function deleteComment(
   accessToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const url =
-      process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL +
-      `/${commentId}?access_token=${accessToken}`;
+    const url = buildGraphApiUrl(commentId);
+    url.searchParams.set("access_token", accessToken);
 
-    await fetchWithTimeout(url, {
+    await fetchWithTimeout(url.toString(), {
       method: "DELETE",
-      timeout: 15000, // 15 seconds for delete
+      timeout: 15000,
       retries: 1,
     });
 
@@ -140,9 +139,9 @@ export async function hideComment(
   hide: boolean = true
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const url = process.env.NEXT_PUBLIC_FACEBOOK_API_BASE_URL + `/${commentId}`;
+    const url = buildGraphApiUrl(commentId);
 
-    await fetchWithTimeout(url, {
+    await fetchWithTimeout(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -151,7 +150,7 @@ export async function hideComment(
         hide,
         access_token: accessToken,
       }),
-      timeout: 15000, // 15 seconds for hide/unhide
+      timeout: 15000,
       retries: 1,
     });
 

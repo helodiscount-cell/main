@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { CheckCircle, RefreshCw, Unlink } from "lucide-react";
 import type { InstagramStatusConnected } from "@dm-broo/common-types";
+import Image from "next/image";
 
 interface ConnectionStatusHeaderProps {
   status: InstagramStatusConnected;
@@ -26,7 +27,16 @@ export const ConnectionStatusHeader = ({
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-border/50">
       <div className="flex items-center gap-3">
         <div className="inline-flex items-center justify-center size-12 rounded-xl bg-linear-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
-          <CheckCircle className="size-6 text-green-500 dark:text-green-400" />
+          {status.profilePictureUrl ? (
+            <Image
+              src={status.profilePictureUrl}
+              alt={status.username}
+              width={48}
+              height={48}
+            />
+          ) : (
+            <CheckCircle className="size-6 text-green-500 dark:text-green-400" />
+          )}
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">
