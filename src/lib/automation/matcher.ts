@@ -9,6 +9,7 @@ import {
   sanitizeText,
 } from "@/lib/utils/sanitize";
 import { safeRegexMatch } from "@/lib/utils/safe-regex";
+import { Automation } from "@/generated/prisma/client";
 
 export interface CommentData {
   id: string;
@@ -29,7 +30,7 @@ export interface AutomationRule {
 
 export interface MatchResult {
   matched: boolean;
-  automation: AutomationRule;
+  automation: Automation;
   matchedTrigger?: string;
 }
 
@@ -39,7 +40,7 @@ export interface MatchResult {
  */
 export async function matchComment(
   comment: CommentData,
-  automation: AutomationRule
+  automation: Automation
 ): Promise<MatchResult> {
   const commentText = comment.text.toLowerCase().trim();
 
@@ -86,7 +87,7 @@ export async function matchComment(
  */
 export async function findMatchingAutomations(
   comment: CommentData,
-  automations: AutomationRule[]
+  automations: Automation[]
 ): Promise<MatchResult[]> {
   const matchPromises = automations.map((automation) =>
     matchComment(comment, automation)
@@ -141,9 +142,10 @@ export function validateCommentData(data: any): CommentData | null {
   return {
     id: sanitizeText(String(data.id), 100), // Comment IDs are typically short
     text: sanitizeCommentText(data.text),
-    username: sanitizeUsername(data.username || data.from?.username || "unknown"),
+    username: sanitizeUsername(
+      data.username || data.from?.username || "unknown"
+    ),
     userId: sanitizeText(String(data.from?.id || data.user?.id || ""), 100),
     timestamp: data.timestamp || new Date().toISOString(),
   };
 }
-
