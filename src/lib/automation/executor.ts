@@ -113,6 +113,64 @@ export async function executeAutomation(
         instagramMessageId = result.messageId || null;
         executionStatus = "SUCCESS";
         incrementRateLimit(rateLimitKey);
+
+        // Replies to the comment after successfully sending DM if configured
+        if (automation.commentReplyWhenDm) {
+          try {
+            const commentReplyRateLimitKey = createCommentsRateLimitKey(
+              instaAccount.instagramUserId
+            );
+
+            // Checks rate limit for comment replies
+            if (!isRateLimited(commentReplyRateLimitKey)) {
+              // Prepares the comment reply message with variable replacement
+              let commentReplyMessage = automation.commentReplyWhenDm;
+              if (automation.useVariables) {
+                commentReplyMessage = replaceVariables(
+                  commentReplyMessage,
+                  comment
+                );
+              }
+
+              const commentReplyResult = await replyToCommentWithRetry({
+                commentId: comment.id,
+                message: commentReplyMessage,
+                accessToken,
+              });
+
+              if (commentReplyResult.success) {
+                incrementRateLimit(commentReplyRateLimitKey);
+                logger.info("Comment reply sent after DM", {
+                  commentId: comment.id,
+                  automationId,
+                });
+              } else {
+                logger.warn("Failed to reply to comment after DM", {
+                  commentId: comment.id,
+                  automationId,
+                  error: commentReplyResult.error,
+                });
+              }
+            } else {
+              logger.warn("Rate limited for comment reply after DM", {
+                commentId: comment.id,
+                automationId,
+              });
+            }
+          } catch (commentReplyError) {
+            // Logs error but doesn't fail the automation execution
+            logger.error(
+              "Error replying to comment after DM",
+              commentReplyError instanceof Error
+                ? commentReplyError
+                : new Error(String(commentReplyError)),
+              {
+                commentId: comment.id,
+                automationId,
+              }
+            );
+          }
+        }
       } else {
         throw new Error(`Unknown action type: ${automation.actionType}`);
       }

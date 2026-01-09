@@ -253,24 +253,13 @@ async function handleCommentEvent(
       postId
     );
 
+    // No relevant automations found
     if (relevantAutomations.length === 0) {
       return;
     }
 
-    // Converts to AutomationRule format
-    const automationRules: AutomationRule[] = relevantAutomations.map(
-      (auto) => ({
-        id: auto.id,
-        triggers: auto.triggers,
-        matchType: auto.matchType as "CONTAINS" | "EXACT" | "REGEX",
-        actionType: auto.actionType,
-        replyMessage: auto.replyMessage,
-        useVariables: auto.useVariables,
-      })
-    );
-
     // Finds matching automations
-    const matches = await findMatchingAutomations(comment, automationRules);
+    const matches = await findMatchingAutomations(comment, relevantAutomations);
 
     if (matches.length === 0) {
       return;

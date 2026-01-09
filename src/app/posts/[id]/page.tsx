@@ -35,6 +35,7 @@ export default function PostPage() {
   const [triggers, setTriggers] = useState<string[]>([]);
   const [triggerInput, setTriggerInput] = useState("");
   const [reply, setReply] = useState("");
+  const [replyWhenDm, setReplyWhenDm] = useState("");
   const [actionType, setActionType] = useState<"DM" | "COMMENT_REPLY">(
     "COMMENT_REPLY"
   );
@@ -78,6 +79,7 @@ export default function PostPage() {
       // Clears form
       setTriggers([]);
       setReply("");
+      setReplyWhenDm("");
     }
   }, [dataAddAutomation]);
 
@@ -98,7 +100,7 @@ export default function PostPage() {
     // Validates inputs before composing payload
     const trimmedTriggers = triggers.map((t) => t.trim()).filter(Boolean);
     const trimmedReply = reply.trim();
-
+    const trimmedReplyWhenDm = replyWhenDm.trim();
     if (trimmedTriggers.length === 0) {
       toast.error("At least one trigger is required");
       return;
@@ -116,6 +118,10 @@ export default function PostPage() {
       triggers: trimmedTriggers,
       matchType: "CONTAINS",
       actionType,
+      commentReplyWhenDm:
+        actionType === "DM" && trimmedReplyWhenDm
+          ? trimmedReplyWhenDm
+          : undefined,
       replyMessage: trimmedReply,
       useVariables: true,
     };
@@ -362,7 +368,10 @@ export default function PostPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setActionType("COMMENT_REPLY")}
+                      onClick={() => {
+                        setActionType("COMMENT_REPLY");
+                        setReplyWhenDm("");
+                      }}
                       className={`cursor-pointer px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                         actionType === "COMMENT_REPLY"
                           ? "bg-linear-to-r from-fuchsia-600 to-pink-600 text-white shadow-lg shadow-fuchsia-500/25 border-2 border-transparent"
@@ -390,7 +399,7 @@ export default function PostPage() {
                 {/* Reply message input */}
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-3">
-                    Reply Message
+                    {actionType === "DM" ? "DM Message" : "Reply Message"}
                   </label>
                   <input
                     type="text"
@@ -410,6 +419,33 @@ export default function PostPage() {
                     </code>
                   </div>
                 </div>
+
+                {/* Reply message to comment when DM - only shown when DM is selected */}
+                {actionType === "DM" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-foreground mb-3">
+                      Reply Message To Comment When DM
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Message to reply to the comment (optional)"
+                      className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none transition-all"
+                      value={replyWhenDm}
+                      onChange={(e) => setReplyWhenDm(e.target.value)}
+                    />
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Optional: Replies to the comment after sending DM.
+                      Available variables:{" "}
+                      <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[0.7rem]">
+                        {"{username}"}
+                      </code>
+                      ,{" "}
+                      <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[0.7rem]">
+                        {"{comment_text}"}
+                      </code>
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit button */}
                 <Button

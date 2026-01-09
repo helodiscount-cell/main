@@ -64,7 +64,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
   }
 
   // Processes the webhook event asynchronously
-  // Don't await - respond quickly to Instagram
+  // Don't await - responds quickly to Instagram
   processEvent(parsedPayload).catch((error) => {
     // Logs error for monitoring - already acknowledged to Instagram
     logger.logWebhook(

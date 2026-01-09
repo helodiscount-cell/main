@@ -69,8 +69,9 @@ model Automation {
   matchType String   @default("CONTAINS") // CONTAINS, EXACT, REGEX
 
   // Action configuration
-  actionType   String // DM or COMMENT_REPLY
-  replyMessage String // User-defined message
+  actionType         String // DM or COMMENT_REPLY
+  replyMessage       String // User-defined message
+  commentReplyWhenDm String?
 
   // Variables support: {username}, {comment_text}
   useVariables Boolean @default(true)
