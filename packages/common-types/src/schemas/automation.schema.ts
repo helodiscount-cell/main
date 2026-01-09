@@ -11,14 +11,17 @@ import {
   sanitizeTrigger,
   MAX_LENGTHS,
 } from "../lib/utils/sanitize";
-import {
-  isValidObjectId,
-  sanitizeQueryParam,
-  validateAndSanitizeObjectId,
-} from "../lib/utils/validation";
+import { sanitizeQueryParam } from "../lib/utils/validation";
 
 // Input schema for creating a new automation
 export const CreateAutomationSchema = z.object({
+  commentReplyWhenDm: z
+    .string()
+    .max(
+      MAX_LENGTHS.REPLY_MESSAGE,
+      `Comment reply when DM must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`
+    )
+    .optional(),
   postId: z
     .string()
     .min(1, "Post ID is required")
@@ -26,7 +29,10 @@ export const CreateAutomationSchema = z.object({
     .transform((val) => sanitizeQueryParam(val, 100)),
   postCaption: z
     .string()
-    .max(MAX_LENGTHS.POST_CAPTION, `Post caption must be no more than ${MAX_LENGTHS.POST_CAPTION} characters`)
+    .max(
+      MAX_LENGTHS.POST_CAPTION,
+      `Post caption must be no more than ${MAX_LENGTHS.POST_CAPTION} characters`
+    )
     .optional()
     .transform((val) => (val ? sanitizePostCaption(val) : null)),
   triggers: z
@@ -34,18 +40,27 @@ export const CreateAutomationSchema = z.object({
       z
         .string()
         .min(1, "Trigger cannot be empty")
-        .max(MAX_LENGTHS.TRIGGER, `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`)
+        .max(
+          MAX_LENGTHS.TRIGGER,
+          `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`
+        )
         .transform((val) => sanitizeTrigger(val))
     )
     .min(1, "At least one trigger is required")
-    .max(MAX_LENGTHS.TRIGGERS_ARRAY, `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`)
+    .max(
+      MAX_LENGTHS.TRIGGERS_ARRAY,
+      `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`
+    )
     .transform((val) => sanitizeTriggers(val)),
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]).default("CONTAINS"),
   actionType: z.enum(["DM", "COMMENT_REPLY"]),
   replyMessage: z
     .string()
     .min(1, "Reply message is required")
-    .max(MAX_LENGTHS.REPLY_MESSAGE, `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`)
+    .max(
+      MAX_LENGTHS.REPLY_MESSAGE,
+      `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`
+    )
     .transform((val) => sanitizeReplyMessage(val)),
   useVariables: z.boolean().default(true),
 });
@@ -57,10 +72,16 @@ export const UpdateAutomationSchema = z.object({
       z
         .string()
         .min(1, "Trigger cannot be empty")
-        .max(MAX_LENGTHS.TRIGGER, `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`)
+        .max(
+          MAX_LENGTHS.TRIGGER,
+          `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`
+        )
         .transform((val) => sanitizeTrigger(val))
     )
-    .max(MAX_LENGTHS.TRIGGERS_ARRAY, `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`)
+    .max(
+      MAX_LENGTHS.TRIGGERS_ARRAY,
+      `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`
+    )
     .transform((val) => sanitizeTriggers(val))
     .optional(),
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]).optional(),
@@ -68,8 +89,18 @@ export const UpdateAutomationSchema = z.object({
   replyMessage: z
     .string()
     .min(1, "Reply message cannot be empty")
-    .max(MAX_LENGTHS.REPLY_MESSAGE, `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`)
+    .max(
+      MAX_LENGTHS.REPLY_MESSAGE,
+      `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`
+    )
     .transform((val) => sanitizeReplyMessage(val))
+    .optional(),
+  commentReplyWhenDm: z
+    .string()
+    .max(
+      MAX_LENGTHS.REPLY_MESSAGE,
+      `Comment reply when DM must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`
+    )
     .optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
@@ -111,6 +142,7 @@ export const AutomationResponseSchema = z.object({
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),
   actionType: z.enum(["DM", "COMMENT_REPLY"]),
   replyMessage: z.string(),
+  commentReplyWhenDm: z.string().nullable().optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: z.number(),
   lastTriggeredAt: z.date().nullable(),
@@ -176,6 +208,7 @@ export const UpdateAutomationResponseSchema = z.object({
     matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),
     actionType: z.enum(["DM", "COMMENT_REPLY"]),
     replyMessage: z.string(),
+    commentReplyWhenDm: z.string().nullable().optional(),
     status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: z.date(),
   }),

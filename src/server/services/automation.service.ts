@@ -40,7 +40,7 @@ export async function createAutomation(
   }
 
   // Creates the automation
-  const automation = await createAutomationRecord({
+  const automation = await createAutomationRecord(user.id, {
     userId: user.id,
     postId: input.postId,
     postCaption: input.postCaption,
@@ -49,6 +49,7 @@ export async function createAutomation(
     actionType: input.actionType,
     replyMessage: input.replyMessage,
     useVariables: input.useVariables,
+    commentReplyWhenDm: input.commentReplyWhenDm,
     status: "ACTIVE",
   });
 
@@ -84,6 +85,7 @@ export async function getAutomation(userId: string, automationId: string) {
     matchType: automation.matchType,
     actionType: automation.actionType,
     replyMessage: automation.replyMessage,
+    commentReplyWhenDm: automation.commentReplyWhenDm,
     status: automation.status,
     timesTriggered: automation.timesTriggered,
     lastTriggeredAt: automation.lastTriggeredAt,
@@ -142,6 +144,7 @@ export async function listAutomations(
       matchType: automation.matchType,
       actionType: automation.actionType,
       replyMessage: automation.replyMessage,
+      commentReplyWhenDm: automation.commentReplyWhenDm,
       status: automation.status,
       timesTriggered: automation.timesTriggered,
       lastTriggeredAt: automation.lastTriggeredAt,
@@ -190,6 +193,7 @@ export async function updateAutomation(
     matchType: updatedAutomation.matchType,
     actionType: updatedAutomation.actionType,
     replyMessage: updatedAutomation.replyMessage,
+    commentReplyWhenDm: updatedAutomation.commentReplyWhenDm,
     status: updatedAutomation.status,
     updatedAt: updatedAutomation.updatedAt,
   };

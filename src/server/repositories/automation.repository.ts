@@ -5,6 +5,8 @@
 
 import { prisma } from "@/lib/db";
 import { executeWithErrorHandling } from "./repository-utils";
+import { CreateAutomationInput } from "@dm-broo/common-types";
+import { Automation } from "@/generated/prisma/client";
 
 export interface CreateAutomationData {
   userId: string;
@@ -16,6 +18,7 @@ export interface CreateAutomationData {
   replyMessage: string;
   useVariables: boolean;
   status?: string;
+  commentReplyWhenDm?: string | null;
 }
 
 export interface UpdateAutomationData {
@@ -24,6 +27,7 @@ export interface UpdateAutomationData {
   matchType?: string;
   actionType?: string;
   replyMessage?: string;
+  commentReplyWhenDm?: string | null;
   useVariables?: boolean;
   status?: string;
 }
@@ -39,7 +43,10 @@ export interface AutomationFilters {
 /**
  * Creates a new automation
  */
-export async function createAutomation(data: CreateAutomationData) {
+export async function createAutomation(
+  userId: string,
+  data: CreateAutomationData
+) {
   return executeWithErrorHandling(
     () =>
       prisma.automation.create({
@@ -53,6 +60,7 @@ export async function createAutomation(data: CreateAutomationData) {
           replyMessage: data.replyMessage,
           useVariables: data.useVariables,
           status: data.status || "ACTIVE",
+          commentReplyWhenDm: data.commentReplyWhenDm,
         },
       }),
     {
@@ -224,7 +232,9 @@ export async function findAutomations(filters: AutomationFilters) {
 /**
  * Counts automations with filters (for pagination)
  */
-export async function countAutomations(filters: AutomationFilters): Promise<number> {
+export async function countAutomations(
+  filters: AutomationFilters
+): Promise<number> {
   return executeWithErrorHandling(
     () => {
       const where: any = {};
@@ -340,4 +350,3 @@ export async function softDeleteAutomation(automationId: string) {
     }
   );
 }
-
