@@ -5,8 +5,6 @@
 
 import { prisma } from "@/lib/db";
 import { executeWithErrorHandling } from "./repository-utils";
-import { CreateAutomationInput } from "@dm-broo/common-types";
-import { Automation } from "@/generated/prisma/client";
 
 export interface CreateAutomationData {
   userId: string;

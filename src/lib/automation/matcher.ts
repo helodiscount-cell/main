@@ -9,7 +9,7 @@ import {
   sanitizeText,
 } from "@/lib/utils/sanitize";
 import { safeRegexMatch } from "@/lib/utils/safe-regex";
-import { Automation } from "@/generated/prisma/client";
+import { Automation } from "@prisma/client";
 
 export interface CommentData {
   id: string;
