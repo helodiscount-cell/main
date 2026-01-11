@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:worker": "cd packages/worker && bun run dev",
     "build": "prisma generate && next build --turbopack",
     "start": "next start",
+    "start:worker": "cd packages/worker && bun run start",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
