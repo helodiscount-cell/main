@@ -63,6 +63,39 @@ export async function processWebhookEvent(payload: string, signature: string) {
     throw new Error("Invalid JSON");
   }
 
+  // FILTER OUT SELF-COMMENTS BEFORE QUEUEING
+  if (parsedPayload.entry && Array.isArray(parsedPayload.entry)) {
+    for (const entry of parsedPayload.entry) {
+      if (entry.changes && Array.isArray(entry.changes)) {
+        entry.changes = entry.changes.filter((change: any) => {
+          // Skips self-comments before queueing
+          if (
+            change.field === "comments" &&
+            change.value?.from?.self_ig_scoped_id
+          ) {
+            logger.info("⏭️  Filtered out self-comment before queueing", {
+              commentId: change.value.id,
+              username: change.value.from.username,
+            });
+            return false; // Removes from array
+          }
+          return true; // Keep all other events
+        });
+      }
+    }
+
+    // Removes entries with no changes left after filtering
+    parsedPayload.entry = parsedPayload.entry.filter(
+      (entry: any) => entry.changes && entry.changes.length > 0
+    );
+  }
+
+  // Returns success if all events were filtered out
+  if (!parsedPayload.entry || parsedPayload.entry.length === 0) {
+    logger.info("All webhook events filtered (self-comments only)");
+    return { success: true as const };
+  }
+
   // Adds webhook event to queue for processing
   // Returns immediately to Instagram
   try {

@@ -55,6 +55,7 @@ export async function findInstaAccountByInstagramUserId(
       accessToken: true,
       instagramUserId: true,
       webhookUserId: true,
+      isActive: true,
     },
   });
 
@@ -67,6 +68,7 @@ export async function findInstaAccountByInstagramUserId(
         instagramUserId: true,
         webhookUserId: true,
         username: true,
+        isActive: true,
       },
     });
     console.log("All stored Instagram accounts:", allAccounts);
