@@ -1,10 +1,11 @@
 /**
  * Redis Connection
- * Singleton Redis client for queue operations
+ * Singleton Redis client for direct Redis operations
  */
 
 import Redis from "ioredis";
 import { logger } from "@/lib/utils/logger";
+import type { ConnectionOptions } from "bullmq";
 
 let redisClient: Redis | null = null;
 
@@ -16,9 +17,12 @@ export function getRedisClient(): Redis {
     return redisClient;
   }
 
-  const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-
-  redisClient = new Redis(redisUrl, {
+  redisClient = new Redis({
+    host: process.env.UPSTASH_REDIS_HOST,
+    port: 6379,
+    username: process.env.UPSTASH_REDIS_USERNAME,
+    password: process.env.UPSTASH_REDIS_PASSWORD,
+    tls: {},
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
     reconnectOnError: (err) => {
@@ -46,12 +50,16 @@ export function getRedisClient(): Redis {
 }
 
 /**
- * Closes Redis connection
+ * Gets Redis connection options for BullMQ
  */
-export async function closeRedisConnection(): Promise<void> {
-  if (redisClient) {
-    await redisClient.quit();
-    redisClient = null;
-  }
+export function getRedisConnectionOptions(): ConnectionOptions {
+  return {
+    host: process.env.UPSTASH_REDIS_HOST,
+    port: 6379,
+    username: process.env.UPSTASH_REDIS_USERNAME,
+    password: process.env.UPSTASH_REDIS_PASSWORD,
+    tls: {},
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+  };
 }
-

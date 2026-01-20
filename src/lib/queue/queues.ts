@@ -4,7 +4,7 @@
  */
 
 import { Queue } from "bullmq";
-import { getRedisClient } from "./redis";
+import { getRedisConnectionOptions } from "./redis";
 import type { WebhookPayload } from "@dm-broo/common-types";
 
 /**
@@ -12,7 +12,7 @@ import type { WebhookPayload } from "@dm-broo/common-types";
  * Handles incoming webhook events from Instagram
  */
 export const webhookQueue = new Queue<WebhookPayload>("webhook-processing", {
-  connection: getRedisClient(),
+  connection: getRedisConnectionOptions(),
   defaultJobOptions: {
     attempts: 3,
     backoff: {

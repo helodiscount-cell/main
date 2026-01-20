@@ -5,6 +5,7 @@ import Header from "@/components/header";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import Footer from "@/components/footer";
+import NextTopLoader from "nextjs-toploader";
 
 export const metadata: Metadata = {
   title: "DmBroo - Instagram Automation Made Simple",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <link rel="icon" href="/logo.jpg" type="image/jpg" />
         {/* Enables font smoothing */}
         <body className="antialiased">
+        <NextTopLoader />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
