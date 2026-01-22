@@ -239,6 +239,22 @@ export async function executeAutomation(
       }
     );
 
+    // Caches the execution result if successful
+    // This prevents duplicate processing on webhook retries
+    if (executionStatus === "SUCCESS") {
+      const { markCommentProcessed } = await import(
+        "@/lib/utils/automation-cache"
+      );
+      await markCommentProcessed(comment.id, automationId).catch((error) => {
+        // Logs error but doesn't fail the operation
+        logger.warn("Failed to cache processed comment", {
+          commentId: comment.id,
+          automationId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    }
+
     // Logs execution result
     if (executionStatus !== "SUCCESS") {
       logger.warn("Automation execution failed", {

@@ -6,6 +6,8 @@
 
 import { prisma } from "@/lib/db";
 import { executeWithErrorHandling } from "./repository-utils";
+import { getRedisClient } from "@/lib/queue/redis";
+import { logger } from "@/lib/utils/logger";
 
 export interface CreateInstaAccountData {
   userId: string;
@@ -56,6 +58,11 @@ export async function findInstaAccountByInstagramUserId(
       instagramUserId: true,
       webhookUserId: true,
       isActive: true,
+      user: {
+        select: {
+          clerkId: true,
+        },
+      },
     },
   });
 
@@ -250,12 +257,35 @@ export async function updateLastSyncedAt(id: string) {
 
 /**
  * Deletes an Instagram account
+ * @param id - The insta account ID of the Instagram account
+ * @param clerkId - The Clerk ID of the user
+ * @returns The deleted Instagram account
  */
-export async function deleteInstaAccount(id: string) {
+export async function deleteInstaAccount(instaAccountId: string, clerkId: string) {
+  // Gets account info before deletion to clear cache
+  const account = await findInstaAccountById(instaAccountId);
+
+  // Clears all cache related to this account
+  if (account) {
+    const { clearAllUserCache } = await import("@/lib/utils/automation-cache");
+    // Uses webhookUserId for cache key (matches webhook handler)
+    const webhookUserId = account.webhookUserId || account.instagramUserId || "";
+    if (webhookUserId) {
+      await clearAllUserCache(webhookUserId, clerkId).catch((error) => {
+        // Logs error but doesn't fail the operation
+        logger.error(
+          "Failed to clear user cache on disconnect",
+          error instanceof Error ? error : new Error(String(error)),
+          { accountId: instaAccountId, clerkId, webhookUserId }
+        );
+      });
+    }
+  }
+
   return executeWithErrorHandling(
     () =>
       prisma.instaAccount.delete({
-        where: { id },
+        where: { id: instaAccountId }, // Deletes the Instagram account record
       }),
     {
       operation: "deleteInstaAccount",

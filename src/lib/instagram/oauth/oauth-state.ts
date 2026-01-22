@@ -3,6 +3,7 @@
  * Provides secure state generation and validation to prevent CSRF attacks
  */
 
+import { OAuthState } from "@dm-broo/common-types";
 import crypto from "crypto";
 
 /**
@@ -39,19 +40,18 @@ function generateNonce(): string {
 /**
  * Creates a secure, signed OAuth state
  * Includes HMAC signature, expiration timestamp, and nonce to prevent CSRF and replay attacks
+ * @param state - The OAuth state
+ * @returns The secure state
  */
-export function createSecureState(data: {
-  clerkId: string;
-  returnUrl?: string;
-}): string {
+export function createSecureState(state: OAuthState): string {
   const secret = getStateSecret();
   const timestamp = Date.now();
   const nonce = generateNonce();
 
   // Creates state payload with expiration and nonce
   const payload = {
-    clerkId: data.clerkId,
-    returnUrl: data.returnUrl || "/dashboard",
+    clerkId: state.clerkId,
+    returnUrl: state.returnUrl || "/dashboard",
     timestamp,
     nonce,
   };
@@ -78,11 +78,10 @@ export function createSecureState(data: {
 /**
  * Validates and decodes a secure OAuth state
  * Verifies HMAC signature, expiration, and prevents replay attacks
+ * @param encodedState - The encoded state from the OAuth callback
+ * @returns The decoded state with the clerk ID and return URL
  */
-export function validateSecureState(encodedState: string): {
-  clerkId: string;
-  returnUrl: string;
-} {
+export function validateSecureState(encodedState: string): OAuthState {
   try {
     const secret = getStateSecret();
 

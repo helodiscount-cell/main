@@ -13,8 +13,9 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
-import type { InstagramPost, InstagramComment } from "@dm-broo/common-types";
+import type { InstagramPost, InstagramComment, InstagramStatusConnected, InstagramStatusDisconnected } from "@dm-broo/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
+import { getRedisClient } from "@/lib/queue/redis";
 
 /**
  * Gets Instagram posts for a user
@@ -125,30 +126,33 @@ export async function getPostComments(clerkId: string, postId: string) {
 
 /**
  * Gets the connection status for a user
+ * @param clerkId - The Clerk ID of the user
+ * @returns Full user record with Instagram account
  */
-export async function getConnectionStatus(clerkId: string) {
-  // Finds user with Instagram account
-  const user = await findUserWithInstaAccount(clerkId);
+export async function getConnectionStatus<T>(clerkId: string): Promise<T | InstagramStatusDisconnected> {
+  const redis = getRedisClient();
 
-  // Returns disconnected status if user or account is not found
-  if (!user || !user.instaAccount) {
-    return {
-      connected: false as const,
-      message: "User or Instagram account not found",
-    };
+  // Checks cache first
+  const instaAccountCacheKey = `ig:account:${clerkId}`;
+  const instaAccountCache = await redis.get(instaAccountCacheKey);
+
+  if (instaAccountCache) {
+    return JSON.parse(instaAccountCache) as T;
   }
 
+  // If cache is not found, fetches from  database
+  // Finds user and Instagram account from database
+  const user = await findUserWithInstaAccount(clerkId);
+
+  if (!user || !user.instaAccount) {
+    return {
+      connected: false,
+      message: ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
+    } as InstagramStatusDisconnected;
+  }
+
+  await redis.set(instaAccountCacheKey, JSON.stringify(user), "EX", 60 * 60);
+
   // Returns connected status and account info
-  return {
-    connected: true as const,
-    username: user.instaAccount.username,
-    profilePictureUrl: user.instaAccount.profilePictureUrl,
-    biography: user.instaAccount.biography,
-    followersCount: user.instaAccount.followersCount,
-    followsCount: user.instaAccount.followsCount,
-    mediaCount: user.instaAccount.mediaCount,
-    accountType: user.instaAccount.accountType,
-    connectedAt: user.instaAccount.connectedAt,
-    lastSyncedAt: user.instaAccount.lastSyncedAt,
-  };
+  return user as T;
 }

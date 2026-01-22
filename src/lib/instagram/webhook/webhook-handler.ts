@@ -7,13 +7,12 @@ import {
   validateCommentData,
   findMatchingAutomations,
   isCommentProcessed,
-  AutomationRule,
 } from "@/lib/automation/matcher";
 import { executeAutomation } from "@/lib/automation/executor";
 import { getValidAccessToken } from "@/lib/instagram/token-manager";
 import { logger } from "@/lib/utils/logger";
 import { getRedisClient } from "@/lib/queue/redis";
-import { Automation, InstaAccount } from "@prisma/client";
+import { InstaAccount } from "@prisma/client";
 const redis = getRedisClient();
 
 export interface WebhookEntry {
@@ -146,7 +145,7 @@ async function handleCommentEvent(
   commentData: any
 ): Promise<void> {
   try {
-    // 1. Validate comment
+    // Validates comment
     const comment = validateCommentData(commentData);
     if (!comment) {
       logger.warn("Invalid comment data in webhook", {
@@ -156,7 +155,7 @@ async function handleCommentEvent(
       return;
     }
 
-    // 2. Extract postId
+    // Extracts postId
     const postId = commentData.media?.id || commentData.media_id;
     if (!postId) {
       logger.warn("Missing postId in comment event", {
@@ -166,32 +165,43 @@ async function handleCommentEvent(
       return;
     }
 
-    /* --------------------------------------------------
-     * ACCOUNT GATING (Redis → DB fallback)
-     * -------------------------------------------------- */
+    // Account gating (Redis → DB fallback)
 
     const accountCacheKey = `ig:webhook:${instagramUserId}`;
 
-    // type InstaAccountCache =
-    //   | { isActive: false }
-    //   | {
-    //       isActive: true;
-    //       id: string;
-    //       userId: string;
-    //     };
-
-    let instaAccount: Pick<
-      InstaAccount,
-      "id" | "userId" | "isActive" | "id"
-    > | null = null;
+    let instaAccount:
+      | {
+        id: string;
+        userId: string;
+        clerkId: string;
+        isActive: boolean;
+      }
+      | null = null;
 
     const cachedAccount = await redis.get(accountCacheKey);
     if (cachedAccount) {
-      instaAccount = JSON.parse(cachedAccount);
+      const parsed = JSON.parse(cachedAccount) as
+        | {
+          id?: string;
+          userId?: string;
+          clerkId?: string;
+          isActive?: boolean;
+        }
+        | { isActive: false };
 
-      if (!instaAccount?.isActive) {
-        // Account disconnected → ignore webhook
+      // Handles cached "inactive" marker without needing clerkId
+      if (parsed && parsed.isActive === false) {
         return;
+      }
+
+      // Uses cached active account only if it includes clerkId (new format)
+      if (parsed && parsed.isActive && parsed.clerkId && parsed.userId && parsed.id) {
+        instaAccount = {
+          id: parsed.id,
+          userId: parsed.userId,
+          clerkId: parsed.clerkId,
+          isActive: true,
+        };
       }
     }
 
@@ -218,6 +228,7 @@ async function handleCommentEvent(
         isActive: true,
         id: dbAccount.id,
         userId: dbAccount.userId,
+        clerkId: dbAccount.user.clerkId,
       };
 
       await redis.set(
@@ -228,11 +239,9 @@ async function handleCommentEvent(
       );
     }
 
-    /* --------------------------------------------------
-     * AUTOMATION EXISTENCE CACHE (NOT LOGIC)
-     * -------------------------------------------------- */
+    // Automation existence cache (not logic)
 
-    const automationsCacheKey = `ig:automation:${instaAccount?.userId}:${postId}`;
+    const automationsCacheKey = `ig:automation:${instaAccount.clerkId}:${postId}`;
 
     type AutomationExistenceCache =
       | { hasAutomations: false }
@@ -250,9 +259,7 @@ async function handleCommentEvent(
       return;
     }
 
-    /* --------------------------------------------------
-     * FETCH FULL AUTOMATIONS (DB)
-     * -------------------------------------------------- */
+    // Fetches full automations (DB)
 
     const { findActiveAutomationsByPost } = await import(
       "@/server/repositories/automation.repository"
@@ -280,18 +287,14 @@ async function handleCommentEvent(
       5 * 60
     );
 
-    /* --------------------------------------------------
-     * MATCH AUTOMATIONS
-     * -------------------------------------------------- */
+    // Matches automations
 
     const matches = await findMatchingAutomations(comment, automations);
     if (matches.length === 0) {
       return;
     }
 
-    /* --------------------------------------------------
-     * RESOLVE ACCESS TOKEN (DB AUTHORITY)
-     * -------------------------------------------------- */
+    // Resolves access token (DB authority)
 
     let accessToken: string;
     try {
@@ -308,36 +311,58 @@ async function handleCommentEvent(
       return;
     }
 
-    /* --------------------------------------------------
-     * EXECUTE AUTOMATIONS (IDEMPOTENT)
-     * -------------------------------------------------- */
+    // Executes automations (idempotent)
+    // Checks all automations in parallel to filter out already-processed ones
+    const processedChecks = await Promise.all(
+      matches.map((match) =>
+        isCommentProcessed(comment.id, match.automation.id).then(
+          (processed) => ({ match, processed })
+        )
+      )
+    );
 
-    for (const match of matches) {
-      try {
-        const alreadyProcessed = await isCommentProcessed(
-          comment.id,
-          match.automation.id
-        );
+    // Filters out already-processed automations
+    const unprocessedMatches = processedChecks.filter(
+      ({ processed }) => !processed
+    );
 
-        if (alreadyProcessed) {
-          logger.debug("Comment already processed", {
-            commentId: comment.id,
-            automationId: match.automation.id,
-          });
-          continue;
-        }
+    // Logs skipped automations
+    processedChecks
+      .filter(({ processed }) => processed)
+      .forEach(({ match }) => {
+        logger.debug("Comment already processed", {
+          commentId: comment.id,
+          automationId: match.automation.id,
+        });
+      });
 
-        await executeAutomation(match.automation.id, comment, accessToken);
+    if (unprocessedMatches.length === 0) {
+      return;
+    }
 
+    // Executes remaining automations in parallel
+    const executionResults = await Promise.allSettled(
+      unprocessedMatches.map(({ match }) =>
+        executeAutomation(match.automation.id, comment, accessToken)
+      )
+    );
+
+    // Logs results
+    executionResults.forEach((result, index) => {
+      const { match } = unprocessedMatches[index];
+
+      if (result.status === "fulfilled") {
         logger.info("Automation executed successfully", {
           commentId: comment.id,
           automationId: match.automation.id,
           actionType: match.automation.actionType,
         });
-      } catch (error) {
+      } else {
         logger.error(
           "Failed to execute automation for comment",
-          error instanceof Error ? error : new Error(String(error)),
+          result.reason instanceof Error
+            ? result.reason
+            : new Error(String(result.reason)),
           {
             commentId: comment.id,
             automationId: match.automation.id,
@@ -345,7 +370,7 @@ async function handleCommentEvent(
           }
         );
       }
-    }
+    });
   } catch (error) {
     logger.error(
       "Error handling comment event",
