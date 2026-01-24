@@ -22,11 +22,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Gets return URL from query params
     const returnUrl =
       request.nextUrl.searchParams.get("returnUrl") || "/dashboard";
 
-    // Calls service layer to generate auth URL
     const authUrl = await initiateOAuth(clerkId, returnUrl);
 
     // Redirects to Instagram OAuth

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { apiClient } from "@/api/api-client";
+import { apiClient } from "@/lib/api/api-client";
 import { AxiosError, AxiosRequestConfig } from "axios";
-import { BeErrorResponse } from "@/types";
+import { ErrorResponse } from "@dm-broo/common-types";
 
 interface UseApiState<T> {
   data: T | null;
   loading: boolean;
-  error: BeErrorResponse | null;
+  error: ErrorResponse | null;
 }
 
 interface ApiOptions {
@@ -70,7 +70,7 @@ export function useApi<T = any>(): UseApiReturn<T> {
       } catch (err) {
         const error = err as AxiosError;
         const errorMessage =
-          (error.response?.data as BeErrorResponse).error ||
+          (error.response?.data as ErrorResponse).error ||
           "An error occurred";
         console.log(errorMessage);
 
@@ -80,7 +80,7 @@ export function useApi<T = any>(): UseApiReturn<T> {
           error: {
             error: errorMessage,
             success: false,
-            details: (error.response?.data as BeErrorResponse).details,
+            details: (error.response?.data as ErrorResponse).details,
           },
         });
         return null;
