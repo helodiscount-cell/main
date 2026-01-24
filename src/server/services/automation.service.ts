@@ -9,7 +9,10 @@ import type {
   UpdateAutomationInput,
   AutomationListQuery,
 } from "@dm-broo/common-types";
-import { findUserByIdWithInstaAccount } from "@/server/repositories/user.repository";
+import {
+  findUserById,
+  findUserByIdWithInstaAccount,
+} from "@/server/repositories/user.repository";
 import {
   createAutomation as createAutomationRecord,
   findAutomationById,
@@ -20,6 +23,8 @@ import {
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
 } from "@/server/repositories/automation.repository";
+import { invalidateAutomationCache } from "@/lib/utils/automation-cache";
+import { logger } from "@/lib/utils/logger";
 
 /**
  * Creates a new automation for a user
@@ -51,6 +56,16 @@ export async function createAutomation(
     useVariables: input.useVariables,
     commentReplyWhenDm: input.commentReplyWhenDm,
     status: "ACTIVE",
+  });
+
+  // Invalidates cache to ensure webhooks re-check for automations
+  await invalidateAutomationCache(user.clerkId, input.postId).catch((error) => {
+    // Logs error but doesn't fail the operation
+    logger.error(
+      "Failed to invalidate automation cache after creation",
+      error instanceof Error ? error : new Error(String(error)),
+      { clerkId: user.clerkId, postId: input.postId }
+    );
   });
 
   return {
@@ -186,6 +201,41 @@ export async function updateAutomation(
   // Updates the automation
   const updatedAutomation = await updateAutomationRecord(automationId, input);
 
+  // Invalidates cache to ensure webhooks re-check for automations
+  // Uses existing postId from the automation and Clerk ID for cache key
+  try {
+    const user = await findUserById(userId);
+    if (user?.clerkId) {
+      await invalidateAutomationCache(
+        user.clerkId,
+        existingAutomation.postId
+      ).catch((error) => {
+        // Logs error but doesn't fail the operation
+        logger.error(
+          "Failed to invalidate automation cache after update",
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            clerkId: user.clerkId,
+            postId: existingAutomation.postId,
+            automationId,
+          }
+        );
+      });
+    } else {
+      logger.warn("Missing clerkId for user when invalidating automation cache", {
+        userId,
+        postId: existingAutomation.postId,
+        automationId,
+      });
+    }
+  } catch (error) {
+    logger.error(
+      "Failed to resolve user for automation cache invalidation after update",
+      error instanceof Error ? error : new Error(String(error)),
+      { userId, postId: existingAutomation.postId, automationId }
+    );
+  }
+
   return {
     id: updatedAutomation.id,
     postId: updatedAutomation.postId,
@@ -218,6 +268,43 @@ export async function deleteAutomation(userId: string, automationId: string) {
 
   // Soft delete: mark as DELETED instead of actually deleting
   await softDeleteAutomation(automationId);
+
+  // Invalidates cache to ensure webhooks re-check for automations
+  try {
+    const user = await findUserById(userId);
+    if (user?.clerkId) {
+      await invalidateAutomationCache(
+        user.clerkId,
+        existingAutomation.postId
+      ).catch((error) => {
+        // Logs error but doesn't fail the operation
+        logger.error(
+          "Failed to invalidate automation cache after deletion",
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            clerkId: user.clerkId,
+            postId: existingAutomation.postId,
+            automationId,
+          }
+        );
+      });
+    } else {
+      logger.warn(
+        "Missing clerkId for user when invalidating automation cache after deletion",
+        {
+          userId,
+          postId: existingAutomation.postId,
+          automationId,
+        }
+      );
+    }
+  } catch (error) {
+    logger.error(
+      "Failed to resolve user for automation cache invalidation after deletion",
+      error instanceof Error ? error : new Error(String(error)),
+      { userId, postId: existingAutomation.postId, automationId }
+    );
+  }
 
   return {
     message: "Automation deleted successfully",

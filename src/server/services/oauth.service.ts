@@ -31,8 +31,11 @@ import { getServerUser } from "@/lib/auth/get-server-user";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
+ * @param clerkId - The Clerk ID of the user
+ * @param returnUrl - The URL to redirect to after the OAuth flow
+ * @returns The authorization URL
  */
-export async function initiateOAuth(clerkId: string, returnUrl?: string) {
+export async function initiateOAuth(clerkId: string, returnUrl: string) {
   // Validates OAuth configuration
   if (!validateOAuthConfig()) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN);
@@ -50,6 +53,9 @@ export async function initiateOAuth(clerkId: string, returnUrl?: string) {
 /**
  * Handles the OAuth callback from Instagram
  * Uses Instagram Login - no Facebook Pages required
+ * @param code - The code from the OAuth callback
+ * @param state - The secure state from the OAuth callback
+ * @returns The OAuth callback result with the return URL, username, and account type
  */
 export async function handleOAuthCallback(code: string, state: string) {
   const serverUser = await getServerUser();
@@ -57,8 +63,6 @@ export async function handleOAuthCallback(code: string, state: string) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
   }
   const { fullName, emailAddresses, imageUrl } = serverUser;
-
-  console.log("serverUser", serverUser);
 
   try {
     // Decodes and validates state
@@ -197,6 +201,8 @@ export async function handleOAuthCallback(code: string, state: string) {
 
 /**
  * Refreshes the access token for an Instagram account
+ * @param clerkId - The Clerk ID of the user
+ * @returns The refresh access token result with the message and expires at
  */
 export async function refreshAccessToken(clerkId: string) {
   // Finds user with Instagram account
@@ -217,6 +223,8 @@ export async function refreshAccessToken(clerkId: string) {
 
 /**
  * Disconnects the Instagram account for a user
+ * @param clerkId - The Clerk ID of the user
+ * @returns The disconnect account result with the message
  */
 export async function disconnectAccount(clerkId: string) {
   // Finds user with Instagram account
@@ -227,7 +235,7 @@ export async function disconnectAccount(clerkId: string) {
   }
 
   // Deletes the Instagram account (cascade will delete automations)
-  await deleteInstaAccount(user.instaAccount.id);
+  await deleteInstaAccount(user.instaAccount.id, clerkId);
 
   return {
     message: "Instagram account disconnected successfully",

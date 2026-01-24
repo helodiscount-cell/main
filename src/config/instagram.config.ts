@@ -17,7 +17,6 @@ export const GRAPH_API = {
   },
 } as const;
 
-// OAuth configuration - uses Instagram Login (Business Login for Instagram)
 export const INSTAGRAM_OAUTH = {
   // Scopes for Instagram API with Instagram Login
   SCOPES: [
@@ -92,7 +91,6 @@ export const ERROR_MESSAGES = {
     TOKEN_EXPIRED: "Your Instagram connection has expired. Please reconnect.",
     INVALID_ACCOUNT_TYPE:
       "Please use an Instagram Business or Creator account.",
-    NO_FACEBOOK_PAGE: "Please link your Instagram account to a Facebook Page.",
   },
   NETWORK: {
     CONNECTION_FAILED:
@@ -129,6 +127,10 @@ export const HTTP_STATUS = {
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
   BAD_GATEWAY: 502,
+  UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
+  SERVICE_UNAVAILABLE: 503,
+  GATEWAY_TIMEOUT: 504,
 } as const;
 
 /**

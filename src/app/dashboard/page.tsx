@@ -67,14 +67,27 @@ export default function DashboardPage() {
     message: string;
   }>();
 
+  // Tracks URL parameter for connection status
+  const [urlConnected, setUrlConnected] = useState(false);
+
+  // Checks URL parameter on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const connected = params.get("connected") === "true";
+      setUrlConnected(connected);
+    }
+  }, []);
+
+  // Determines if Instagram is connected based on API response
   const connectedStatus =
     statusData && "connected" in statusData && statusData.connected === true;
 
   const errorBanner =
     checkStatusError || fetchPostsError || fetchAutomationsError
       ? getErrorMessage(
-          checkStatusError || fetchPostsError || fetchAutomationsError
-        )
+        checkStatusError || fetchPostsError || fetchAutomationsError
+      )
       : null;
 
   // Fetches posts from API and stores them in localStorage
@@ -99,6 +112,17 @@ export default function DashboardPage() {
   useEffect(() => {
     getInstaConnectionStatus("/instagram/status", "GET");
   }, []);
+
+  // Refetches status when connected=true is in URL (after OAuth callback)
+  useEffect(() => {
+    if (urlConnected && !isCheckingStatus) {
+      // Small delay to ensure backend has processed the OAuth callback
+      const timer = setTimeout(() => {
+        getInstaConnectionStatus("/instagram/status", "GET");
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [urlConnected, isCheckingStatus, getInstaConnectionStatus]);
 
   // Loads posts from localStorage when connection status is confirmed
   useEffect(() => {
@@ -218,7 +242,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {connectedStatus && (
+        {connectedStatus && statusData && "connected" in statusData && statusData.connected === true && (
           <div className="animate-fade-in flex flex-col gap-8">
             <ConnectionStatusHeader
               status={statusData}

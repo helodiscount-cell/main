@@ -33,7 +33,7 @@ export const WebhookCommentValueSchema = z.object({
 // Webhook change object
 export const WebhookChangeSchema = z.object({
   field: z.string(),
-  value: z.any(),
+  value: z.object(WebhookCommentValueSchema),
 });
 
 // Webhook messaging event

@@ -98,6 +98,7 @@ export async function findMatchingAutomations(
 
 /**
  * Checks if a comment was already processed by an automation
+ * Uses caching to reduce DB load for already-processed comments
  */
 export async function isCommentProcessed(
   commentId: string,
@@ -106,7 +107,13 @@ export async function isCommentProcessed(
   const { isCommentProcessed: checkProcessed } = await import(
     "@/server/repositories/automation-execution.repository"
   );
-  return checkProcessed(commentId, automationId);
+  const { isCommentProcessedCached } = await import(
+    "@/lib/utils/automation-cache"
+  );
+
+  return isCommentProcessedCached(commentId, automationId, () =>
+    checkProcessed(commentId, automationId)
+  );
 }
 
 /**

@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getConnectionStatus } from "@/server/services/instagram.service";
+import { InstaAccount, User } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -23,7 +24,7 @@ export async function GET() {
     }
 
     // Calls service layer
-    const status = await getConnectionStatus(clerkId);
+    const status = await getConnectionStatus<User | InstaAccount>(clerkId);
 
     return NextResponse.json(status, { status: 200 });
   } catch (error) {

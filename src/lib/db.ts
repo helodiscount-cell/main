@@ -13,6 +13,11 @@ const createPrismaClient = () => {
       process.env.NODE_ENV === "development"
         ? ["error", "warn"] // Only log errors and warnings, not all queries
         : ["error"],
+        datasources: {
+          db: {
+            url: process.env.DATABASE_URL,
+          },
+        },
   });
 };
 

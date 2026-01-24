@@ -20,6 +20,8 @@ import { InstagramUserData, OAuthState } from "@dm-broo/common-types";
 /**
  * Generates the Instagram OAuth authorization URL
  * Uses secure state with HMAC signature to prevent CSRF attacks
+ * @param state - The OAuth state
+ * @returns The authorization URL
  */
 export function generateAuthorizationUrl(state: OAuthState): string {
   if (!validateOAuthConfig()) {
