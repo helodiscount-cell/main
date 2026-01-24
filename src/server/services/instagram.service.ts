@@ -127,9 +127,9 @@ export async function getPostComments(clerkId: string, postId: string) {
 /**
  * Gets the connection status for a user
  * @param clerkId - The Clerk ID of the user
- * @returns Full user record with Instagram account
+ * @returns Instagram connection status in the expected format
  */
-export async function getConnectionStatus<T>(clerkId: string): Promise<T | InstagramStatusDisconnected> {
+export async function getConnectionStatus<T>(clerkId: string): Promise<InstagramStatusConnected | InstagramStatusDisconnected> {
   const redis = getRedisClient();
 
   // Checks cache first
@@ -137,22 +137,49 @@ export async function getConnectionStatus<T>(clerkId: string): Promise<T | Insta
   const instaAccountCache = await redis.get(instaAccountCacheKey);
 
   if (instaAccountCache) {
-    return JSON.parse(instaAccountCache) as T;
+    const cached = JSON.parse(instaAccountCache);
+    // If cached data has the correct format, return it
+    if (cached && "connected" in cached) {
+      return cached as InstagramStatusConnected | InstagramStatusDisconnected;
+    }
+    // Otherwise, transform it
+    if (cached && cached.instaAccount) {
+      const status: InstagramStatusConnected = {
+        connected: true,
+        username: cached.instaAccount.username,
+        profilePictureUrl: cached.instaAccount.profilePictureUrl,
+        accountType: cached.instaAccount.accountType as "BUSINESS" | "CREATOR" | "PERSONAL",
+        connectedAt: new Date(cached.instaAccount.connectedAt),
+        lastSyncedAt: cached.instaAccount.lastSyncedAt ? new Date(cached.instaAccount.lastSyncedAt) : null,
+      };
+      await redis.set(instaAccountCacheKey, JSON.stringify(status), "EX", 60 * 60);
+      return status;
+    }
   }
 
-  // If cache is not found, fetches from  database
+  // If cache is not found, fetches from database
   // Finds user and Instagram account from database
   const user = await findUserWithInstaAccount(clerkId);
 
-  if (!user || !user.instaAccount) {
+  if (!user || !user.instaAccount || !user.instaAccount.isActive) {
     return {
       connected: false,
       message: ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
     } as InstagramStatusDisconnected;
   }
 
-  await redis.set(instaAccountCacheKey, JSON.stringify(user), "EX", 60 * 60);
+  // Transforms user data to the expected status format
+  const status: InstagramStatusConnected = {
+    connected: true,
+    username: user.instaAccount.username,
+    profilePictureUrl: user.instaAccount.profilePictureUrl,
+    accountType: (user.instaAccount.accountType || "PERSONAL") as "BUSINESS" | "CREATOR" | "PERSONAL",
+    connectedAt: user.instaAccount.connectedAt,
+    lastSyncedAt: user.instaAccount.lastSyncedAt,
+  };
 
-  // Returns connected status and account info
-  return user as T;
+  // Caches the transformed status
+  await redis.set(instaAccountCacheKey, JSON.stringify(status), "EX", 60 * 60);
+
+  return status;
 }
