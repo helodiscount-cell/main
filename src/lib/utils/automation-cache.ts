@@ -16,6 +16,7 @@ export async function invalidateAutomationCache(
   clerkId: string,
   postId: string
 ): Promise<void> {
+  console.log("Invalidating automation cache for user:", clerkId, "and post:", postId);
   const cacheKey = `ig:automation:${clerkId}:${postId}`;
   await redis.del(cacheKey);
 }

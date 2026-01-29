@@ -9,6 +9,7 @@ import {
   InstagramPost,
   AutomationListResponse,
   AutomationResponse,
+  InstagramStatusConnected,
 } from "@dm-broo/common-types";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
@@ -19,6 +20,7 @@ import { ConnectionStatusHeader } from "@/components/dashboard/connection-status
 import { ErrorBanner } from "@/components/dashboard/error-banner";
 import { PostsSection } from "@/components/dashboard/posts-section";
 import { AutomationsSection } from "@/components/dashboard/automations-section";
+import { SuccessResponse } from "@/lib/middleware/errors";
 
 const handleConnectInstagram = () => {
   window.location.href = "/api/instagram/oauth/authorize?returnUrl=/dashboard";
@@ -37,7 +39,7 @@ export default function DashboardPage() {
     loading: isCheckingStatus,
     error: checkStatusError,
     data: statusData,
-  } = useApi<InstagramStatusResponse>();
+  } = useApi<SuccessResponse<InstagramStatusConnected>>();
 
   // Posts: /instagram/posts
   const {
@@ -53,7 +55,7 @@ export default function DashboardPage() {
     loading: isFetchingAutomations,
     error: fetchAutomationsError,
     data: automationsData,
-  } = useApi<AutomationListResponse>();
+  } = useApi<{ data: AutomationListResponse, success: true }>();
 
   // Update automation: /automations/[id]
   const { execute: updateAutomation } = useApi<any>();
@@ -81,7 +83,7 @@ export default function DashboardPage() {
 
   // Determines if Instagram is connected based on API response
   const connectedStatus =
-    statusData && "connected" in statusData && statusData.connected === true;
+    statusData && statusData.data && "connected" in statusData.data && statusData.data.connected === true;
 
   const errorBanner =
     checkStatusError || fetchPostsError || fetchAutomationsError
@@ -156,11 +158,6 @@ export default function DashboardPage() {
     }
   }, [connectedStatus, fetchAutomations]);
 
-  useEffect(() => {
-    if (automationsData?.automations) {
-      setAutomations(automationsData.automations);
-    }
-  }, [automationsData]);
 
   const handleToggleAutomation = async (
     id: string,
@@ -242,10 +239,10 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {connectedStatus && statusData && "connected" in statusData && statusData.connected === true && (
+        {connectedStatus && statusData && statusData.data && "connected" in statusData.data && statusData.data.connected === true && (
           <div className="animate-fade-in flex flex-col gap-8">
             <ConnectionStatusHeader
-              status={statusData}
+              status={statusData.data}
               onFetchPosts={handleFetchPosts}
               isFetchingPosts={isFetchingPosts}
               postsCount={posts.length}
@@ -256,7 +253,7 @@ export default function DashboardPage() {
             <PostsSection posts={posts} onPostClick={handlePostClick} />
 
             <AutomationsSection
-              automations={automations}
+              automations={automationsData}
               isFetching={isFetchingAutomations}
               onToggleStatus={handleToggleAutomation}
               onDelete={handleDeleteAutomation}

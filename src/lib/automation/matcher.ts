@@ -136,23 +136,3 @@ export function replaceVariables(
     .replace(/{comment_id}/g, sanitizedCommentId);
 }
 
-/**
- * Validates and sanitizes comment data from Instagram webhook
- * Ensures all external input is properly sanitized before use
- */
-export function validateCommentData(data: any): CommentData | null {
-  if (!data.id || !data.text) {
-    return null;
-  }
-
-  // Sanitizes all comment data from external source (Instagram API)
-  return {
-    id: sanitizeText(String(data.id), 100), // Comment IDs are typically short
-    text: sanitizeCommentText(data.text),
-    username: sanitizeUsername(
-      data.username || data.from?.username || "unknown"
-    ),
-    userId: sanitizeText(String(data.from?.id || data.user?.id || ""), 100),
-    timestamp: data.timestamp || new Date().toISOString(),
-  };
-}

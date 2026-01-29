@@ -3,10 +3,10 @@
 import { Spinner } from "@/components/ui/spinner";
 import AutomationCard from "@/components/automations/AutomationCard";
 import { Zap } from "lucide-react";
-import type { AutomationResponse } from "@dm-broo/common-types";
+import type { AutomationListResponse } from "@dm-broo/common-types";
 
 interface AutomationsSectionProps {
-  automations: AutomationResponse[];
+  automations: { data: AutomationListResponse, success: true } | null;
   isFetching: boolean;
   onToggleStatus: (id: string, newStatus: "ACTIVE" | "PAUSED") => void;
   onDelete: (id: string) => void;
@@ -21,6 +21,7 @@ export const AutomationsSection = ({
   onDelete,
   onViewDetails,
 }: AutomationsSectionProps) => {
+
   if (isFetching) {
     return (
       <div className="flex justify-center py-12">
@@ -29,7 +30,7 @@ export const AutomationsSection = ({
     );
   }
 
-  if (automations.length === 0) {
+  if (automations?.data.automations.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-2xl bg-muted/30">
         <Zap className="mx-auto mb-4 text-muted-foreground/50" size={48} />
@@ -50,7 +51,7 @@ export const AutomationsSection = ({
         </span>
       </h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {automations.map((automation) => (
+        {automations?.data.automations.map((automation) => (
           <AutomationCard
             key={automation.id}
             automation={automation}

@@ -7,56 +7,46 @@ import { ERROR_MESSAGES } from "@/config/instagram.config";
 import type {
   CreateAutomationInput,
   UpdateAutomationInput,
-  AutomationListQuery,
 } from "@dm-broo/common-types";
 import {
   findUserById,
   findUserByIdWithInstaAccount,
+  findUserByClerkId,
+  findUserWithInstaAccount,
 } from "@/server/repositories/user.repository";
 import {
   createAutomation as createAutomationRecord,
   findAutomationById,
   findAutomationByIdAndUserId,
   findAutomationByIdAndUserIdForUpdate,
-  findAutomations,
-  countAutomations,
+  findUserAutomations,
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
 } from "@/server/repositories/automation.repository";
 import { invalidateAutomationCache } from "@/lib/utils/automation-cache";
 import { logger } from "@/lib/utils/logger";
+import { ApiRouteError } from "@/lib/middleware/errors/classes";
 
 /**
  * Creates a new automation for a user
  */
 export async function createAutomation(
-  userId: string,
+  clerkId: string,
   input: CreateAutomationInput
 ) {
   // Gets the user record with Instagram account
-  const user = await findUserByIdWithInstaAccount(userId);
+  const user = await findUserWithInstaAccount(clerkId);
 
   if (!user) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
+    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER, "NO_USER");
   }
 
   if (!user.instaAccount) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
+    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT, "NO_INSTAGRAM_ACCOUNT");
   }
 
   // Creates the automation
-  const automation = await createAutomationRecord(user.id, {
-    userId: user.id,
-    postId: input.postId,
-    postCaption: input.postCaption,
-    triggers: input.triggers,
-    matchType: input.matchType,
-    actionType: input.actionType,
-    replyMessage: input.replyMessage,
-    useVariables: input.useVariables,
-    commentReplyWhenDm: input.commentReplyWhenDm,
-    status: "ACTIVE",
-  });
+  const automation = await createAutomationRecord(user.id, input);
 
   // Invalidates cache to ensure webhooks re-check for automations
   await invalidateAutomationCache(user.clerkId, input.postId).catch((error) => {
@@ -71,9 +61,6 @@ export async function createAutomation(
   return {
     id: automation.id,
     postId: automation.postId,
-    actionType: automation.actionType,
-    triggers: automation.triggers,
-    replyMessage: automation.replyMessage,
     createdAt: automation.createdAt,
   };
 }
@@ -112,15 +99,25 @@ export async function getAutomation(userId: string, automationId: string) {
 }
 
 /**
- * Lists all automations for a user with optional filters and pagination
+ * Lists all automations for a user with optional filters
  */
-export async function listAutomations(
-  userId: string,
-  filters?: AutomationListQuery
+export async function getUserAutomations(
+  clerkId: string,
+  filters?: {
+    status?: "ACTIVE" | "PAUSED" | "DELETED";
+    postId?: string;
+  }
 ) {
-  // Builds filter conditions
+  // Gets the user by clerkId to obtain userId
+  const user = await findUserByClerkId(clerkId);
+
+  if (!user) {
+    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER, "NO_USER");
+  }
+
+  // Builds filter conditions using userId
   const repositoryFilters: any = {
-    userId: userId,
+    userId: user.id,
   };
 
   if (
@@ -134,47 +131,10 @@ export async function listAutomations(
     repositoryFilters.postId = filters.postId;
   }
 
-  // Pagination parameters
-  const page = filters?.page || 1;
-  const limit = filters?.limit || 20;
-  const skip = (page - 1) * limit;
+  // Fetches all automations without pagination
+  const automations = await findUserAutomations(repositoryFilters);
 
-  repositoryFilters.skip = skip;
-  repositoryFilters.take = limit;
-
-  // Fetches automations with pagination
-  const [automations, total] = await Promise.all([
-    findAutomations(repositoryFilters),
-    countAutomations(repositoryFilters),
-  ]);
-
-  const totalPages = Math.ceil(total / limit);
-
-  return {
-    data: automations.map((automation) => ({
-      id: automation.id,
-      postId: automation.postId,
-      postCaption: automation.postCaption,
-      triggers: automation.triggers,
-      matchType: automation.matchType,
-      actionType: automation.actionType,
-      replyMessage: automation.replyMessage,
-      commentReplyWhenDm: automation.commentReplyWhenDm,
-      status: automation.status,
-      timesTriggered: automation.timesTriggered,
-      lastTriggeredAt: automation.lastTriggeredAt,
-      createdAt: automation.createdAt,
-      updatedAt: automation.updatedAt,
-      executionsCount: automation._count.executions,
-    })),
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasMore: page < totalPages,
-    },
-  };
+  return automations;
 }
 
 /**

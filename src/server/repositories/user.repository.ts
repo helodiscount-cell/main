@@ -32,7 +32,6 @@ export async function findUserByClerkId(clerkId: string) {
       operation: "findUserByClerkId",
       model: "User",
       fallback: null,
-      retries: 1,
     }
   );
 }
@@ -50,7 +49,6 @@ export async function findUserById(userId: string) {
       operation: "findUserById",
       model: "User",
       fallback: null,
-      retries: 1,
     }
   );
 }
@@ -69,7 +67,6 @@ export async function findUserWithInstaAccount(clerkId: string) {
       operation: "findUserWithInstaAccount",
       model: "User",
       fallback: null,
-      retries: 1,
     }
   );
 }
@@ -88,7 +85,6 @@ export async function findUserByIdWithInstaAccount(userId: string) {
       operation: "findUserByIdWithInstaAccount",
       model: "User",
       fallback: null,
-      retries: 1,
     }
   );
 }
@@ -116,7 +112,6 @@ export async function upsertUser(data: CreateUserData) {
     {
       operation: "upsertUser",
       model: "User",
-      retries: 1,
     }
   );
 }
@@ -138,7 +133,6 @@ export async function createUser(data: CreateUserData) {
     {
       operation: "createUser",
       model: "User",
-      retries: 1,
     }
   );
 }
@@ -156,7 +150,6 @@ export async function updateUser(userId: string, data: UpdateUserData) {
     {
       operation: "updateUser",
       model: "User",
-      retries: 1,
     }
   );
 }

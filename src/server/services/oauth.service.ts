@@ -213,7 +213,7 @@ export async function refreshAccessToken(clerkId: string) {
   }
 
   // Refreshes the token
-  const { accessToken, expiresAt } = await refreshToken(user.instaAccount.id);
+  const { expiresAt } = await refreshToken(user.instaAccount);
 
   return {
     message: "Token refreshed successfully",

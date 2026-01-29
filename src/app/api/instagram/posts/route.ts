@@ -3,46 +3,17 @@
  * Retrieves Instagram posts for the authenticated user
  */
 
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getUserPosts } from "@/server/services/instagram.service";
+import { runWithErrorHandling } from "@/lib/middleware/errors";
+
+/**
+ * This endpoint should not be spammed, hit it once and then store the data in local storage of the browser
+ * and then use the data from the local storage for the rest of the session until the user logs out or clicks refresh
+*/
 
 export async function GET() {
-  try {
-    // Gets current authenticated user
-    const { userId: clerkId } = await auth();
-
-    if (!clerkId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "You need to be signed in to view your Instagram posts. Please login and try again.",
-        },
-        { status: 401 }
-      );
-    }
-
-    // Calls service layer
+  return runWithErrorHandling(async (clerkId) => {
     const result = await getUserPosts(clerkId);
-
-    return NextResponse.json(
-      {
-        success: true,
-        ...result,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "An unexpected server error occurred while fetching your Instagram posts. Please try again.",
-      },
-      { status: 500 }
-    );
-  }
+    return result;
+  });
 }

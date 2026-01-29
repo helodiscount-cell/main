@@ -169,7 +169,7 @@ export const ExecutionRecordSchema = z.object({
 // Automation detail response (includes executions)
 export const AutomationDetailResponseSchema = z.object({
   success: z.literal(true),
-  automation: AutomationResponseSchema.extend({
+  data: AutomationResponseSchema.extend({
     recentExecutions: z.array(ExecutionRecordSchema).optional(),
     totalExecutions: z.number().optional(),
   }),

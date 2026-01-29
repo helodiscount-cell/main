@@ -1042,12 +1042,12 @@ No pagination limits on database queries, allowing unbounded result sets that co
 2. **Repository Layer** (`src/server/repositories/automation.repository.ts`):
 
    - Added `skip` and `take` parameters to `AutomationFilters` interface
-   - Updated `findAutomations()` to support pagination
+   - Updated `findUserAutomations()` to support pagination
    - Added `countAutomations()` function for total count
 
 3. **Service Layer** (`src/server/services/automation.service.ts`):
 
-   - Updated `listAutomations()` to accept pagination parameters
+   - Updated `getUserAutomations()` to accept pagination parameters
    - Calculates skip based on page and limit
    - Returns pagination metadata (page, limit, total, totalPages, hasMore)
 
@@ -1095,7 +1095,7 @@ export const AutomationListQuerySchema = z.object({
 });
 
 // Service layer pagination
-export async function listAutomations(
+export async function getUserAutomations(
   userId: string,
   filters?: AutomationListQuery
 ) {
@@ -1107,7 +1107,7 @@ export async function listAutomations(
   repositoryFilters.take = limit;
 
   const [automations, total] = await Promise.all([
-    findAutomations(repositoryFilters),
+    findUserAutomations(repositoryFilters),
     countAutomations(repositoryFilters),
   ]);
 

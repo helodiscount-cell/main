@@ -9,6 +9,7 @@ export const GRAPH_API = {
   VERSION: "v21.0",
   BASE_URL: "https://graph.instagram.com",
   ENDPOINTS: {
+    REFRESH_TOKEN: (accessToken: string) => `refresh_access_token?access_token=${accessToken}`,
     USER_MEDIA: (userId: string) => `${userId}/media`,
     POST_COMMENTS: (postId: string) => `${postId}/comments`,
     USER_INFO: (userId: string) => `${userId}`,

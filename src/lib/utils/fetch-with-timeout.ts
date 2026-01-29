@@ -8,12 +8,12 @@ import { logger } from "./logger";
 /**
  * Default timeout for API requests (in milliseconds)
  */
-export const DEFAULT_TIMEOUT_MS = 30000; // 30 seconds
+export const DEFAULT_TIMEOUT_MS = process.env.DEFAULT_TIMEOUT_FOR_FETCH_REQUEST ? parseInt(process.env.DEFAULT_TIMEOUT_FOR_FETCH_REQUEST) : 30000; // 30 seconds
 
 /**
  * Maximum number of retries for failed requests
  */
-export const MAX_RETRIES = 3;
+export const MAX_RETRIES = process.env.MAX_RETRY_FOR_FETCH_REQUEST ? parseInt(process.env.MAX_RETRY_FOR_FETCH_REQUEST) : 2;
 
 /**
  * Retryable HTTP status codes
@@ -135,8 +135,8 @@ export async function fetchWithTimeout<T = any>(
 
           throw new Error(
             errorData.error?.message ||
-              errorData.message ||
-              `HTTP ${response.status}: ${response.statusText}`
+            errorData.message ||
+            `HTTP ${response.status}: ${response.statusText}`
           );
         }
 
@@ -160,18 +160,6 @@ export async function fetchWithTimeout<T = any>(
       }
     } catch (error) {
       lastError = error;
-
-      // Logs the error
-      logger.error(
-        `API request failed: ${url}`,
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          url,
-          attempt: attempt + 1,
-          maxRetries: retries,
-          timeout: `${timeout}ms`,
-        }
-      );
 
       // Retries if error is retryable and attempts remain
       if (isRetryableError(error, lastStatusCode) && attempt < retries) {

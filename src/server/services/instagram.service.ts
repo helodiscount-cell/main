@@ -9,70 +9,39 @@ import { findUserWithInstaAccount } from "@/server/repositories/user.repository"
 import {
   GRAPH_API,
   GRAPH_API_FIELDS,
-  RATE_LIMITS,
   ERROR_MESSAGES,
   buildGraphApiUrl,
 } from "@/config/instagram.config";
 import type { InstagramPost, InstagramComment, InstagramStatusConnected, InstagramStatusDisconnected } from "@dm-broo/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 import { getRedisClient } from "@/lib/queue/redis";
+import { ApiRouteError } from "@/lib/middleware/errors/classes";
+import { getUserPostsFromInstagram } from "@/lib/instagram/user";
 
 /**
  * Gets Instagram posts for a user
+ * @param clerkId - The Clerk ID of the user
  */
 export async function getUserPosts(clerkId: string) {
   // Gets the user record with possible Instagram account
   const user = await findUserWithInstaAccount(clerkId);
 
   if (!user || !user.instaAccount) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
+    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT, "NO_INSTAGRAM_ACCOUNT");
   }
 
   const { instagramUserId, username } = user.instaAccount;
 
   // Gets valid access token (refreshes if needed)
-  const accessToken = await getValidAccessToken(user.instaAccount.id);
+  const accessToken = await getValidAccessToken(user.instaAccount);
 
-  // Uses Instagram Graph API directly
-  const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_MEDIA(instagramUserId));
-  url.searchParams.set("fields", GRAPH_API_FIELDS.POSTS.join(","));
-  url.searchParams.set("limit", RATE_LIMITS.POSTS_PER_REQUEST.toString());
-  url.searchParams.set("access_token", accessToken);
+  const posts = await getUserPostsFromInstagram(instagramUserId, accessToken);
 
-  // Fetches posts from Instagram Graph API
-  try {
-    const result = await fetchWithTimeout<any>(url.toString(), {
-      method: "GET",
-      timeout: 30000, // 30 seconds for posts fetch
-      retries: 2,
-    });
-
-    const data = result.data;
-
-    // Handles Instagram API error object
-    if (data.error) {
-      const readableError =
-        data.error.message && typeof data.error.message === "string"
-          ? data.error.message
-          : ERROR_MESSAGES.API.GENERIC_ERROR;
-      throw new Error(readableError);
-    }
-
-    // Checks for missing data
-    if (!Array.isArray(data.data)) {
-      throw new Error(ERROR_MESSAGES.API.INVALID_RESPONSE);
-    }
-
-    return {
-      posts: data.data as InstagramPost[],
-      username: username,
-      paging: data.paging,
-    };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : ERROR_MESSAGES.API.GENERIC_ERROR;
-    throw new Error(errorMessage);
-  }
+  return {
+    posts: posts.posts,
+    username: username,
+    paging: posts.paging,
+  };
 }
 
 /**
@@ -87,7 +56,7 @@ export async function getPostComments(clerkId: string, postId: string) {
   }
 
   // Gets valid access token (refreshes if needed)
-  const accessToken = await getValidAccessToken(user.instaAccount.id);
+  const accessToken = await getValidAccessToken(user.instaAccount);
 
   // Builds Graph API URL
   const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.POST_COMMENTS(postId));
@@ -129,46 +98,27 @@ export async function getPostComments(clerkId: string, postId: string) {
  * @param clerkId - The Clerk ID of the user
  * @returns Instagram connection status in the expected format
  */
-export async function getConnectionStatus<T>(clerkId: string): Promise<InstagramStatusConnected | InstagramStatusDisconnected> {
+export async function getConnectionStatus(clerkId: string): Promise<InstagramStatusConnected> {
   const redis = getRedisClient();
 
   // Checks cache first
   const instaAccountCacheKey = `ig:account:${clerkId}`;
   const instaAccountCache = await redis.get(instaAccountCacheKey);
 
+  // When cache is found
   if (instaAccountCache) {
-    const cached = JSON.parse(instaAccountCache);
-    // If cached data has the correct format, return it
-    if (cached && "connected" in cached) {
-      return cached as InstagramStatusConnected | InstagramStatusDisconnected;
-    }
-    // Otherwise, transform it
-    if (cached && cached.instaAccount) {
-      const status: InstagramStatusConnected = {
-        connected: true,
-        username: cached.instaAccount.username,
-        profilePictureUrl: cached.instaAccount.profilePictureUrl,
-        accountType: cached.instaAccount.accountType as "BUSINESS" | "CREATOR" | "PERSONAL",
-        connectedAt: new Date(cached.instaAccount.connectedAt),
-        lastSyncedAt: cached.instaAccount.lastSyncedAt ? new Date(cached.instaAccount.lastSyncedAt) : null,
-      };
-      await redis.set(instaAccountCacheKey, JSON.stringify(status), "EX", 60 * 60);
-      return status;
-    }
+    return JSON.parse(instaAccountCache);
   }
 
-  // If cache is not found, fetches from database
-  // Finds user and Instagram account from database
+  // When cache is not found, fetches from database
   const user = await findUserWithInstaAccount(clerkId);
 
+  // If user is not found or their Instagram account is not active, throws an error
   if (!user || !user.instaAccount || !user.instaAccount.isActive) {
-    return {
-      connected: false,
-      message: ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
-    } as InstagramStatusDisconnected;
+    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT, "NO_INSTAGRAM_ACCOUNT");
   }
 
-  // Transforms user data to the expected status format
+  // Otherwise, transforms user data to the expected status format
   const status: InstagramStatusConnected = {
     connected: true,
     username: user.instaAccount.username,
@@ -178,7 +128,7 @@ export async function getConnectionStatus<T>(clerkId: string): Promise<Instagram
     lastSyncedAt: user.instaAccount.lastSyncedAt,
   };
 
-  // Caches the transformed status
+  // And caches the transformed status
   await redis.set(instaAccountCacheKey, JSON.stringify(status), "EX", 60 * 60);
 
   return status;

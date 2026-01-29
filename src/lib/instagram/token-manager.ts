@@ -16,6 +16,8 @@ import {
   OAuthTokenResponse,
 } from "@dm-broo/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
+import { executeWithErrorHandling } from "@/server/repositories/repository-utils";
+import { InstaAccount } from "@prisma/client";
 
 export interface RefreshTokenResponse {
   access_token: string;
@@ -28,16 +30,11 @@ export interface RefreshTokenResponse {
  * Uses graph.instagram.com/refresh_access_token endpoint
  */
 export async function refreshAccessToken(
-  accountId: string
+  account: Pick<
+    InstaAccount,
+    "id" | "accessToken" | "tokenExpiresAt"
+  >
 ): Promise<{ accessToken: string; expiresAt: Date }> {
-  // Gets the account from database
-  const account = await prisma.instaAccount.findUnique({
-    where: { id: accountId },
-  });
-
-  if (!account) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
-  }
 
   // Refreshes the token using Instagram Graph API
   // Uses ig_refresh_token grant type for long-lived token refresh
@@ -46,15 +43,17 @@ export async function refreshAccessToken(
     access_token: account.accessToken,
   });
 
-  const url = `${INSTAGRAM_OAUTH.REFRESH_URL}?${params.toString()}`;
+  const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.REFRESH_TOKEN(account.accessToken));
+
+  params.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
 
   const { fetchWithTimeout } = await import("@/lib/utils/fetch-with-timeout");
 
   try {
-    const result = await fetchWithTimeout<RefreshTokenResponse>(url, {
+    const result = await fetchWithTimeout<RefreshTokenResponse>(url.toString(), {
       method: "GET",
-      timeout: 15000,
-      retries: 2,
     });
 
     const data = result.data;
@@ -63,13 +62,18 @@ export async function refreshAccessToken(
     const expiresAt = new Date(Date.now() + data.expires_in * 1000);
 
     // Updates the database
-    await prisma.instaAccount.update({
-      where: { id: accountId },
-      data: {
-        accessToken: data.access_token,
-        tokenExpiresAt: expiresAt,
-        lastSyncedAt: new Date(),
-      },
+    executeWithErrorHandling(async () => {
+      await prisma.instaAccount.update({
+        where: { id: account.id },
+        data: {
+          accessToken: data.access_token,
+          tokenExpiresAt: expiresAt,
+          lastSyncedAt: new Date(),
+        },
+      });
+    }, {
+      operation: "refreshAccessToken",
+      model: "instaAccount",
     });
 
     return {
@@ -77,11 +81,7 @@ export async function refreshAccessToken(
       expiresAt,
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : ERROR_MESSAGES.AUTH.TOKEN_EXPIRED;
-    throw new Error(errorMessage);
+    throw error;
   }
 }
 
@@ -101,18 +101,15 @@ export function isTokenExpiringSoon(
 /**
  * Gets a valid access token, refreshing if needed
  */
-export async function getValidAccessToken(accountId: string): Promise<string> {
-  const account = await prisma.instaAccount.findUnique({
-    where: { id: accountId },
-  });
 
-  if (!account) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
-  }
-
-  // Checks if token needs refresh (within 7 days of expiry)
+export async function getValidAccessToken(
+  account: Pick<
+    InstaAccount,
+    "id" | "accessToken" | "tokenExpiresAt"
+  >
+): Promise<string> {
   if (isTokenExpiringSoon(account.tokenExpiresAt)) {
-    const { accessToken } = await refreshAccessToken(accountId);
+    const { accessToken } = await refreshAccessToken(account);
     return accessToken;
   }
 
@@ -141,31 +138,6 @@ export async function findExpiringTokens(
   });
 
   return accounts.map((acc) => acc.id);
-}
-
-/**
- * Batch refreshes tokens for multiple accounts
- */
-export async function batchRefreshTokens(accountIds: string[]): Promise<{
-  successful: string[];
-  failed: Array<{ accountId: string; error: string }>;
-}> {
-  const successful: string[] = [];
-  const failed: Array<{ accountId: string; error: string }> = [];
-
-  for (const accountId of accountIds) {
-    try {
-      await refreshAccessToken(accountId);
-      successful.push(accountId);
-    } catch (error) {
-      failed.push({
-        accountId,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  }
-
-  return { successful, failed };
 }
 
 /**

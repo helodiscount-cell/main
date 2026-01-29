@@ -3,6 +3,8 @@
  * Provides constants and validation for request body size limits
  */
 
+import { ApiRouteError } from "../middleware/errors/classes";
+
 /**
  * Maximum request body sizes (in bytes) for different endpoint types
  */
@@ -79,7 +81,7 @@ export async function parseRequestBodySafely(
     const size = parseInt(contentLength, 10);
     if (!isNaN(size) && size > maxSize) {
       const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(2);
-      throw new Error(`Request body too large. Maximum size is ${maxSizeMB} MB`);
+      throw new ApiRouteError(`Request body too large. Maximum size is ${maxSizeMB} MB`, "REQUEST_BODY_TOO_LARGE");
     }
   }
 
@@ -88,7 +90,7 @@ export async function parseRequestBodySafely(
 
   if (bodyText.length > maxSize) {
     const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(2);
-    throw new Error(`Request body too large. Maximum size is ${maxSizeMB} MB`);
+    throw new ApiRouteError(`Request body too large. Maximum size is ${maxSizeMB} MB`, "REQUEST_BODY_TOO_LARGE");
   }
 
   // Parses JSON if content type is JSON
@@ -97,7 +99,7 @@ export async function parseRequestBodySafely(
     try {
       return JSON.parse(bodyText);
     } catch (error) {
-      throw new Error("Invalid JSON in request body");
+      throw new ApiRouteError("Invalid JSON in request body", "INVALID_JSON");
     }
   }
 

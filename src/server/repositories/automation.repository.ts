@@ -5,9 +5,9 @@
 
 import { prisma } from "@/lib/db";
 import { executeWithErrorHandling } from "./repository-utils";
+import { CreateAutomationInput } from "@dm-broo/common-types";
 
 export interface CreateAutomationData {
-  userId: string;
   postId: string;
   postCaption?: string | null;
   triggers: string[];
@@ -15,7 +15,6 @@ export interface CreateAutomationData {
   actionType: string;
   replyMessage: string;
   useVariables: boolean;
-  status?: string;
   commentReplyWhenDm?: string | null;
 }
 
@@ -43,13 +42,13 @@ export interface AutomationFilters {
  */
 export async function createAutomation(
   userId: string,
-  data: CreateAutomationData
+  data: CreateAutomationInput
 ) {
   return executeWithErrorHandling(
     () =>
       prisma.automation.create({
         data: {
-          userId: data.userId,
+          userId: userId,
           postId: data.postId,
           postCaption: data.postCaption,
           triggers: data.triggers,
@@ -57,7 +56,7 @@ export async function createAutomation(
           actionType: data.actionType,
           replyMessage: data.replyMessage,
           useVariables: data.useVariables,
-          status: data.status || "ACTIVE",
+          status: "ACTIVE",
           commentReplyWhenDm: data.commentReplyWhenDm,
         },
       }),
@@ -185,7 +184,7 @@ export async function findAutomationByIdAndUserIdForUpdate(
 /**
  * Finds automations with filters
  */
-export async function findAutomations(filters: AutomationFilters) {
+export async function findUserAutomations(filters: AutomationFilters) {
   return executeWithErrorHandling(
     () => {
       const where: any = {};
@@ -219,7 +218,7 @@ export async function findAutomations(filters: AutomationFilters) {
       });
     },
     {
-      operation: "findAutomations",
+      operation: "findUserAutomations",
       model: "Automation",
       fallback: [], // Returns empty array on error
       retries: 1,
