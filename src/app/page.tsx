@@ -10,9 +10,28 @@ import {
   Instagram,
   Bot,
   Target,
+  CheckIcon,
 } from "lucide-react";
 import { SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
+
+// Main landing page component
+export default function LandingPage() {
+  return (
+    // Uses grid pattern background according to brand style
+    <div
+      className="min-h-screen overflow-hidden relative
+        bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)]
+        dark:bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)]
+        bg-size-[60px_60px]"
+    >
+      <HeroSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <Pricing />
+    </div>
+  );
+}
 
 // Shows the badge used in the hero section
 const HeroBadge = () => (
@@ -167,7 +186,7 @@ const FeatureCard = ({ icon: Icon, title, description, gradient }: any) => (
 
 // Handles feature grid section
 const FeaturesSection = () => (
-  <section className="py-24 px-4 bg-muted/30">
+  <section className="py-24 px-4">
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-16">
         <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -272,66 +291,126 @@ const HowItWorksSection = () => (
   </section>
 );
 
-// Handles CTA section on bottom of page
-const CTASection = () => (
-  <section className="py-24 px-4">
-    <div className="max-w-4xl mx-auto">
-      <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-fuchsia-600 via-pink-600 to-cyan-600 p-12 md:p-16 text-center">
-        {/* Shows patterned overlay for CTA area */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.1)_1px,transparent_1px)] bg-size-[40px_40px]" />
-        <div className="relative z-10">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
-            Ready to Automate Your Growth?
-          </h2>
-          <p className="text-lg text-white/80 max-w-xl mx-auto mb-10">
-            Joins thousands of creators who are saving hours every week with
-            intelligent Instagram automation.
-          </p>
-          <SignedOut>
-            <SignUpButton mode="modal" fallbackRedirectUrl="/dashboard">
-              <Button
-                size="lg"
-                className="px-10 py-6 text-lg bg-white text-fuchsia-600 hover:bg-white/90 shadow-xl hover:shadow-2xl transition-all duration-300"
+const tiers = [
+  {
+    name: 'Hobby',
+    id: 'tier-hobby',
+    href: '#',
+    priceMonthly: '$29',
+    description: "The perfect plan if you're just getting started with our product.",
+    features: ['25 products', 'Up to 10,000 subscribers', 'Advanced analytics', '24-hour support response time'],
+    featured: false,
+  },
+  {
+    name: 'Enterprise',
+    id: 'tier-enterprise',
+    href: '#',
+    priceMonthly: '$99',
+    description: 'Dedicated support and infrastructure for your company.',
+    features: [
+      'Unlimited products',
+      'Unlimited subscribers',
+      'Advanced analytics',
+      'Dedicated support representative',
+      'Marketing automations',
+      'Custom integrations',
+    ],
+    featured: true,
+  },
+]
+
+function classNames(...classes: any[]) {
+  return classes.filter(Boolean).join(' ')
+}
+
+const Pricing = () => {
+  return (
+    <div className="relative isolate  px-6 py-24 sm:py-32 lg:px-8 bg-linear-to-br">
+      <div aria-hidden="true" className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl">
+        <div
+          style={{
+            clipPath:
+              'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
+          }}
+          className="mx-auto aspect-1155/678 w-288.75 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-20"
+        />
+      </div>
+      <div className="mx-auto max-w-4xl text-center">
+        <h2 className="text-base/7 font-semibold text-fuchsia-500">Pricing</h2>
+        <p className="mt-2 text-5xl font-semibold tracking-tight text-balance text-foreground sm:text-6xl">
+          Choose the right plan for you
+        </p>
+      </div>
+      <p className="mx-auto mt-6 max-w-2xl text-center text-lg font-medium text-pretty text-gray-400 sm:text-xl/8">
+        Choose an affordable plan that’s packed with the best features for engaging your audience, creating customer
+        loyalty, and driving sales.
+      </p>
+      <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
+        {tiers.map((tier, tierIdx) => (
+          <div
+            key={tier.id}
+            className={classNames(
+              tier.featured ? 'relative bg-linear-to-br from-fuchsia-600 via-pink-600 to-cyan-600' : 'bg-foreground/2.5 sm:mx-8 lg:mx-0',
+              tier.featured
+                ? ''
+                : tierIdx === 0
+                  ? 'rounded-t-3xl sm:rounded-b-none lg:rounded-tr-none lg:rounded-bl-3xl'
+                  : 'sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none',
+              'rounded-3xl p-8 ring-1 ring-white/10 sm:p-10',
+            )}
+          >
+            <h3
+              id={tier.id}
+              className={classNames(tier.featured ? 'text-white-400' : 'text-foreground', 'text-base/7 font-semibold')}
+            >
+              {tier.name}
+            </h3>
+            <p className="mt-4 flex items-baseline gap-x-2">
+              <span
+                className={classNames(
+                  tier.featured ? 'text-white' : 'text-foreground',
+                  'text-5xl font-semibold tracking-tight',
+                )}
               >
-                Get Started Free
-                <ArrowRight className="ml-2 size-5" />
-              </Button>
-            </SignUpButton>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="px-10 py-6 text-lg bg-white text-fuchsia-600 hover:bg-white/90 shadow-xl hover:shadow-2xl transition-all duration-300"
-              >
-                Go to Dashboard
-                <ArrowRight className="ml-2 size-5" />
-              </Button>
-            </Link>
-          </SignedIn>
-          <p className="mt-6 text-sm text-white/60">
-            No credit card required • Free forever plan available
-          </p>
-        </div>
+                {tier.priceMonthly}
+              </span>
+              <span className={classNames(tier.featured ? 'text-white' : 'text-gray-400', 'text-base')}>/month</span>
+            </p>
+            <p className={classNames(tier.featured ? 'text-white' : 'text-foreground', 'mt-6 text-base/7')}>
+              {tier.description}
+            </p>
+            <ul
+              role="list"
+              className={classNames(
+                tier.featured ? 'text-white' : 'text-foreground',
+                'mt-8 space-y-3 text-sm/6 sm:mt-10',
+              )}
+            >
+              {tier.features.map((feature) => (
+                <li key={feature} className="flex gap-x-3">
+                  <CheckIcon
+                    aria-hidden="true"
+                    className={classNames(tier.featured ? 'text-foreground-400' : 'text-foreground', 'h-6 w-5 flex-none')}
+                  />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <a
+              // href={tier.href}
+              aria-describedby={tier.id}
+              className={classNames(
+                tier.featured
+                  ? 'bg-white text-fuchsia-600 hover:opacity-70 focus-visible:outline-indigo-500'
+                  : 'bg-foreground/10 text-foreground inset-ring inset-ring-white/5 hover:bg-white/20 focus-visible:outline-white/75',
+                'mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 sm:mt-10',
+              )}
+            >
+              Get started today
+            </a>
+          </div>
+        ))}
       </div>
     </div>
-  </section>
-);
-
-// Main landing page component
-export default function LandingPage() {
-  return (
-    // Uses grid pattern background according to brand style
-    <div
-      className="min-h-screen overflow-hidden relative
-        bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)]
-        dark:bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)]
-        bg-size-[60px_60px]"
-    >
-      <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <CTASection />
-    </div>
-  );
+  )
 }
