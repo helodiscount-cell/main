@@ -5,7 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { CreateAutomationSchema } from "@dm-broo/common-types";
-import { createAutomation } from "@/server/services/automation.service";
+import { createAutomation } from "@/server/services/auto/automation.service";
 import {
   parseRequestBodySafely,
   REQUEST_SIZE_LIMITS,
@@ -18,13 +18,17 @@ export async function POST(request: NextRequest) {
     // Parses and validates request body with size limits
     const body = await parseRequestBodySafely(
       request,
-      REQUEST_SIZE_LIMITS.API_DEFAULT
+      REQUEST_SIZE_LIMITS.API_DEFAULT,
     );
 
     const validation = CreateAutomationSchema.safeParse(body);
 
     if (!validation.success) {
-      throw new ApiRouteError(validation.error.issues[0]?.message || "Invalid input", "INVALID_INPUT", 400);
+      throw new ApiRouteError(
+        validation.error.issues[0]?.message || "Invalid input",
+        "INVALID_INPUT",
+        400,
+      );
     }
 
     // Calls service layer to create automation

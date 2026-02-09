@@ -18,7 +18,7 @@ import { logger } from "@/lib/utils/logger";
 export async function verifyWebhook(
   mode: string,
   token: string,
-  challenge: string
+  challenge: string,
 ) {
   // Verifies that this is a subscribe request
   if (mode !== "subscribe") {
@@ -86,7 +86,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
 
     // Removes entries with no changes left after filtering
     parsedPayload.entry = parsedPayload.entry.filter(
-      (entry: any) => entry.changes && entry.changes.length > 0
+      (entry: any) => entry.changes && entry.changes.length > 0,
     );
   }
 
@@ -113,7 +113,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
         entryCount: Array.isArray(parsedPayload.entry)
           ? parsedPayload.entry.length
           : 0,
-      }
+      },
     );
   } catch (error) {
     // Logs error but still returns success to Instagram
@@ -126,7 +126,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
         entryCount: Array.isArray(parsedPayload.entry)
           ? parsedPayload.entry.length
           : 0,
-      }
+      },
     );
   }
 

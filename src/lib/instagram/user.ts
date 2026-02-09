@@ -1,35 +1,49 @@
-import { buildGraphApiUrl, ERROR_MESSAGES, GRAPH_API, GRAPH_API_FIELDS, RATE_LIMITS } from "@/config/instagram.config";
+import {
+  buildGraphApiUrl,
+  ERROR_MESSAGES,
+  GRAPH_API,
+  GRAPH_API_FIELDS,
+  RATE_LIMITS,
+} from "@/config/instagram.config";
 import { fetchWithTimeout } from "../utils/fetch-with-timeout";
-import { InstagramPost } from "@dm-broo/common-types";
+import { InstagramPostsResponse } from "@dm-broo/common-types";
 
-export const getUserPostsFromInstagram = async (instagramUserId: string, accessToken: string) => {
-    const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_MEDIA(instagramUserId));
-    url.searchParams.set("fields", GRAPH_API_FIELDS.POSTS.join(","));
-    url.searchParams.set("limit", RATE_LIMITS.POSTS_PER_REQUEST.toString());
-    url.searchParams.set("access_token", accessToken);
+export const getUserPostsFromInstagram = async (
+  instagramUserId: string,
+  accessToken: string,
+) => {
+  const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_MEDIA(instagramUserId));
+  url.searchParams.set("fields", GRAPH_API_FIELDS.POSTS.join(","));
+  url.searchParams.set("limit", RATE_LIMITS.POSTS_PER_REQUEST.toString());
+  url.searchParams.set("access_token", accessToken);
 
-    const result = await fetchWithTimeout<any>(url.toString(), {
-        method: "GET",
-    });
+  const result = await fetchWithTimeout<InstagramPostsResponse>(
+    url.toString(),
+    {
+      method: "GET",
+    },
+  );
 
-    const data = result.data;
+  return result;
+};
 
-    // Handles Instagram API error object
-    if (data.error) {
-        const readableError =
-            data.error.message && typeof data.error.message === "string"
-                ? data.error.message
-                : ERROR_MESSAGES.API.GENERIC_ERROR;
-        throw new Error(readableError);
-    }
+export const getUserStoriesFromInstagram = async (
+  instagramUserId: string,
+  accessToken: string,
+) => {
+  const url = buildGraphApiUrl(
+    GRAPH_API.ENDPOINTS.USER_STORIES(instagramUserId),
+  );
+  url.searchParams.set("fields", GRAPH_API_FIELDS.STORIES.join(","));
+  url.searchParams.set("limit", RATE_LIMITS.STORIES_PER_REQUEST.toString());
+  url.searchParams.set("access_token", accessToken);
 
-    // Checks for missing data
-    if (!Array.isArray(data.data)) {
-        throw new Error(ERROR_MESSAGES.API.INVALID_RESPONSE);
-    }
+  const result = await fetchWithTimeout<InstagramPostsResponse>(
+    url.toString(),
+    {
+      method: "GET",
+    },
+  );
 
-    return {
-        posts: data.data as InstagramPost[],
-        paging: data.paging,
-    };
+  return result;
 };

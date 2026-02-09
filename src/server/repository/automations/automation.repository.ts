@@ -4,7 +4,7 @@
  */
 
 import { prisma } from "@/lib/db";
-import { executeWithErrorHandling } from "./repository-utils";
+import { executeWithErrorHandling } from "../repository-utils";
 import { CreateAutomationInput } from "@dm-broo/common-types";
 
 export interface CreateAutomationData {
@@ -42,7 +42,7 @@ export interface AutomationFilters {
  */
 export async function createAutomation(
   userId: string,
-  data: CreateAutomationInput
+  data: CreateAutomationInput,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -64,7 +64,7 @@ export async function createAutomation(
       operation: "createAutomation",
       model: "Automation",
       retries: 1,
-    }
+    },
   );
 }
 
@@ -82,7 +82,7 @@ export async function findAutomationById(automationId: string) {
       model: "Automation",
       fallback: null, // Returns null if not found or on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -113,7 +113,7 @@ export async function findAutomationByIdWithExecutions(automationId: string) {
       model: "Automation",
       fallback: null, // Returns null if not found or on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -124,7 +124,7 @@ export async function findAutomationByIdWithExecutions(automationId: string) {
  */
 export async function findAutomationByIdAndUserId(
   automationId: string,
-  userId: string
+  userId: string,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -152,7 +152,7 @@ export async function findAutomationByIdAndUserId(
       model: "Automation",
       fallback: null, // Returns null if not found or on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -162,7 +162,7 @@ export async function findAutomationByIdAndUserId(
  */
 export async function findAutomationByIdAndUserIdForUpdate(
   automationId: string,
-  userId: string
+  userId: string,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -177,7 +177,7 @@ export async function findAutomationByIdAndUserIdForUpdate(
       model: "Automation",
       fallback: null, // Returns null if not found or on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -222,7 +222,7 @@ export async function findUserAutomations(filters: AutomationFilters) {
       model: "Automation",
       fallback: [], // Returns empty array on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -230,7 +230,7 @@ export async function findUserAutomations(filters: AutomationFilters) {
  * Counts automations with filters (for pagination)
  */
 export async function countAutomations(
-  filters: AutomationFilters
+  filters: AutomationFilters,
 ): Promise<number> {
   return executeWithErrorHandling(
     () => {
@@ -255,7 +255,7 @@ export async function countAutomations(
       model: "Automation",
       fallback: 0, // Returns 0 on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -264,7 +264,7 @@ export async function countAutomations(
  */
 export async function findActiveAutomationsByPost(
   userId: string,
-  postId: string
+  postId: string,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -280,7 +280,7 @@ export async function findActiveAutomationsByPost(
       model: "Automation",
       fallback: [], // Returns empty array on error (allows webhook to continue)
       retries: 1,
-    }
+    },
   );
 }
 
@@ -289,7 +289,7 @@ export async function findActiveAutomationsByPost(
  */
 export async function updateAutomation(
   automationId: string,
-  data: UpdateAutomationData
+  data: UpdateAutomationData,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -301,7 +301,7 @@ export async function updateAutomation(
       operation: "updateAutomation",
       model: "Automation",
       retries: 1,
-    }
+    },
   );
 }
 
@@ -326,7 +326,7 @@ export async function updateAutomationStats(automationId: string) {
       model: "Automation",
       fallback: null, // Stats update failure shouldn't block execution
       retries: 1,
-    }
+    },
   );
 }
 
@@ -344,6 +344,6 @@ export async function softDeleteAutomation(automationId: string) {
       operation: "softDeleteAutomation",
       model: "Automation",
       retries: 1,
-    }
+    },
   );
 }

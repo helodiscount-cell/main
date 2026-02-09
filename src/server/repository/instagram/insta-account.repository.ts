@@ -5,7 +5,7 @@
  */
 
 import { prisma } from "@/lib/db";
-import { executeWithErrorHandling } from "./repository-utils";
+import { executeWithErrorHandling } from "../repository-utils";
 import { getRedisClient } from "@/lib/queue/redis";
 import { logger } from "@/lib/utils/logger";
 
@@ -43,7 +43,7 @@ export interface UpdateInstaAccountData {
  * Finds an Instagram account by Instagram user ID
  */
 export async function findInstaAccountByInstagramUserId(
-  instagramUserId: string
+  instagramUserId: string,
 ) {
   // Ensures Instagram user ID is a string for consistent querying
   const userIdString = String(instagramUserId);
@@ -86,7 +86,7 @@ export async function findInstaAccountByInstagramUserId(
         stored: acc.webhookUserId,
         storedType: typeof acc.instagramUserId,
         matches: acc.instagramUserId === userIdString,
-      }))
+      })),
     );
   }
 
@@ -125,7 +125,7 @@ export async function findInstaAccountByUserId(userId: string) {
       model: "InstaAccount",
       fallback: null,
       retries: 1,
-    }
+    },
   );
 }
 
@@ -143,7 +143,7 @@ export async function findInstaAccountById(id: string) {
       model: "InstaAccount",
       fallback: null,
       retries: 1,
-    }
+    },
   );
 }
 
@@ -169,7 +169,7 @@ export async function findInstaAccountByAutomationId(automationId: string) {
       model: "InstaAccount",
       fallback: null,
       retries: 1,
-    }
+    },
   );
 }
 
@@ -178,7 +178,7 @@ export async function findInstaAccountByAutomationId(automationId: string) {
  */
 export async function upsertInstaAccount(
   userId: string,
-  data: CreateInstaAccountData
+  data: CreateInstaAccountData,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -211,7 +211,7 @@ export async function upsertInstaAccount(
       operation: "upsertInstaAccount",
       model: "InstaAccount",
       retries: 1,
-    }
+    },
   );
 }
 
@@ -220,7 +220,7 @@ export async function upsertInstaAccount(
  */
 export async function updateInstaAccount(
   id: string,
-  data: UpdateInstaAccountData
+  data: UpdateInstaAccountData,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -232,7 +232,7 @@ export async function updateInstaAccount(
       operation: "updateInstaAccount",
       model: "InstaAccount",
       retries: 1,
-    }
+    },
   );
 }
 
@@ -251,7 +251,7 @@ export async function updateLastSyncedAt(id: string) {
       model: "InstaAccount",
       fallback: null, // Non-critical operation
       retries: 1,
-    }
+    },
   );
 }
 
@@ -261,7 +261,10 @@ export async function updateLastSyncedAt(id: string) {
  * @param clerkId - The Clerk ID of the user
  * @returns The deleted Instagram account
  */
-export async function deleteInstaAccount(instaAccountId: string, clerkId: string) {
+export async function deleteInstaAccount(
+  instaAccountId: string,
+  clerkId: string,
+) {
   // Gets account info before deletion to clear cache
   const account = await findInstaAccountById(instaAccountId);
 
@@ -269,14 +272,15 @@ export async function deleteInstaAccount(instaAccountId: string, clerkId: string
   if (account) {
     const { clearAllUserCache } = await import("@/lib/utils/automation-cache");
     // Uses webhookUserId for cache key (matches webhook handler)
-    const webhookUserId = account.webhookUserId || account.instagramUserId || "";
+    const webhookUserId =
+      account.webhookUserId || account.instagramUserId || "";
     if (webhookUserId) {
       await clearAllUserCache(webhookUserId, clerkId).catch((error) => {
         // Logs error but doesn't fail the operation
         logger.error(
           "Failed to clear user cache on disconnect",
           error instanceof Error ? error : new Error(String(error)),
-          { accountId: instaAccountId, clerkId, webhookUserId }
+          { accountId: instaAccountId, clerkId, webhookUserId },
         );
       });
     }
@@ -291,6 +295,6 @@ export async function deleteInstaAccount(instaAccountId: string, clerkId: string
       operation: "deleteInstaAccount",
       model: "InstaAccount",
       retries: 1,
-    }
+    },
   );
 }

@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   verifyWebhook,
   processWebhookEvent,
-} from "@/server/services/webhook.service";
+} from "@/server/services/webhooks/webhook.service";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (!mode || !token || !challenge) {
       return NextResponse.json(
         { error: "Invalid parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
           error instanceof Error && error.message === "Invalid mode"
             ? 403
             : 500,
-      }
+      },
     );
   }
 }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
           error instanceof Error && error.message === "Invalid signature"
             ? 403
             : 500,
-      }
+      },
     );
   }
 }

@@ -19,8 +19,8 @@ import {
   markWebhooksEnabled,
 } from "@/lib/instagram/webhook/webhook-registration";
 import { refreshAccessToken as refreshToken } from "@/lib/instagram/token-manager";
-import { findUserWithInstaAccount } from "@/server/repositories/user.repository";
-import { deleteInstaAccount } from "@/server/repositories/insta-account.repository";
+import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
+import { deleteInstaAccount } from "@/server/repository/instagram/insta-account.repository";
 import { validateSecureState } from "@/lib/instagram/oauth/oauth-state";
 import {
   exchangeCodeForToken,
@@ -75,7 +75,7 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     // Exchanges for long-lived token (60 days)
     const longLivedToken = await getLongLivedToken(
-      shortLivedToken.access_token
+      shortLivedToken.access_token,
     );
 
     console.log("longLivedToken", longLivedToken);
@@ -83,7 +83,7 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Fetches Instagram user data using the token
     // Passes user_id from token exchange for direct access
     const instagramUser = await fetchInstagramUserData(
-      longLivedToken.access_token
+      longLivedToken.access_token,
     );
 
     console.log("instagramUser", instagramUser);
@@ -93,7 +93,7 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     if (!validation.valid) {
       throw new Error(
-        validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE
+        validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE,
       );
     }
 
@@ -102,9 +102,8 @@ export async function handleOAuthCallback(code: string, state: string) {
     const grantedScopes = INSTAGRAM_OAUTH.SCOPES.split(",");
 
     // Wraps user creation and Instagram account linking in a transaction
-    const { executeTransaction } = await import(
-      "@/server/repositories/repository-utils"
-    );
+    const { executeTransaction } =
+      await import("@/server/repository/repository-utils");
 
     const { instaAccount } = await executeTransaction(
       async (tx) => {
@@ -172,14 +171,14 @@ export async function handleOAuthCallback(code: string, state: string) {
       {
         operation: "handleOAuthCallback",
         models: ["User", "InstaAccount"],
-      }
+      },
     );
 
     // Registers webhooks using Instagram user ID
     try {
       const webhookRegistered = await subscribeToWebhooks(
         longLivedToken.access_token,
-        instagramUser.id
+        instagramUser.id,
       );
 
       if (webhookRegistered) {

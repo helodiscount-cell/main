@@ -16,7 +16,7 @@ import {
   OAuthTokenResponse,
 } from "@dm-broo/common-types";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
-import { executeWithErrorHandling } from "@/server/repositories/repository-utils";
+import { executeWithErrorHandling } from "@/server/repository/repository-utils";
 import { InstaAccount } from "@prisma/client";
 
 export interface RefreshTokenResponse {
@@ -30,12 +30,8 @@ export interface RefreshTokenResponse {
  * Uses graph.instagram.com/refresh_access_token endpoint
  */
 export async function refreshAccessToken(
-  account: Pick<
-    InstaAccount,
-    "id" | "accessToken" | "tokenExpiresAt"
-  >
+  account: Pick<InstaAccount, "id" | "accessToken" | "tokenExpiresAt">,
 ): Promise<{ accessToken: string; expiresAt: Date }> {
-
   // Refreshes the token using Instagram Graph API
   // Uses ig_refresh_token grant type for long-lived token refresh
   const params = new URLSearchParams({
@@ -43,7 +39,9 @@ export async function refreshAccessToken(
     access_token: account.accessToken,
   });
 
-  const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.REFRESH_TOKEN(account.accessToken));
+  const url = buildGraphApiUrl(
+    GRAPH_API.ENDPOINTS.REFRESH_TOKEN(account.accessToken),
+  );
 
   params.forEach((value, key) => {
     url.searchParams.set(key, value);
@@ -52,9 +50,12 @@ export async function refreshAccessToken(
   const { fetchWithTimeout } = await import("@/lib/utils/fetch-with-timeout");
 
   try {
-    const result = await fetchWithTimeout<RefreshTokenResponse>(url.toString(), {
-      method: "GET",
-    });
+    const result = await fetchWithTimeout<RefreshTokenResponse>(
+      url.toString(),
+      {
+        method: "GET",
+      },
+    );
 
     const data = result.data;
 
@@ -62,19 +63,22 @@ export async function refreshAccessToken(
     const expiresAt = new Date(Date.now() + data.expires_in * 1000);
 
     // Updates the database
-    executeWithErrorHandling(async () => {
-      await prisma.instaAccount.update({
-        where: { id: account.id },
-        data: {
-          accessToken: data.access_token,
-          tokenExpiresAt: expiresAt,
-          lastSyncedAt: new Date(),
-        },
-      });
-    }, {
-      operation: "refreshAccessToken",
-      model: "instaAccount",
-    });
+    executeWithErrorHandling(
+      async () => {
+        await prisma.instaAccount.update({
+          where: { id: account.id },
+          data: {
+            accessToken: data.access_token,
+            tokenExpiresAt: expiresAt,
+            lastSyncedAt: new Date(),
+          },
+        });
+      },
+      {
+        operation: "refreshAccessToken",
+        model: "instaAccount",
+      },
+    );
 
     return {
       accessToken: data.access_token,
@@ -90,7 +94,7 @@ export async function refreshAccessToken(
  */
 export function isTokenExpiringSoon(
   expiresAt: Date,
-  daysThreshold: number = 7
+  daysThreshold: number = 7,
 ): boolean {
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
@@ -103,10 +107,7 @@ export function isTokenExpiringSoon(
  */
 
 export async function getValidAccessToken(
-  account: Pick<
-    InstaAccount,
-    "id" | "accessToken" | "tokenExpiresAt"
-  >
+  account: Pick<InstaAccount, "id" | "accessToken" | "tokenExpiresAt">,
 ): Promise<string> {
   if (isTokenExpiringSoon(account.tokenExpiresAt)) {
     const { accessToken } = await refreshAccessToken(account);
@@ -120,7 +121,7 @@ export async function getValidAccessToken(
  * Finds all accounts with expiring tokens
  */
 export async function findExpiringTokens(
-  daysThreshold: number = 7
+  daysThreshold: number = 7,
 ): Promise<string[]> {
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
@@ -145,11 +146,11 @@ export async function findExpiringTokens(
  */
 export async function validateToken(
   accessToken: string,
-  instagramUserId: string
+  instagramUserId: string,
 ): Promise<boolean> {
   try {
     const url = buildGraphApiUrl(
-      GRAPH_API.ENDPOINTS.USER_INFO(instagramUserId)
+      GRAPH_API.ENDPOINTS.USER_INFO(instagramUserId),
     );
     url.searchParams.set("fields", "id");
     url.searchParams.set("access_token", accessToken);
@@ -166,7 +167,7 @@ export async function validateToken(
  * Uses Instagram's token endpoint (api.instagram.com)
  */
 export async function exchangeCodeForToken(
-  code: string
+  code: string,
 ): Promise<OAuthTokenResponse> {
   const { appId, appSecret, redirectUri } = getOAuthCredentials();
 
@@ -212,7 +213,7 @@ export async function exchangeCodeForToken(
  * Uses graph.instagram.com/access_token endpoint
  */
 export async function getLongLivedToken(
-  shortLivedToken: string
+  shortLivedToken: string,
 ): Promise<LongLivedTokenResponse> {
   const { appSecret } = getOAuthCredentials();
 
@@ -233,7 +234,7 @@ export async function getLongLivedToken(
 
   if (status !== 200) {
     throw new Error(
-      `Failed to exchange short-lived token for long-lived token: ${status}`
+      `Failed to exchange short-lived token for long-lived token: ${status}`,
     );
   }
 

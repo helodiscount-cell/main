@@ -10,8 +10,8 @@ import {
   getAutomation,
   updateAutomation,
   deleteAutomation,
-} from "@/server/services/automation.service";
-import { findUserByClerkId } from "@/server/repositories/user.repository";
+} from "@/server/services/auto/automation.service";
+import { findUserByClerkId } from "@/server/repository/user-profile/user.repository";
 import { isValidObjectId, sanitizeQueryParam } from "@/lib/utils/validation";
 
 /**
@@ -19,7 +19,7 @@ import { isValidObjectId, sanitizeQueryParam } from "@/lib/utils/validation";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -27,7 +27,7 @@ export async function GET(
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: "You must be logged in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -36,7 +36,7 @@ export async function GET(
     if (!user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -48,7 +48,7 @@ export async function GET(
     if (!isValidObjectId(automationId)) {
       return NextResponse.json(
         { success: false, error: "Invalid automation ID format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -60,7 +60,7 @@ export async function GET(
         success: true,
         automation,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     // Uses generic error message to prevent information disclosure
@@ -78,7 +78,7 @@ export async function GET(
             ? error.message
             : "Failed to retrieve automation. Please try again.",
       },
-      { status: statusCode }
+      { status: statusCode },
     );
   }
 }
@@ -88,7 +88,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -96,7 +96,7 @@ export async function PATCH(
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: "You must be logged in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -105,7 +105,7 @@ export async function PATCH(
     if (!user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -121,7 +121,7 @@ export async function PATCH(
         validation.error.issues[0]?.message || "Invalid input";
       return NextResponse.json(
         { success: false, error: errorMessage },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -129,7 +129,7 @@ export async function PATCH(
     const automation = await updateAutomation(
       user.id,
       automationId,
-      validation.data
+      validation.data,
     );
 
     return NextResponse.json(
@@ -137,7 +137,7 @@ export async function PATCH(
         success: true,
         automation,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     // Uses generic error message to prevent information disclosure
@@ -155,7 +155,7 @@ export async function PATCH(
             ? error.message
             : "Failed to update automation. Please try again.",
       },
-      { status: statusCode }
+      { status: statusCode },
     );
   }
 }
@@ -165,7 +165,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -173,7 +173,7 @@ export async function DELETE(
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: "You must be logged in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -182,7 +182,7 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -197,7 +197,7 @@ export async function DELETE(
         success: true,
         message: result.message,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     // Uses generic error message to prevent information disclosure
@@ -215,7 +215,7 @@ export async function DELETE(
             ? error.message
             : "Failed to delete automation. Please try again.",
       },
-      { status: statusCode }
+      { status: statusCode },
     );
   }
 }

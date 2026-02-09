@@ -13,7 +13,7 @@ import {
   findUserByIdWithInstaAccount,
   findUserByClerkId,
   findUserWithInstaAccount,
-} from "@/server/repositories/user.repository";
+} from "@/server/repository/user-profile/user.repository";
 import {
   createAutomation as createAutomationRecord,
   findAutomationById,
@@ -22,7 +22,7 @@ import {
   findUserAutomations,
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
-} from "@/server/repositories/automation.repository";
+} from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/lib/utils/automation-cache";
 import { logger } from "@/lib/utils/logger";
 import { ApiRouteError } from "@/lib/middleware/errors/classes";
@@ -32,7 +32,7 @@ import { ApiRouteError } from "@/lib/middleware/errors/classes";
  */
 export async function createAutomation(
   clerkId: string,
-  input: CreateAutomationInput
+  input: CreateAutomationInput,
 ) {
   // Gets the user record with Instagram account
   const user = await findUserWithInstaAccount(clerkId);
@@ -42,7 +42,10 @@ export async function createAutomation(
   }
 
   if (!user.instaAccount) {
-    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT, "NO_INSTAGRAM_ACCOUNT");
+    throw new ApiRouteError(
+      ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
+      "NO_INSTAGRAM_ACCOUNT",
+    );
   }
 
   // Creates the automation
@@ -54,7 +57,7 @@ export async function createAutomation(
     logger.error(
       "Failed to invalidate automation cache after creation",
       error instanceof Error ? error : new Error(String(error)),
-      { clerkId: user.clerkId, postId: input.postId }
+      { clerkId: user.clerkId, postId: input.postId },
     );
   });
 
@@ -106,7 +109,7 @@ export async function getUserAutomations(
   filters?: {
     status?: "ACTIVE" | "PAUSED" | "DELETED";
     postId?: string;
-  }
+  },
 ) {
   // Gets the user by clerkId to obtain userId
   const user = await findUserByClerkId(clerkId);
@@ -144,13 +147,13 @@ export async function getUserAutomations(
 export async function updateAutomation(
   userId: string,
   automationId: string,
-  input: UpdateAutomationInput
+  input: UpdateAutomationInput,
 ) {
   // Checks ownership in the database query to prevent information disclosure
   // Returns null if automation doesn't exist OR user doesn't own it
   const existingAutomation = await findAutomationByIdAndUserIdForUpdate(
     automationId,
-    userId
+    userId,
   );
 
   if (!existingAutomation) {
@@ -168,7 +171,7 @@ export async function updateAutomation(
     if (user?.clerkId) {
       await invalidateAutomationCache(
         user.clerkId,
-        existingAutomation.postId
+        existingAutomation.postId,
       ).catch((error) => {
         // Logs error but doesn't fail the operation
         logger.error(
@@ -178,21 +181,24 @@ export async function updateAutomation(
             clerkId: user.clerkId,
             postId: existingAutomation.postId,
             automationId,
-          }
+          },
         );
       });
     } else {
-      logger.warn("Missing clerkId for user when invalidating automation cache", {
-        userId,
-        postId: existingAutomation.postId,
-        automationId,
-      });
+      logger.warn(
+        "Missing clerkId for user when invalidating automation cache",
+        {
+          userId,
+          postId: existingAutomation.postId,
+          automationId,
+        },
+      );
     }
   } catch (error) {
     logger.error(
       "Failed to resolve user for automation cache invalidation after update",
       error instanceof Error ? error : new Error(String(error)),
-      { userId, postId: existingAutomation.postId, automationId }
+      { userId, postId: existingAutomation.postId, automationId },
     );
   }
 
@@ -218,7 +224,7 @@ export async function deleteAutomation(userId: string, automationId: string) {
   // Returns null if automation doesn't exist OR user doesn't own it
   const existingAutomation = await findAutomationByIdAndUserIdForUpdate(
     automationId,
-    userId
+    userId,
   );
 
   if (!existingAutomation) {
@@ -235,7 +241,7 @@ export async function deleteAutomation(userId: string, automationId: string) {
     if (user?.clerkId) {
       await invalidateAutomationCache(
         user.clerkId,
-        existingAutomation.postId
+        existingAutomation.postId,
       ).catch((error) => {
         // Logs error but doesn't fail the operation
         logger.error(
@@ -245,7 +251,7 @@ export async function deleteAutomation(userId: string, automationId: string) {
             clerkId: user.clerkId,
             postId: existingAutomation.postId,
             automationId,
-          }
+          },
         );
       });
     } else {
@@ -255,14 +261,14 @@ export async function deleteAutomation(userId: string, automationId: string) {
           userId,
           postId: existingAutomation.postId,
           automationId,
-        }
+        },
       );
     }
   } catch (error) {
     logger.error(
       "Failed to resolve user for automation cache invalidation after deletion",
       error instanceof Error ? error : new Error(String(error)),
-      { userId, postId: existingAutomation.postId, automationId }
+      { userId, postId: existingAutomation.postId, automationId },
     );
   }
 

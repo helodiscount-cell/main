@@ -11,6 +11,7 @@ interface PostsSectionProps {
 
 // Renders posts grid section with cards
 export const PostsSection = ({ posts, onPostClick }: PostsSectionProps) => {
+  console.log(posts);
   if (posts.length === 0) {
     return (
       <div className="text-center py-16 text-muted-foreground border-2 border-dashed border-border rounded-2xl bg-muted/30">

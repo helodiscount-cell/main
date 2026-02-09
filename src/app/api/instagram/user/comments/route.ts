@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { CommentsQuerySchema } from "@dm-broo/common-types";
-import { getPostComments } from "@/server/services/instagram.service";
+import { getPostComments } from "@/server/services/instagram/instagram.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: "You must be logged in" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         validationResult.error.issues[0]?.message || "Post ID is required";
       return NextResponse.json(
         { success: false, error: errorMessage },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         success: true,
         ...result,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
             ? error.message
             : "An unexpected error occurred while processing the request",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

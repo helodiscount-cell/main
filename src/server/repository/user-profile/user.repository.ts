@@ -4,7 +4,7 @@
  */
 
 import { prisma } from "@/lib/db";
-import { executeWithErrorHandling } from "./repository-utils";
+import { executeWithErrorHandling } from "../repository-utils";
 
 export interface CreateUserData {
   clerkId: string;
@@ -32,7 +32,7 @@ export async function findUserByClerkId(clerkId: string) {
       operation: "findUserByClerkId",
       model: "User",
       fallback: null,
-    }
+    },
   );
 }
 
@@ -49,7 +49,7 @@ export async function findUserById(userId: string) {
       operation: "findUserById",
       model: "User",
       fallback: null,
-    }
+    },
   );
 }
 
@@ -67,7 +67,7 @@ export async function findUserWithInstaAccount(clerkId: string) {
       operation: "findUserWithInstaAccount",
       model: "User",
       fallback: null,
-    }
+    },
   );
 }
 
@@ -85,7 +85,7 @@ export async function findUserByIdWithInstaAccount(userId: string) {
       operation: "findUserByIdWithInstaAccount",
       model: "User",
       fallback: null,
-    }
+    },
   );
 }
 
@@ -112,7 +112,7 @@ export async function upsertUser(data: CreateUserData) {
     {
       operation: "upsertUser",
       model: "User",
-    }
+    },
   );
 }
 
@@ -133,7 +133,7 @@ export async function createUser(data: CreateUserData) {
     {
       operation: "createUser",
       model: "User",
-    }
+    },
   );
 }
 
@@ -150,7 +150,6 @@ export async function updateUser(userId: string, data: UpdateUserData) {
     {
       operation: "updateUser",
       model: "User",
-    }
+    },
   );
 }
-

@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { initiateOAuth } from "@/server/services/oauth.service";
+import { initiateOAuth } from "@/server/services/instagram/oauth.service";
 import { ERROR_MESSAGES } from "@/config/instagram.config";
 
 export async function GET(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.AUTH.NO_USER },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
             ? error.message
             : ERROR_MESSAGES.AUTH.OAUTH_FAILED,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

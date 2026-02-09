@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { useApi } from "@/hooks/use-api";
 import {
-  InstagramStatusResponse,
   InstagramPostsResponse,
   InstagramPost,
   AutomationListResponse,
@@ -41,7 +40,7 @@ export default function DashboardPage() {
     data: statusData,
   } = useApi<SuccessResponse<InstagramStatusConnected>>();
 
-  // Posts: /instagram/posts
+  // Posts: /instagram/user/posts
   const {
     execute: fetchPosts,
     loading: isFetchingPosts,
@@ -55,7 +54,7 @@ export default function DashboardPage() {
     loading: isFetchingAutomations,
     error: fetchAutomationsError,
     data: automationsData,
-  } = useApi<{ data: AutomationListResponse, success: true }>();
+  } = useApi<{ data: AutomationListResponse; success: true }>();
 
   // Update automation: /automations/[id]
   const { execute: updateAutomation } = useApi<any>();
@@ -83,23 +82,30 @@ export default function DashboardPage() {
 
   // Determines if Instagram is connected based on API response
   const connectedStatus =
-    statusData && statusData.data && "connected" in statusData.data && statusData.data.connected === true;
+    statusData &&
+    statusData.data &&
+    "connected" in statusData.data &&
+    statusData.data.connected === true;
 
   const errorBanner =
     checkStatusError || fetchPostsError || fetchAutomationsError
       ? getErrorMessage(
-        checkStatusError || fetchPostsError || fetchAutomationsError
-      )
+          checkStatusError || fetchPostsError || fetchAutomationsError,
+        )
       : null;
 
   // Fetches posts from API and stores them in localStorage
   const handleFetchPosts = async () => {
     try {
-      const result = await fetchPosts("/instagram/posts", "GET");
-      if (result?.posts) {
-        setPosts(result.posts);
-        localStorage.setItem("instagram_posts", JSON.stringify(result.posts));
-        toast.success(`Loaded ${result.posts.length} posts successfully!`);
+      const result = await fetchPosts("/instagram/user/posts", "GET");
+      if (result?.data?.posts) {
+        console.log(result.data.posts);
+        setPosts(result.data.posts);
+        localStorage.setItem(
+          "instagram_posts",
+          JSON.stringify(result.data.posts),
+        );
+        toast.success(`Loaded ${result.data.posts.length} posts successfully!`);
       }
     } catch (err) {
       toast.error("Failed to fetch posts. Please try again.");
@@ -147,8 +153,9 @@ export default function DashboardPage() {
   }, [connectedStatus]);
 
   useEffect(() => {
-    if (postsData?.posts) {
-      setPosts(postsData.posts);
+    if (postsData?.data?.posts) {
+      console.log(postsData.data.posts);
+      setPosts(postsData.data.posts);
     }
   }, [postsData]);
 
@@ -158,10 +165,9 @@ export default function DashboardPage() {
     }
   }, [connectedStatus, fetchAutomations]);
 
-
   const handleToggleAutomation = async (
     id: string,
-    newStatus: "ACTIVE" | "PAUSED"
+    newStatus: "ACTIVE" | "PAUSED",
   ) => {
     try {
       await updateAutomation(`/automations/${id}`, "PATCH", {
@@ -191,7 +197,7 @@ export default function DashboardPage() {
   const handleDisconnectInstagram = async () => {
     if (
       !confirm(
-        "Are you sure you want to disconnect your Instagram account? All automations will be removed."
+        "Are you sure you want to disconnect your Instagram account? All automations will be removed.",
       )
     ) {
       return;
@@ -200,7 +206,7 @@ export default function DashboardPage() {
     try {
       const result = await disconnectInstagram(
         "/instagram/oauth/disconnect",
-        "POST"
+        "POST",
       );
       if (result?.success) {
         toast.success("Instagram account disconnected");
@@ -239,32 +245,36 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {connectedStatus && statusData && statusData.data && "connected" in statusData.data && statusData.data.connected === true && (
-          <div className="animate-fade-in flex flex-col gap-8">
-            <ConnectionStatusHeader
-              status={statusData.data}
-              onFetchPosts={handleFetchPosts}
-              isFetchingPosts={isFetchingPosts}
-              postsCount={posts.length}
-              onDisconnect={handleDisconnectInstagram}
-              isDisconnecting={isDisconnecting}
-            />
+        {connectedStatus &&
+          statusData &&
+          statusData.data &&
+          "connected" in statusData.data &&
+          statusData.data.connected === true && (
+            <div className="animate-fade-in flex flex-col gap-8">
+              <ConnectionStatusHeader
+                status={statusData.data}
+                onFetchPosts={handleFetchPosts}
+                isFetchingPosts={isFetchingPosts}
+                postsCount={posts.length}
+                onDisconnect={handleDisconnectInstagram}
+                isDisconnecting={isDisconnecting}
+              />
 
-            <PostsSection posts={posts} onPostClick={handlePostClick} />
+              <PostsSection posts={posts} onPostClick={handlePostClick} />
 
-            <AutomationsSection
-              automations={automationsData}
-              isFetching={isFetchingAutomations}
-              onToggleStatus={handleToggleAutomation}
-              onDelete={handleDeleteAutomation}
-              onViewDetails={(id) =>
-                router.push(
-                  `/posts/${automations.find((a) => a.id === id)?.postId || ""}`
-                )
-              }
-            />
-          </div>
-        )}
+              <AutomationsSection
+                automations={automationsData}
+                isFetching={isFetchingAutomations}
+                onToggleStatus={handleToggleAutomation}
+                onDelete={handleDeleteAutomation}
+                onViewDetails={(id) =>
+                  router.push(
+                    `/posts/${automations.find((a) => a.id === id)?.postId || ""}`,
+                  )
+                }
+              />
+            </div>
+          )}
       </div>
     </div>
   );

@@ -87,9 +87,16 @@ export async function executeWithErrorHandling<T>(
     model?: string;
     fallback?: T;
     retries?: number;
-  }
+  },
 ): Promise<T> {
-  const { operation: opName, model, fallback, retries = process.env.MAX_RETRY_FOR_DB_OP ? parseInt(process.env.MAX_RETRY_FOR_DB_OP) : 1 } = context;
+  const {
+    operation: opName,
+    model,
+    fallback,
+    retries = process.env.MAX_RETRY_FOR_DB_OP
+      ? parseInt(process.env.MAX_RETRY_FOR_DB_OP)
+      : 1,
+  } = context;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -137,7 +144,7 @@ export async function executeTransaction<T>(
     operation: string;
     models?: string[];
     retries?: number;
-  }
+  },
 ): Promise<T> {
   const { operation: opName, models, retries = 3 } = context;
   const startTime = Date.now();
@@ -149,13 +156,14 @@ export async function executeTransaction<T>(
 
       if (attempt > 0) {
         logger.debug(
-          `Retrying transaction: ${opName} (attempt ${attempt + 1}/${retries + 1
+          `Retrying transaction: ${opName} (attempt ${attempt + 1}/${
+            retries + 1
           })`,
           {
             operation: opName,
             models: models || [],
             attempt: attempt + 1,
-          }
+          },
         );
       } else {
         logger.debug(`Starting transaction: ${opName}`, {
@@ -176,7 +184,8 @@ export async function executeTransaction<T>(
       const isRetryable = isRetryableError(error);
 
       logger.error(
-        `Transaction failed: ${opName}${attempt < retries && isRetryable ? " (will retry)" : ""
+        `Transaction failed: ${opName}${
+          attempt < retries && isRetryable ? " (will retry)" : ""
         }`,
         error instanceof Error ? error : new Error(String(error)),
         {
@@ -191,7 +200,7 @@ export async function executeTransaction<T>(
             error instanceof Prisma.PrismaClientKnownRequestError
               ? error.code
               : undefined,
-        }
+        },
       );
 
       // Retries if error is retryable and attempts remain

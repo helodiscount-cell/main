@@ -1,9 +1,9 @@
 import { runWithErrorHandling } from "@/lib/middleware/errors";
-import { getConnectionStatus } from "@/server/services/instagram.service";
+import { getInstaConnectionStatus } from "@/server/services/instagram/instagram.service";
 
 export async function GET() {
   return runWithErrorHandling(async (clerkId) => {
-    const status = await getConnectionStatus(clerkId);
+    const status = await getInstaConnectionStatus(clerkId);
     return status;
   });
 }

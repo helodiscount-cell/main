@@ -3,7 +3,7 @@
  * Contains business logic for user management
  */
 
-import { upsertUser } from "@/server/repositories/user.repository";
+import { upsertUser } from "@/server/repository/user-profile/user.repository";
 
 /**
  * Ensures a user exists in the database (creates or updates)
@@ -14,7 +14,7 @@ export async function ensureUser(
     email?: string;
     fullName?: string;
     imageUrl?: string | null;
-  }
+  },
 ) {
   const user = await upsertUser({
     clerkId,
@@ -25,4 +25,3 @@ export async function ensureUser(
 
   return { id: user.id };
 }
-

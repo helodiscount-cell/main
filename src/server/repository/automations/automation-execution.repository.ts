@@ -44,7 +44,7 @@ export async function createExecution(data: CreateExecutionData) {
       operation: "createExecution",
       model: "AutomationExecution",
       retries: 2,
-    }
+    },
   );
 }
 
@@ -54,7 +54,7 @@ export async function createExecution(data: CreateExecutionData) {
  */
 export async function isCommentProcessed(
   commentId: string,
-  automationId: string
+  automationId: string,
 ): Promise<boolean> {
   return executeWithErrorHandling(
     async () => {
@@ -71,7 +71,7 @@ export async function isCommentProcessed(
       model: "AutomationExecution",
       fallback: false, // Fail-open: if we can't check, allow processing
       retries: 1,
-    }
+    },
   );
 }
 
@@ -80,7 +80,7 @@ export async function isCommentProcessed(
  */
 export async function findExecutionsByAutomationId(
   automationId: string,
-  limit?: number
+  limit?: number,
 ) {
   return executeWithErrorHandling(
     () =>
@@ -96,7 +96,7 @@ export async function findExecutionsByAutomationId(
       model: "AutomationExecution",
       fallback: [], // Returns empty array on error
       retries: 1,
-    }
+    },
   );
 }
 
@@ -117,7 +117,6 @@ export async function findExecutionsByCommentId(commentId: string) {
       model: "AutomationExecution",
       fallback: [], // Returns empty array on error
       retries: 1,
-    }
+    },
   );
 }
-

@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { refreshAccessToken } from "@/server/services/oauth.service";
+import { refreshAccessToken } from "@/server/services/instagram/oauth.service";
 
 export async function POST() {
   try {
@@ -15,7 +15,7 @@ export async function POST() {
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: "You must be logged in to refresh token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function POST() {
         success: true,
         ...result,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
@@ -38,7 +38,7 @@ export async function POST() {
             ? error.message
             : "Failed to refresh token. Please try reconnecting your account.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

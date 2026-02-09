@@ -9,8 +9,15 @@ export const GRAPH_API = {
   VERSION: "v21.0",
   BASE_URL: "https://graph.instagram.com",
   ENDPOINTS: {
-    REFRESH_TOKEN: (accessToken: string) => `refresh_access_token?access_token=${accessToken}`,
+    REFRESH_TOKEN: (accessToken: string) =>
+      `refresh_access_token?access_token=${accessToken}`,
     USER_MEDIA: (userId: string) => `${userId}/media`,
+    // Fetch stories specifically
+    USER_STORIES: (userId: string) => `${userId}/stories`,
+    // Get specific story details
+    STORY_DETAILS: (storyId: string) => `${storyId}`,
+    // Get story insights (requires specific permissions)
+    STORY_INSIGHTS: (storyId: string) => `${storyId}/insights`,
     POST_COMMENTS: (postId: string) => `${postId}/comments`,
     USER_INFO: (userId: string) => `${userId}`,
     SEND_MESSAGE: (igUserId: string) => `${igUserId}/messages`,
@@ -55,6 +62,16 @@ export const GRAPH_API_FIELDS = {
     "timestamp",
     "like_count",
     "comments_count",
+    "media_product_type",
+  ],
+  STORIES: [
+    "id",
+    "media_type",
+    "media_url",
+    "timestamp",
+    "permalink",
+    "caption",
+    "media_product_type",
   ],
   COMMENTS: ["id", "text", "timestamp", "username", "like_count", "user"],
   USER: [
@@ -76,6 +93,7 @@ export const RATE_LIMITS = {
   POSTS_PER_REQUEST: 25,
   COMMENTS_PER_REQUEST: 50,
   REQUEST_TIMEOUT_MS: 10000, // 10 seconds
+  STORIES_PER_REQUEST: 25,
 } as const;
 
 // Error messages
@@ -214,7 +232,7 @@ export const getWebhookConfigSecrets = () => {
 
   if (!verifyToken || !callbackUrl) {
     throw new Error(
-      "Webhook verify token or callback URL not configured in environment variables"
+      "Webhook verify token or callback URL not configured in environment variables",
     );
   }
 
