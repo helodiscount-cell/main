@@ -1,14 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
-
 @import "tailwindcss";
 @import "tw-animate-css";
 
-body {
-  font-family: 'Geist', sans-serif;
-}
-
 @custom-variant dark (&:is(.dark *));
 
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -116,20 +115,6 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
 }
 
 /* Animation delays for staggered effects */

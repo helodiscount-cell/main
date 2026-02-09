@@ -14,22 +14,21 @@ import {
 } from "lucide-react";
 import { SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
+import { LandingHeader } from "@/components/home/Header";
+import HeroSection from "@/components/home/Hero";
+import Section2 from "@/components/home/Section2";
+import Section3 from "@/components/home/Section3";
 
 // Main landing page component
 export default function LandingPage() {
   return (
     // Uses grid pattern background according to brand style
-    <div
-      className="min-h-screen overflow-hidden relative
-        bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)]
-        dark:bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)]
-        bg-size-[60px_60px]"
-    >
+    <>
+      <LandingHeader />
       <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <Pricing />
-    </div>
+      <Section2 />
+      <Section3 />
+    </>
   );
 }
 
@@ -98,33 +97,33 @@ const SocialProof = () => (
 );
 
 // Handles the hero section
-const HeroSection = () => (
-  // Wraps hero and decorative backgrounds
-  <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
-    {/* Background gradients & blurs for effect */}
-    <div className="absolute inset-0 bg-linear-to-br from-fuchsia-500/5 via-transparent to-cyan-500/5 dark:from-fuchsia-500/10 dark:to-cyan-500/10 pointer-events-none" />
-    <div className="absolute top-20 left-10 w-72 h-72 bg-linear-to-r from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
-    <div className="absolute bottom-20 right-10 w-96 h-96 bg-linear-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse animation-delay-2000 pointer-events-none" />
-    <div className="absolute inset-0 mask-[radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
-    <div className="relative z-10 max-w-5xl mx-auto text-center">
-      <HeroBadge />
-      <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight mb-6 animate-fade-in animation-delay-100">
-        <span className="bg-linear-to-r from-fuchsia-600 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
-          Automate
-        </span>{" "}
-        Your Instagram
-        <br />
-        <span className="text-foreground">Engagement</span>
-      </h1>
-      <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in animation-delay-200">
-        Responds to comments instantly, sends automated DMs, and grows your
-        audience while you sleep. Built for creators and businesses.
-      </p>
-      <CTAActions />
-      <SocialProof />
-    </div>
-  </section>
-);
+// const HeroSection = () => (
+//   // Wraps hero and decorative backgrounds
+//   <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+//     {/* Background gradients & blurs for effect */}
+//     <div className="absolute inset-0 bg-linear-to-br from-fuchsia-500/5 via-transparent to-cyan-500/5 dark:from-fuchsia-500/10 dark:to-cyan-500/10 pointer-events-none" />
+//     <div className="absolute top-20 left-10 w-72 h-72 bg-linear-to-r from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
+//     <div className="absolute bottom-20 right-10 w-96 h-96 bg-linear-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse animation-delay-2000 pointer-events-none" />
+//     <div className="absolute inset-0 mask-[radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+//     <div className="relative z-10 max-w-5xl mx-auto text-center">
+//       <HeroBadge />
+//       <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight mb-6 animate-fade-in animation-delay-100">
+//         <span className="bg-linear-to-r from-fuchsia-600 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
+//           Automate
+//         </span>{" "}
+//         Your Instagram
+//         <br />
+//         <span className="text-foreground">Engagement</span>
+//       </h1>
+//       <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in animation-delay-200">
+//         Responds to comments instantly, sends automated DMs, and grows your
+//         audience while you sleep. Built for creators and businesses.
+//       </p>
+//       <CTAActions />
+//       <SocialProof />
+//     </div>
+//   </section>
+// );
 
 // Represents data and rendering for each feature
 const features = [
@@ -293,44 +292,53 @@ const HowItWorksSection = () => (
 
 const tiers = [
   {
-    name: 'Hobby',
-    id: 'tier-hobby',
-    href: '#',
-    priceMonthly: '$29',
-    description: "The perfect plan if you're just getting started with our product.",
-    features: ['25 products', 'Up to 10,000 subscribers', 'Advanced analytics', '24-hour support response time'],
+    name: "Hobby",
+    id: "tier-hobby",
+    href: "#",
+    priceMonthly: "$29",
+    description:
+      "The perfect plan if you're just getting started with our product.",
+    features: [
+      "25 products",
+      "Up to 10,000 subscribers",
+      "Advanced analytics",
+      "24-hour support response time",
+    ],
     featured: false,
   },
   {
-    name: 'Enterprise',
-    id: 'tier-enterprise',
-    href: '#',
-    priceMonthly: '$99',
-    description: 'Dedicated support and infrastructure for your company.',
+    name: "Enterprise",
+    id: "tier-enterprise",
+    href: "#",
+    priceMonthly: "$99",
+    description: "Dedicated support and infrastructure for your company.",
     features: [
-      'Unlimited products',
-      'Unlimited subscribers',
-      'Advanced analytics',
-      'Dedicated support representative',
-      'Marketing automations',
-      'Custom integrations',
+      "Unlimited products",
+      "Unlimited subscribers",
+      "Advanced analytics",
+      "Dedicated support representative",
+      "Marketing automations",
+      "Custom integrations",
     ],
     featured: true,
   },
-]
+];
 
 function classNames(...classes: any[]) {
-  return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(" ");
 }
 
 const Pricing = () => {
   return (
     <div className="relative isolate  px-6 py-24 sm:py-32 lg:px-8 bg-linear-to-br">
-      <div aria-hidden="true" className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl">
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl"
+      >
         <div
           style={{
             clipPath:
-              'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
+              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
           }}
           className="mx-auto aspect-1155/678 w-288.75 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-20"
         />
@@ -342,55 +350,75 @@ const Pricing = () => {
         </p>
       </div>
       <p className="mx-auto mt-6 max-w-2xl text-center text-lg font-medium text-pretty text-gray-400 sm:text-xl/8">
-        Choose an affordable plan that’s packed with the best features for engaging your audience, creating customer
-        loyalty, and driving sales.
+        Choose an affordable plan that’s packed with the best features for
+        engaging your audience, creating customer loyalty, and driving sales.
       </p>
       <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
         {tiers.map((tier, tierIdx) => (
           <div
             key={tier.id}
             className={classNames(
-              tier.featured ? 'relative bg-linear-to-br from-fuchsia-600 via-pink-600 to-cyan-600' : 'bg-foreground/2.5 sm:mx-8 lg:mx-0',
               tier.featured
-                ? ''
+                ? "relative bg-linear-to-br from-fuchsia-600 via-pink-600 to-cyan-600"
+                : "bg-foreground/2.5 sm:mx-8 lg:mx-0",
+              tier.featured
+                ? ""
                 : tierIdx === 0
-                  ? 'rounded-t-3xl sm:rounded-b-none lg:rounded-tr-none lg:rounded-bl-3xl'
-                  : 'sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none',
-              'rounded-3xl p-8 ring-1 ring-white/10 sm:p-10',
+                  ? "rounded-t-3xl sm:rounded-b-none lg:rounded-tr-none lg:rounded-bl-3xl"
+                  : "sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none",
+              "rounded-3xl p-8 ring-1 ring-white/10 sm:p-10",
             )}
           >
             <h3
               id={tier.id}
-              className={classNames(tier.featured ? 'text-white-400' : 'text-foreground', 'text-base/7 font-semibold')}
+              className={classNames(
+                tier.featured ? "text-white-400" : "text-foreground",
+                "text-base/7 font-semibold",
+              )}
             >
               {tier.name}
             </h3>
             <p className="mt-4 flex items-baseline gap-x-2">
               <span
                 className={classNames(
-                  tier.featured ? 'text-white' : 'text-foreground',
-                  'text-5xl font-semibold tracking-tight',
+                  tier.featured ? "text-white" : "text-foreground",
+                  "text-5xl font-semibold tracking-tight",
                 )}
               >
                 {tier.priceMonthly}
               </span>
-              <span className={classNames(tier.featured ? 'text-white' : 'text-gray-400', 'text-base')}>/month</span>
+              <span
+                className={classNames(
+                  tier.featured ? "text-white" : "text-gray-400",
+                  "text-base",
+                )}
+              >
+                /month
+              </span>
             </p>
-            <p className={classNames(tier.featured ? 'text-white' : 'text-foreground', 'mt-6 text-base/7')}>
+            <p
+              className={classNames(
+                tier.featured ? "text-white" : "text-foreground",
+                "mt-6 text-base/7",
+              )}
+            >
               {tier.description}
             </p>
             <ul
               role="list"
               className={classNames(
-                tier.featured ? 'text-white' : 'text-foreground',
-                'mt-8 space-y-3 text-sm/6 sm:mt-10',
+                tier.featured ? "text-white" : "text-foreground",
+                "mt-8 space-y-3 text-sm/6 sm:mt-10",
               )}
             >
               {tier.features.map((feature) => (
                 <li key={feature} className="flex gap-x-3">
                   <CheckIcon
                     aria-hidden="true"
-                    className={classNames(tier.featured ? 'text-foreground-400' : 'text-foreground', 'h-6 w-5 flex-none')}
+                    className={classNames(
+                      tier.featured ? "text-foreground-400" : "text-foreground",
+                      "h-6 w-5 flex-none",
+                    )}
                   />
                   {feature}
                 </li>
@@ -401,9 +429,9 @@ const Pricing = () => {
               aria-describedby={tier.id}
               className={classNames(
                 tier.featured
-                  ? 'bg-white text-fuchsia-600 hover:opacity-70 focus-visible:outline-indigo-500'
-                  : 'bg-foreground/10 text-foreground inset-ring inset-ring-white/5 hover:bg-white/20 focus-visible:outline-white/75',
-                'mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 sm:mt-10',
+                  ? "bg-white text-fuchsia-600 hover:opacity-70 focus-visible:outline-indigo-500"
+                  : "bg-foreground/10 text-foreground inset-ring inset-ring-white/5 hover:bg-white/20 focus-visible:outline-white/75",
+                "mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 sm:mt-10",
               )}
             >
               Get started today
@@ -412,5 +440,5 @@ const Pricing = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
