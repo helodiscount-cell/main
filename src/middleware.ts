@@ -5,12 +5,14 @@ import {
   validateRequestSize,
 } from "@/lib/utils/request-limits";
 import { validateCsrfProtection } from "@/lib/utils/csrf";
-import { rateLimitMiddleware, getRateLimitHeaders } from "@/lib/utils/rate-limit";
+import {
+  rateLimitMiddleware,
+  getRateLimitHeaders,
+} from "@/lib/utils/rate-limit";
 
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
+  "/auth",
   "/api/webhooks/instagram",
 ]);
 
@@ -29,18 +31,24 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   // Validates CSRF protection for state-changing API requests
-  if (isApiRoute(request) && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
+  if (
+    isApiRoute(request) &&
+    ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)
+  ) {
     const csrfValidation = validateCsrfProtection(request);
     if (!csrfValidation.valid) {
       return NextResponse.json(
         { error: csrfValidation.error || "CSRF validation failed" },
-        { status: 403 } // 403 Forbidden
+        { status: 403 }, // 403 Forbidden
       );
     }
   }
 
   // Validates request size for API routes with request bodies
-  if (isApiRoute(request) && ["POST", "PUT", "PATCH"].includes(request.method)) {
+  if (
+    isApiRoute(request) &&
+    ["POST", "PUT", "PATCH"].includes(request.method)
+  ) {
     const contentLength = request.headers.get("content-length");
     const pathname = request.nextUrl.pathname;
     const maxSize = getSizeLimitForRoute(pathname);
@@ -49,7 +57,7 @@ export default clerkMiddleware(async (auth, request) => {
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.error || "Request body too large" },
-        { status: 413 } // 413 Payload Too Large
+        { status: 413 }, // 413 Payload Too Large
       );
     }
   }

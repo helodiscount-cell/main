@@ -23,6 +23,11 @@ rules.md
 !.yarn/releases
 !.yarn/versions
 
+# lock files
+
+bun.lock
+package-lock.json
+
 # testing
 /coverage
 

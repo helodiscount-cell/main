@@ -1,9 +1,17 @@
 import React from "react";
 import { MessageSquare } from "lucide-react";
+import PlaceHolderImage1 from "@/assets/homepage/@2x/Ellipse 10@2x.png";
+import PlaceHolderImag2 from "@/assets/homepage/@2x/Ellipse 12@2x.png";
+import PlaceHolderImage3 from "@/assets/homepage/@2x/Ellipse 9@2x.png";
+import PlaceHolderImage4 from "@/assets/homepage/@2x/NoPath - Copy (2)@2x.png";
+import PlaceHolderImage5 from "@/assets/homepage/@2x/NoPath - Copy (3)@2x.png";
+import GridPattern from "@/assets/svgs/Group 18.svg";
+import Image from "next/image";
+import GrowthLine from "../icons/GrowthLine";
 
 const Section2 = () => {
   return (
-    <section className="bg-[#FCF9FF] bg-[linear-gradient(to_right,rgba(106,6,228,0.18),transparent_20%,transparent_80%,rgba(106,6,228,0.18))] py-20">
+    <section className="py-20">
       <div className="">
         <div className="text-box flex flex-col justify-center items-center gap-2 mb-16">
           <div className="flex gap-2">
@@ -39,7 +47,7 @@ const FeatureCard = () => (
 
     <div className="relative grid grid-cols-2 gap-12 items-start">
       {/* Left Content */}
-      <div className="space-y-6">
+      <div className="space-y-6 z-10">
         <h2 className="text-[46px] font-bold text-[#071329] leading-tight">
           Accelerate Your
           <br />
@@ -52,43 +60,36 @@ const FeatureCard = () => (
         </p>
 
         {/* Avatar circles in a row below text */}
-        <div className="flex items-center gap-4 pt-8">
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-pink-300 to-pink-400 border-4 border-white shadow-lg" />
-          <div className="w-14 h-14 rounded-full bg-linear-to-br from-purple-400 to-purple-500 border-4 border-white shadow-lg" />
-          <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-300 to-gray-400 border-4 border-white shadow-lg" />
-          <div className="w-16 h-16 rounded-full bg-linear-to-br from-orange-300 to-orange-400 border-4 border-white shadow-lg" />
-          <div className="w-14 h-14 rounded-full bg-linear-to-br from-orange-400 to-yellow-400 border-4 border-white shadow-lg" />
+        <div className="flex items-center gap-7 pt-8">
+          {[
+            PlaceHolderImage1,
+            PlaceHolderImag2,
+            PlaceHolderImage3,
+            PlaceHolderImage4,
+            PlaceHolderImage5,
+          ].map((image, index) => (
+            <Image
+              key={index}
+              width={60}
+              height={60}
+              src={image}
+              alt=""
+              className={`mb-${index % 2 === 0 ? 0 : 16} ml-2`}
+            />
+          ))}
         </div>
       </div>
 
       {/* Right Chart Area */}
-      <div className="relative h-80">
+      <div className="relative h-full">
+        <Image src={GridPattern} fill alt="" />
         {/* Growth Chart SVG */}
-        <svg
-          className="absolute inset-0 w-full h-full"
-          viewBox="0 0 400 320"
-          fill="none"
-        >
-          {/* Growth curve */}
-          <path
-            d="M 20 280 Q 100 250, 150 200 T 280 100 T 380 40"
-            stroke="url(#gradient)"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#6366f1" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <GrowthLine className="absolute top-10" />
 
         {/* "After" label */}
         <div className="absolute top-8 right-12 flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 shadow-sm">
-          <MessageSquare className="w-4 h-4 text-purple-600" />
           <span className="text-sm font-semibold text-gray-900">After</span>
+          <MessageSquare className="w-4 h-4 text-purple-600" />
         </div>
       </div>
     </div>
