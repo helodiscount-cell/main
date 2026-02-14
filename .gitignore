@@ -63,3 +63,7 @@ next-env.d.ts
 
 # Prisma
 /src/generated
+
+
+bun.lock
+package-lock.json

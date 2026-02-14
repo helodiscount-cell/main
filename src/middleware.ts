@@ -5,14 +5,12 @@ import {
   validateRequestSize,
 } from "@/lib/utils/request-limits";
 import { validateCsrfProtection } from "@/lib/utils/csrf";
-import {
-  rateLimitMiddleware,
-  getRateLimitHeaders,
-} from "@/lib/utils/rate-limit";
+import { rateLimitMiddleware } from "@/lib/utils/rate-limit";
 
 const isPublicRoute = createRouteMatcher([
   "/",
   "/auth",
+  "/sso-callback",
   "/api/webhooks/instagram",
 ]);
 
@@ -21,6 +19,10 @@ const isApiRoute = createRouteMatcher(["/api/(.*)"]);
 export default clerkMiddleware(async (auth, request) => {
   // Gets user ID for rate limiting
   const { userId } = await auth();
+
+  if (userId && request.nextUrl.pathname === "/auth") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
   // Applies rate limiting to API routes
   if (isApiRoute(request)) {
