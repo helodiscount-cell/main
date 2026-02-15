@@ -20,13 +20,13 @@ export const instagramService = {
       window.location.href = url;
     },
     disconnect: async (): Promise<void> => {
-      return request(api.post<void>("/api/instagram/oauth/disconnect"));
+      return request(api.post<void>("/instagram/oauth/disconnect"));
     },
     status: async (): Promise<void> => {},
   },
   profile: {
     getAccountInfo: async (): Promise<InstagramAccountInfo> => {
-      return request(api.get<InstagramAccountInfo>("/api/instagram/status"));
+      return request(api.get<InstagramAccountInfo>("/instagram/status"));
     },
   },
 };

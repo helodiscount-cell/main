@@ -182,6 +182,25 @@ export async function handleOAuthCallback(code: string, state: string) {
       },
     );
 
+    // Updates Clerk metadata to reflect connection status
+    // This allows the middleware to check connection status without a DB query
+    try {
+      console.log("🚀 Running clerk:", clerkId);
+      const { createClerkClient } = await import("@clerk/nextjs/server");
+      const clerkClient = createClerkClient({
+        secretKey: process.env.CLERK_SECRET_KEY,
+      });
+      await clerkClient.users.updateUserMetadata(clerkId, {
+        publicMetadata: {
+          isConnected: true,
+        },
+      });
+    } catch (metadataError) {
+      console.error("Failed to update Clerk metadata:", metadataError);
+      // Non-fatal: the DB is updated, but middleware might be slightly out of sync
+      // until the next session refresh or manual fix
+    }
+
     // Registers webhooks using Instagram user ID
     try {
       const webhookRegistered = await subscribeToWebhooks(
@@ -243,6 +262,24 @@ export async function disconnectAccount(clerkId: string) {
 
   // Deletes the Instagram account (cascade will delete automations)
   await deleteInstaAccount(user.instaAccount.id, clerkId);
+
+  // Updates Clerk metadata to reflect disconnection
+  try {
+    const { createClerkClient } = await import("@clerk/nextjs/server");
+    const clerkClient = createClerkClient({
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+    await clerkClient.users.updateUserMetadata(clerkId, {
+      publicMetadata: {
+        isConnected: false,
+      },
+    });
+  } catch (metadataError) {
+    console.error(
+      "Failed to update Clerk metadata on disconnect:",
+      metadataError,
+    );
+  }
 
   return {
     message: "Instagram account disconnected successfully",

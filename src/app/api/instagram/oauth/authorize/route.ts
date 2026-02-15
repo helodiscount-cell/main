@@ -6,13 +6,22 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import { initiateOAuth } from "@/server/services/instagram/oauth.service";
-import { runWithErrorHandling } from "@/lib/middleware/errors";
 
 export async function GET(request: NextRequest) {
-  console.log("📢 API route hit /instagram/oauth/authorize");
+  try {
+    // Gets current authenticated user
+    const { userId: clerkId } = await auth();
 
-  return runWithErrorHandling(async (clerkId: string) => {
+    if (!clerkId) {
+      return NextResponse.json(
+        { success: false, error: ERROR_MESSAGES.AUTH.NO_USER },
+        { status: 401 },
+      );
+    }
+
     const returnUrl =
       request.nextUrl.searchParams.get("returnUrl") || "/dashboard";
 
@@ -20,5 +29,16 @@ export async function GET(request: NextRequest) {
 
     // Redirects to Instagram OAuth
     return NextResponse.redirect(authUrl);
-  });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : ERROR_MESSAGES.AUTH.OAUTH_FAILED,
+      },
+      { status: 500 },
+    );
+  }
 }

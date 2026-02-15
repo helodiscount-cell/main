@@ -45,6 +45,7 @@ export async function getUserPosts(clerkId: string) {
  * @param clerkId - The Clerk ID of the user
  * @returns Instagram connection status in the expected format
  */
+// We have to rate-limit this API bruh. anyone can spam it.
 export async function getInstaConnectionStatus(
   clerkId: string,
 ): Promise<InstagramStatusConnected> {
@@ -54,10 +55,10 @@ export async function getInstaConnectionStatus(
   const instaAccountCacheKey = `ig:account:${clerkId}`;
   const instaAccountCache = await redis.get(instaAccountCacheKey);
 
+  console.log(instaAccountCache);
+
   // When cache is found
-  if (instaAccountCache) {
-    return JSON.parse(instaAccountCache);
-  }
+  if (instaAccountCache) return JSON.parse(instaAccountCache);
 
   // When cache is not found, fetches from database
   const user = await findUserWithInstaAccount(clerkId);

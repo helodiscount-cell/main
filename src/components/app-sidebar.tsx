@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import StockImage from "@/assets/homepage/@2x/Ellipse 12@2x.png";
+import { Button } from "./ui/button";
+import Link from "next/link";
 
 // This is sample data.
 const data = {
@@ -64,19 +66,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {/* We create a SidebarGroup for each parent. */}
         {data.navMain.map((item) => (
-          <SidebarGroup key={item.title}>
-            <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {item.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={item.isActive}>
-                      <a href={item.url} className="px-4 py-6">
-                        {item.title}
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+          <SidebarGroup key={item.title} className="h-full">
+            {/* <SidebarGroupLabel>{item.title}</SidebarGroupLabel> */}
+            <SidebarGroupContent className="h-full">
+              <SidebarMenu className="h-full">
+                <div className="flex flex-col h-full justify-between">
+                  <div>
+                    {item.items.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={item.isActive}>
+                          <Link href={item.url} className="px-4 py-6">
+                            {item.title}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </div>
+                  <Button variant={"destructive"}>
+                    <Link href={"/auth/logout"}>Logout</Link>
+                  </Button>
+                </div>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
