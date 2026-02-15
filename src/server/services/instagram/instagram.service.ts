@@ -6,7 +6,7 @@
 
 import { getValidAccessToken } from "@/lib/instagram/token-manager";
 import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
-import { ERROR_MESSAGES } from "@/config/instagram.config";
+import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import type { InstagramStatusConnected } from "@dm-broo/common-types";
 import { getRedisClient } from "@/lib/queue/redis";
 import { ApiRouteError } from "@/lib/middleware/errors/classes";

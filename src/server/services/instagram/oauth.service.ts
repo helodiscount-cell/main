@@ -13,11 +13,11 @@ import {
   INSTAGRAM_OAUTH,
   ERROR_MESSAGES,
   validateOAuthConfig,
-} from "@/config/instagram.config";
+} from "@/server/config/instagram.config";
 import {
   subscribeToWebhooks,
   markWebhooksEnabled,
-} from "@/lib/instagram/webhook/webhook-registration";
+} from "@/lib/instagram/webhook/registration";
 import { refreshAccessToken as refreshToken } from "@/lib/instagram/token-manager";
 import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
 import { deleteInstaAccount } from "@/server/repository/instagram/insta-account.repository";
@@ -28,6 +28,8 @@ import {
   getLongLivedToken,
 } from "@/lib/instagram/token-manager";
 import { getServerUser } from "@/lib/auth/get-server-user";
+import { ApiRouteError } from "@/lib/middleware/errors/classes";
+import { OAuthState } from "@dm-broo/common-types";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -35,11 +37,17 @@ import { getServerUser } from "@/lib/auth/get-server-user";
  * @param returnUrl - The URL to redirect to after the OAuth flow
  * @returns The authorization URL
  */
-export async function initiateOAuth(clerkId: string, returnUrl: string) {
+export async function initiateOAuth({
+  clerkId,
+  returnUrl,
+}: OAuthState): Promise<string> {
   // Validates OAuth configuration
-  if (!validateOAuthConfig()) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN);
-  }
+  if (!validateOAuthConfig())
+    throw new ApiRouteError(
+      ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN,
+      "AUTH_NO_ACCESS_TOKEN",
+      500,
+    );
 
   // Generates authorization URL with state
   const authUrl = generateAuthorizationUrl({
@@ -60,7 +68,7 @@ export async function initiateOAuth(clerkId: string, returnUrl: string) {
 export async function handleOAuthCallback(code: string, state: string) {
   const serverUser = await getServerUser();
   if (!serverUser) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_USER);
+    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER);
   }
   const { fullName, emailAddresses, imageUrl } = serverUser;
 

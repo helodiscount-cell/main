@@ -56,7 +56,7 @@ export const ConnectionStatusHeader = ({
         <Button
           onClick={onFetchPosts}
           disabled={isFetchingPosts || isDisconnecting}
-          variant="instagram"
+          variant="default"
           size="lg"
         >
           {isFetchingPosts ? (

@@ -11,7 +11,7 @@ import crypto from "crypto";
 export function verifyWebhookSignature(
   payload: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   try {
     // Removes 'sha256=' prefix if present
@@ -28,7 +28,7 @@ export function verifyWebhookSignature(
     // Uses timing-safe comparison to prevent timing attacks
     return crypto.timingSafeEqual(
       Buffer.from(cleanSignature, "utf8"),
-      Buffer.from(expectedSignature, "utf8")
+      Buffer.from(expectedSignature, "utf8"),
     );
   } catch (error) {
     return false;

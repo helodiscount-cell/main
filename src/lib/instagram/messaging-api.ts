@@ -8,7 +8,7 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
   GRAPH_API,
-} from "@/config/instagram.config";
+} from "@/server/config/instagram.config";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
 export interface SendMessageOptions {
@@ -30,7 +30,7 @@ export interface SendMessageResult {
  * Sends a direct message on Instagram
  */
 export async function sendDirectMessage(
-  options: SendMessageOptions
+  options: SendMessageOptions,
 ): Promise<SendMessageResult> {
   try {
     // Validates message length
@@ -108,7 +108,7 @@ export async function sendDirectMessage(
  */
 export async function checkMessagingWindow(
   recipientId: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<boolean> {
   try {
     // Gets conversation info from Instagram Graph API
@@ -145,7 +145,7 @@ export async function checkMessagingWindow(
  */
 export async function sendDirectMessageWithRetry(
   options: SendMessageOptions,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<SendMessageResult> {
   let lastError: string = "";
 

@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { useSignIn } from "@clerk/nextjs";
 import GoogleIcon from "../icons/GoogleIcon";
@@ -14,7 +15,7 @@ const GoogleButton = () => {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard",
+        redirectUrlComplete: "/connect",
       });
     } catch (error) {
       console.error("Error during Google authentication:", error);

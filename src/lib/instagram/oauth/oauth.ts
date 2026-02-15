@@ -12,7 +12,7 @@ import {
   validateOAuthConfig,
   buildGraphApiUrl,
   GRAPH_API_FIELDS,
-} from "@/config/instagram.config";
+} from "@/server/config/instagram.config";
 import { createSecureState } from "./oauth-state";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 import { InstagramUserData, OAuthState } from "@dm-broo/common-types";
@@ -24,10 +24,6 @@ import { InstagramUserData, OAuthState } from "@dm-broo/common-types";
  * @returns The authorization URL
  */
 export function generateAuthorizationUrl(state: OAuthState): string {
-  if (!validateOAuthConfig()) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_ACCESS_TOKEN);
-  }
-
   const { appId, redirectUri } = getOAuthCredentials();
 
   // Creates secure, signed state with expiration and nonce
@@ -52,7 +48,7 @@ export function generateAuthorizationUrl(state: OAuthState): string {
  * Uses /me endpoint or user_id from token exchange
  */
 export async function fetchInstagramUserData(
-  accessToken: string
+  accessToken: string,
 ): Promise<InstagramUserData> {
   // For Instagram Login, always uses /me endpoint with access token
 
@@ -71,7 +67,7 @@ export async function fetchInstagramUserData(
 
   if (instagramUserDataStatus !== 200) {
     throw new Error(
-      `Failed to fetch Instagram user data: ${instagramUserDataStatus}`
+      `Failed to fetch Instagram user data: ${instagramUserDataStatus}`,
     );
   }
 

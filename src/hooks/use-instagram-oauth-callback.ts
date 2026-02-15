@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { instagramKeys } from "@/lib/api/services/instagram/hooks/use-insta-oauth";
 
-// Handles Instagram OAuth callback parameters and shows toast notifications
-export const handleInstagramOAuthCallback = () => {
+/**
+ * Handles Instagram OAuth callback parameters and shows toast notifications
+ * This hook should be used on the page where Instagram redirects after OAuth
+ */
+export function useInstagramOAuthCallback() {
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("connected");
@@ -12,7 +19,12 @@ export const handleInstagramOAuthCallback = () => {
 
     if (connected === "true") {
       toast.success("Instagram connected successfully!");
-      window.history.replaceState({}, "", "/dashboard");
+
+      // Invalidate Instagram account query to refetch the updated data
+      queryClient.invalidateQueries({ queryKey: instagramKeys.account() });
+
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
     } else if (error) {
       const errorMessages: Record<string, string> = {
         oauth_declined: "You declined the Instagram authorization.",
@@ -24,9 +36,12 @@ export const handleInstagramOAuthCallback = () => {
       };
 
       toast.error(
-        errorMessages[error] || "Failed to connect Instagram. Please try again."
+        errorMessages[error] ||
+          "Failed to connect Instagram. Please try again.",
       );
-      window.history.replaceState({}, "", "/dashboard");
+
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
     }
-  }, []);
-};
+  }, [queryClient]);
+}

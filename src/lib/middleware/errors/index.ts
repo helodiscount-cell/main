@@ -14,82 +14,79 @@ import { logger } from "../../utils/logger";
 import { ApiRouteError } from "./classes";
 
 export type SuccessResponse<T> = {
-    success: true;
-    data: T;
-    message?: string;
+  success: true;
+  data: T;
+  message?: string;
 };
 
 export type ErrorResponse = {
-    success: false;
-    error: string;
-    code?: string;
-    details?: any;
+  success: false;
+  error: string;
+  code?: string;
+  details?: any;
 };
 
 type HandlerFunction<T> = (clerkId: string) => Promise<T>;
 
-
-
 export async function runWithErrorHandling<T>(
-    handler: HandlerFunction<T>,
-    options?: {
-        requireAuth?: boolean; // Default true
-        successMessage?: string;
-    }
+  handler: HandlerFunction<T>,
+  options?: {
+    requireAuth?: boolean; // Default true
+    successMessage?: string;
+  },
 ) {
-    const { requireAuth = true, successMessage } = options || {};
+  const { requireAuth = true, successMessage } = options || {};
 
-    try {
-        // Checks authentication
-        const { userId: clerkId } = await auth();
+  try {
+    // Checks authentication
+    const { userId: clerkId } = await auth();
 
-        if (requireAuth && !clerkId) {
-            throw new ApiRouteError("You need to be signed in", "UNAUTHORIZED");
-        }
-
-        // Execute handler with clerkId
-        const result = await handler(clerkId!);
-
-        // Standardized success response
-        return NextResponse.json<SuccessResponse<T>>(
-            {
-                success: true,
-                data: result,
-                ...(successMessage && { message: successMessage }),
-            },
-            { status: 200 }
-        );
-
-    } catch (error) {
-        // Handles known ApiRouteErrors
-        if (error instanceof ApiRouteError) {
-            logger.warn(`Operational error: ${error.message}`, {
-                code: error.code,
-                statusCode: error.statusCode,
-            });
-
-            return NextResponse.json<ErrorResponse>(
-                {
-                    success: false,
-                    error: error.message,
-                    code: error.code,
-                },
-                { status: error.statusCode }
-            );
-        }
-
-        // // Logs and handles unexpected errors in API handler
-        if (error instanceof Error) {
-            console.log(error.message);
-        }
-
-        return NextResponse.json<ErrorResponse>(
-            {
-                success: false,
-                error: "An unexpected error occurred. Please try again later.",
-                code: "INTERNAL_SERVER_ERROR",
-            },
-            { status: 500 }
-        );
+    if (requireAuth && !clerkId) {
+      throw new ApiRouteError("You need to be signed in", "UNAUTHORIZED");
     }
+
+    // Execute handler with clerkId
+    const result = await handler(clerkId!);
+
+    // Standardized success response
+    return NextResponse.json<SuccessResponse<T>>(
+      {
+        success: true,
+        data: result,
+        ...(successMessage && { message: successMessage }),
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    // Handles known ApiRouteErrors
+    if (error instanceof ApiRouteError) {
+      logger.warn(`Operational error: ${error.message}`, {
+        code: error.code,
+        statusCode: error.statusCode,
+      });
+
+      return NextResponse.json<ErrorResponse>(
+        {
+          success: false,
+          error: error.message,
+          code: error.code,
+        },
+        { status: error.statusCode },
+      );
+    }
+
+    // Logs and handles unexpected errors in API handler
+    if (error instanceof Error) {
+      console.log(error.message);
+    }
+
+    return NextResponse.json<ErrorResponse>(
+      {
+        success: false,
+        error: "An unexpected error occurred. Please try again later.",
+        code: "INTERNAL_SERVER_ERROR",
+      },
+      { status: 500 },
+    );
+  }
 }

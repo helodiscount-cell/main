@@ -7,7 +7,7 @@
 import {
   getOAuthCredentials,
   buildGraphApiUrl,
-} from "@/config/instagram.config";
+} from "@/server/config/instagram.config";
 import { prisma } from "@/lib/db";
 import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
 
@@ -25,7 +25,7 @@ import { fetchWithTimeout } from "@/lib/utils/fetch-with-timeout";
  */
 export async function subscribeToWebhooks(
   accessToken: string,
-  instagramUserId: string
+  instagramUserId: string,
 ): Promise<boolean> {
   try {
     const { appId } = getOAuthCredentials();
@@ -70,7 +70,7 @@ export async function subscribeToWebhooks(
  */
 export async function markWebhooksEnabled(
   accountId: string,
-  enabled: boolean
+  enabled: boolean,
 ): Promise<void> {
   await prisma.instaAccount.update({
     where: { id: accountId },
@@ -86,7 +86,7 @@ export async function markWebhooksEnabled(
  */
 export async function getWebhookSubscriptionStatus(
   accessToken: string,
-  instagramUserId: string
+  instagramUserId: string,
 ): Promise<{
   subscribed: boolean;
   fields: string[];

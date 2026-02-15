@@ -3,7 +3,7 @@
  * Contains business logic for automation management
  */
 
-import { ERROR_MESSAGES } from "@/config/instagram.config";
+import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import type {
   CreateAutomationInput,
   UpdateAutomationInput,

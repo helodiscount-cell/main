@@ -7,7 +7,7 @@ import {
   verifyWebhookSignature,
   getWebhookVerifyToken,
   getWebhookSecret,
-} from "@/lib/instagram/webhook/webhook-validator";
+} from "@/lib/instagram/webhook/validator";
 import { webhookQueue } from "@/lib/queue/queues";
 import type { WebhookPayload } from "@dm-broo/common-types";
 import { logger } from "@/lib/utils/logger";

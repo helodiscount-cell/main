@@ -65,5 +65,4 @@ next-env.d.ts
 /src/generated
 
 
-bun.lock
 package-lock.json

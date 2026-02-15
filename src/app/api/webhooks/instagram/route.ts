@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   verifyWebhook,
   processWebhookEvent,
-} from "@/server/services/webhooks/webhook.service";
+} from "@/server/services/webhooks/instagram.webhook";
 import { logger } from "@/lib/utils/logger";
 
 /**

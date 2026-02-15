@@ -6,7 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { CommentsQuerySchema } from "@dm-broo/common-types";
-import { getPostComments } from "@/server/services/instagram/instagram.service";
+// TODO: Implement getPostComments function
+// import { getPostComments } from "@/server/services/instagram/instagram.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,15 +38,15 @@ export async function GET(request: NextRequest) {
 
     const { postId } = validationResult.data;
 
-    // Calls service layer
-    const result = await getPostComments(clerkId, postId);
+    // TODO: Implement getPostComments function
+    // const result = await getPostComments(clerkId, postId);
 
     return NextResponse.json(
       {
-        success: true,
-        ...result,
+        success: false,
+        error: "This endpoint is not yet implemented",
       },
-      { status: 200 },
+      { status: 501 },
     );
   } catch (error) {
     return NextResponse.json(

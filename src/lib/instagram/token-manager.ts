@@ -10,7 +10,7 @@ import {
   ERROR_MESSAGES,
   buildGraphApiUrl,
   getOAuthCredentials,
-} from "@/config/instagram.config";
+} from "@/server/config/instagram.config";
 import {
   LongLivedTokenResponse,
   OAuthTokenResponse,

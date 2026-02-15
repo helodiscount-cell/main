@@ -4,7 +4,7 @@ import {
   GRAPH_API,
   GRAPH_API_FIELDS,
   RATE_LIMITS,
-} from "@/config/instagram.config";
+} from "@/server/config/instagram.config";
 import { fetchWithTimeout } from "../utils/fetch-with-timeout";
 import { InstagramPostsResponse } from "@dm-broo/common-types";
 

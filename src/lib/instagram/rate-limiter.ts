@@ -3,7 +3,7 @@
  * Manages rate limiting for Instagram API calls
  */
 
-import { MESSAGING_CONSTRAINTS } from "@/config/instagram.config";
+import { MESSAGING_CONSTRAINTS } from "@/server/config/instagram.config";
 
 interface RateLimitEntry {
   count: number;
@@ -16,7 +16,10 @@ const rateLimitMap = new Map<string, RateLimitEntry>();
 /**
  * Checks if rate limit is exceeded
  */
-export function isRateLimited(key: string, limit: number = MESSAGING_CONSTRAINTS.RATE_LIMIT_PER_HOUR): boolean {
+export function isRateLimited(
+  key: string,
+  limit: number = MESSAGING_CONSTRAINTS.RATE_LIMIT_PER_HOUR,
+): boolean {
   const entry = rateLimitMap.get(key);
 
   if (!entry) {
@@ -53,7 +56,10 @@ export function incrementRateLimit(key: string): void {
 /**
  * Gets remaining requests for a key
  */
-export function getRemainingRequests(key: string, limit: number = MESSAGING_CONSTRAINTS.RATE_LIMIT_PER_HOUR): number {
+export function getRemainingRequests(
+  key: string,
+  limit: number = MESSAGING_CONSTRAINTS.RATE_LIMIT_PER_HOUR,
+): number {
   const entry = rateLimitMap.get(key);
 
   if (!entry) {
@@ -131,7 +137,7 @@ export async function waitForRateLimit(key: string): Promise<void> {
 export async function withRateLimit<T>(
   key: string,
   fn: () => Promise<T>,
-  limit?: number
+  limit?: number,
 ): Promise<T> {
   // Checks rate limit
   if (isRateLimited(key, limit)) {
@@ -160,4 +166,3 @@ export function cleanupRateLimits(): void {
 
 // Cleans up rate limits every 5 minutes
 setInterval(cleanupRateLimits, 5 * 60 * 1000);
-

@@ -4,7 +4,7 @@ class ApiClient {
   private client: AxiosInstance;
 
   constructor(
-    baseURL: string = process.env.NEXT_PUBLIC_API_BASE_URL || "/api"
+    baseURL: string = process.env.NEXT_PUBLIC_API_BASE_URL || "/api",
   ) {
     this.client = axios.create({
       baseURL,
@@ -33,7 +33,7 @@ class ApiClient {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor
@@ -52,13 +52,13 @@ class ApiClient {
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
   async get<T = any>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.client.get<T>(url, config);
   }
@@ -66,7 +66,7 @@ class ApiClient {
   async post<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.client.post<T>(url, data, config);
   }
@@ -74,14 +74,14 @@ class ApiClient {
   async patch<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.client.patch<T>(url, data, config);
   }
 
   async delete<T = any>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.client.delete<T>(url, config);
   }
