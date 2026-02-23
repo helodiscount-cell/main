@@ -3,7 +3,7 @@
  * Data access layer for Automation model operations
  */
 
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 import { CreateAutomationInput } from "@dm-broo/common-types";
 

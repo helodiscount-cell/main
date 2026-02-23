@@ -1,4 +1,4 @@
-import { runWithErrorHandling } from "@/lib/middleware/errors";
+import { runWithErrorHandling } from "@/server/middleware/errors";
 import { getUserStories } from "@/server/services/instagram/instagram.service";
 
 export async function GET(request: Request) {

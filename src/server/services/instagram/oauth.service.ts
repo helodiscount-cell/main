@@ -8,7 +8,7 @@ import {
   generateAuthorizationUrl,
   fetchInstagramUserData,
   validateInstagramAccount,
-} from "@/lib/instagram/oauth/oauth";
+} from "@/server/instagram/oauth/oauth";
 import {
   INSTAGRAM_OAUTH,
   ERROR_MESSAGES,
@@ -17,19 +17,19 @@ import {
 import {
   subscribeToWebhooks,
   markWebhooksEnabled,
-} from "@/lib/instagram/webhook/registration";
-import { refreshAccessToken as refreshToken } from "@/lib/instagram/token-manager";
+} from "@/server/instagram/webhook/registration";
+import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
 import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
 import { deleteInstaAccount } from "@/server/repository/instagram/insta-account.repository";
-import { validateSecureState } from "@/lib/instagram/oauth/oauth-state";
+import { validateSecureState } from "@/server/instagram/oauth/oauth-state";
 import {
   exchangeCodeForToken,
   calculateTokenExpiration,
   getLongLivedToken,
-} from "@/lib/instagram/token-manager";
-import { getServerUser } from "@/lib/auth/get-server-user";
-import { ApiRouteError } from "@/lib/middleware/errors/classes";
+} from "@/server/instagram/token-manager";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { OAuthState } from "@dm-broo/common-types";
+import { getRedisClient } from "@/server/queue/redis";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -66,11 +66,11 @@ export async function initiateOAuth({
  * @returns The OAuth callback result with the return URL, username, and account type
  */
 export async function handleOAuthCallback(code: string, state: string) {
-  const serverUser = await getServerUser();
-  if (!serverUser) {
-    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER);
-  }
-  const { fullName, emailAddresses, imageUrl } = serverUser;
+  // const serverUser = await getServerUser();
+  // if (!serverUser) {
+  //   throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER);
+  // }
+  // const { fullName, emailAddresses, imageUrl } = serverUser;
 
   try {
     // Decodes and validates state
@@ -79,22 +79,16 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Exchanges code for short-lived token (returns user_id too)
     const shortLivedToken = await exchangeCodeForToken(code);
 
-    console.log("shortLivedToken", shortLivedToken);
-
     // Exchanges for long-lived token (60 days)
     const longLivedToken = await getLongLivedToken(
       shortLivedToken.access_token,
     );
-
-    console.log("longLivedToken", longLivedToken);
 
     // Fetches Instagram user data using the token
     // Passes user_id from token exchange for direct access
     const instagramUser = await fetchInstagramUserData(
       longLivedToken.access_token,
     );
-
-    console.log("instagramUser", instagramUser);
 
     // Validates account type (must be BUSINESS or MEDIA_CREATOR)
     const validation = validateInstagramAccount(instagramUser);
@@ -124,14 +118,11 @@ export async function handleOAuthCallback(code: string, state: string) {
           user = await tx.user.create({
             data: {
               clerkId,
-              fullName: fullName ?? "",
-              email: emailAddresses ?? "",
-              imageUrl: imageUrl ?? "",
             },
           });
         }
 
-        // Upserts Instagram account (no Facebook Page needed anymore)
+        // Upserts Instagram account
         // Ensures Instagram user ID is stored as a string
         const instagramUserIdString = String(instagramUser.id);
 
@@ -200,6 +191,23 @@ export async function handleOAuthCallback(code: string, state: string) {
       // Non-fatal: the DB is updated, but middleware might be slightly out of sync
       // until the next session refresh or manual fix
     }
+
+    const redisClient = getRedisClient();
+
+    await redisClient.set(
+      `insta-account:${clerkId}`,
+      JSON.stringify({
+        id: instaAccount.id,
+        username: instaAccount.username,
+        accountType: instaAccount.accountType,
+        profilePictureUrl: instaAccount.profilePictureUrl,
+        biography: instaAccount.biography,
+        followersCount: instaAccount.followersCount,
+        followsCount: instaAccount.followsCount,
+        mediaCount: instaAccount.mediaCount,
+        lastSyncedAt: instaAccount.lastSyncedAt,
+      }),
+    );
 
     // Registers webhooks using Instagram user ID
     try {

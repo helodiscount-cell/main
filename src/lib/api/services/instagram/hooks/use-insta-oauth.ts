@@ -9,7 +9,19 @@ import { useInstagramStore } from "@/store/instagram";
 export const instagramKeys = {
   all: ["instagram"] as const,
   account: () => [...instagramKeys.all, "account"] as const,
+  profile: () => [...instagramKeys.all, "profile"] as const,
 };
+
+/**
+ * Hook to get Instagram user profile
+ */
+export function useInstagramUser() {
+  return useQuery({
+    queryKey: instagramKeys.profile(),
+    queryFn: () => instagramService.profile.getUserProfile(),
+    retry: false,
+  });
+}
 
 /**
  * Hook to get Instagram account information

@@ -9,9 +9,9 @@ import { createAutomation } from "@/server/services/auto/automation.service";
 import {
   parseRequestBodySafely,
   REQUEST_SIZE_LIMITS,
-} from "@/lib/utils/request-limits";
-import { runWithErrorHandling } from "@/lib/middleware/errors";
-import { ApiRouteError } from "@/lib/middleware/errors/classes";
+} from "@/server/utils/request-limits";
+import { runWithErrorHandling } from "@/server/middleware/errors";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 export async function POST(request: NextRequest) {
   return runWithErrorHandling(async (clerkId) => {

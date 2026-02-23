@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import {
   getSizeLimitForRoute,
   validateRequestSize,
-} from "@/lib/utils/request-limits";
-import { validateCsrfProtection } from "@/lib/utils/csrf";
-import { rateLimitMiddleware } from "@/lib/utils/rate-limit";
+} from "@/server/utils/request-limits";
+import { validateCsrfProtection } from "@/server/utils/csrf";
+import { rateLimitMiddleware } from "@/server/utils/rate-limit";
 import {
   isPublicRoute,
   isApiRoute,

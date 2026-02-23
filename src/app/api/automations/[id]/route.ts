@@ -12,7 +12,7 @@ import {
   deleteAutomation,
 } from "@/server/services/auto/automation.service";
 import { findUserByClerkId } from "@/server/repository/user-profile/user.repository";
-import { isValidObjectId, sanitizeQueryParam } from "@/lib/utils/validation";
+import { isValidObjectId, sanitizeQueryParam } from "@/server/utils/validation";
 
 /**
  * GET - Retrieves a specific automation

@@ -4,10 +4,10 @@
  * Supports Instagram Login (no Facebook Page required)
  */
 
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
-import { getRedisClient } from "@/lib/queue/redis";
-import { logger } from "@/lib/utils/logger";
+import { getRedisClient } from "@/server/queue/redis";
+import { logger } from "@/server/utils/logger";
 
 export interface CreateInstaAccountData {
   userId: string;
@@ -270,7 +270,8 @@ export async function deleteInstaAccount(
 
   // Clears all cache related to this account
   if (account) {
-    const { clearAllUserCache } = await import("@/lib/utils/automation-cache");
+    const { clearAllUserCache } =
+      await import("@/server/utils/automation-cache");
     // Uses webhookUserId for cache key (matches webhook handler)
     const webhookUserId =
       account.webhookUserId || account.instagramUserId || "";

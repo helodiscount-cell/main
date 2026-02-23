@@ -14,8 +14,8 @@ const GoogleButton = () => {
       // Start the Google OAuth flow without showing Clerk UI
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/connect",
+        redirectUrl: "/auth/sso-callback",
+        redirectUrlComplete: "/auth/connect",
       });
     } catch (error) {
       console.error("Error during Google authentication:", error);

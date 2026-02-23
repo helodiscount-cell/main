@@ -13,6 +13,23 @@ export interface InstagramAccountInfo {
   lastSyncedAt: Date | null;
 }
 
+export interface InstagramUserProfile {
+  id: string;
+  username: string;
+  accountType: string;
+  profilePictureUrl: string;
+  biography: string | null;
+  followersCount: number;
+  followsCount: number;
+  mediaCount: number;
+  lastSyncedAt: string;
+}
+
+export interface InstagramUserResponse {
+  success: boolean;
+  data: InstagramUserProfile;
+}
+
 export const instagramService = {
   oauth: {
     connect: async (returnUrl: string): Promise<void> => {
@@ -27,6 +44,9 @@ export const instagramService = {
   profile: {
     getAccountInfo: async (): Promise<InstagramAccountInfo> => {
       return request(api.get<InstagramAccountInfo>("/instagram/status"));
+    },
+    getUserProfile: async (): Promise<InstagramUserResponse> => {
+      return request(api.get<InstagramUserResponse>("/instagram/user"));
     },
   },
 };

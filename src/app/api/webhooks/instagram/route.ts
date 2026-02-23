@@ -8,7 +8,7 @@ import {
   verifyWebhook,
   processWebhookEvent,
 } from "@/server/services/webhooks/instagram.webhook";
-import { logger } from "@/lib/utils/logger";
+import { logger } from "@/server/utils/logger";
 
 /**
  * GET handler for webhook verification

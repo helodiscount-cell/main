@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { handleOAuthCallback } from "@/server/services/instagram/oauth.service";
-import { logger } from "@/lib/utils/logger";
+import { logger } from "@/server/utils/logger";
 
 enum RedirectUrls {
   SUCCESS = "/dashboard?connected=true",

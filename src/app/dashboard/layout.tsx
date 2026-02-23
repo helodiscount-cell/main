@@ -3,9 +3,9 @@ import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import RestartIcon from "@/assets/svgs/restart.svg";
-import { ConnectInstaDialog } from "@/components/ConnectInstaDialog";
+import { CreateAutomationDialog } from "@/components/CreateAutomation";
 
 export default function DashboardLayout({
   children,
@@ -33,7 +33,7 @@ export default function DashboardLayout({
             <Button className="bg-[#6A06E4] border-none outline-none rounded-sm">
               <Image src={RestartIcon} alt="Restart" width={20} height={20} />
             </Button>
-            <ConnectInstaDialog />
+            <CreateAutomationDialog />
           </div>
         </header>
         {children}

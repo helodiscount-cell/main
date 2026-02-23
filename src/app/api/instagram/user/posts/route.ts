@@ -4,7 +4,7 @@
  */
 
 import { getUserPosts } from "@/server/services/instagram/instagram.service";
-import { runWithErrorHandling } from "@/lib/middleware/errors";
+import { runWithErrorHandling } from "@/server/middleware/errors";
 
 /**
  * This endpoint should not be spammed, hit it once and then store the data in local storage of the browser

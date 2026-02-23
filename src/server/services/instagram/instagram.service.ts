@@ -4,16 +4,16 @@
  * Uses Instagram Graph API (graph.instagram.com)
  */
 
-import { getValidAccessToken } from "@/lib/instagram/token-manager";
+import { getValidAccessToken } from "@/server/instagram/token-manager";
 import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
 import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import type { InstagramStatusConnected } from "@dm-broo/common-types";
-import { getRedisClient } from "@/lib/queue/redis";
-import { ApiRouteError } from "@/lib/middleware/errors/classes";
+import { getRedisClient } from "@/server/queue/redis";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 import {
   getUserPostsFromInstagram,
   getUserStoriesFromInstagram,
-} from "@/lib/instagram/user";
+} from "@/server/instagram/user";
 
 /**
  * Gets Instagram posts for a user
@@ -118,3 +118,12 @@ export async function getUserStories(clerkId: string) {
     paging: result.data.paging,
   };
 }
+
+export const getInstaUserProfile = async (clerkId: string) => {
+  const redis = getRedisClient();
+  const data = await redis.get(`insta-account:${clerkId}`);
+
+  if (!data) return null;
+
+  return JSON.parse(data);
+};

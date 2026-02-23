@@ -3,8 +3,8 @@
  * Data access layer for AutomationExecution model operations
  */
 
-import { prisma } from "@/lib/db";
-import { executeWithErrorHandling } from "./repository-utils";
+import { prisma } from "@/server/db";
+import { executeWithErrorHandling } from "../repository-utils";
 
 export interface CreateExecutionData {
   automationId: string;

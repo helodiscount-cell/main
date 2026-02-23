@@ -7,10 +7,10 @@ import {
   verifyWebhookSignature,
   getWebhookVerifyToken,
   getWebhookSecret,
-} from "@/lib/instagram/webhook/validator";
-import { webhookQueue } from "@/lib/queue/queues";
+} from "@/server/instagram/webhook/validator";
+import { webhookQueue } from "@/server/queue/queues";
 import type { WebhookPayload } from "@dm-broo/common-types";
-import { logger } from "@/lib/utils/logger";
+import { logger } from "@/server/utils/logger";
 
 /**
  * Verifies webhook registration from Instagram

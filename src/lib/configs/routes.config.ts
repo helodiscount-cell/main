@@ -6,12 +6,12 @@
 export const PUBLIC_ROUTES = [
   "/",
   "/auth",
-  "/sso-callback",
+  "/auth/sso-callback",
   "/api/webhooks/instagram",
 ] as const;
 
 export const AUTH_ROUTE = "/auth";
-export const CONNECT_ROUTE = "/connect";
+export const CONNECT_ROUTE = "/auth/connect";
 export const DASHBOARD_ROUTE = "/dashboard";
 
 /**

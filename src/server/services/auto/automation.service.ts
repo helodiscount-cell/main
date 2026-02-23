@@ -23,9 +23,9 @@ import {
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
 } from "@/server/repository/automations/automation.repository";
-import { invalidateAutomationCache } from "@/lib/utils/automation-cache";
-import { logger } from "@/lib/utils/logger";
-import { ApiRouteError } from "@/lib/middleware/errors/classes";
+import { invalidateAutomationCache } from "@/server/utils/automation-cache";
+import { logger } from "@/server/utils/logger";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 /**
  * Creates a new automation for a user

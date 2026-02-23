@@ -3,7 +3,7 @@
  * Shared error handling and retry logic for database operations
  */
 
-import { logger } from "@/lib/utils/logger";
+import { logger } from "@/server/utils/logger";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -152,7 +152,7 @@ export async function executeTransaction<T>(
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const { prisma } = await import("@/lib/db");
+      const { prisma } = await import("@/server/db");
 
       if (attempt > 0) {
         logger.debug(

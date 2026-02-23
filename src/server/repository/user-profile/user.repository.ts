@@ -3,7 +3,7 @@
  * Data access layer for User model operations
  */
 
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 
 export interface CreateUserData {
