@@ -8,7 +8,7 @@ import {
   getWebhookVerifyToken,
   getWebhookSecret,
 } from "@/server/instagram/webhook/validator";
-import { webhookQueue } from "@/server/queue/queues";
+import { webhookQueue } from "@/server/redis/queues";
 import type { WebhookPayload } from "@dm-broo/common-types";
 import { logger } from "@/server/utils/logger";
 

@@ -11,7 +11,7 @@ import {
   updateAutomation,
   deleteAutomation,
 } from "@/server/services/auto/automation.service";
-import { findUserByClerkId } from "@/server/repository/user-profile/user.repository";
+import { findUserByClerkId } from "@/server/repository/user/user.repository";
 import { isValidObjectId, sanitizeQueryParam } from "@/server/utils/validation";
 
 /**

@@ -19,7 +19,7 @@ import {
   markWebhooksEnabled,
 } from "@/server/instagram/webhook/registration";
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
-import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
+import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
 import { deleteInstaAccount } from "@/server/repository/instagram/insta-account.repository";
 import { validateSecureState } from "@/server/instagram/oauth/oauth-state";
 import {
@@ -29,7 +29,7 @@ import {
 } from "@/server/instagram/token-manager";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { OAuthState } from "@dm-broo/common-types";
-import { getRedisClient } from "@/server/queue/redis";
+import { getRedisClient } from "@/server/redis";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -176,7 +176,6 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Updates Clerk metadata to reflect connection status
     // This allows the middleware to check connection status without a DB query
     try {
-      console.log("🚀 Running clerk:", clerkId);
       const { createClerkClient } = await import("@clerk/nextjs/server");
       const clerkClient = createClerkClient({
         secretKey: process.env.CLERK_SECRET_KEY,

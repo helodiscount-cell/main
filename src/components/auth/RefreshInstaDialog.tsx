@@ -8,20 +8,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useInstagram } from "@/hooks/instagram/use-instagram";
 import { Instagram, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import RestartIcon from "@/assets/svgs/restart.svg";
 import MetaIcon from "@/assets/svgs/meta-color.svg";
 
-export function RefreshInsta() {
-  const { connect } = useInstagram();
-
-  const handleRefresh = () => {
-    // Refreshing usually means re-authenticating
-    connect(window.location.href);
-  };
-
+export function RefreshInstaDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -57,10 +49,7 @@ export function RefreshInsta() {
         </div>
 
         <div className="w-full space-y-4">
-          <Button
-            onClick={handleRefresh}
-            className="w-full h-14 bg-[#6A06E4] hover:bg-[#5a05c4] text-white text-lg font-medium rounded-md transition-all"
-          >
+          <Button className="w-full h-14 bg-[#6A06E4] hover:bg-[#5a05c4] text-white text-lg font-medium rounded-md transition-all">
             Refresh Connection
           </Button>
 

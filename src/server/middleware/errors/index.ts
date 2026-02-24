@@ -13,12 +13,6 @@ import { NextResponse } from "next/server";
 import { logger } from "../../utils/logger";
 import { ApiRouteError } from "./classes";
 
-export type SuccessResponse<T> = {
-  success: true;
-  data: T;
-  message?: string;
-};
-
 export type ErrorResponse = {
   success: false;
   error: string;
@@ -49,10 +43,10 @@ export async function runWithErrorHandling<T>(
     const result = await handler(clerkId!);
 
     // Standardized success response
-    return NextResponse.json<SuccessResponse<T>>(
+    return NextResponse.json(
       {
         success: true,
-        data: result,
+        result,
         ...(successMessage && { message: successMessage }),
       },
       { status: 200 },

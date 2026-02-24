@@ -5,15 +5,16 @@
  */
 
 import { getValidAccessToken } from "@/server/instagram/token-manager";
-import { findUserWithInstaAccount } from "@/server/repository/user-profile/user.repository";
+import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
 import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import type { InstagramStatusConnected } from "@dm-broo/common-types";
-import { getRedisClient } from "@/server/queue/redis";
+import { getRedisClient } from "@/server/redis";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import {
   getUserPostsFromInstagram,
   getUserStoriesFromInstagram,
 } from "@/server/instagram/user";
+import { redisKeys } from "@/server/redis/keys";
 
 /**
  * Gets Instagram posts for a user
@@ -121,7 +122,7 @@ export async function getUserStories(clerkId: string) {
 
 export const getInstaUserProfile = async (clerkId: string) => {
   const redis = getRedisClient();
-  const data = await redis.get(`insta-account:${clerkId}`);
+  const data = await redis.get(redisKeys.instagram.account(clerkId));
 
   if (!data) return null;
 

@@ -13,8 +13,7 @@ const LogoutPage = () => {
     const handleLogout = async () => {
       try {
         // Disconnect Instagram first while we still have an active session
-        const { instagramService } =
-          await import("@/lib/api/services/instagram/oauth");
+        const { instagramService } = await import("@/api/services/instagram");
         await instagramService.oauth.disconnect();
       } catch (e) {
         console.error("Failed to disconnect Instagram during logout:", e);

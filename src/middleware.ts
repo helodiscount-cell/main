@@ -14,7 +14,7 @@ import {
   AUTH_ROUTE,
   CONNECT_ROUTE,
   DASHBOARD_ROUTE,
-} from "@/lib/configs/routes.config";
+} from "@/configs/routes.config";
 
 export default clerkMiddleware(async (auth, request) => {
   const { userId, sessionClaims } = await auth();

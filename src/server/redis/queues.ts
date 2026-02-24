@@ -4,7 +4,7 @@
  */
 
 import { Queue } from "bullmq";
-import { getRedisConnectionOptions } from "./redis";
+import { getRedisConnectionOptions } from ".";
 import type { WebhookPayload } from "@dm-broo/common-types";
 
 /**

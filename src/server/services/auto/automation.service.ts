@@ -10,10 +10,9 @@ import type {
 } from "@dm-broo/common-types";
 import {
   findUserById,
-  findUserByIdWithInstaAccount,
   findUserByClerkId,
   findUserWithInstaAccount,
-} from "@/server/repository/user-profile/user.repository";
+} from "@/server/repository/user/user.repository";
 import {
   createAutomation as createAutomationRecord,
   findAutomationById,

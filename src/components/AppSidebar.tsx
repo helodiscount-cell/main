@@ -14,6 +14,7 @@ import {
 import { Button } from "./ui/button";
 import Link from "next/link";
 import UserSection from "./UserSection";
+import { LogOut } from "lucide-react";
 
 // This is sample data.
 const data = {
@@ -79,6 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     ))}
                   </div>
                   <Button variant={"destructive"}>
+                    <LogOut />
                     <Link href={"/auth/logout"}>Logout</Link>
                   </Button>
                 </div>

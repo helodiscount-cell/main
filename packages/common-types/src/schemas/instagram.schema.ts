@@ -21,9 +21,7 @@ export const InstagramPostSchema = z.object({
 
 // Instagram posts success response
 export const InstagramPostsResponseSchema = z.object({
-  data: z.object({
-    posts: z.array(InstagramPostSchema),
-  }),
+  data: z.array(InstagramPostSchema),
   paging: z
     .object({
       cursors: z.object({

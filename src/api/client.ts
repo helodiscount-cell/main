@@ -44,18 +44,6 @@ api.interceptors.response.use(
       console.error(`[API Error] ${status || "Network Error"}:`, message);
     }
 
-    // Handle specific error cases
-    if (status === 401) {
-      // Unauthorized - could redirect to login
-      console.error("Unauthorized request");
-    } else if (status === 403) {
-      // Forbidden
-      console.error("Forbidden request");
-    } else if (status === 500) {
-      // Server error
-      console.error("Server error");
-    }
-
     return Promise.reject(error);
   },
 );

@@ -1,5 +1,6 @@
 "use client";
 
+import { instagramService } from "@/api/services/instagram";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,8 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useInstagram } from "@/hooks/instagram/use-instagram";
+import { instagramKeys } from "@/keys/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, MessageSquare, Instagram, Zap } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const tabs = [
@@ -63,7 +66,10 @@ export function CreateAutomationDialog() {
           Create your first automation
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-3xl overflow-hidden">
+      <DialogContent
+        className="sm:max-w-3xl overflow-hidden"
+        showCloseButton={false}
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold tracking-tight">
             {activeTab ? "Configure Automation" : "Choose a Template"}
@@ -104,7 +110,11 @@ const TabSelector = ({
 };
 
 const DMFromComments = ({ onBack }: { onBack: () => void }) => {
-  const {} = useInstagram();
+  const { data: userPosts } = useQuery({
+    queryKey: instagramKeys.posts(),
+    queryFn: () => instagramService.profile.getUserPosts(),
+  });
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="flex items-center gap-3">
@@ -119,13 +129,30 @@ const DMFromComments = ({ onBack }: { onBack: () => void }) => {
         <h3 className="text-lg font-medium">Select Post/Reel</h3>
       </div>
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((item) => (
+        {userPosts?.result.data.data.map((item) => (
           <div
-            key={item}
+            key={item.id}
             className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
           >
-            <Instagram className="w-6 h-6 text-gray-200 group-hover:text-purple-300 transition-colors" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+            {item.media_type === "IMAGE" ? (
+              <Image
+                src={item.media_url}
+                alt={item.caption as string}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <video
+                src={item.media_url}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            )}
+            {/* <Instagram className="w-6 h-6 text-gray-200 group-hover:text-purple-300 transition-colors" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" /> */}
           </div>
         ))}
       </div>

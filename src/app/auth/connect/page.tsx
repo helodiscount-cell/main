@@ -1,16 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { instagramService } from "@/api/services/instagram";
 import { Instagram } from "lucide-react";
-import { useInstagram } from "@/hooks/instagram/use-instagram";
+import { useState } from "react";
 
 export default function ConnectPage() {
-  // Use the all-in-one hook - much simpler!
-  const instagram = useInstagram();
+  const [isConnecting, setIsConnecting] = useState(false);
 
-  if (instagram.account) {
-    console.log(instagram.account);
-  }
+  const handleConnect = () => {
+    setIsConnecting(true);
+    instagramService.oauth.connect("/dashboard");
+  };
 
   return (
     <div className="min-h-screen bg-[#F1F1F1] flex items-center justify-center p-4">
@@ -33,21 +34,13 @@ export default function ConnectPage() {
           </p>
         </div>
 
-        {/* Error Message */}
-        {instagram.error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm text-sm">
-            {instagram.error}
-          </div>
-        )}
-
         {/* Connect Button */}
         <div className="pt-4">
           <Button
-            onClick={() => instagram.connect("/dashboard")}
-            disabled={instagram.isConnecting}
+            onClick={handleConnect}
             className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-8 py-6 text-base font-medium border-none outline-none w-full max-w-xs mx-auto"
           >
-            {instagram.isConnecting ? (
+            {isConnecting ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Connecting...

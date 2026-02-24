@@ -4,7 +4,7 @@
  * and caching for processed comment checks
  */
 
-import { getRedisClient } from "@/server/queue/redis";
+import { getRedisClient } from "@/server/redis";
 
 const redis = getRedisClient();
 
