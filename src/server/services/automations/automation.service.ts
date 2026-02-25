@@ -21,19 +21,20 @@ import {
   findUserAutomations,
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
+  findActiveAutomationsByPost,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/utils/automation-cache";
 import { logger } from "@/server/utils/logger";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 /**
- * Creates a new automation for a user
+ * Creates a new automation for a user.
+ * Invalidates cache to ensure webhooks re-check for automations
  */
 export async function createAutomation(
   clerkId: string,
   input: CreateAutomationInput,
 ) {
-  // Gets the user record with Instagram account
   const user = await findUserWithInstaAccount(clerkId);
 
   if (!user) {
@@ -47,10 +48,19 @@ export async function createAutomation(
     );
   }
 
-  // Creates the automation
+  // Note on soft-deletes: The check intentionally ignores PAUSED and DELETED automations — only ACTIVE ones block creation
+
+  const existing = await findActiveAutomationsByPost(user.id, input.postId);
+  if (existing && existing.length > 0) {
+    throw new ApiRouteError(
+      "An automation already exists for this post. Only one automation per post is allowed.",
+      "DUPLICATE_AUTOMATION",
+      409,
+    );
+  }
+
   const automation = await createAutomationRecord(user.id, input);
 
-  // Invalidates cache to ensure webhooks re-check for automations
   await invalidateAutomationCache(user.clerkId, input.postId).catch((error) => {
     // Logs error but doesn't fail the operation
     logger.error(

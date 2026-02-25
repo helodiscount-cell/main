@@ -94,7 +94,7 @@ export async function handleOAuthCallback(code: string, state: string) {
     const validation = validateInstagramAccount(instagramUser);
 
     if (!validation.valid) {
-      throw new Error(
+      throw new ApiRouteError(
         validation.error || ERROR_MESSAGES.AUTH.INVALID_ACCOUNT_TYPE,
       );
     }
@@ -118,6 +118,9 @@ export async function handleOAuthCallback(code: string, state: string) {
           user = await tx.user.create({
             data: {
               clerkId,
+              fullName: instagramUser.username,
+              email: "",
+              imageUrl: instagramUser.profile_picture_url,
             },
           });
         }

@@ -11,8 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { instagramKeys } from "@/keys/react-query";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MessageSquare, Instagram, Zap } from "lucide-react";
+import {
+  ArrowLeft,
+  MessageSquare,
+  Instagram,
+  Zap,
+  PlusIcon,
+} from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const tabs = [
@@ -37,7 +44,7 @@ const tabs = [
   },
 ];
 
-export function CreateAutomationDialog() {
+export function CreateAutomationDialog({ title }: { title: string }) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   const renderContent = () => {
@@ -63,7 +70,8 @@ export function CreateAutomationDialog() {
     <Dialog onOpenChange={(open) => !open && setActiveTab(null)}>
       <DialogTrigger asChild>
         <Button className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none">
-          Create your first automation
+          <PlusIcon />
+          {title}
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -135,12 +143,14 @@ const DMFromComments = ({ onBack }: { onBack: () => void }) => {
             className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
           >
             {item.media_type === "IMAGE" ? (
-              <Image
-                src={item.media_url}
-                alt={item.caption as string}
-                fill
-                className="object-cover"
-              />
+              <Link href={`/dashboard/automations/dmforcomments/${item.id}`}>
+                <Image
+                  src={item.media_url}
+                  alt={item.caption as string}
+                  fill
+                  className="object-cover"
+                />
+              </Link>
             ) : (
               <video
                 src={item.media_url}

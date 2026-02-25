@@ -1,4 +1,4 @@
-import * as React from "react";
+"use client";
 
 import {
   Sidebar,
@@ -14,80 +14,82 @@ import {
 import { Button } from "./ui/button";
 import Link from "next/link";
 import UserSection from "./UserSection";
-import { LogOut } from "lucide-react";
+import {
+  LogOut,
+  BarChart2,
+  MessageSquare,
+  ClipboardList,
+  Users,
+  Database,
+  Settings,
+} from "lucide-react";
+import { usePathname } from "next/navigation";
 
-// This is sample data.
-const data = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
-  navMain: [
-    {
-      title: "",
-      url: "#",
-      items: [
-        {
-          title: "Dashboard",
-          url: "/dashboard",
-        },
-        {
-          title: "Automations",
-          url: "/dashboard",
-        },
-        {
-          title: "Forms",
-          url: "/dashboard",
-          isActive: true,
-        },
-        {
-          title: "Contacts",
-          url: "/dashboard",
-        },
-        {
-          title: "Refer & Earn",
-          url: "/dashboard",
-        },
-        {
-          title: "Settings",
-          url: "/dashboard",
-        },
-      ],
-    },
-  ],
-};
+const navItems = [
+  { title: "Dashboard", url: "/dashboard", exact: true, Icon: BarChart2 },
+  { title: "Automations", url: "/dashboard/automations", Icon: MessageSquare },
+  { title: "Forms", url: "/dashboard/forms", Icon: ClipboardList },
+  { title: "Contacts", url: "/dashboard/contacts", Icon: Users },
+  { title: "Refer & Earn", url: "/dashboard/refer", Icon: Database },
+  { title: "Settings", url: "/dashboard/settings", Icon: Settings },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         <UserSection />
       </SidebarHeader>
       <SidebarContent>
-        {/* We create a SidebarGroup for each parent. */}
-        {data.navMain.map((item) => (
-          <SidebarGroup key={item.title} className="h-full">
-            {/* <SidebarGroupLabel>{item.title}</SidebarGroupLabel> */}
-            <SidebarGroupContent className="h-full">
-              <SidebarMenu className="h-full">
-                <div className="flex flex-col h-full justify-between">
-                  <div>
-                    {item.items.map((item) => (
+        <SidebarGroup className="h-full">
+          <SidebarGroupContent className="h-full">
+            <SidebarMenu className="h-full">
+              <div className="flex flex-col h-full justify-between">
+                <div className="flex flex-col gap-4">
+                  {navItems.map((item) => {
+                    const isActive = item.exact
+                      ? pathname === item.url
+                      : pathname.startsWith(item.url);
+                    return (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={item.isActive}>
-                          <Link href={item.url} className="px-4 py-6">
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className={
+                            isActive
+                              ? "bg-purple-600 text-white hover:bg-purple-700 hover:text-white"
+                              : "bg-[#F9F9F9] hover:bg-[#F9F9F9]/80"
+                          }
+                        >
+                          <Link
+                            href={item.url}
+                            className="px-4 py-6 flex items-center gap-3"
+                          >
+                            <item.Icon
+                              className={
+                                isActive ? "text-purple-600" : "text-slate-500"
+                              }
+                              size={18}
+                            />
                             {item.title}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                    ))}
-                  </div>
-                  <Button variant={"destructive"}>
-                    <LogOut />
-                    <Link href={"/auth/logout"}>Logout</Link>
-                  </Button>
+                    );
+                  })}
                 </div>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+                <Button variant={"destructive"}>
+                  <LogOut className="text-red-600" />
+                  <Link href={"/auth/logout"} className="text-primary">
+                    Log out
+                  </Link>
+                </Button>
+              </div>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

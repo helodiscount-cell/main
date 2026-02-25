@@ -5,7 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { CreateAutomationSchema } from "@dm-broo/common-types";
-import { createAutomation } from "@/server/services/auto/automation.service";
+import { createAutomation } from "@/server/services/automations/automation.service";
 import {
   parseRequestBodySafely,
   REQUEST_SIZE_LIMITS,
@@ -15,7 +15,6 @@ import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 export async function POST(request: NextRequest) {
   return runWithErrorHandling(async (clerkId) => {
-    // Parses and validates request body with size limits
     const body = await parseRequestBodySafely(
       request,
       REQUEST_SIZE_LIMITS.API_DEFAULT,

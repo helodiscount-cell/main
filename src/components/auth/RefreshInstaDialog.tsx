@@ -26,7 +26,7 @@ export function RefreshInstaDialog() {
         className="sm:max-w-xl p-8 rounded-[32px] gap-6 flex flex-col items-center shadow-[0_0_50px_rgba(106,6,228,0.4)]"
       >
         <DialogHeader className="space-y-1 items-center">
-          <DialogTitle className="text-[23px] font-bold text-[#0F172A] text-center leading-tight">
+          <DialogTitle className="text-[23px] font-medium text-[#0F172A] text-center leading-tight">
             Refresh Your Instgram Connection
           </DialogTitle>
           <p className="text-[#64748B] text-center text-sm leading-relaxed max-w-[340px]">
@@ -44,7 +44,7 @@ export function RefreshInstaDialog() {
           <RefreshCw className="w-8 h-8 text-[#94A3B8]" />
 
           <div className="w-[72px] h-[72px] rounded-2xl bg-[#6A06E4] flex items-center justify-center">
-            <span className="text-white font-bold text-xs">Logo</span>
+            <span className="text-white font-semibold text-xs">Logo</span>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export function RefreshInstaDialog() {
             Refresh Connection
           </Button>
 
-          <p className="text-center text-[#64748B] text-[12px] px-4 leading-relaxed font-medium">
+          <p className="text-center text-gray-500 text-[12px] px-4 leading-relaxed font-medium">
             You'll be redirected to Instagram to grant permission. <br /> Once
             approved, you'll be connected to us.
           </p>

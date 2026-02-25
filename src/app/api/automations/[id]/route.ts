@@ -10,7 +10,7 @@ import {
   getAutomation,
   updateAutomation,
   deleteAutomation,
-} from "@/server/services/auto/automation.service";
+} from "@/server/services/automations/automation.service";
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
 import { isValidObjectId, sanitizeQueryParam } from "@/server/utils/validation";
 

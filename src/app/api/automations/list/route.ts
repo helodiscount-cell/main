@@ -5,7 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { getUserAutomations } from "@/server/services/auto/automation.service";
+import { getUserAutomations } from "@/server/services/automations/automation.service";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { sanitizeQueryParam } from "@/server/utils/validation";
