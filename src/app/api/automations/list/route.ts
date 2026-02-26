@@ -9,9 +9,12 @@ import { getUserAutomations } from "@/server/services/automations/automation.ser
 import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { sanitizeQueryParam } from "@/server/utils/validation";
+import {
+  parseRequestBodySafely,
+  REQUEST_SIZE_LIMITS,
+} from "@/server/utils/request-limits";
 
-// Validates query parameters (status and postId only, no pagination)
-const AutomationListQuerySchema = z.object({
+const AutomationListBodySchema = z.object({
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
   postId: z
     .string()
@@ -19,28 +22,23 @@ const AutomationListQuerySchema = z.object({
     .transform((val) => (val ? sanitizeQueryParam(val, 100) : undefined)),
 });
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   return runWithErrorHandling(async (clerkId) => {
-    // Gets and validates query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const queryValidation = AutomationListQuerySchema.safeParse({
-      status: searchParams.get("status") || undefined,
-      postId: searchParams.get("postId") || undefined,
-    });
+    const body = await parseRequestBodySafely(
+      request,
+      REQUEST_SIZE_LIMITS.API_DEFAULT,
+    );
 
-    if (!queryValidation.success) {
+    const validation = AutomationListBodySchema.safeParse(body);
+
+    if (!validation.success) {
       const errorMessage =
-        queryValidation.error.issues[0]?.message || "Invalid query parameters";
-      throw new ApiRouteError(errorMessage, "INVALID_QUERY_PARAMETERS");
+        validation.error.issues[0]?.message || "Invalid request body";
+      throw new ApiRouteError(errorMessage, "INVALID_INPUT", 400);
     }
 
-    const filters = queryValidation.data;
+    const automations = await getUserAutomations(clerkId, validation.data);
 
-    // Calls service layer to get all automations
-    const automations = await getUserAutomations(clerkId, filters);
-
-    return {
-      automations,
-    };
+    return { automations };
   });
 }

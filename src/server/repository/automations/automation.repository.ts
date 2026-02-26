@@ -32,7 +32,7 @@ export interface UpdateAutomationData {
 export interface AutomationFilters {
   userId?: string;
   postId?: string;
-  status?: string;
+  status?: string | string[];
   skip?: number;
   take?: number;
 }
@@ -198,7 +198,11 @@ export async function findUserAutomations(filters: AutomationFilters) {
       }
 
       if (filters.status) {
-        where.status = filters.status;
+        if (Array.isArray(filters.status)) {
+          where.status = { in: filters.status };
+        } else {
+          where.status = filters.status;
+        }
       }
 
       return prisma.automation.findMany({

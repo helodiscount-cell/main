@@ -25,6 +25,57 @@ export declare const InstagramPostSchema: z.ZodObject<
   },
   z.core.$strip
 >;
+export declare const InstagramStorySchema: z.ZodObject<
+  {
+    id: z.ZodString;
+    caption: z.ZodOptional<z.ZodString>;
+    media_type: z.ZodEnum<{
+      IMAGE: "IMAGE";
+      VIDEO: "VIDEO";
+    }>;
+    media_product_type: z.ZodLiteral<"STORY">;
+    media_url: z.ZodString;
+    permalink: z.ZodString;
+    timestamp: z.ZodString;
+  },
+  z.core.$strip
+>;
+export declare const InstagramStoriesResponseSchema: z.ZodObject<
+  {
+    data: z.ZodArray<
+      z.ZodObject<
+        {
+          id: z.ZodString;
+          caption: z.ZodOptional<z.ZodString>;
+          media_type: z.ZodEnum<{
+            IMAGE: "IMAGE";
+            VIDEO: "VIDEO";
+          }>;
+          media_product_type: z.ZodLiteral<"STORY">;
+          media_url: z.ZodString;
+          permalink: z.ZodString;
+          timestamp: z.ZodString;
+        },
+        z.core.$strip
+      >
+    >;
+    paging: z.ZodOptional<
+      z.ZodObject<
+        {
+          cursors: z.ZodObject<
+            {
+              before: z.ZodOptional<z.ZodString>;
+              after: z.ZodOptional<z.ZodString>;
+            },
+            z.core.$strip
+          >;
+        },
+        z.core.$strip
+      >
+    >;
+  },
+  z.core.$strip
+>;
 export declare const InstagramPostsResponseSchema: z.ZodObject<
   {
     data: z.ZodArray<

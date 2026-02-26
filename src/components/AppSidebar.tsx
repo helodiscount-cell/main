@@ -26,12 +26,12 @@ import {
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { title: "Dashboard", url: "/dashboard", exact: true, Icon: BarChart2 },
-  { title: "Automations", url: "/dashboard/automations", Icon: MessageSquare },
-  { title: "Forms", url: "/dashboard/forms", Icon: ClipboardList },
-  { title: "Contacts", url: "/dashboard/contacts", Icon: Users },
-  { title: "Refer & Earn", url: "/dashboard/refer", Icon: Database },
-  { title: "Settings", url: "/dashboard/settings", Icon: Settings },
+  { title: "Dashboard", url: "/dash", exact: true, Icon: BarChart2 },
+  { title: "Automations", url: "/dash/automations", Icon: MessageSquare },
+  { title: "Forms", url: "/dash/forms", Icon: ClipboardList },
+  { title: "Contacts", url: "/dash/contacts", Icon: Users },
+  { title: "Refer & Earn", url: "/dash/refer", Icon: Database },
+  { title: "Settings", url: "/dash/settings", Icon: Settings },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

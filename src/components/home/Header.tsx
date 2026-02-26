@@ -85,7 +85,7 @@ export const LandingHeader = () => {
 //     </SignedOut>
 //     <SignedIn>
 //       <Link
-//         href="/dashboard"
+//         href="/dash"
 //         className="px-5 py-2 text-sm font-medium text-white bg-[#6A06E4] rounded-full transition-all"
 //       >
 //         Dashboard

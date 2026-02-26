@@ -358,7 +358,7 @@ POST   /api/admin/security/rules/:id/test  # Test rule against events
 ### Security Dashboard API
 
 ```
-GET    /api/admin/security/dashboard       # Get dashboard metrics
+GET    /api/admin/security/dash       # Get dashboard metrics
 GET    /api/admin/security/incidents       # List security incidents
 GET    /api/admin/security/incidents/:id   # Get incident details
 PUT    /api/admin/security/incidents/:id   # Update incident
@@ -578,7 +578,7 @@ describe("SecurityAuditor", () => {
     // Verify alert was sent
     expect(mockEmailService.sendAlert).toHaveBeenCalledWith(
       "test@example.com",
-      expect.stringContaining("High risk security event")
+      expect.stringContaining("High risk security event"),
     );
   });
 });
@@ -614,7 +614,7 @@ describe("Security Auditor Integration", () => {
       .map(() =>
         request(app)
           .get("/api/automations/list")
-          .set("Authorization", "Bearer test-token")
+          .set("Authorization", "Bearer test-token"),
       );
 
     await Promise.all(promises);
@@ -633,25 +633,21 @@ describe("Security Auditor Integration", () => {
 ### Security Test Scenarios
 
 1. **Authentication Attacks**
-
    - Brute force login attempts
    - OAuth state tampering
    - Session fixation attacks
 
 2. **Authorization Attacks**
-
    - IDOR (Insecure Direct Object References)
    - Privilege escalation attempts
    - Resource enumeration
 
 3. **Input Validation Attacks**
-
    - XSS payload injection
    - SQL injection attempts
    - Regex DoS attacks
 
 4. **API Attacks**
-
    - Rate limit bypass attempts
    - CSRF token bypass
    - Request size limit evasion
@@ -692,7 +688,7 @@ export async function GET() {
 ```typescript
 // src/app/admin/security/page.tsx
 export default function SecurityDashboard() {
-  const { data: metrics } = useSWR("/api/admin/security/dashboard");
+  const { data: metrics } = useSWR("/api/admin/security/dash");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

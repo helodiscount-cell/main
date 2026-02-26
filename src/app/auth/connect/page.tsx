@@ -10,7 +10,7 @@ export default function ConnectPage() {
 
   const handleConnect = () => {
     setIsConnecting(true);
-    instagramService.oauth.connect("/dashboard");
+    instagramService.oauth.connect("/dash");
   };
 
   return (

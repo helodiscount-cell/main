@@ -8,10 +8,10 @@ import { handleOAuthCallback } from "@/server/services/instagram/oauth.service";
 import { logger } from "@/server/utils/logger";
 
 enum RedirectUrls {
-  SUCCESS = "/dashboard?connected=true",
-  ERROR_OAUTH_DECLINED = "/dashboard?error=oauth_declined",
-  ERROR_OAUTH_INVALID = "/dashboard?error=oauth_invalid",
-  ERROR_OAUTH_FAILED = "/dashboard?error=oauth_failed",
+  SUCCESS = "/dash?connected=true",
+  ERROR_OAUTH_DECLINED = "/dash?error=oauth_declined",
+  ERROR_OAUTH_INVALID = "/dash?error=oauth_invalid",
+  ERROR_OAUTH_FAILED = "/dash?error=oauth_failed",
 }
 
 export async function GET(request: NextRequest) {

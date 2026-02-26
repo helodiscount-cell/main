@@ -22,6 +22,7 @@ import {
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
   findActiveAutomationsByPost,
+  AutomationFilters,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/utils/automation-cache";
 import { logger } from "@/server/utils/logger";
@@ -120,30 +121,22 @@ export async function getUserAutomations(
     postId?: string;
   },
 ) {
-  // Gets the user by clerkId to obtain userId
   const user = await findUserByClerkId(clerkId);
 
   if (!user) {
     throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER, "NO_USER");
   }
 
-  // Builds filter conditions using userId
-  const repositoryFilters: any = {
+  const repositoryFilters: AutomationFilters = {
     userId: user.id,
+    // Only show DELETED if explicitly requested; otherwise hide them
+    status: filters?.status ?? ["ACTIVE", "PAUSED"],
   };
-
-  if (
-    filters?.status &&
-    ["ACTIVE", "PAUSED", "DELETED"].includes(filters.status)
-  ) {
-    repositoryFilters.status = filters.status;
-  }
 
   if (filters?.postId) {
     repositoryFilters.postId = filters.postId;
   }
 
-  // Fetches all automations without pagination
   const automations = await findUserAutomations(repositoryFilters);
 
   return automations;

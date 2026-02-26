@@ -19,6 +19,30 @@ export const InstagramPostSchema = z.object({
   comments_count: z.number().optional(),
 });
 
+// Instagram story schema (stories have no like_count/comments_count, and no CAROUSEL_ALBUM)
+export const InstagramStorySchema = z.object({
+  id: z.string(),
+  caption: z.string().optional(),
+  media_type: z.enum(["IMAGE", "VIDEO"]),
+  media_product_type: z.literal("STORY"),
+  media_url: z.string(),
+  permalink: z.string(),
+  timestamp: z.string(),
+});
+
+// Instagram stories success response
+export const InstagramStoriesResponseSchema = z.object({
+  data: z.array(InstagramStorySchema),
+  paging: z
+    .object({
+      cursors: z.object({
+        before: z.string().optional(),
+        after: z.string().optional(),
+      }),
+    })
+    .optional(),
+});
+
 // Instagram posts success response
 export const InstagramPostsResponseSchema = z.object({
   data: z.array(InstagramPostSchema),

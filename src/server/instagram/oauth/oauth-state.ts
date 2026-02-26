@@ -51,7 +51,7 @@ export function createSecureState(state: OAuthState): string {
   // Creates state payload with expiration and nonce
   const payload = {
     clerkId: state.clerkId,
-    returnUrl: state.returnUrl || "/dashboard",
+    returnUrl: state.returnUrl || "/dash",
     timestamp,
     nonce,
   };
@@ -140,7 +140,7 @@ export function validateSecureState(encodedState: string): OAuthState {
 
     return {
       clerkId: payload.clerkId,
-      returnUrl: payload.returnUrl || "/dashboard",
+      returnUrl: payload.returnUrl || "/dash",
     };
   } catch (error) {
     // Provides generic error message to prevent information leakage

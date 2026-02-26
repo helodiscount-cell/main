@@ -42,56 +42,6 @@ export async function getUserPosts(clerkId: string) {
 }
 
 /**
- * Gets the connection status for a user
- * @param clerkId - The Clerk ID of the user
- * @returns Instagram connection status in the expected format
- */
-// We have to rate-limit this API bruh. anyone can spam it.
-export async function getInstaConnectionStatus(
-  clerkId: string,
-): Promise<InstagramStatusConnected> {
-  const redis = getRedisClient();
-
-  // Checks cache first
-  const instaAccountCacheKey = `ig:account:${clerkId}`;
-  const instaAccountCache = await redis.get(instaAccountCacheKey);
-
-  console.log(instaAccountCache);
-
-  // When cache is found
-  if (instaAccountCache) return JSON.parse(instaAccountCache);
-
-  // When cache is not found, fetches from database
-  const user = await findUserWithInstaAccount(clerkId);
-
-  // If user is not found or their Instagram account is not active, throws an error
-  if (!user || !user.instaAccount || !user.instaAccount.isActive) {
-    throw new ApiRouteError(
-      ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
-      "NO_INSTAGRAM_ACCOUNT",
-    );
-  }
-
-  // Otherwise, transforms user data to the expected status format
-  const status: InstagramStatusConnected = {
-    connected: true,
-    username: user.instaAccount.username,
-    profilePictureUrl: user.instaAccount.profilePictureUrl,
-    accountType: (user.instaAccount.accountType || "PERSONAL") as
-      | "BUSINESS"
-      | "CREATOR"
-      | "PERSONAL",
-    connectedAt: user.instaAccount.connectedAt,
-    lastSyncedAt: user.instaAccount.lastSyncedAt,
-  };
-
-  // And caches the transformed status
-  await redis.set(instaAccountCacheKey, JSON.stringify(status), "EX", 60 * 60);
-
-  return status;
-}
-
-/**
  * Gets stories for a user
  * @param clerkId - The Clerk ID of the user
  */
@@ -115,7 +65,7 @@ export async function getUserStories(clerkId: string) {
   );
 
   return {
-    stories: result.data,
+    stories: result.data.data,
     paging: result.data.paging,
   };
 }

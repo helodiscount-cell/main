@@ -12,7 +12,7 @@ export const PUBLIC_ROUTES = [
 
 export const AUTH_ROUTE = "/auth";
 export const CONNECT_ROUTE = "/auth/connect";
-export const DASHBOARD_ROUTE = "/dashboard";
+export const DASHBOARD_ROUTE = "/dash";
 
 /**
  * Route Matchers

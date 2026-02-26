@@ -1,9 +1,6 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { CreateAutomationDialog } from "@/components/CreateAutomation";
-import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 
 export default function DashboardLayout({
   children,

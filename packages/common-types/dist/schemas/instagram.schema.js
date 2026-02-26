@@ -22,6 +22,8 @@ exports.InstagramConnectResponseSchema =
   exports.CommentsQuerySchema =
   exports.InstagramCommentSchema =
   exports.InstagramPostsResponseSchema =
+  exports.InstagramStoriesResponseSchema =
+  exports.InstagramStorySchema =
   exports.InstagramPostSchema =
     void 0;
 const zod_1 = require("zod");
@@ -37,6 +39,28 @@ exports.InstagramPostSchema = zod_1.z.object({
   timestamp: zod_1.z.string(),
   like_count: zod_1.z.number().optional(),
   comments_count: zod_1.z.number().optional(),
+});
+// Instagram story schema (stories have no like_count/comments_count, and no CAROUSEL_ALBUM)
+exports.InstagramStorySchema = zod_1.z.object({
+  id: zod_1.z.string(),
+  caption: zod_1.z.string().optional(),
+  media_type: zod_1.z.enum(["IMAGE", "VIDEO"]),
+  media_product_type: zod_1.z.literal("STORY"),
+  media_url: zod_1.z.string(),
+  permalink: zod_1.z.string(),
+  timestamp: zod_1.z.string(),
+});
+// Instagram stories success response
+exports.InstagramStoriesResponseSchema = zod_1.z.object({
+  data: zod_1.z.array(exports.InstagramStorySchema),
+  paging: zod_1.z
+    .object({
+      cursors: zod_1.z.object({
+        before: zod_1.z.string().optional(),
+        after: zod_1.z.string().optional(),
+      }),
+    })
+    .optional(),
 });
 // Instagram posts success response
 exports.InstagramPostsResponseSchema = zod_1.z.object({

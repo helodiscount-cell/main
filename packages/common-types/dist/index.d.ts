@@ -22,6 +22,8 @@ import {
 import {
   InstagramPostSchema,
   InstagramPostsResponseSchema,
+  InstagramStorySchema,
+  InstagramStoriesResponseSchema,
   InstagramCommentSchema,
   CommentsQuerySchema,
   CommentsResponseSchema,
@@ -77,6 +79,10 @@ export type ExecutionRecord = z.infer<typeof ExecutionRecordSchema>;
 export type InstagramPost = z.infer<typeof InstagramPostSchema>;
 export type InstagramPostsResponse = z.infer<
   typeof InstagramPostsResponseSchema
+>;
+export type InstagramStory = z.infer<typeof InstagramStorySchema>;
+export type InstagramStoriesResponse = z.infer<
+  typeof InstagramStoriesResponseSchema
 >;
 export type InstagramComment = z.infer<typeof InstagramCommentSchema>;
 export type CommentsQuery = z.infer<typeof CommentsQuerySchema>;

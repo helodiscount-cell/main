@@ -1,5 +1,8 @@
 import { api, request } from "@/api/client";
-import { InstagramPostsResponse } from "@dm-broo/common-types";
+import {
+  InstagramPostsResponse,
+  InstagramStoriesResponse,
+} from "@dm-broo/common-types";
 
 interface InstagramUserProfileResponse {
   success: boolean;
@@ -25,6 +28,14 @@ interface InstagramPostsApiResponse {
   };
 }
 
+interface InstagramStoriesApiResponse {
+  success: boolean;
+  result: {
+    stories: InstagramStoriesResponse["data"];
+    paging: InstagramStoriesResponse["paging"];
+  };
+}
+
 export const instagramService = {
   oauth: {
     connect: async (returnUrl: string): Promise<void> => {
@@ -44,6 +55,11 @@ export const instagramService = {
     getUserPosts: async (): Promise<InstagramPostsApiResponse> => {
       return request(
         api.get<InstagramPostsApiResponse>("/instagram/profile/posts"),
+      );
+    },
+    getUserStories: async (): Promise<InstagramStoriesApiResponse> => {
+      return request(
+        api.get<InstagramStoriesApiResponse>("/instagram/profile/story"),
       );
     },
   },

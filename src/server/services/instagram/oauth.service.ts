@@ -52,7 +52,7 @@ export async function initiateOAuth({
   // Generates authorization URL with state
   const authUrl = generateAuthorizationUrl({
     clerkId,
-    returnUrl: returnUrl || "/dashboard",
+    returnUrl: returnUrl || "/dash",
   });
 
   return authUrl;
@@ -226,7 +226,7 @@ export async function handleOAuthCallback(code: string, state: string) {
     }
 
     return {
-      returnUrl: returnUrl || "/dashboard",
+      returnUrl: returnUrl || "/dash",
       username: instagramUser.username,
       accountType: instagramUser.account_type,
     };

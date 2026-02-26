@@ -1,4 +1,4 @@
-// url from frontend: http://localhost:3000/api/instagram/oauth/authorize?returnUrl=/dashboard
+// url from frontend: http://localhost:3000/api/instagram/oauth/authorize?returnUrl=/dash
 
 /**
  * Instagram OAuth Authorization Endpoint
@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const returnUrl =
-      request.nextUrl.searchParams.get("returnUrl") || "/dashboard";
+    const returnUrl = request.nextUrl.searchParams.get("returnUrl") || "/dash";
 
     const authUrl = await initiateOAuth({ clerkId, returnUrl });
 

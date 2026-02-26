@@ -1,4 +1,4 @@
-import { api } from "@/api/client";
+import { api, request } from "@/api/client";
 
 export type AutomationStatus = "ACTIVE" | "PAUSED" | "DELETED";
 
@@ -35,13 +35,31 @@ export const automationService = {
     status?: AutomationStatus;
     postId?: string;
   }): Promise<AutomationListResponse> => {
-    const params = new URLSearchParams();
-    if (filters?.status) params.set("status", filters.status);
-    if (filters?.postId) params.set("postId", filters.postId);
-    const query = params.toString();
-    const res = await api.get<ApiEnvelope<AutomationListResponse>>(
-      `/automations/list${query ? `?${query}` : ""}`,
+    const envelope = await request(
+      api.post<ApiEnvelope<AutomationListResponse>>(
+        "/automations/list",
+        filters ?? {},
+      ),
     );
-    return res.data.result;
+    return envelope.result;
+  },
+
+  create: async (
+    payload: Record<string, unknown>,
+  ): Promise<{ id: string; postId: string }> => {
+    const envelope = await request(
+      api.post<ApiEnvelope<{ id: string; postId: string }>>(
+        "/automations/create",
+        payload,
+      ),
+    );
+    return envelope.result;
+  },
+
+  delete: async (id: string): Promise<{ message: string }> => {
+    const envelope = await request(
+      api.delete<ApiEnvelope<{ message: string }>>(`/automations/${id}`),
+    );
+    return envelope.result;
   },
 };
