@@ -44,13 +44,36 @@ export async function createAutomation(
   userId: string,
   data: CreateAutomationInput,
 ) {
+  const triggerType = data.triggerType ?? "COMMENT_ON_POST";
+
   return executeWithErrorHandling(
     () =>
       prisma.automation.create({
         data: {
           userId: userId,
-          postId: data.postId,
-          postCaption: data.postCaption,
+          triggerType,
+          // Embedded post target (only for COMMENT_ON_POST)
+          ...(triggerType === "COMMENT_ON_POST" && data.postId
+            ? {
+                post: {
+                  id: data.postId,
+                  caption: data.postCaption ?? null,
+                },
+              }
+            : {}),
+          // Embedded story target (only for STORY_REPLY)
+          ...(triggerType === "STORY_REPLY" && data.story
+            ? {
+                story: {
+                  id: data.story.id,
+                  mediaUrl: data.story.mediaUrl,
+                  mediaType: data.story.mediaType,
+                  caption: data.story.caption ?? null,
+                  permalink: data.story.permalink,
+                  timestamp: data.story.timestamp,
+                },
+              }
+            : {}),
           triggers: data.triggers,
           matchType: data.matchType,
           actionType: data.actionType,
@@ -194,7 +217,7 @@ export async function findUserAutomations(filters: AutomationFilters) {
       }
 
       if (filters.postId) {
-        where.postId = filters.postId;
+        where.post = { is: { id: filters.postId } };
       }
 
       if (filters.status) {
@@ -245,7 +268,7 @@ export async function countAutomations(
       }
 
       if (filters.postId) {
-        where.postId = filters.postId;
+        where.post = { is: { id: filters.postId } };
       }
 
       if (filters.status) {
@@ -275,7 +298,7 @@ export async function findActiveAutomationsByPost(
       prisma.automation.findMany({
         where: {
           userId,
-          postId,
+          post: { is: { id: postId } },
           status: "ACTIVE",
         },
       }),
@@ -283,6 +306,31 @@ export async function findActiveAutomationsByPost(
       operation: "findActiveAutomationsByPost",
       model: "Automation",
       fallback: [], // Returns empty array on error (allows webhook to continue)
+      retries: 1,
+    },
+  );
+}
+
+/**
+ * Finds active automations for a specific story
+ */
+export async function findActiveAutomationsByStory(
+  userId: string,
+  storyId: string,
+) {
+  return executeWithErrorHandling(
+    () =>
+      prisma.automation.findMany({
+        where: {
+          userId,
+          story: { is: { id: storyId } },
+          status: "ACTIVE",
+        },
+      }),
+    {
+      operation: "findActiveAutomationsByStory",
+      model: "Automation",
+      fallback: [],
       retries: 1,
     },
   );

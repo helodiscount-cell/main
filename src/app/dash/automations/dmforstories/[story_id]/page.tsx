@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import AddKeywords from "@/components/dash/automations/AddKeywords";
-import PublicReplyToComments from "@/components/dash/automations/PublicReplyToComments";
+import SendDm from "@/components/dash/automations/SendDm";
 import { Pencil, Play, RefreshCw, RotateCcw, Square } from "lucide-react";
 import Image from "next/image";
 import phoneImg from "@/assets/png/phone.png";
-import SendDm from "@/components/dash/automations/SendDm";
 import { use } from "react";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
@@ -20,21 +19,52 @@ import {
   automationService,
   AutomationListItem,
 } from "@/api/services/automations";
-import { automationKeys } from "@/keys/react-query";
+import { automationKeys, instagramKeys } from "@/keys/react-query";
+import { instagramService } from "@/api/services/instagram";
 
-// Schema
-type Reply = { id: string; text: string };
+// ─── Config ────────────────────────────────────────────────────────────────────
+// Single source of truth for the story automation page.
+// Every label, default, and option is driven from here.
+
+const PAGE_CONFIG = {
+  triggerType: "STORY_REPLY" as const,
+  breadcrumb: "DM For Story",
+  matchType: "CONTAINS" as const,
+  actionType: "DM" as const,
+
+  form: {
+    defaults: {
+      keywords: [] as string[],
+      dmMessage: "",
+    },
+    validation: {
+      keywords: { min: 1, message: "Add at least one keyword to continue." },
+      dmMessage: { min: 1, message: "Write a DM message before going live." },
+    },
+  },
+} as const;
+
+// ─── Schema ────────────────────────────────────────────────────────────────────
 
 const formSchema = z.object({
-  keywords: z.array(z.string()).min(1, "Add at least one keyword to continue."),
-  dmMessage: z.string().min(1, "Write a DM message before going live."),
-  publicReplyEnabled: z.boolean(),
-  publicReplies: z.array(z.object({ id: z.string(), text: z.string() })),
+  keywords: z
+    .array(z.string())
+    .min(
+      PAGE_CONFIG.form.validation.keywords.min,
+      PAGE_CONFIG.form.validation.keywords.message,
+    ),
+  dmMessage: z
+    .string()
+    .min(
+      PAGE_CONFIG.form.validation.dmMessage.min,
+      PAGE_CONFIG.form.validation.dmMessage.message,
+    ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Page state config — single source of truth for what the header renders
+// ─── State machine ─────────────────────────────────────────────────────────────
+
 type PageState = "loading" | "fresh" | "live";
 
 function derivePageState(
@@ -46,27 +76,34 @@ function derivePageState(
   return "fresh";
 }
 
-// Payload builder
+// ─── Payload builder ───────────────────────────────────────────────────────────
+
+type StoryMeta = {
+  id: string;
+  mediaUrl: string;
+  mediaType: string;
+  caption?: string | null;
+  permalink: string;
+  timestamp: string;
+};
+
 function buildPayload(
-  postId: string,
+  storyMeta: StoryMeta,
   form: FormValues,
 ): Record<string, unknown> {
   return {
-    postId,
+    triggerType: PAGE_CONFIG.triggerType,
+    story: storyMeta,
     triggers: form.keywords,
-    matchType: "CONTAINS",
-    actionType: "DM",
+    matchType: PAGE_CONFIG.matchType,
+    actionType: PAGE_CONFIG.actionType,
     replyMessage: form.dmMessage,
     useVariables: true,
-    ...(form.publicReplyEnabled && form.publicReplies.length > 0
-      ? {
-          commentReplyWhenDm: form.publicReplies.map((r) => r.text).join(" | "),
-        }
-      : {}),
   };
 }
 
-// Header sub-components
+// ─── Header sub-components ─────────────────────────────────────────────────────
+
 function HeaderSkeleton() {
   return (
     <div className="flex w-full gap-3 items-center animate-pulse">
@@ -82,7 +119,8 @@ function FreshHeader({ isPending }: { isPending: boolean }) {
     <div className="flex w-full gap-3 items-center animate-in fade-in duration-300">
       <div className="flex-2 bg-white rounded-md px-4 flex items-center h-9">
         <p className="text-sm font-semibold">
-          <span className="opacity-50">Automation </span>/ DM For Comment
+          <span className="opacity-50">Automation </span>/{" "}
+          {PAGE_CONFIG.breadcrumb}
         </p>
       </div>
 
@@ -130,17 +168,18 @@ function LiveHeader({
   onReRun: () => void;
   isReRunning: boolean;
 }) {
-  const label = automation.post?.caption
-    ? automation.post.caption.slice(0, 30) +
-      (automation.post.caption.length > 30 ? "…" : "")
-    : automation.post?.id;
+  const label = automation.story?.caption
+    ? automation.story.caption.slice(0, 30) +
+      (automation.story.caption.length > 30 ? "…" : "")
+    : `Story ${automation.story?.id.slice(0, 8) ?? ""}`;
 
   return (
     <div className="flex w-full gap-2 items-center animate-in fade-in slide-in-from-top-2 duration-300">
-      {/* Breadcrumb pill */}
       <div className="flex items-center gap-2 bg-white rounded-md px-4 h-9 flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">
-          <span className="opacity-50">Automation / DM For Comment/ </span>
+          <span className="opacity-50">
+            Automation / {PAGE_CONFIG.breadcrumb}/{" "}
+          </span>
           <span>{label}</span>
         </p>
         <button
@@ -151,7 +190,6 @@ function LiveHeader({
         </button>
       </div>
 
-      {/* Refresh icon */}
       <button
         type="button"
         onClick={onReRun}
@@ -161,7 +199,6 @@ function LiveHeader({
         <RotateCcw size={15} className={isReRunning ? "animate-spin" : ""} />
       </button>
 
-      {/* Re-Run */}
       <Button
         type="button"
         onClick={onReRun}
@@ -172,7 +209,6 @@ function LiveHeader({
         {isReRunning ? "Running…" : "Re-Run"}
       </Button>
 
-      {/* Stop */}
       <Button
         type="button"
         onClick={onStop}
@@ -187,7 +223,6 @@ function LiveHeader({
         {isStopping ? "Stopping…" : "Stop"}
       </Button>
 
-      {/* Live badge */}
       <div className="h-9 px-4 rounded-md border-2 border-green-500 text-green-600 text-sm font-semibold flex items-center gap-1.5">
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         Live
@@ -196,47 +231,54 @@ function LiveHeader({
   );
 }
 
-const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
-  const { post_id } = use(params);
+// ─── Page ──────────────────────────────────────────────────────────────────────
+
+const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
+  const { story_id } = use(params);
   const queryClient = useQueryClient();
 
-  // Fetch all automations — uses cache if already populated (e.g., user came
-  // from the automations list page). Fetches fresh on direct URL navigation.
+  // ── Fetch stories to get metadata for the selected story ──
+  const { data: storiesData } = useQuery({
+    queryKey: instagramKeys.stories(),
+    queryFn: () => instagramService.profile.getUserStories(),
+  });
+
+  const currentStory = storiesData?.result.stories?.find(
+    (s) => s.id === story_id,
+  );
+
+  // ── Automations (reuse cache) ──
   const { data, isLoading } = useQuery({
     queryKey: automationKeys.list(),
     queryFn: () => automationService.list(),
   });
 
   const existingAutomation = data?.automations.find(
-    (a) => a.post?.id === post_id && a.status !== "DELETED",
+    (a) =>
+      a.triggerType === PAGE_CONFIG.triggerType &&
+      a.story?.id === story_id &&
+      a.status !== "DELETED",
   );
 
   const pageState = derivePageState(isLoading, existingAutomation);
 
-  // Form
+  // ── Form ──
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      keywords: [],
-      dmMessage: "",
-      publicReplyEnabled: true,
-      publicReplies: [
-        { id: crypto.randomUUID(), text: "Open your DMs, it's there!" },
-      ],
-    },
+    defaultValues: PAGE_CONFIG.form.defaults,
   });
 
-  // Create mutation
+  // ── Mutations ──
   const { mutate: createAutomation, isPending: isCreating } = useMutation({
     mutationKey: automationKeys.create(),
     mutationFn: (payload: Record<string, unknown>) =>
       automationService.create(payload),
     onSuccess: () => {
-      toast.success("Automation is now live! 🚀");
+      toast.success("Story automation is now live! 🚀");
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
     },
     onError: (err: unknown) => {
@@ -247,22 +289,35 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
     },
   });
 
-  // Delete (Stop) mutation
   const { mutate: stopAutomation, isPending: isStopping } = useMutation({
     mutationFn: () => automationService.delete(existingAutomation!.id),
     onSuccess: () => {
-      toast.success("Automation stopped.");
+      toast.success("Story automation stopped.");
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
     },
     onError: () => toast.error("Failed to stop automation."),
   });
 
-  // Re-Run = no-op toast for now (extend later)
   const isReRunning = false;
   const handleReRun = () => toast.info("Re-Run coming soon.");
 
-  const onSubmit = (data: FormValues) =>
-    createAutomation(buildPayload(post_id, data));
+  const onSubmit = (formData: FormValues) => {
+    if (!currentStory) {
+      toast.error("Story data not available. Please try again.");
+      return;
+    }
+
+    const storyMeta: StoryMeta = {
+      id: currentStory.id,
+      mediaUrl: currentStory.media_url,
+      mediaType: currentStory.media_type,
+      caption: currentStory.caption ?? null,
+      permalink: currentStory.permalink,
+      timestamp: currentStory.timestamp,
+    };
+
+    createAutomation(buildPayload(storyMeta, formData));
+  };
 
   const onInvalid = (errs: typeof errors) => {
     const first =
@@ -272,7 +327,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
     toast.error(first);
   };
 
-  // Header config — maps page state → what to render
+  // ── Header config ──
   const headerContent: Record<PageState, React.ReactNode> = {
     loading: <HeaderSkeleton />,
     fresh: <FreshHeader isPending={isCreating} />,
@@ -337,27 +392,8 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
             </div>
           </div>
 
-          {/* Right: Scrollable widgets */}
+          {/* Right: DM message */}
           <div className="flex flex-col justify-center gap-3 overflow-y-auto pr-1">
-            <Controller
-              control={control}
-              name="publicReplyEnabled"
-              render={({ field: enabledField }) => (
-                <Controller
-                  control={control}
-                  name="publicReplies"
-                  render={({ field: repliesField }) => (
-                    <PublicReplyToComments
-                      enabled={enabledField.value}
-                      onEnabledChange={enabledField.onChange}
-                      replies={repliesField.value as Reply[]}
-                      onRepliesChange={repliesField.onChange}
-                    />
-                  )}
-                />
-              )}
-            />
-
             <Controller
               control={control}
               name="dmMessage"

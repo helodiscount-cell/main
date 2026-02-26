@@ -1,40 +1,10 @@
 import { api, request } from "@/api/client";
-import {
-  InstagramPostsResponse,
-  InstagramStoriesResponse,
-} from "@dm-broo/common-types";
-
-interface InstagramUserProfileResponse {
-  success: boolean;
-  result: {
-    id: string;
-    username: string;
-    accountType: string;
-    profilePictureUrl: string;
-    biography: string | null;
-    followersCount: number;
-    followsCount: number;
-    mediaCount: number;
-    lastSyncedAt: string;
-  };
-}
-
-interface InstagramPostsApiResponse {
-  success: boolean;
-  result: {
-    data: InstagramPostsResponse;
-    status: number;
-    statusText: string;
-  };
-}
-
-interface InstagramStoriesApiResponse {
-  success: boolean;
-  result: {
-    stories: InstagramStoriesResponse["data"];
-    paging: InstagramStoriesResponse["paging"];
-  };
-}
+import type {
+  ApiResponse,
+  UserProfileResult,
+  PostsResult,
+  StoriesResult,
+} from "./types";
 
 export const instagramService = {
   oauth: {
@@ -47,19 +17,19 @@ export const instagramService = {
     },
   },
   profile: {
-    getUserProfile: async (): Promise<InstagramUserProfileResponse> => {
+    getUserProfile: async (): Promise<ApiResponse<UserProfileResult>> => {
       return request(
-        api.get<InstagramUserProfileResponse>("/instagram/profile"),
+        api.get<ApiResponse<UserProfileResult>>("/instagram/profile"),
       );
     },
-    getUserPosts: async (): Promise<InstagramPostsApiResponse> => {
+    getUserPosts: async (): Promise<ApiResponse<PostsResult>> => {
       return request(
-        api.get<InstagramPostsApiResponse>("/instagram/profile/posts"),
+        api.get<ApiResponse<PostsResult>>("/instagram/profile/posts"),
       );
     },
-    getUserStories: async (): Promise<InstagramStoriesApiResponse> => {
+    getUserStories: async (): Promise<ApiResponse<StoriesResult>> => {
       return request(
-        api.get<InstagramStoriesApiResponse>("/instagram/profile/story"),
+        api.get<ApiResponse<StoriesResult>>("/instagram/profile/story"),
       );
     },
   },

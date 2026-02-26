@@ -22,6 +22,7 @@ import {
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
   findActiveAutomationsByPost,
+  findActiveAutomationsByStory,
   AutomationFilters,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/utils/automation-cache";
@@ -49,31 +50,53 @@ export async function createAutomation(
     );
   }
 
-  // Note on soft-deletes: The check intentionally ignores PAUSED and DELETED automations — only ACTIVE ones block creation
+  const triggerType = input.triggerType ?? "COMMENT_ON_POST";
 
-  const existing = await findActiveAutomationsByPost(user.id, input.postId);
-  if (existing && existing.length > 0) {
-    throw new ApiRouteError(
-      "An automation already exists for this post. Only one automation per post is allowed.",
-      "DUPLICATE_AUTOMATION",
-      409,
+  // Dedup check — only ACTIVE ones block creation
+  if (triggerType === "COMMENT_ON_POST" && input.postId) {
+    const existing = await findActiveAutomationsByPost(user.id, input.postId);
+    if (existing && existing.length > 0) {
+      throw new ApiRouteError(
+        "An automation already exists for this post. Only one automation per post is allowed.",
+        "DUPLICATE_AUTOMATION",
+        409,
+      );
+    }
+  } else if (triggerType === "STORY_REPLY" && input.story) {
+    const existing = await findActiveAutomationsByStory(
+      user.id,
+      input.story.id,
     );
+    if (existing && existing.length > 0) {
+      throw new ApiRouteError(
+        "An automation already exists for this story. Only one automation per story is allowed.",
+        "DUPLICATE_AUTOMATION",
+        409,
+      );
+    }
   }
 
   const automation = await createAutomationRecord(user.id, input);
 
-  await invalidateAutomationCache(user.clerkId, input.postId).catch((error) => {
-    // Logs error but doesn't fail the operation
-    logger.error(
-      "Failed to invalidate automation cache after creation",
-      error instanceof Error ? error : new Error(String(error)),
-      { clerkId: user.clerkId, postId: input.postId },
+  // Cache invalidation — use the relevant target ID
+  const cacheTargetId =
+    triggerType === "STORY_REPLY" ? input.story?.id : input.postId;
+
+  if (cacheTargetId) {
+    await invalidateAutomationCache(user.clerkId, cacheTargetId).catch(
+      (error) => {
+        logger.error(
+          "Failed to invalidate automation cache after creation",
+          error instanceof Error ? error : new Error(String(error)),
+          { clerkId: user.clerkId, targetId: cacheTargetId, triggerType },
+        );
+      },
     );
-  });
+  }
 
   return {
     id: automation.id,
-    postId: automation.postId,
+    triggerType: automation.triggerType,
     createdAt: automation.createdAt,
   };
 }
@@ -94,8 +117,9 @@ export async function getAutomation(userId: string, automationId: string) {
 
   return {
     id: automation.id,
-    postId: automation.postId,
-    postCaption: automation.postCaption,
+    triggerType: automation.triggerType,
+    post: automation.post,
+    story: automation.story,
     triggers: automation.triggers,
     matchType: automation.matchType,
     actionType: automation.actionType,
@@ -167,31 +191,27 @@ export async function updateAutomation(
   const updatedAutomation = await updateAutomationRecord(automationId, input);
 
   // Invalidates cache to ensure webhooks re-check for automations
-  // Uses existing postId from the automation and Clerk ID for cache key
+  const targetId = existingAutomation.post?.id ?? existingAutomation.story?.id;
   try {
     const user = await findUserById(userId);
-    if (user?.clerkId) {
-      await invalidateAutomationCache(
-        user.clerkId,
-        existingAutomation.postId,
-      ).catch((error) => {
-        // Logs error but doesn't fail the operation
+    if (user?.clerkId && targetId) {
+      await invalidateAutomationCache(user.clerkId, targetId).catch((error) => {
         logger.error(
           "Failed to invalidate automation cache after update",
           error instanceof Error ? error : new Error(String(error)),
           {
             clerkId: user.clerkId,
-            postId: existingAutomation.postId,
+            targetId,
             automationId,
           },
         );
       });
-    } else {
+    } else if (!user?.clerkId) {
       logger.warn(
         "Missing clerkId for user when invalidating automation cache",
         {
           userId,
-          postId: existingAutomation.postId,
+          targetId,
           automationId,
         },
       );
@@ -200,13 +220,15 @@ export async function updateAutomation(
     logger.error(
       "Failed to resolve user for automation cache invalidation after update",
       error instanceof Error ? error : new Error(String(error)),
-      { userId, postId: existingAutomation.postId, automationId },
+      { userId, targetId, automationId },
     );
   }
 
   return {
     id: updatedAutomation.id,
-    postId: updatedAutomation.postId,
+    triggerType: updatedAutomation.triggerType,
+    post: updatedAutomation.post,
+    story: updatedAutomation.story,
     triggers: updatedAutomation.triggers,
     matchType: updatedAutomation.matchType,
     actionType: updatedAutomation.actionType,
@@ -238,30 +260,27 @@ export async function deleteAutomation(userId: string, automationId: string) {
   await softDeleteAutomation(automationId);
 
   // Invalidates cache to ensure webhooks re-check for automations
+  const targetId = existingAutomation.post?.id ?? existingAutomation.story?.id;
   try {
     const user = await findUserById(userId);
-    if (user?.clerkId) {
-      await invalidateAutomationCache(
-        user.clerkId,
-        existingAutomation.postId,
-      ).catch((error) => {
-        // Logs error but doesn't fail the operation
+    if (user?.clerkId && targetId) {
+      await invalidateAutomationCache(user.clerkId, targetId).catch((error) => {
         logger.error(
           "Failed to invalidate automation cache after deletion",
           error instanceof Error ? error : new Error(String(error)),
           {
             clerkId: user.clerkId,
-            postId: existingAutomation.postId,
+            targetId,
             automationId,
           },
         );
       });
-    } else {
+    } else if (!user?.clerkId) {
       logger.warn(
         "Missing clerkId for user when invalidating automation cache after deletion",
         {
           userId,
-          postId: existingAutomation.postId,
+          targetId,
           automationId,
         },
       );
@@ -270,7 +289,7 @@ export async function deleteAutomation(userId: string, automationId: string) {
     logger.error(
       "Failed to resolve user for automation cache invalidation after deletion",
       error instanceof Error ? error : new Error(String(error)),
-      { userId, postId: existingAutomation.postId, automationId },
+      { userId, targetId, automationId },
     );
   }
 

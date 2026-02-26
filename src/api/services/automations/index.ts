@@ -1,11 +1,20 @@
 import { api, request } from "@/api/client";
+import { ApiResponse } from "../instagram/types";
 
 export type AutomationStatus = "ACTIVE" | "PAUSED" | "DELETED";
 
 export interface AutomationListItem {
   id: string;
-  postId: string;
-  postCaption: string | null;
+  triggerType: "COMMENT_ON_POST" | "STORY_REPLY";
+  post: { id: string; caption: string | null } | null;
+  story: {
+    id: string;
+    mediaUrl: string;
+    mediaType: string;
+    caption: string | null;
+    permalink: string;
+    timestamp: string;
+  } | null;
   triggers: string[];
   matchType: string;
   actionType: string;
@@ -24,19 +33,13 @@ interface AutomationListResponse {
   automations: AutomationListItem[];
 }
 
-// The middleware always wraps responses as { success: true, result: <data> }
-interface ApiEnvelope<T> {
-  success: boolean;
-  result: T;
-}
-
 export const automationService = {
   list: async (filters?: {
     status?: AutomationStatus;
     postId?: string;
   }): Promise<AutomationListResponse> => {
     const envelope = await request(
-      api.post<ApiEnvelope<AutomationListResponse>>(
+      api.post<ApiResponse<AutomationListResponse>>(
         "/automations/list",
         filters ?? {},
       ),
@@ -46,9 +49,9 @@ export const automationService = {
 
   create: async (
     payload: Record<string, unknown>,
-  ): Promise<{ id: string; postId: string }> => {
+  ): Promise<{ id: string; triggerType: string }> => {
     const envelope = await request(
-      api.post<ApiEnvelope<{ id: string; postId: string }>>(
+      api.post<ApiResponse<{ id: string; triggerType: string }>>(
         "/automations/create",
         payload,
       ),
@@ -58,7 +61,7 @@ export const automationService = {
 
   delete: async (id: string): Promise<{ message: string }> => {
     const envelope = await request(
-      api.delete<ApiEnvelope<{ message: string }>>(`/automations/${id}`),
+      api.delete<ApiResponse<{ message: string }>>(`/automations/${id}`),
     );
     return envelope.result;
   },

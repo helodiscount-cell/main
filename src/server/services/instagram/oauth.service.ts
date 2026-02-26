@@ -30,6 +30,7 @@ import {
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { OAuthState } from "@dm-broo/common-types";
 import { getRedisClient } from "@/server/redis";
+import { redisKeys } from "@/server/redis/keys";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -257,23 +258,8 @@ export async function refreshAccessToken(clerkId: string) {
   };
 }
 
-/**
- * Disconnects the Instagram account for a user
- * @param clerkId - The Clerk ID of the user
- * @returns The disconnect account result with the message
- */
 export async function disconnectAccount(clerkId: string) {
-  // Finds user with Instagram account
-  const user = await findUserWithInstaAccount(clerkId);
-
-  if (!user || !user.instaAccount) {
-    throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
-  }
-
-  // Deletes the Instagram account (cascade will delete automations)
-  await deleteInstaAccount(user.instaAccount.id, clerkId);
-
-  // Updates Clerk metadata to reflect disconnection
+  // Always update Clerk metadata to reflect disconnection first to prevent zombie states
   try {
     const { createClerkClient } = await import("@clerk/nextjs/server");
     const clerkClient = createClerkClient({
@@ -289,6 +275,23 @@ export async function disconnectAccount(clerkId: string) {
       "Failed to update Clerk metadata on disconnect:",
       metadataError,
     );
+  }
+
+  // Clear Redis cache to ensure no stale profile data remains
+  try {
+    const redisClient = getRedisClient();
+    await redisClient.del(redisKeys.instagram.account(clerkId));
+  } catch (redisError) {
+    console.error("Failed to clear Redis cache on disconnect:", redisError);
+  }
+
+  // Finds user with Instagram account
+  const user = await findUserWithInstaAccount(clerkId);
+
+  // If user doesn't exist in Prisma, that's fine, we already fixed their Clerk state!
+  if (user && user.instaAccount) {
+    // Deletes the Instagram account (cascade will delete automations)
+    await deleteInstaAccount(user.instaAccount.id, clerkId);
   }
 
   return {

@@ -5,11 +5,35 @@
 import { z } from "zod";
 export declare const CreateAutomationSchema: z.ZodObject<
   {
+    triggerType: z.ZodDefault<
+      z.ZodEnum<{
+        COMMENT_ON_POST: "COMMENT_ON_POST";
+        STORY_REPLY: "STORY_REPLY";
+      }>
+    >;
     commentReplyWhenDm: z.ZodOptional<z.ZodString>;
-    postId: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
+    postId: z.ZodOptional<
+      z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>
+    >;
     postCaption: z.ZodPipe<
       z.ZodOptional<z.ZodString>,
       z.ZodTransform<string | null, string | undefined>
+    >;
+    story: z.ZodOptional<
+      z.ZodObject<
+        {
+          id: z.ZodString;
+          mediaUrl: z.ZodString;
+          mediaType: z.ZodEnum<{
+            IMAGE: "IMAGE";
+            VIDEO: "VIDEO";
+          }>;
+          caption: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+          permalink: z.ZodString;
+          timestamp: z.ZodString;
+        },
+        z.core.$strip
+      >
     >;
     triggers: z.ZodPipe<
       z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>,

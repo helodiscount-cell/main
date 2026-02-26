@@ -74,7 +74,33 @@ export const getInstaUserProfile = async (clerkId: string) => {
   const redis = getRedisClient();
   const data = await redis.get(redisKeys.instagram.account(clerkId));
 
-  if (!data) return null;
+  if (data) {
+    return JSON.parse(data);
+  }
 
-  return JSON.parse(data);
+  // Cache miss, let's fetch from DB
+  const user = await findUserWithInstaAccount(clerkId);
+  if (user && user.instaAccount) {
+    const accountData = {
+      id: user.instaAccount.id,
+      username: user.instaAccount.username,
+      accountType: user.instaAccount.accountType,
+      profilePictureUrl: user.instaAccount.profilePictureUrl,
+      biography: user.instaAccount.biography,
+      followersCount: user.instaAccount.followersCount,
+      followsCount: user.instaAccount.followsCount,
+      mediaCount: user.instaAccount.mediaCount,
+      lastSyncedAt: user.instaAccount.lastSyncedAt,
+    };
+
+    // Cache it for future, let's use a TTL of 1 hour to prevent stale state forever
+    await redis.set(
+      redisKeys.instagram.account(clerkId),
+      JSON.stringify(accountData),
+    );
+
+    return accountData;
+  }
+
+  return null;
 };

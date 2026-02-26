@@ -4,6 +4,7 @@ import { instagramKeys } from "@/keys/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, ImageIcon, Video } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export const DmForStories: React.FC<{
   onSetActiveTab: (value: string | null) => void;
@@ -46,47 +47,40 @@ export const DmForStories: React.FC<{
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
           {stories.map((story) => (
-            <div
+            <Link
               key={story.id}
-              className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group"
+              href={`/dash/automations/dmforstories/${story.id}`}
             >
-              {story.media_type === "IMAGE" ? (
-                <Image
-                  src={story.media_url}
-                  alt={story.caption ?? "Story"}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <video
-                  src={story.media_url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              )}
-              <div className="absolute bottom-1 right-1 bg-black/50 rounded p-0.5">
-                {story.media_type === "VIDEO" ? (
-                  <Video className="w-3 h-3 text-white" />
+              <div className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group">
+                {story.media_type === "IMAGE" ? (
+                  <Image
+                    src={story.media_url}
+                    alt={story.caption ?? "Story"}
+                    fill
+                    className="object-cover"
+                  />
                 ) : (
-                  <ImageIcon className="w-3 h-3 text-white" />
+                  <video
+                    src={story.media_url}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
                 )}
+                <div className="absolute bottom-1 right-1 bg-black/50 rounded p-0.5">
+                  {story.media_type === "VIDEO" ? (
+                    <Video className="w-3 h-3 text-white" />
+                  ) : (
+                    <ImageIcon className="w-3 h-3 text-white" />
+                  )}
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
-
-      <div className="flex justify-end pt-4">
-        <Button
-          disabled
-          className="bg-gray-100 text-gray-400 cursor-not-allowed"
-        >
-          Continue
-        </Button>
-      </div>
     </div>
   );
 };

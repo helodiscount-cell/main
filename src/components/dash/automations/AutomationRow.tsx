@@ -18,14 +18,26 @@ export const AutomationRow = ({
   return (
     <>
       <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] items-center px-4 py-4 gap-4">
-        {/* Name + postId */}
+        {/* Name + target */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-md bg-slate-100 shrink-0 flex items-center justify-center text-xs font-bold text-slate-400">
-            {automation.postId.slice(0, 2).toUpperCase()}
+            {(automation.post?.id ?? automation.story?.id ?? "")
+              .slice(0, 2)
+              .toUpperCase()}
           </div>
-          <Link href={`/dash/automations/dmforcomments/${automation.postId}`}>
+          <Link
+            href={
+              automation.triggerType === "STORY_REPLY"
+                ? `/dash/automations/dmforstories/${automation.story?.id}`
+                : `/dash/automations/dmforcomments/${automation.post?.id}`
+            }
+          >
             <span className="text-sm font-medium text-slate-800 truncate max-w-[180px]">
-              {automation.postCaption ?? automation.postId}
+              {automation.post?.caption ??
+                automation.story?.caption ??
+                automation.post?.id ??
+                automation.story?.id ??
+                "Untitled"}
             </span>
           </Link>
         </div>

@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const DMForComments = ({ onBack }: { onBack: () => void }) => {
-  const { data: userPosts } = useQuery({
+  const { data } = useQuery({
     queryKey: instagramKeys.posts(),
     queryFn: () => instagramService.profile.getUserPosts(),
   });
@@ -26,7 +26,7 @@ export const DMForComments = ({ onBack }: { onBack: () => void }) => {
         <h3 className="text-lg font-medium">Select Post/Reel</h3>
       </div>
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-        {userPosts?.result.data.data.map((item) => (
+        {data?.result.data.data.map((item) => (
           <div
             key={item.id}
             className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
@@ -50,8 +50,6 @@ export const DMForComments = ({ onBack }: { onBack: () => void }) => {
                 className="w-full h-full object-cover"
               />
             )}
-            {/* <Instagram className="w-6 h-6 text-gray-200 group-hover:text-purple-300 transition-colors" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" /> */}
           </div>
         ))}
       </div>
