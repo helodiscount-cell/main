@@ -21,7 +21,7 @@ export default function Page() {
             <p className="text-sm font-semibold">Dashboard</p>
           </div>
           <RefreshInstaDialog />
-          <CreateAutomationDialog />
+          <CreateAutomationDialog title="New Automation" />
         </div>
       </header>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
