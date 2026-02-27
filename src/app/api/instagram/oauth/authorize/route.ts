@@ -1,4 +1,4 @@
-// url from frontend: http://localhost:3000/api/instagram/oauth/authorize?returnUrl=/dashboard
+// url from frontend: http://localhost:3000/api/instagram/oauth/authorize?returnUrl=/dash
 
 /**
  * Instagram OAuth Authorization Endpoint
@@ -7,8 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { initiateOAuth } from "@/server/services/oauth.service";
-import { ERROR_MESSAGES } from "@/config/instagram.config";
+import { ERROR_MESSAGES } from "@/server/config/instagram.config";
+import { initiateOAuth } from "@/server/services/instagram/oauth.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,14 +18,13 @@ export async function GET(request: NextRequest) {
     if (!clerkId) {
       return NextResponse.json(
         { success: false, error: ERROR_MESSAGES.AUTH.NO_USER },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const returnUrl =
-      request.nextUrl.searchParams.get("returnUrl") || "/dashboard";
+    const returnUrl = request.nextUrl.searchParams.get("returnUrl") || "/dash";
 
-    const authUrl = await initiateOAuth(clerkId, returnUrl);
+    const authUrl = await initiateOAuth({ clerkId, returnUrl });
 
     // Redirects to Instagram OAuth
     return NextResponse.redirect(authUrl);
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
             ? error.message
             : ERROR_MESSAGES.AUTH.OAUTH_FAILED,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

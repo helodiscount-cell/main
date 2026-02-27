@@ -3,72 +3,42 @@
  * Retrieves all automations for the current user
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { AutomationListQuerySchema } from "@dm-broo/common-types";
-import { listAutomations } from "@/server/services/automation.service";
-import { findUserByClerkId } from "@/server/repositories/user.repository";
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { getUserAutomations } from "@/server/services/automations/automation.service";
+import { runWithErrorHandling } from "@/server/middleware/errors";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
+import { sanitizeQueryParam } from "@/server/utils/validation";
+import {
+  parseRequestBodySafely,
+  REQUEST_SIZE_LIMITS,
+} from "@/server/utils/request-limits";
 
-export async function GET(request: NextRequest) {
-  try {
-    // Gets current authenticated user
-    const { userId: clerkId } = await auth();
+const AutomationListBodySchema = z.object({
+  status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
+  postId: z
+    .string()
+    .optional()
+    .transform((val) => (val ? sanitizeQueryParam(val, 100) : undefined)),
+});
 
-    if (!clerkId) {
-      return NextResponse.json(
-        { success: false, error: "You must be logged in" },
-        { status: 401 }
-      );
-    }
+export async function POST(request: NextRequest) {
+  return runWithErrorHandling(async (clerkId) => {
+    const body = await parseRequestBodySafely(
+      request,
+      REQUEST_SIZE_LIMITS.API_DEFAULT,
+    );
 
-    // Gets the user record
-    const user = await findUserByClerkId(clerkId);
+    const validation = AutomationListBodySchema.safeParse(body);
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // Gets and validates query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const queryValidation = AutomationListQuerySchema.safeParse({
-      status: searchParams.get("status") || undefined,
-      postId: searchParams.get("postId") || undefined,
-      page: searchParams.get("page") || undefined,
-      limit: searchParams.get("limit") || undefined,
-    });
-
-    if (!queryValidation.success) {
+    if (!validation.success) {
       const errorMessage =
-        queryValidation.error.issues[0]?.message || "Invalid query parameters";
-      return NextResponse.json(
-        { success: false, error: errorMessage },
-        { status: 400 }
-      );
+        validation.error.issues[0]?.message || "Invalid request body";
+      throw new ApiRouteError(errorMessage, "INVALID_INPUT", 400);
     }
 
-    const filters = queryValidation.data;
+    const automations = await getUserAutomations(clerkId, validation.data);
 
-    // Calls service layer
-    const result = await listAutomations(user.id, filters);
-
-    return NextResponse.json(
-      {
-        success: true,
-        automations: result.data,
-        pagination: result.pagination,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to retrieve automations. Please try again.",
-      },
-      { status: 500 }
-    );
-  }
+    return { automations };
+  });
 }

@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
+
 import { ThemeProvider } from "@/providers/theme";
-import Header from "@/components/header";
+import { QueryProvider } from "@/providers/query";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
-import Footer from "@/components/footer";
 import NextTopLoader from "nextjs-toploader";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "DmBroo - Instagram Automation Made Simple",
@@ -22,31 +31,27 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <ClerkProvider
-    // Configures Clerk with security settings for CSRF protection
-    // SameSite cookies are handled by Clerk automatically
-    // Additional CSRF validation is done in middleware
-    >
-      <html lang="en">
-        <link rel="icon" href="/logo.jpg" type="image/jpg" />
-        {/* Enables font smoothing */}
-        <body className="antialiased">
-        <NextTopLoader />
+    <ClerkProvider>
+      <html lang="en" className={jakarta.variable}>
+        <body className="font-sans antialiased">
+          <NextTopLoader />
+
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            forcedTheme="light"
+            defaultTheme="light"
             disableTransitionOnChange
           >
-            <Header />
-            {/* <EnsureUser /> */}
-            {children}
-            <Toaster />
-            <Footer />
+            <QueryProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster />
+              </TooltipProvider>
+            </QueryProvider>
           </ThemeProvider>
         </body>
       </html>

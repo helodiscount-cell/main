@@ -1,13 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
-
 @import "tailwindcss";
 @import "tw-animate-css";
 
-body {
-  font-family: 'Geist', sans-serif;
-}
-
 @custom-variant dark (&:is(.dark *));
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -65,7 +69,8 @@ body {
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* --destructive: oklch(0.577 0.245 27.325); */
+  --destructive: #fff0f0;
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -78,7 +83,8 @@ body {
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  /* --sidebar-accent: oklch(0.97 0 0); */
+  --sidebar-accent: #f7f0ff;
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
@@ -118,20 +124,6 @@ body {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
 /* Animation delays for staggered effects */
 .animation-delay-100 {
   animation-delay: 100ms;
@@ -169,4 +161,14 @@ body {
 .animate-fade-in {
   animation: fade-in 0.6s ease-out forwards;
   opacity: 0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
