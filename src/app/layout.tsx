@@ -9,6 +9,7 @@ import NextTopLoader from "nextjs-toploader";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { logger } from "@/server/utils/pino";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],

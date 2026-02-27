@@ -54,6 +54,10 @@ import {
   WebhookCommentValueSchema,
   WebhookChangeSchema,
   WebhookMessagingEventSchema,
+  WebhookEntryOfPostsSchema,
+  WebhookPayloadOfPostsSchema,
+  WebhookEntryOfStoriesSchema,
+  WebhookPayloadOfStoriesSchema,
   WebhookEntrySchema,
   WebhookPayloadSchema,
   WebhookVerificationResponseSchema,
@@ -133,6 +137,12 @@ export type WebhookVerificationQuery = z.infer<
 export type WebhookCommentValue = z.infer<typeof WebhookCommentValueSchema>;
 export type WebhookChange = z.infer<typeof WebhookChangeSchema>;
 export type WebhookMessagingEvent = z.infer<typeof WebhookMessagingEventSchema>;
+export type WebhookEntryOfPosts = z.infer<typeof WebhookEntryOfPostsSchema>;
+export type WebhookPayloadOfPosts = z.infer<typeof WebhookPayloadOfPostsSchema>;
+export type WebhookEntryOfStories = z.infer<typeof WebhookEntryOfStoriesSchema>;
+export type WebhookPayloadOfStories = z.infer<
+  typeof WebhookPayloadOfStoriesSchema
+>;
 export type WebhookEntry = z.infer<typeof WebhookEntrySchema>;
 export type WebhookPayload = z.infer<typeof WebhookPayloadSchema>;
 export type WebhookVerificationResponse = z.infer<

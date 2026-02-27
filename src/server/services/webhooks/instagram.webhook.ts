@@ -64,7 +64,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
   // FILTER OUT SELF-COMMENTS BEFORE QUEUEING
   if (parsedPayload.entry && Array.isArray(parsedPayload.entry)) {
     for (const entry of parsedPayload.entry) {
-      if (entry.changes && Array.isArray(entry.changes)) {
+      if ("changes" in entry && Array.isArray(entry.changes)) {
         entry.changes = entry.changes.filter((change: any) => {
           // Skips self-comments before queueing
           if (
@@ -85,9 +85,11 @@ export async function processWebhookEvent(payload: string, signature: string) {
       }
     }
 
-    // Removes entries with no changes left after filtering
-    parsedPayload.entry = parsedPayload.entry.filter(
-      (entry: any) => entry.changes && entry.changes.length > 0,
+    // Removes entries with no changes left after filtering, unless they have messaging events
+    parsedPayload.entry = (parsedPayload.entry as any[]).filter(
+      (entry: any) =>
+        (entry.changes && entry.changes.length > 0) ||
+        (entry.messaging && entry.messaging.length > 0),
     );
   }
 

@@ -49,19 +49,42 @@ export const WebhookMessagingEventSchema = z.object({
     .optional(),
 });
 
-// Webhook entry object
-export const WebhookEntrySchema = z.object({
+// Webhook entry object for posts/reels (comments)
+export const WebhookEntryOfPostsSchema = z.object({
   id: z.string().optional(),
   time: z.number(),
-  changes: z.array(WebhookChangeSchema).optional(),
-  messaging: z.array(WebhookMessagingEventSchema).optional(),
+  changes: z.array(WebhookChangeSchema),
 });
 
-// Complete webhook payload
-export const WebhookPayloadSchema = z.object({
+// Complete webhook payload for posts/reels
+export const WebhookPayloadOfPostsSchema = z.object({
   object: z.string(),
-  entry: z.array(WebhookEntrySchema),
+  entry: z.array(WebhookEntryOfPostsSchema),
 });
+
+// Webhook entry object for stories (messaging)
+export const WebhookEntryOfStoriesSchema = z.object({
+  id: z.string().optional(),
+  time: z.number(),
+  messaging: z.array(WebhookMessagingEventSchema),
+});
+
+// Complete webhook payload for stories
+export const WebhookPayloadOfStoriesSchema = z.object({
+  object: z.string(),
+  entry: z.array(WebhookEntryOfStoriesSchema),
+});
+
+// For backward compatibility / generic processing
+export const WebhookEntrySchema = z.union([
+  WebhookEntryOfPostsSchema,
+  WebhookEntryOfStoriesSchema,
+]);
+
+export const WebhookPayloadSchema = z.union([
+  WebhookPayloadOfPostsSchema,
+  WebhookPayloadOfStoriesSchema,
+]);
 
 // Webhook verification success response
 export const WebhookVerificationResponseSchema = z.string();
