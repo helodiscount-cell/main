@@ -10,7 +10,7 @@ import {
 } from "@/server/instagram/webhook/validator";
 import { webhookQueue } from "@/server/redis/queues";
 import type { WebhookPayload } from "@dm-broo/common-types";
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 
 /**
  * Verifies webhook registration from Instagram
@@ -46,9 +46,7 @@ export async function verifyWebhook(
 export async function processWebhookEvent(payload: string, signature: string) {
   // Gets the webhook secret
   const secret = getWebhookSecret();
-  if (!secret) {
-    throw new Error("Webhook not configured");
-  }
+  if (!secret) throw new Error("Webhook not configured");
 
   // Verifies the signature
   if (!verifyWebhookSignature(payload, signature, secret)) {
@@ -73,10 +71,13 @@ export async function processWebhookEvent(payload: string, signature: string) {
             change.field === "comments" &&
             change.value?.from?.self_ig_scoped_id
           ) {
-            logger.info("⏭️  Filtered out self-comment before queueing", {
-              commentId: change.value.id,
-              username: change.value.from.username,
-            });
+            logger.info(
+              {
+                commentId: change.value.id,
+                username: change.value.from.username,
+              },
+              "⏭️  Filtered out self-comment before queueing",
+            );
             return false; // Removes from array
           }
           return true; // Keep all other events
@@ -92,7 +93,15 @@ export async function processWebhookEvent(payload: string, signature: string) {
 
   // Returns success if all events were filtered out
   if (!parsedPayload.entry || parsedPayload.entry.length === 0) {
-    logger.info("All webhook events filtered (self-comments only)");
+    logger.info(
+      {
+        payloadType: parsedPayload.object,
+        entryCount: Array.isArray(parsedPayload.entry)
+          ? parsedPayload.entry.length
+          : 0,
+      },
+      "All webhook events filtered (self-comments only)",
+    );
     return { success: true as const };
   }
 
@@ -103,30 +112,26 @@ export async function processWebhookEvent(payload: string, signature: string) {
       jobId: `webhook-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     });
 
-    logger.logWebhook(
-      parsedPayload.object || "unknown",
-      "instagram",
-      true,
-      undefined,
+    logger.info(
       {
         payloadType: parsedPayload.object,
         entryCount: Array.isArray(parsedPayload.entry)
           ? parsedPayload.entry.length
           : 0,
       },
+      "Webhook event added to queue",
     );
   } catch (error) {
     // Logs error but still returns success to Instagram
     // Queue errors shouldn't cause webhook failures
     logger.error(
-      "Failed to add webhook to queue",
-      error instanceof Error ? error : new Error(String(error)),
       {
         payloadType: parsedPayload.object,
         entryCount: Array.isArray(parsedPayload.entry)
           ? parsedPayload.entry.length
           : 0,
       },
+      "Failed to add webhook to queue",
     );
   }
 

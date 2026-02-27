@@ -4,7 +4,7 @@
  */
 
 import Redis from "ioredis";
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 import type { ConnectionOptions } from "bullmq";
 
 let redisClient: Redis | null = null;
@@ -39,7 +39,7 @@ export function getRedisClient(): Redis {
   });
 
   redisClient.on("error", (err) => {
-    logger.error("Redis client error", err);
+    logger.error({ err }, "Redis client error");
   });
 
   redisClient.on("close", () => {

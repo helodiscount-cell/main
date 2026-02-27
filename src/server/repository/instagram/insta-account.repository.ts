@@ -6,7 +6,7 @@
 
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 
 /**
  * Finds an Instagram account by Instagram user ID
@@ -148,9 +148,9 @@ export async function deleteInstaAccount(
       await clearAllUserCache(webhookUserId, clerkId).catch((error) => {
         // Logs error but doesn't fail the operation
         logger.error(
+          { accountId: instaAccountId, clerkId, webhookUserId },
           "Failed to clear user cache on disconnect",
           error instanceof Error ? error : new Error(String(error)),
-          { accountId: instaAccountId, clerkId, webhookUserId },
         );
       });
     }

@@ -10,7 +10,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { logger } from "../../utils/logger";
+import { logger } from "../../utils/pino";
 import { ApiRouteError } from "./classes";
 
 export type ErrorResponse = {
@@ -54,10 +54,13 @@ export async function runWithErrorHandling<T>(
   } catch (error) {
     // Handles known ApiRouteErrors
     if (error instanceof ApiRouteError) {
-      logger.warn(`Operational error: ${error.message}`, {
-        code: error.code,
-        statusCode: error.statusCode,
-      });
+      logger.warn(
+        {
+          code: error.code,
+          statusCode: error.statusCode,
+        },
+        `Operational error: ${error.message}`,
+      );
 
       return NextResponse.json<ErrorResponse>(
         {

@@ -2,8 +2,6 @@
 
 .cursor/
 
-ngrok.yml
-
 secrets.txt
 
 .env.*
@@ -24,9 +22,6 @@ rules.md
 !.yarn/versions
 
 # lock files
-
-bun.lock
-package-lock.json
 
 # testing
 /coverage
@@ -63,6 +58,3 @@ next-env.d.ts
 
 # Prisma
 /src/generated
-
-
-package-lock.json

@@ -12,7 +12,7 @@ import {
   createMessagingRateLimitKey,
   createCommentsRateLimitKey,
 } from "@/server/instagram/rate-limiter";
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 import { findAutomationById } from "@/server/repository/automations/automation.repository";
 import { findInstaAccountByAutomationId } from "@/server/repository/instagram/insta-account.repository";
 
@@ -35,7 +35,7 @@ export async function executeAutomation(
     const automation = await findAutomationById(automationId);
 
     if (!automation) {
-      logger.warn("Automation not found", { automationId });
+      logger.warn({ automationId }, "Automation not found");
       return {
         success: false,
         error: "Automation not found",
@@ -140,34 +140,44 @@ export async function executeAutomation(
 
               if (commentReplyResult.success) {
                 incrementRateLimit(commentReplyRateLimitKey);
-                logger.info("Comment reply sent after DM", {
-                  commentId: comment.id,
-                  automationId,
-                });
+                logger.info(
+                  {
+                    commentId: comment.id,
+                    automationId,
+                  },
+                  "Comment reply sent after DM",
+                );
               } else {
-                logger.warn("Failed to reply to comment after DM", {
-                  commentId: comment.id,
-                  automationId,
-                  error: commentReplyResult.error,
-                });
+                logger.warn(
+                  {
+                    commentId: comment.id,
+                    automationId,
+                    error: commentReplyResult.error,
+                  },
+                  "Failed to reply to comment after DM",
+                );
               }
             } else {
-              logger.warn("Rate limited for comment reply after DM", {
-                commentId: comment.id,
-                automationId,
-              });
+              logger.warn(
+                {
+                  commentId: comment.id,
+                  automationId,
+                },
+                "Rate limited for comment reply after DM",
+              );
             }
           } catch (commentReplyError) {
             // Logs error but doesn't fail the automation execution
             logger.error(
-              "Error replying to comment after DM",
-              commentReplyError instanceof Error
-                ? commentReplyError
-                : new Error(String(commentReplyError)),
               {
                 commentId: comment.id,
                 automationId,
+                error:
+                  commentReplyError instanceof Error
+                    ? commentReplyError
+                    : new Error(String(commentReplyError)),
               },
+              "Error replying to comment after DM",
             );
           }
         }
@@ -182,15 +192,16 @@ export async function executeAutomation(
           : "Unknown error executing action";
 
       logger.error(
-        "Failed to execute automation action",
-        actionError instanceof Error
-          ? actionError
-          : new Error(String(actionError)),
         {
           automationId,
           actionType: automation.actionType,
           commentId: comment.id,
+          error:
+            actionError instanceof Error
+              ? actionError
+              : new Error(String(actionError)),
         },
+        "Failed to execute automation action",
       );
     }
 
@@ -245,22 +256,28 @@ export async function executeAutomation(
         await import("@/server/utils/automation-cache");
       await markCommentProcessed(comment.id, automationId).catch((error) => {
         // Logs error but doesn't fail the operation
-        logger.warn("Failed to cache processed comment", {
-          commentId: comment.id,
-          automationId,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        logger.warn(
+          {
+            commentId: comment.id,
+            automationId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          "Failed to cache processed comment",
+        );
       });
     }
 
     // Logs execution result
     if (executionStatus !== "SUCCESS") {
-      logger.warn("Automation execution failed", {
-        automationId,
-        executionId: execution.id,
-        actionType: automation.actionType,
-        error: errorMessage,
-      });
+      logger.warn(
+        {
+          automationId,
+          executionId: execution.id,
+          actionType: automation.actionType,
+          error: errorMessage,
+        },
+        "Automation execution failed",
+      );
     }
     return {
       success: executionStatus === "SUCCESS",
@@ -268,14 +285,10 @@ export async function executeAutomation(
       error: errorMessage || undefined,
     };
   } catch (error) {
-    logger.error(
-      "Error in executeAutomation",
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        automationId,
-        commentId: comment.id,
-      },
-    );
+    logger.error({
+      automationId,
+      commentId: comment.id,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

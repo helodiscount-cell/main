@@ -44,6 +44,11 @@ tmux new-window -t "$SESSION" -n ngrok
 tmux send-keys -t "$SESSION":2 \
     "cd ~/projects/dmbro && ngrok start --config ngrok.yml ia" C-m
 
+# Window 4 — prisma studio
+tmux new-window -t "$SESSION" -n prisma-studio
+tmux send-keys -t "$SESSION":3 \
+    "cd ~/projects/dmbro && bunx prisma studio" C-m
+
 # Focus first window
 tmux select-window -t "$SESSION":0
 

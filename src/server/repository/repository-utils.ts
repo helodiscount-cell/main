@@ -3,7 +3,7 @@
  * Shared error handling and retry logic for database operations
  */
 
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -116,11 +116,14 @@ export async function executeWithErrorHandling<T>(
 
       // Returns fallback if provided
       if (fallback !== null) {
-        logger.warn(`Database operation failed, using fallback: ${opName}`, {
-          operation: opName,
-          model,
-          errorType,
-        });
+        logger.warn(
+          {
+            operation: opName,
+            model,
+            errorType,
+          },
+          `Database operation failed, using fallback: ${opName}`,
+        );
         return fallback as T;
       }
 
@@ -156,20 +159,23 @@ export async function executeTransaction<T>(
 
       if (attempt > 0) {
         logger.debug(
-          `Retrying transaction: ${opName} (attempt ${attempt + 1}/${
-            retries + 1
-          })`,
           {
             operation: opName,
             models: models || [],
             attempt: attempt + 1,
           },
+          `Retrying transaction: ${opName} (attempt ${attempt + 1}/${
+            retries + 1
+          })`,
         );
       } else {
-        logger.debug(`Starting transaction: ${opName}`, {
-          operation: opName,
-          models: models || [],
-        });
+        logger.debug(
+          {
+            operation: opName,
+            models: models || [],
+          },
+          `Starting transaction: ${opName}`,
+        );
       }
 
       const result = await prisma.$transaction(operations, {
@@ -184,10 +190,6 @@ export async function executeTransaction<T>(
       const isRetryable = isRetryableError(error);
 
       logger.error(
-        `Transaction failed: ${opName}${
-          attempt < retries && isRetryable ? " (will retry)" : ""
-        }`,
-        error instanceof Error ? error : new Error(String(error)),
         {
           operation: opName,
           models: models || [],
@@ -201,15 +203,22 @@ export async function executeTransaction<T>(
               ? error.code
               : undefined,
         },
+        `Transaction failed: ${opName}${
+          attempt < retries && isRetryable ? " (will retry)" : ""
+        }`,
+        error instanceof Error ? error : new Error(String(error)),
       );
 
       // Retries if error is retryable and attempts remain
       if (isRetryable && attempt < retries) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 5000); // Exponential backoff, max 5s
-        logger.debug(`Waiting ${delay}ms before retry...`, {
-          operation: opName,
-          delay,
-        });
+        logger.debug(
+          {
+            operation: opName,
+            delay,
+          },
+          `Waiting ${delay}ms before retry...`,
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }

@@ -51,7 +51,7 @@ export const WebhookMessagingEventSchema = z.object({
 
 // Webhook entry object
 export const WebhookEntrySchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   time: z.number(),
   changes: z.array(WebhookChangeSchema).optional(),
   messaging: z.array(WebhookMessagingEventSchema).optional(),

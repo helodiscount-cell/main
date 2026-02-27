@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { handleOAuthCallback } from "@/server/services/instagram/oauth.service";
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 
 enum RedirectUrls {
   SUCCESS = "/dash?connected=true",
@@ -21,11 +21,14 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
-  logger.info("Instagram OAuth callback received", {
-    state,
-    error,
-    hasCode: !!code,
-  });
+  logger.info(
+    {
+      state,
+      error,
+      hasCode: !!code,
+    },
+    "Instagram OAuth callback received",
+  );
 
   try {
     // Handles user declining authorization
@@ -34,23 +37,36 @@ export async function GET(request: NextRequest) {
       error?.toLowerCase() === "access_denied_by_user" ||
       error?.toLowerCase() === "oauth_declined"
     ) {
-      logger.warn("User declined Instagram authorization", { error });
+      logger.warn(
+        {
+          error,
+        },
+        "User declined Instagram authorization",
+      );
       const returnUrl = RedirectUrls.ERROR_OAUTH_DECLINED;
       return NextResponse.redirect(new URL(returnUrl, request.url));
     }
 
     // Validates required parameters
     if (!code || !state) {
-      logger.warn("Missing required OAuth parameters", {
-        hasCode: !!code,
-        hasState: !!state,
-      });
+      logger.warn(
+        {
+          hasCode: !!code,
+          hasState: !!state,
+        },
+        "Missing required OAuth parameters",
+      );
       const returnUrl = RedirectUrls.ERROR_OAUTH_INVALID;
       return NextResponse.redirect(new URL(returnUrl, request.url));
     }
 
     // Calls service layer to handle the callback
-    logger.debug("Processing Instagram OAuth code", { state });
+    logger.debug(
+      {
+        state,
+      },
+      "Processing Instagram OAuth code",
+    );
     const result = await handleOAuthCallback(code, state);
 
     // Redirects back to the return URL with success
@@ -66,18 +82,25 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    logger.info("Instagram OAuth callback successful", {
-      username: result.username,
-      accountType: result.accountType,
-      duration,
-    });
+    logger.info(
+      {
+        username: result.username,
+        accountType: result.accountType,
+        duration,
+      },
+      "Instagram OAuth callback successful",
+    );
 
     return NextResponse.redirect(redirectUrl);
   } catch (err) {
     const errorInstance = err instanceof Error ? err : new Error(String(err));
-    logger.error("Instagram OAuth callback failed", errorInstance, {
-      state,
-    });
+    logger.error(
+      {
+        state,
+      },
+      "Instagram OAuth callback failed",
+      errorInstance,
+    );
 
     const errorUrl = RedirectUrls.ERROR_OAUTH_FAILED;
     const redirectUrl = new URL(errorUrl, request.url);

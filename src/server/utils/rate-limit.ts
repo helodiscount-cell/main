@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "./logger";
+import { logger } from "./pino";
 
 /**
  * Rate limit entry stored in memory
@@ -190,14 +190,17 @@ export function rateLimitMiddleware(
   if (!result.allowed) {
     const retryAfter = Math.ceil((result.resetTime - Date.now()) / 1000);
 
-    logger.warn("Rate limit exceeded", {
-      pathname,
-      method: request.method,
-      identifier,
-      limit,
-      windowMs,
-      retryAfter,
-    });
+    logger.warn(
+      {
+        pathname,
+        method: request.method,
+        identifier,
+        limit,
+        windowMs,
+        retryAfter,
+      },
+      "Rate limit exceeded",
+    );
 
     return NextResponse.json(
       {

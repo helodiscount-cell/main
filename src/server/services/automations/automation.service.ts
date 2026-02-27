@@ -26,7 +26,7 @@ import {
   AutomationFilters,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/utils/automation-cache";
-import { logger } from "@/server/utils/logger";
+import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 /**
@@ -86,9 +86,9 @@ export async function createAutomation(
     await invalidateAutomationCache(user.clerkId, cacheTargetId).catch(
       (error) => {
         logger.error(
+          { clerkId: user.clerkId, targetId: cacheTargetId, triggerType },
           "Failed to invalidate automation cache after creation",
           error instanceof Error ? error : new Error(String(error)),
-          { clerkId: user.clerkId, targetId: cacheTargetId, triggerType },
         );
       },
     );
@@ -197,30 +197,30 @@ export async function updateAutomation(
     if (user?.clerkId && targetId) {
       await invalidateAutomationCache(user.clerkId, targetId).catch((error) => {
         logger.error(
-          "Failed to invalidate automation cache after update",
-          error instanceof Error ? error : new Error(String(error)),
           {
             clerkId: user.clerkId,
             targetId,
             automationId,
           },
+          "Failed to invalidate automation cache after update",
+          error instanceof Error ? error : new Error(String(error)),
         );
       });
     } else if (!user?.clerkId) {
       logger.warn(
-        "Missing clerkId for user when invalidating automation cache",
         {
           userId,
           targetId,
           automationId,
         },
+        "Missing clerkId for user when invalidating automation cache",
       );
     }
   } catch (error) {
     logger.error(
+      { userId, targetId, automationId },
       "Failed to resolve user for automation cache invalidation after update",
       error instanceof Error ? error : new Error(String(error)),
-      { userId, targetId, automationId },
     );
   }
 
@@ -266,30 +266,30 @@ export async function deleteAutomation(userId: string, automationId: string) {
     if (user?.clerkId && targetId) {
       await invalidateAutomationCache(user.clerkId, targetId).catch((error) => {
         logger.error(
-          "Failed to invalidate automation cache after deletion",
-          error instanceof Error ? error : new Error(String(error)),
           {
             clerkId: user.clerkId,
             targetId,
             automationId,
           },
+          "Failed to invalidate automation cache after deletion",
+          error instanceof Error ? error : new Error(String(error)),
         );
       });
     } else if (!user?.clerkId) {
       logger.warn(
-        "Missing clerkId for user when invalidating automation cache after deletion",
         {
           userId,
           targetId,
           automationId,
         },
+        "Missing clerkId for user when invalidating automation cache after deletion",
       );
     }
   } catch (error) {
     logger.error(
+      { userId, targetId, automationId },
       "Failed to resolve user for automation cache invalidation after deletion",
       error instanceof Error ? error : new Error(String(error)),
-      { userId, targetId, automationId },
     );
   }
 

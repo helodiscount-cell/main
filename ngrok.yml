@@ -1,0 +1,8 @@
+version: 3
+agent:
+  authtoken: 35HapDNzBl8wUxS5gVyEOaJU52i_7hcB7wMiAnDG9p3BaXujm
+
+tunnels:
+  ia:
+    proto: http
+    addr: 3000
