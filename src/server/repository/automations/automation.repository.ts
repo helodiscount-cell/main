@@ -30,8 +30,7 @@ export interface UpdateAutomationData {
 }
 
 export interface AutomationFilters {
-  userId?: string;
-  postId?: string;
+  userId: string;
   status?: string | string[];
   skip?: number;
   take?: number;
@@ -210,15 +209,9 @@ export async function findAutomationByIdAndUserIdForUpdate(
 export async function findUserAutomations(filters: AutomationFilters) {
   return executeWithErrorHandling(
     () => {
-      const where: any = {};
-
-      if (filters.userId) {
-        where.userId = filters.userId;
-      }
-
-      if (filters.postId) {
-        where.post = { is: { id: filters.postId } };
-      }
+      const where: any = {
+        userId: filters.userId,
+      };
 
       if (filters.status) {
         if (Array.isArray(filters.status)) {
@@ -261,15 +254,9 @@ export async function countAutomations(
 ): Promise<number> {
   return executeWithErrorHandling(
     () => {
-      const where: any = {};
-
-      if (filters.userId) {
-        where.userId = filters.userId;
-      }
-
-      if (filters.postId) {
-        where.post = { is: { id: filters.postId } };
-      }
+      const where: any = {
+        userId: filters.userId,
+      };
 
       if (filters.status) {
         where.status = filters.status;

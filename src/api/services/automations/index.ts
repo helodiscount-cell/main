@@ -1,7 +1,7 @@
 import { api, request } from "@/api/client";
 import { ApiResponse } from "../instagram/types";
 
-export type AutomationStatus = "ACTIVE" | "PAUSED" | "DELETED";
+export type AutomationStatus = "ACTIVE" | "PAUSED";
 
 export interface AutomationListItem {
   id: string;

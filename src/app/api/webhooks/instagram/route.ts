@@ -8,6 +8,7 @@ import {
   verifyWebhook,
   processWebhookEvent,
 } from "@/server/services/webhooks/instagram.webhook";
+import { clogger } from "@/server/utils/consola";
 
 /**
  * GET handler for webhook verification
@@ -60,6 +61,9 @@ export async function POST(request: NextRequest) {
   try {
     // Gets the raw body for signature verification
     const bodyText = await request.text();
+
+    // debug logs won't show in production unless you set LOG_LEVEL=debug
+    clogger.info({ bodyText }, "Raw webhook payload");
 
     // Gets the signature header
     const signature = request.headers.get("x-hub-signature-256") || "";

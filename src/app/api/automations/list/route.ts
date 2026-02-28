@@ -8,33 +8,22 @@ import { z } from "zod";
 import { getUserAutomations } from "@/server/services/automations/automation.service";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import { sanitizeQueryParam } from "@/server/utils/validation";
-import {
-  parseRequestBodySafely,
-  REQUEST_SIZE_LIMITS,
-} from "@/server/utils/request-limits";
 
-const AutomationListBodySchema = z.object({
-  status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
-  postId: z
-    .string()
-    .optional()
-    .transform((val) => (val ? sanitizeQueryParam(val, 100) : undefined)),
+const AutomationListQuerySchema = z.object({
+  status: z.enum(["ACTIVE", "PAUSED"]).optional(),
 });
 
 export async function POST(request: NextRequest) {
   return runWithErrorHandling(async (clerkId) => {
-    const body = await parseRequestBodySafely(
-      request,
-      REQUEST_SIZE_LIMITS.API_DEFAULT,
-    );
+    const { searchParams } = new URL(request.url);
+    const queryData = {
+      status: searchParams.get("status") || undefined,
+    };
 
-    const validation = AutomationListBodySchema.safeParse(body);
+    const validation = AutomationListQuerySchema.safeParse(queryData);
 
     if (!validation.success) {
-      const errorMessage =
-        validation.error.issues[0]?.message || "Invalid request body";
-      throw new ApiRouteError(errorMessage, "INVALID_INPUT", 400);
+      throw new ApiRouteError("Invalid status filter", "INVALID_INPUT", 400);
     }
 
     const automations = await getUserAutomations(clerkId, validation.data);

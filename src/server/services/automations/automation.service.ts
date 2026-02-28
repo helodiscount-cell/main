@@ -141,8 +141,7 @@ export async function getAutomation(userId: string, automationId: string) {
 export async function getUserAutomations(
   clerkId: string,
   filters?: {
-    status?: "ACTIVE" | "PAUSED" | "DELETED";
-    postId?: string;
+    status?: "ACTIVE" | "PAUSED";
   },
 ) {
   const user = await findUserByClerkId(clerkId);
@@ -153,13 +152,9 @@ export async function getUserAutomations(
 
   const repositoryFilters: AutomationFilters = {
     userId: user.id,
-    // Only show DELETED if explicitly requested; otherwise hide them
+    // Only shows DELETED if explicitly requested; otherwise hide them
     status: filters?.status ?? ["ACTIVE", "PAUSED"],
   };
-
-  if (filters?.postId) {
-    repositoryFilters.postId = filters.postId;
-  }
 
   const automations = await findUserAutomations(repositoryFilters);
 

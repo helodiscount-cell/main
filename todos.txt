@@ -1,3 +1,6 @@
 - webhooks only work for authrized persons on the console.
     -- should be resolved when the app is live
 - webhook instagram user id and actual instagram user id and subscribed apps id mismatch.
+- Never expose internal user IDs in URLs if you can avoid it, use UUIDs instead of sequential integers (/users/1 is guessable)
+- Never leak stack traces or internal error details to the client
+- Log errors internally with full detail, return generic messages externally

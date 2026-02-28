@@ -1,23 +1,11 @@
-"use client";
-
 import React from "react";
 import Image from "next/image";
-import StockImage from "@/assets/homepage/@2x/Ellipse 12@2x.png";
-import { useQuery } from "@tanstack/react-query";
-import { instagramKeys } from "@/keys/react-query";
-import { instagramService } from "@/api/services/instagram";
+import { currentUser } from "@clerk/nextjs/server";
 
-const UserSection = () => {
-  const {
-    data: response,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: instagramKeys.profile(),
-    queryFn: () => instagramService.profile.getUserProfile(),
-  });
+const UserSection = async () => {
+  const data = await currentUser();
 
-  if (isLoading) {
+  if (!data?.publicMetadata.isConnected) {
     return (
       <div className="flex flex-col items-center gap-3 py-4">
         <div className="w-24 h-24 rounded-full bg-muted animate-pulse" />
@@ -26,33 +14,15 @@ const UserSection = () => {
     );
   }
 
-  if (error || !response?.success) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-4">
-        <div className="relative w-24 h-24 rounded-full p-[3px] bg-gradient-to-br from-purple-400 via-purple-300 to-blue-200">
-          <div className="w-full h-full rounded-full overflow-hidden bg-white">
-            <Image
-              src={StockImage}
-              alt="Default Profile"
-              width={96}
-              height={96}
-              className="rounded-full object-cover w-full h-full"
-            />
-          </div>
-        </div>
-        <span className="text-sm font-medium text-gray-700">Guest</span>
-      </div>
-    );
-  }
-
-  const { username, profilePictureUrl } = response.result;
+  const profilePictureUrl = data.publicMetadata.instaProfilePictureUrl;
+  const username = data.publicMetadata.instaUsername || data.username || "User";
 
   return (
     <div className="flex flex-col items-center gap-3 py-4">
-      <div className="relative w-24 h-24 rounded-full p-[3px] bg-gradient-to-br from-purple-400 via-purple-300 to-blue-200">
+      <div className="relative w-24 h-24 rounded-full p-[3px] bg-linear-to-br from-purple-400 via-purple-300 to-blue-200">
         <div className="w-full h-full rounded-full overflow-hidden bg-white">
           <Image
-            src={profilePictureUrl || StockImage}
+            src={profilePictureUrl as string}
             alt={username}
             width={96}
             height={96}

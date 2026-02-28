@@ -11,6 +11,7 @@ import {
 import { webhookQueue } from "@/server/redis/queues";
 import type { WebhookPayload } from "@dm-broo/common-types";
 import { logger } from "@/server/utils/pino";
+import { clogger } from "@/server/utils/consola";
 
 /**
  * Verifies webhook registration from Instagram
@@ -71,13 +72,6 @@ export async function processWebhookEvent(payload: string, signature: string) {
             change.field === "comments" &&
             change.value?.from?.self_ig_scoped_id
           ) {
-            logger.info(
-              {
-                commentId: change.value.id,
-                username: change.value.from.username,
-              },
-              "⏭️  Filtered out self-comment before queueing",
-            );
             return false; // Removes from array
           }
           return true; // Keep all other events
@@ -94,18 +88,8 @@ export async function processWebhookEvent(payload: string, signature: string) {
   }
 
   // Returns success if all events were filtered out
-  if (!parsedPayload.entry || parsedPayload.entry.length === 0) {
-    logger.info(
-      {
-        payloadType: parsedPayload.object,
-        entryCount: Array.isArray(parsedPayload.entry)
-          ? parsedPayload.entry.length
-          : 0,
-      },
-      "All webhook events filtered (self-comments only)",
-    );
+  if (!parsedPayload.entry || parsedPayload.entry.length === 0)
     return { success: true as const };
-  }
 
   // Adds webhook event to queue for processing
   // Returns immediately to Instagram
@@ -114,7 +98,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
       jobId: `webhook-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     });
 
-    logger.info(
+    clogger.info(
       {
         payloadType: parsedPayload.object,
         entryCount: Array.isArray(parsedPayload.entry)

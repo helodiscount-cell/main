@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Sidebar,
   SidebarContent,
@@ -7,36 +5,16 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import UserSection from "./UserSection";
-import {
-  LogOut,
-  BarChart2,
-  MessageSquare,
-  ClipboardList,
-  Users,
-  Database,
-  Settings,
-} from "lucide-react";
-import { usePathname } from "next/navigation";
-
-const navItems = [
-  { title: "Dashboard", url: "/dash", exact: true, Icon: BarChart2 },
-  { title: "Automations", url: "/dash/automations", Icon: MessageSquare },
-  { title: "Forms", url: "/dash/forms", Icon: ClipboardList },
-  { title: "Contacts", url: "/dash/contacts", Icon: Users },
-  { title: "Refer & Earn", url: "/dash/refer", Icon: Database },
-  { title: "Settings", url: "/dash/settings", Icon: Settings },
-];
+import { LogOut } from "lucide-react";
+import { AppSidebarNav } from "./AppSidebarNav";
+import React from "react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname();
-
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -47,39 +25,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent className="h-full">
             <SidebarMenu className="h-full">
               <div className="flex flex-col h-full justify-between">
-                <div className="flex flex-col gap-4">
-                  {navItems.map((item) => {
-                    const isActive = item.exact
-                      ? pathname === item.url
-                      : pathname.startsWith(item.url);
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          className={
-                            isActive
-                              ? "bg-purple-600 text-white hover:bg-purple-700 hover:text-white"
-                              : "bg-[#F9F9F9] hover:bg-[#F9F9F9]/80"
-                          }
-                        >
-                          <Link
-                            href={item.url}
-                            className="px-4 py-6 flex items-center gap-3"
-                          >
-                            <item.Icon
-                              className={
-                                isActive ? "text-purple-600" : "text-slate-500"
-                              }
-                              size={18}
-                            />
-                            {item.title}
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </div>
+                <AppSidebarNav />
                 <Button variant={"destructive"}>
                   <LogOut className="text-red-600" />
                   <Link href={"/auth/logout"} className="text-primary">

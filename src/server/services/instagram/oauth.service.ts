@@ -31,6 +31,7 @@ import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { OAuthState } from "@dm-broo/common-types";
 import { getRedisClient } from "@/server/redis";
 import { redisKeys } from "@/server/redis/keys";
+import { currentUser } from "@clerk/nextjs/server";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -67,12 +68,7 @@ export async function initiateOAuth({
  * @returns The OAuth callback result with the return URL, username, and account type
  */
 export async function handleOAuthCallback(code: string, state: string) {
-  // const serverUser = await getServerUser();
-  // if (!serverUser) {
-  //   throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER);
-  // }
-  // const { fullName, emailAddresses, imageUrl } = serverUser;
-
+  const currentClerkUser = await currentUser();
   try {
     // Decodes and validates state
     const { clerkId, returnUrl } = validateSecureState(state);
@@ -120,7 +116,7 @@ export async function handleOAuthCallback(code: string, state: string) {
             data: {
               clerkId,
               fullName: instagramUser.username,
-              email: "",
+              email: currentClerkUser?.primaryEmailAddress?.emailAddress,
               imageUrl: instagramUser.profile_picture_url,
             },
           });
@@ -187,6 +183,11 @@ export async function handleOAuthCallback(code: string, state: string) {
       await clerkClient.users.updateUserMetadata(clerkId, {
         publicMetadata: {
           isConnected: true,
+          instaUsername: instagramUser.username,
+          instaProfilePictureUrl: instagramUser.profile_picture_url,
+          instaUserId: instagramUser.id,
+          instaAccountType: instagramUser.account_type,
+          lastSync: new Date().toISOString(),
         },
       });
     } catch (metadataError) {
@@ -194,23 +195,6 @@ export async function handleOAuthCallback(code: string, state: string) {
       // Non-fatal: the DB is updated, but middleware might be slightly out of sync
       // until the next session refresh or manual fix
     }
-
-    const redisClient = getRedisClient();
-
-    await redisClient.set(
-      `insta-account:${clerkId}`,
-      JSON.stringify({
-        id: instaAccount.id,
-        username: instaAccount.username,
-        accountType: instaAccount.accountType,
-        profilePictureUrl: instaAccount.profilePictureUrl,
-        biography: instaAccount.biography,
-        followersCount: instaAccount.followersCount,
-        followsCount: instaAccount.followsCount,
-        mediaCount: instaAccount.mediaCount,
-        lastSyncedAt: instaAccount.lastSyncedAt,
-      }),
-    );
 
     // Registers webhooks using Instagram user ID
     try {
