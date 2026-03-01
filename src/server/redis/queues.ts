@@ -14,7 +14,7 @@ import type { WebhookPayload } from "@dm-broo/common-types";
 export const webhookQueue = new Queue<WebhookPayload>("webhook-processing", {
   connection: getRedisConnectionOptions(),
   defaultJobOptions: {
-    attempts: 3,
+    attempts: 5,
     backoff: {
       type: "exponential",
       delay: 2000,

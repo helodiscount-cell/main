@@ -152,7 +152,7 @@ export async function getUserAutomations(
 
   const repositoryFilters: AutomationFilters = {
     userId: user.id,
-    // Only shows DELETED if explicitly requested; otherwise hide them
+    // If filters then filter otherwise ALL.
     status: filters?.status ?? ["ACTIVE", "PAUSED"],
   };
 

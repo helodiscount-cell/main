@@ -1,2 +1,3 @@
 - Handle rate limits. Meta and app level
 - rewrire caching logic
+- edge case. If there's only one user and they're heavy, all jobs in the queue are using the same token — so concurrency of 10 means 10 simultaneous Instagram calls with that one token. That's exactly the scenario that gets us blocked. We should limit concurrency per user.
