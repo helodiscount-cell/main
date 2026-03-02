@@ -33,6 +33,7 @@ export async function updateRateLimitsFromHeaders(
   businessUsage: Record<string, any> | null,
 ) {
   const redis = getRedisClient();
+  if (!redis) return;
   const pipeline = redis.pipeline();
 
   if (appUsage && typeof appUsage.call_count === "number") {
@@ -73,6 +74,7 @@ export async function updateRateLimitsFromHeaders(
  */
 export async function checkRateLimits(instagramUserId: string): Promise<void> {
   const redis = getRedisClient();
+  if (!redis) return;
   const [appUsageStr, accountUsageStr] = await redis.mget(
     KEYS.APP_USAGE,
     KEYS.ACCOUNT_USAGE(instagramUserId),
@@ -113,6 +115,7 @@ export async function checkRateLimits(instagramUserId: string): Promise<void> {
  */
 export async function getRateLimitStats(instagramUserId: string) {
   const redis = getRedisClient();
+  if (!redis) return { appUsagePercent: 0, accountUsagePercent: 0 };
   const [appUsage, accountUsage] = await redis.mget(
     KEYS.APP_USAGE,
     KEYS.ACCOUNT_USAGE(instagramUserId),

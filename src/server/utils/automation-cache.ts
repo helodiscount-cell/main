@@ -6,7 +6,7 @@
 
 import { getRedisClient } from "@/server/redis";
 
-const redis = getRedisClient();
+// Lazy loaded in functions
 
 /**
  * Invalidates the automation existence cache for a specific user (by Clerk ID) and post
@@ -22,6 +22,9 @@ export async function invalidateAutomationCache(
     "and post:",
     postId,
   );
+  const redis = getRedisClient();
+  if (!redis) return;
+
   const cacheKey = `ig:automation:${clerkId}:${postId}`;
   await redis.del(cacheKey);
 }
@@ -36,6 +39,9 @@ export async function isCommentProcessedCached(
   dbCheck: () => Promise<boolean>,
 ): Promise<boolean> {
   const cacheKey = `ig:processed:${commentId}:${automationId}`;
+
+  const redis = getRedisClient();
+  if (!redis) return dbCheck();
 
   // Checks cache first
   const cached = await redis.get(cacheKey);
@@ -67,6 +73,9 @@ export async function markCommentProcessed(
   commentId: string,
   automationId: string,
 ): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+
   const cacheKey = `ig:processed:${commentId}:${automationId}`;
   // Caches for 24 hours since this is immutable
   await redis.set(cacheKey, "1", "EX", 24 * 60 * 60);
@@ -80,6 +89,9 @@ export async function clearAllUserCache(
   webhookUserId: string,
   clerkId: string,
 ): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+
   const pipeline = redis.pipeline();
 
   // Deletes account webhook cache (uses webhookUserId from webhook payload)

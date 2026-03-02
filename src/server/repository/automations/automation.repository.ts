@@ -6,6 +6,7 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 import { CreateAutomationInput } from "@dm-broo/common-types";
+import { invalidateAutomations } from "@/server/redis";
 
 export interface CreateAutomationData {
   postId: string;
@@ -45,7 +46,7 @@ export async function createAutomation(
 ) {
   const triggerType = data.triggerType ?? "COMMENT_ON_POST";
 
-  return executeWithErrorHandling(
+  const result = await executeWithErrorHandling(
     () =>
       prisma.automation.create({
         data: {
@@ -88,6 +89,12 @@ export async function createAutomation(
       retries: 1,
     },
   );
+
+  if (result) {
+    // Invalidate the post/story automations cache so the worker pulls fresh rules
+    await invalidateAutomations(userId).catch(() => {});
+  }
+  return result;
 }
 
 /**
@@ -330,7 +337,7 @@ export async function updateAutomation(
   automationId: string,
   data: UpdateAutomationData,
 ) {
-  return executeWithErrorHandling(
+  const result = await executeWithErrorHandling(
     () =>
       prisma.automation.update({
         where: { id: automationId },
@@ -342,6 +349,12 @@ export async function updateAutomation(
       retries: 1,
     },
   );
+
+  if (result) {
+    // Invalidate the post/story automations cache so the worker pulls fresh rules
+    await invalidateAutomations(result.userId).catch(() => {});
+  }
+  return result;
 }
 
 /**
@@ -373,7 +386,7 @@ export async function updateAutomationStats(automationId: string) {
  * Soft deletes an automation (marks as DELETED)
  */
 export async function softDeleteAutomation(automationId: string) {
-  return executeWithErrorHandling(
+  const result = await executeWithErrorHandling(
     () =>
       prisma.automation.update({
         where: { id: automationId },
@@ -385,4 +398,10 @@ export async function softDeleteAutomation(automationId: string) {
       retries: 1,
     },
   );
+
+  if (result) {
+    // Invalidate the post/story automations cache so the worker pulls fresh rules
+    await invalidateAutomations(result.userId).catch(() => {});
+  }
+  return result;
 }

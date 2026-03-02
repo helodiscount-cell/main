@@ -20,7 +20,10 @@ import {
 } from "@/server/instagram/webhook/registration";
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
 import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
-import { deleteInstaAccount } from "@/server/repository/instagram/insta-account.repository";
+import {
+  deleteInstaAccount,
+  deactivateInstaAccount,
+} from "@/server/repository/instagram/insta-account.repository";
 import { validateSecureState } from "@/server/instagram/oauth/oauth-state";
 import {
   exchangeCodeForToken,
@@ -30,8 +33,13 @@ import {
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { OAuthState } from "@dm-broo/common-types";
 import { getRedisClient } from "@/server/redis";
-import { redisKeys } from "@/server/redis/keys";
-import { currentUser } from "@clerk/nextjs/server";
+import { KEYS } from "@/server/redis/keys";
+import {
+  setUserConnected,
+  invalidateUser,
+} from "@/server/redis/operations/user";
+import { cacheAccessToken } from "@/server/redis/operations/token";
+import { createClerkClient } from "@clerk/nextjs/server";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -68,10 +76,15 @@ export async function initiateOAuth({
  * @returns The OAuth callback result with the return URL, username, and account type
  */
 export async function handleOAuthCallback(code: string, state: string) {
-  const currentClerkUser = await currentUser();
   try {
     // Decodes and validates state
     const { clerkId, returnUrl } = validateSecureState(state);
+
+    // Fetch user directly from Clerk using their known ID
+    const clerkClient = createClerkClient({
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+    const currentClerkUser = await clerkClient.users.getUser(clerkId);
 
     // Exchanges code for short-lived token (returns user_id too)
     const shortLivedToken = await exchangeCodeForToken(code);
@@ -176,10 +189,6 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Updates Clerk metadata to reflect connection status
     // This allows the middleware to check connection status without a DB query
     try {
-      const { createClerkClient } = await import("@clerk/nextjs/server");
-      const clerkClient = createClerkClient({
-        secretKey: process.env.CLERK_SECRET_KEY,
-      });
       await clerkClient.users.updateUserMetadata(clerkId, {
         publicMetadata: {
           isConnected: true,
@@ -210,6 +219,10 @@ export async function handleOAuthCallback(code: string, state: string) {
       // Non-fatal: user can still use the app without webhooks
     }
 
+    // Actively populate Redis cache so the worker is instantly aware of the connection
+    await setUserConnected(String(instagramUser.id));
+    await cacheAccessToken(instaAccount.id, longLivedToken.access_token);
+
     return {
       returnUrl: returnUrl || "/dash",
       username: instagramUser.username,
@@ -234,7 +247,10 @@ export async function refreshAccessToken(clerkId: string) {
   }
 
   // Refreshes the token
-  const { expiresAt } = await refreshToken(user.instaAccount);
+  const { accessToken, expiresAt } = await refreshToken(user.instaAccount);
+
+  // Actively push new token to cache so the worker doesn't miss
+  await cacheAccessToken(user.instaAccount.id, accessToken);
 
   return {
     message: "Token refreshed successfully",
@@ -264,7 +280,9 @@ export async function disconnectAccount(clerkId: string) {
   // Clear Redis cache to ensure no stale profile data remains
   try {
     const redisClient = getRedisClient();
-    await redisClient.del(redisKeys.instagram.account(clerkId));
+    if (redisClient) {
+      await redisClient.del(KEYS.USER_CONNECTION(clerkId));
+    }
   } catch (redisError) {
     console.error("Failed to clear Redis cache on disconnect:", redisError);
   }
@@ -274,8 +292,22 @@ export async function disconnectAccount(clerkId: string) {
 
   // If user doesn't exist in Prisma, that's fine, we already fixed their Clerk state!
   if (user && user.instaAccount) {
-    // Deletes the Instagram account (cascade will delete automations)
-    await deleteInstaAccount(user.instaAccount.id, clerkId);
+    // Actively invalidate Redis Cache using all Identifiers
+    await invalidateUser(
+      user.instaAccount.instagramUserId,
+      clerkId,
+      user.instaAccount.id,
+    );
+    // Deactivates the Instagram account (leaves it intact for history but inactive)
+    await deactivateInstaAccount(user.instaAccount.id, clerkId);
+  } else {
+    // Just in case Prisma is out of sync but Redis isn't, attempt a blind wipe of clerk profile
+    try {
+      const redisClient = getRedisClient();
+      if (redisClient) {
+        await redisClient.del(KEYS.USER_CONNECTION(clerkId)); // Using temporary fallback
+      }
+    } catch {}
   }
 
   return {

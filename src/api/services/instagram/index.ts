@@ -17,11 +17,6 @@ export const instagramService = {
     },
   },
   profile: {
-    getUserProfile: async (): Promise<ApiResponse<UserProfileResult>> => {
-      return request(
-        api.get<ApiResponse<UserProfileResult>>("/instagram/profile"),
-      );
-    },
     getUserPosts: async (): Promise<ApiResponse<PostsResult>> => {
       return request(
         api.get<ApiResponse<PostsResult>>("/instagram/profile/posts"),

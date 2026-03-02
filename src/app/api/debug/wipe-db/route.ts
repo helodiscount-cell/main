@@ -20,7 +20,9 @@ export async function GET() {
     // Clear Redis cache to prevent out-of-sync state
     const { getRedisClient } = await import("@/server/redis");
     const redis = getRedisClient();
-    await redis.flushdb();
+    if (redis) {
+      await redis.flushdb();
+    }
 
     return NextResponse.json({
       success: true,

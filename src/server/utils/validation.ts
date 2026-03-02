@@ -3,7 +3,14 @@
  * Provides validation functions for common data types
  */
 
-import { CommentData } from "../automation/matcher";
+// Mock typing structurally as we don't have access to the worker domain here
+interface CommentData {
+  id: string;
+  text: string;
+  username: string;
+  userId: string;
+  timestamp: string;
+}
 import {
   sanitizeCommentText,
   sanitizeText,

@@ -168,3 +168,27 @@ export async function deleteInstaAccount(
     },
   );
 }
+
+/**
+ * Softly deactivates an Instagram account by setting isActive to false
+ * @param instaAccountId - The ID of the Instagram account
+ * @param clerkId - The Clerk ID of the user
+ * @returns The updated Instagram account
+ */
+export async function deactivateInstaAccount(
+  instaAccountId: string,
+  clerkId: string,
+) {
+  return executeWithErrorHandling(
+    () =>
+      prisma.instaAccount.update({
+        where: { id: instaAccountId },
+        data: { isActive: false },
+      }),
+    {
+      operation: "deactivateInstaAccount",
+      model: "InstaAccount",
+      retries: 1,
+    },
+  );
+}

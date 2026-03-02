@@ -5,3 +5,17 @@
  the flow should be -
 
 webhook arrives in the queue, worker dequeue it, start processing (make it also a task that all the validators are seprated out from the main flow and the flow remains declarative), if the processing fails in any way
+
+- implement the refresh token mechanism, check it proactively 2 days prior its expiry and update it in the db.
+- incase its not refreshed, disable the automation and notify the user.
+- work on user login and logout and account disconnection properly.
+
+
+///// Add this in the policy guide so that we sound genwin
+Issue: If a user goes into their Instagram Settings and revokes your app's permissions manually, Meta stops sending webhooks and revokes the token instantly. Your app (Clerk + DB) still thinks they are connected.
+Solution: Meta sends a special deauthorize webhook event when this happens. You need to configure the Webhook Handler to listen for this specific payload and execute disconnectAccount(clerkId) automatically to clean up the ghosts.
+
+okay you can implement the plan. some guidelines - make sure there's no in-line noise, declarative syntax like we are writing a clean script,
+
+
+- we still get webhook notifications even after logging out

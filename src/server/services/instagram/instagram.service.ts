@@ -7,14 +7,11 @@
 import { getValidAccessToken } from "@/server/instagram/token-manager";
 import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
 import { ERROR_MESSAGES } from "@/server/config/instagram.config";
-import type { InstagramStatusConnected } from "@dm-broo/common-types";
-import { getRedisClient } from "@/server/redis";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import {
   getUserPostsFromInstagram,
   getUserStoriesFromInstagram,
 } from "@/server/instagram/user";
-import { redisKeys } from "@/server/redis/keys";
 
 /**
  * Gets Instagram posts for a user
@@ -69,38 +66,3 @@ export async function getUserStories(clerkId: string) {
     paging: result.data.paging,
   };
 }
-
-export const getInstaUserProfile = async (clerkId: string) => {
-  const redis = getRedisClient();
-  const data = await redis.get(redisKeys.instagram.account(clerkId));
-
-  if (data) {
-    return JSON.parse(data);
-  }
-
-  // Cache miss, let's fetch from DB
-  const user = await findUserWithInstaAccount(clerkId);
-  if (user && user.instaAccount) {
-    const accountData = {
-      id: user.instaAccount.id,
-      username: user.instaAccount.username,
-      accountType: user.instaAccount.accountType,
-      profilePictureUrl: user.instaAccount.profilePictureUrl,
-      biography: user.instaAccount.biography,
-      followersCount: user.instaAccount.followersCount,
-      followsCount: user.instaAccount.followsCount,
-      mediaCount: user.instaAccount.mediaCount,
-      lastSyncedAt: user.instaAccount.lastSyncedAt,
-    };
-
-    // Cache it for future, let's use a TTL of 1 hour to prevent stale state forever
-    await redis.set(
-      redisKeys.instagram.account(clerkId),
-      JSON.stringify(accountData),
-    );
-
-    return accountData;
-  }
-
-  return null;
-};

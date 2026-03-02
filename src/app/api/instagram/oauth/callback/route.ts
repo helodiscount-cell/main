@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         state,
       },
       "Instagram OAuth callback failed",
-      errorInstance,
+      errorInstance.message,
     );
 
     const errorUrl = RedirectUrls.ERROR_OAUTH_FAILED;

@@ -45,6 +45,7 @@ export async function verifyWebhook(
  * Processes an incoming webhook event from Instagram
  */
 export async function processWebhookEvent(payload: string, signature: string) {
+  // these tests are mainly for the imposters
   // Gets the webhook secret
   const secret = getWebhookSecret();
   if (!secret) throw new Error("Webhook not configured");

@@ -36,5 +36,4 @@ export {
   getAccountByInstagramId,
   getAutomationsByPost,
   getAutomationsByStory,
-  invalidateAutomations,
 } from "./operations/automation";
