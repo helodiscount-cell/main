@@ -62,7 +62,7 @@ export async function processWebhookEvent(payload: string, signature: string) {
     throw new Error("Invalid JSON");
   }
 
-  // FILTER OUT SELF-COMMENTS BEFORE QUEUEING
+  // FILTERS OUT SELF-COMMENTS BEFORE QUEUEING
   if (parsedPayload.entry && Array.isArray(parsedPayload.entry)) {
     for (const entry of parsedPayload.entry) {
       if ("changes" in entry && Array.isArray(entry.changes)) {
@@ -72,6 +72,16 @@ export async function processWebhookEvent(payload: string, signature: string) {
             change.field === "comments" &&
             change.value?.from?.self_ig_scoped_id
           ) {
+            return false; // Removes from array
+          }
+          return true; // Keep all other events
+        });
+      }
+
+      if ("messaging" in entry && Array.isArray(entry.messaging)) {
+        entry.messaging = entry.messaging.filter((messagingEvent: any) => {
+          // Skips self-sent "echo" DMs to prevent infinite automation loops
+          if (messagingEvent.message?.is_echo === true) {
             return false; // Removes from array
           }
           return true; // Keep all other events

@@ -18,6 +18,7 @@ export interface SendMessageOptions {
   accessToken: string;
   messagingType?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
   tag?: string;
+  instagramUserId?: string;
 }
 
 export interface SendMessageResult {
@@ -66,6 +67,7 @@ export async function sendDirectMessage(
         body: JSON.stringify(requestBody),
         timeout: 20000, // 20 seconds for message sending
         retries: 2,
+        instagramUserId: options.instagramUserId,
       });
 
       return {

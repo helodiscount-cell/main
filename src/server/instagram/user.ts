@@ -24,6 +24,7 @@ export const getUserPostsFromInstagram = async (
     url.toString(),
     {
       method: "GET",
+      instagramUserId,
     },
   );
 
@@ -45,6 +46,7 @@ export const getUserStoriesFromInstagram = async (
     url.toString(),
     {
       method: "GET",
+      instagramUserId,
     },
   );
 

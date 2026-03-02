@@ -1,28 +1,28 @@
 /**
  * Redis-Backed Instagram Rate Limiter
- * Tracks and enforces Meta Graph API Rate Limits globally between frontend and worker.
+ * Tracks and enforces Meta Graph API Rate Limits globally across workers.
  */
 
-import { getRedisClient } from "@/server/redis";
-import { RATE_LIMIT_THRESHOLDS } from "@/server/config/instagram.config";
-import { logger } from "@/server/utils/pino";
+import { Redis } from "ioredis";
+import { RATE_LIMIT_THRESHOLDS } from "../../../config/instagram.config";
+import { InstagramRateLimitError } from "../api/api-errors";
+import { logger } from "../../utils/pino";
 
-// Since we share budget with the worker, we use the same Redis instance and keys
+// Since BullMQ requires Redis, we reuse the Upstash connection logic
+const redis = new Redis({
+  host: process.env.UPSTASH_REDIS_HOST,
+  port: 6379,
+  username: process.env.UPSTASH_REDIS_USERNAME,
+  password: process.env.UPSTASH_REDIS_PASSWORD,
+  tls: {},
+  maxRetriesPerRequest: null,
+});
+
 const KEYS = {
   APP_USAGE: "instagram:rate_limit:app_usage",
   ACCOUNT_USAGE: (accountId: string) =>
     `instagram:rate_limit:account:${accountId}`,
 };
-
-export class InstagramRateLimitError extends Error {
-  isAppLevel: boolean;
-
-  constructor(message: string, isAppLevel: boolean = false) {
-    super(message);
-    this.name = "InstagramRateLimitError";
-    this.isAppLevel = isAppLevel;
-  }
-}
 
 /**
  * Updates Redis with new usage percentages extracted from headers
@@ -32,7 +32,6 @@ export async function updateRateLimitsFromHeaders(
   appUsage: Record<string, any> | null,
   businessUsage: Record<string, any> | null,
 ) {
-  const redis = getRedisClient();
   const pipeline = redis.pipeline();
 
   if (appUsage && typeof appUsage.call_count === "number") {
@@ -72,7 +71,6 @@ export async function updateRateLimitsFromHeaders(
  * Throws InstagramRateLimitError if unsafe.
  */
 export async function checkRateLimits(instagramUserId: string): Promise<void> {
-  const redis = getRedisClient();
   const [appUsageStr, accountUsageStr] = await redis.mget(
     KEYS.APP_USAGE,
     KEYS.ACCOUNT_USAGE(instagramUserId),
@@ -112,7 +110,6 @@ export async function checkRateLimits(instagramUserId: string): Promise<void> {
  * Utility to get current usage stats for debugging
  */
 export async function getRateLimitStats(instagramUserId: string) {
-  const redis = getRedisClient();
   const [appUsage, accountUsage] = await redis.mget(
     KEYS.APP_USAGE,
     KEYS.ACCOUNT_USAGE(instagramUserId),

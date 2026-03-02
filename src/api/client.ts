@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { toast } from "sonner";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -42,6 +43,10 @@ api.interceptors.response.use(
 
     if (process.env.NODE_ENV === "development") {
       console.error(`[API Error] ${status || "Network Error"}:`, message);
+    }
+
+    if (status === 429) {
+      toast.error("You are moving too fast. Please wait a moment.");
     }
 
     return Promise.reject(error);

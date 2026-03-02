@@ -5,7 +5,7 @@ import {
   validateRequestSize,
 } from "@/server/utils/request-limits";
 import { validateCsrfProtection } from "@/server/utils/csrf";
-import { rateLimitMiddleware } from "@/server/utils/rate-limit";
+import { checkRateLimit } from "@/server/utils/redis-ratelimit";
 import {
   isPublicRoute,
   isApiRoute,
@@ -23,7 +23,8 @@ export default clerkMiddleware(async (auth, request) => {
   // 1. API Route Logic (Rate Limiting, CSRF, Size Validation)
   if (isApiRoute(pathname)) {
     // Applies rate limiting to API routes
-    const rateLimitResponse = rateLimitMiddleware(request, userId || undefined);
+    const tier = (sessionClaims?.metadata as any)?.tier;
+    const rateLimitResponse = await checkRateLimit(request, userId, tier);
     if (rateLimitResponse) return rateLimitResponse;
 
     // Validates CSRF protection for state-changing API requests

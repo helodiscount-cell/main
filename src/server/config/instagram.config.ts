@@ -96,6 +96,13 @@ export const RATE_LIMITS = {
   STORIES_PER_REQUEST: 25,
 } as const;
 
+// Meta Graph API Usage Thresholds
+// We stop processing if the percentage exceeds the STOP threshold. Worker uses 85/90, frontend uses tighter to leave buffer.
+export const RATE_LIMIT_THRESHOLDS = {
+  APP_USAGE_STOP_PERCENT: 50,
+  ACCOUNT_USAGE_STOP_PERCENT: 50,
+} as const;
+
 // Error messages
 export const ERROR_MESSAGES = {
   AUTH: {

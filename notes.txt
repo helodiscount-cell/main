@@ -1,3 +1,7 @@
 - Handle rate limits. Meta and app level
 - rewrire caching logic
 - edge case. If there's only one user and they're heavy, all jobs in the queue are using the same token — so concurrency of 10 means 10 simultaneous Instagram calls with that one token. That's exactly the scenario that gets us blocked. We should limit concurrency per user.
+
+ the flow should be -
+
+webhook arrives in the queue, worker dequeue it, start processing (make it also a task that all the validators are seprated out from the main flow and the flow remains declarative), if the processing fails in any way

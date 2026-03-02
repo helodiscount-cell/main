@@ -4,6 +4,7 @@
  */
 
 import { logger } from "./pino";
+import { updateRateLimitsFromHeaders } from "@/server/instagram/rate-limiter";
 
 /**
  * Default timeout for API requests (in milliseconds)
@@ -55,6 +56,7 @@ export interface FetchWithTimeoutOptions extends RequestInit {
   timeout?: number;
   retries?: number;
   retryDelay?: number;
+  instagramUserId?: string; // Passed to update rate limits from Meta headers
 }
 
 export interface FetchResult<T = any> {
@@ -155,6 +157,39 @@ export async function fetchWithTimeout<T = any>(
 
         // Parses response
         const data = await response.json();
+
+        // Process Meta Rate Limiting Headers
+        if (options.instagramUserId) {
+          try {
+            const appUsageHeader = response.headers.get("x-app-usage");
+            const businessUsageHeader = response.headers.get(
+              "x-business-use-case-usage",
+            );
+
+            const appUsage = appUsageHeader ? JSON.parse(appUsageHeader) : null;
+            const businessUsage = businessUsageHeader
+              ? JSON.parse(businessUsageHeader)
+              : null;
+
+            if (appUsage || businessUsage) {
+              await updateRateLimitsFromHeaders(
+                options.instagramUserId,
+                appUsage,
+                businessUsage,
+              ).catch((err) => {
+                logger.error(
+                  { err },
+                  "Failed to update rate limits from headers in fetchWithTimeout",
+                );
+              });
+            }
+          } catch (e) {
+            logger.warn(
+              { error: e instanceof Error ? e.message : String(e) },
+              "Failed to parse rate limit headers",
+            );
+          }
+        }
 
         return {
           data: data as T,

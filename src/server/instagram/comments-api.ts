@@ -14,6 +14,7 @@ export interface ReplyToCommentOptions {
   commentId: string;
   message: string;
   accessToken: string;
+  instagramUserId?: string;
 }
 
 export interface ReplyToCommentResult {
@@ -44,6 +45,7 @@ export async function replyToComment(
       }),
       timeout: 20000, // 20 seconds for comment reply
       retries: 2,
+      instagramUserId: options.instagramUserId,
     });
 
     return {

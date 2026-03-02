@@ -6,12 +6,7 @@
 import { CommentData, replaceVariables } from "./matcher";
 import { sendDirectMessageWithRetry } from "@/server/instagram/messaging-api";
 import { replyToCommentWithRetry } from "@/server/instagram/comments-api";
-import {
-  isRateLimited,
-  incrementRateLimit,
-  createMessagingRateLimitKey,
-  createCommentsRateLimitKey,
-} from "@/server/instagram/rate-limiter";
+import { checkRateLimits } from "@/server/instagram/rate-limiter";
 import { logger } from "@/server/utils/pino";
 import { findAutomationById } from "@/server/repository/automations/automation.repository";
 import { findInstaAccountByAutomationId } from "@/server/repository/instagram/insta-account.repository";
@@ -66,18 +61,14 @@ export async function executeAutomation(
     try {
       if (automation.actionType === "COMMENT_REPLY") {
         // Checks rate limit
-        const rateLimitKey = createCommentsRateLimitKey(
-          instaAccount.instagramUserId,
-        );
-        if (isRateLimited(rateLimitKey)) {
-          throw new Error("Rate limit exceeded for comment replies");
-        }
+        await checkRateLimits(instaAccount.instagramUserId);
 
         // Replies to comment with retry
         const result = await replyToCommentWithRetry({
           commentId: comment.id,
           message: finalMessage,
           accessToken,
+          instagramUserId: instaAccount.instagramUserId,
         });
 
         if (!result.success) {
@@ -86,15 +77,9 @@ export async function executeAutomation(
 
         instagramMessageId = result.replyId || null;
         executionStatus = "SUCCESS";
-        incrementRateLimit(rateLimitKey);
       } else if (automation.actionType === "DM") {
         // Checks rate limit
-        const rateLimitKey = createMessagingRateLimitKey(
-          instaAccount.instagramUserId,
-        );
-        if (isRateLimited(rateLimitKey)) {
-          throw new Error("Rate limit exceeded for direct messages");
-        }
+        await checkRateLimits(instaAccount.instagramUserId);
 
         // Sends DM with retry
         // Note: If user hasn't messaged before, DM will go to their "Message Requests" folder
@@ -104,6 +89,7 @@ export async function executeAutomation(
           commentId: comment.id,
           message: finalMessage,
           accessToken,
+          instagramUserId: instaAccount.instagramUserId,
         });
 
         if (!result.success) {
@@ -112,58 +98,45 @@ export async function executeAutomation(
 
         instagramMessageId = result.messageId || null;
         executionStatus = "SUCCESS";
-        incrementRateLimit(rateLimitKey);
 
         // Replies to the comment after successfully sending DM if configured
         if (automation.commentReplyWhenDm) {
           try {
-            const commentReplyRateLimitKey = createCommentsRateLimitKey(
-              instaAccount.instagramUserId,
-            );
-
             // Checks rate limit for comment replies
-            if (!isRateLimited(commentReplyRateLimitKey)) {
-              // Prepares the comment reply message with variable replacement
-              let commentReplyMessage = automation.commentReplyWhenDm;
-              if (automation.useVariables) {
-                commentReplyMessage = replaceVariables(
-                  commentReplyMessage,
-                  comment,
-                );
-              }
+            await checkRateLimits(instaAccount.instagramUserId);
 
-              const commentReplyResult = await replyToCommentWithRetry({
-                commentId: comment.id,
-                message: commentReplyMessage,
-                accessToken,
-              });
+            // Prepares the comment reply message with variable replacement
+            let commentReplyMessage = automation.commentReplyWhenDm;
+            if (automation.useVariables) {
+              commentReplyMessage = replaceVariables(
+                commentReplyMessage,
+                comment,
+              );
+            }
 
-              if (commentReplyResult.success) {
-                incrementRateLimit(commentReplyRateLimitKey);
-                logger.info(
-                  {
-                    commentId: comment.id,
-                    automationId,
-                  },
-                  "Comment reply sent after DM",
-                );
-              } else {
-                logger.warn(
-                  {
-                    commentId: comment.id,
-                    automationId,
-                    error: commentReplyResult.error,
-                  },
-                  "Failed to reply to comment after DM",
-                );
-              }
+            const commentReplyResult = await replyToCommentWithRetry({
+              commentId: comment.id,
+              message: commentReplyMessage,
+              accessToken,
+              instagramUserId: instaAccount.instagramUserId,
+            });
+
+            if (commentReplyResult.success) {
+              logger.info(
+                {
+                  commentId: comment.id,
+                  automationId,
+                },
+                "Comment reply sent after DM",
+              );
             } else {
               logger.warn(
                 {
                   commentId: comment.id,
                   automationId,
+                  error: commentReplyResult.error,
                 },
-                "Rate limited for comment reply after DM",
+                "Failed to reply to comment after DM",
               );
             }
           } catch (commentReplyError) {
