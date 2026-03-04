@@ -7,9 +7,6 @@ import { FollowersWidget } from "@/components/dash/followers-widget";
 import { OutreachImpactWidget } from "./outreach-impact-widget";
 
 export default async function Page() {
-  const user = await currentUser();
-  const userCreatedAt = user?.createdAt || Date.now();
-
   return (
     <div className="flex flex-1 flex-col gap-4 px-4">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -32,7 +29,7 @@ export default async function Page() {
       </header>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
         <FollowersWidget />
-        <OutreachImpactWidget userCreatedAt={userCreatedAt} />
+        <OutreachImpactWidget />
         <div className="bg-muted/50 aspect-square rounded-xl" />
       </div>
       <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />

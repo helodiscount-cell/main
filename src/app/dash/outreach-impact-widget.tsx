@@ -12,42 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface OutreachImpactWidgetProps {
-  userCreatedAt: number; // Timestamp
-}
-
-const HOUR = 60 * 60 * 1000;
-const DAY = 24 * HOUR;
-
-export function OutreachImpactWidget({
-  userCreatedAt,
-}: OutreachImpactWidgetProps) {
-  const accountAge = Date.now() - userCreatedAt;
-
-  // Derive exactly 2-3 relevant options based on user age buckets
-  const getOptions = () => {
-    if (accountAge < DAY) {
-      const opts = ["Since you joined"];
-      if (accountAge > HOUR) opts.unshift("Last 1 hour");
-      if (accountAge > 6 * HOUR) opts.splice(1, 0, "Last 6 hours");
-      return opts;
-    }
-    if (accountAge < 3 * DAY) {
-      const opts = ["Today", "Since you joined"];
-      if (accountAge > 1.5 * DAY) opts.splice(1, 0, "Yesterday");
-      return opts;
-    }
-    if (accountAge < 7 * DAY) {
-      return ["Last 3 days", "Since you joined"];
-    }
-    if (accountAge < 30 * DAY) {
-      return ["Last 7 days", "Since you joined"];
-    }
-    return ["Last 7 days", "Last 30 days", "All time"];
-  };
-
-  const options = getOptions();
-  const [range, setRange] = useState(options[options.length - 1]);
+export function OutreachImpactWidget() {
+  const options = ["Last 7 days", "Last 30 days", "All time"];
+  const [range, setRange] = useState(options[0]);
 
   // Use react-query for data fetching
   const { data, isLoading } = useQuery({

@@ -5,19 +5,21 @@ export async function GET() {
   try {
     if (process.env.NODE_ENV === "production") {
       // Optional: protect this in production or disable it entirely
-      // return NextResponse.json({ error: "Not allowed in production" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Not allowed in production" },
+        { status: 403 },
+      );
     }
 
-    // Delete in order to respect potential constraints (though Cascades help)
-    // Delete WebhookEvents (no relations)
+    // Delete all collections explicitly
+    // deleteMany does NOT trigger cascades in Prisma/MongoDB
     await prisma.webhookEvent.deleteMany({});
-
-    // Deleting Users will cascade delete InstaAccounts and Automations (and their Executions)
-    // But strictly speaking, in MongoDB with Prisma, relations are emulated.
-    // Prisma handles the cascade deletions for us if configured in schema.
+    await prisma.automationExecution.deleteMany({});
+    await prisma.automation.deleteMany({});
+    await prisma.instaAccount.deleteMany({});
     await prisma.user.deleteMany({});
 
-    // Clear Redis cache to prevent out-of-sync state
+    // Clear Redis cache (wipes all keys, including BullMQ and auth sessions)
     const { getRedisClient } = await import("@/server/redis");
     const redis = getRedisClient();
     if (redis) {
