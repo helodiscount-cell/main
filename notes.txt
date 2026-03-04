@@ -19,3 +19,24 @@ okay you can implement the plan. some guidelines - make sure there's no in-line 
 
 
 - we still get webhook notifications even after logging out
+
+
+- research what are the dynamic imports and what is their relevency wrt our codebase
+
+
+## The Pending Edge Cases (The Unsolved Board)
+
+1.  **The 60 Day Token Death:**
+    *   *Scenario:* User sets up an automation and doesn't log in for 61 days.
+    *   *Result:* Their Long-Lived Token expires natively. When a webhook arrives, [getAccessToken](file:///home/devpalwar/projects/dmbro/src/server/redis/operations/token.ts#12-62) hits the DB, retrieves a dead token, attempts to send a DM, and Meta throws an `OAuthException`.
+    *   *Solution:* Implement a daily CRON job that queries Postgres for tokens expiring in < 3 days and actively invokes [refreshAccessToken](file:///home/devpalwar/projects/dmbro/packages/worker/src/lib/instagram/token-manager.ts#15-69).
+
+2.  **The Meta App Revoke (Silent Death):**
+    *   *Scenario:* User goes to native Instagram App Settings -> "Apps and Websites" -> Removes DM Bro.
+    *   *Result:* Meta instantly revokes the token and stops sending webhooks. However, our Postgres database and Clerk profile *still show the user as fully connected* with "active" automations. The user gets confused why it isn't working.
+    *   *Solution:* Register a webhook listener for the special `deauthorize` Meta payload. When received, the worker automatically triggers [disconnectAccount](file:///home/devpalwar/projects/dmbro/src/server/services/instagram/oauth.service.ts#245-287) in the background to sync our DB/Clerk state with the reality of Meta's graph.
+
+3.  **The Clerk Metadata Sync Failure:**
+    *   *Scenario:* AWS or Clerk has a network blip during onboarding callback *after* DB creation.
+    *   *Result:* DB is connected. Clerk metadata is totally blank. User gets locked in a loop "Please connect your account" but if they click it, Postgres says "Account already exists".
+    *   *Solution:* In the `/dash` layout, add a lightweight background `useEffect` or server-check that compares DB presence vs Clerk presence, and actively patches Clerk if it sees a desync.

@@ -120,3 +120,37 @@ export async function findExecutionsByCommentId(commentId: string) {
     },
   );
 }
+/**
+ * Counts unique automation executions for a user within a date range
+ * This is the basis for the "Outreach Impact" / "Automation Reach" widget
+ */
+export async function countExecutionsByDateRange(
+  userId: string,
+  startDate?: Date,
+  endDate?: Date,
+): Promise<number> {
+  return executeWithErrorHandling(
+    () =>
+      prisma.automationExecution.count({
+        where: {
+          automation: {
+            userId: userId,
+          },
+          ...(startDate || endDate
+            ? {
+                executedAt: {
+                  ...(startDate && { gte: startDate }),
+                  ...(endDate && { lte: endDate }),
+                },
+              }
+            : {}),
+        },
+      }),
+    {
+      operation: "countExecutionsByDateRange",
+      model: "AutomationExecution",
+      fallback: 0,
+      retries: 1,
+    },
+  );
+}

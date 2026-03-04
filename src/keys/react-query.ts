@@ -12,3 +12,9 @@ export const automationKeys = {
     [...automationKeys.all, "list", filters] as const,
   create: () => [...automationKeys.all, "create"] as const,
 };
+
+export const statsKeys = {
+  all: ["stats"] as const,
+  outreachImpact: (range: string) =>
+    [...statsKeys.all, "outreach-impact", range] as const,
+};

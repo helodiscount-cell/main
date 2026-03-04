@@ -1,9 +1,15 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 import { CreateAutomationDialog } from "@/components/CreateAutomation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { FollowersWidget } from "@/components/dash/followers-widget";
+import { OutreachImpactWidget } from "./outreach-impact-widget";
 
 export default async function Page() {
+  const user = await currentUser();
+  const userCreatedAt = user?.createdAt || Date.now();
+
   return (
     <div className="flex flex-1 flex-col gap-4 px-4">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -25,9 +31,9 @@ export default async function Page() {
         </div>
       </header>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
+        <FollowersWidget />
+        <OutreachImpactWidget userCreatedAt={userCreatedAt} />
+        <div className="bg-muted/50 aspect-square rounded-xl" />
       </div>
       <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
     </div>
