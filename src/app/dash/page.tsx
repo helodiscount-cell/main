@@ -1,4 +1,3 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 import { CreateAutomationDialog } from "@/components/CreateAutomation";
 import { Separator } from "@/components/ui/separator";

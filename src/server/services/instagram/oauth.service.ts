@@ -178,6 +178,31 @@ export async function handleOAuthCallback(code: string, state: string) {
           },
         });
 
+        // Atomic baseline snapshot for follower tracking
+        const nowUtc = new Date();
+        const todayUtc = new Date(
+          Date.UTC(
+            nowUtc.getUTCFullYear(),
+            nowUtc.getUTCMonth(),
+            nowUtc.getUTCDate(),
+          ),
+        );
+
+        try {
+          await tx.instaFollowerSnapshot.create({
+            data: {
+              instaAccountId: instaAccount.id,
+              followersCount: instagramUser.followers_count || 0,
+              date: todayUtc,
+            },
+          });
+        } catch (e: any) {
+          // Ignore P2002 unique constraint if they re-connect on the exact same day
+          if (e.code !== "P2002") {
+            throw e;
+          }
+        }
+
         return { user, instaAccount };
       },
       {

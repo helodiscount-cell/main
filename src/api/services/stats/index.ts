@@ -3,7 +3,17 @@ import { ApiResponse } from "../instagram/types";
 
 export interface OutreachImpactResponse {
   count: number;
-  range: string;
+  data: ChartDataPoint[];
+}
+
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+}
+
+export interface FollowerGrowthResponse {
+  growth: number;
+  data: ChartDataPoint[];
 }
 
 export const statsService = {
@@ -11,6 +21,15 @@ export const statsService = {
     const envelope = await request(
       api.get<ApiResponse<OutreachImpactResponse>>(
         `/stats/outreach-impact?range=${encodeURIComponent(range)}`,
+      ),
+    );
+    return envelope.result;
+  },
+
+  getFollowerGrowth: async (range: string): Promise<FollowerGrowthResponse> => {
+    const envelope = await request(
+      api.get<ApiResponse<FollowerGrowthResponse>>(
+        `/stats/followers-growth?range=${encodeURIComponent(range)}`,
       ),
     );
     return envelope.result;

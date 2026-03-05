@@ -14,11 +14,11 @@ export async function GET(req: NextRequest) {
     const range = searchParams.get("range") || "Last 7 days";
 
     // Get statistics
-    const count = await getOutreachImpactStats(clerkId, range);
+    const stats = await getOutreachImpactStats(clerkId, range);
 
     return {
-      count,
-      range,
+      count: stats.count,
+      data: stats.data,
     };
   });
 }

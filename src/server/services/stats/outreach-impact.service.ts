@@ -3,63 +3,110 @@
  * Business logic for outreach statistics
  */
 
-import { findUserByClerkId } from "@/server/repository/user/user.repository";
-import { countExecutionsByDateRange } from "@/server/repository/automations/automation-execution.repository";
+import {
+  countExecutionsByDateRange,
+  getExecutionDatesByDateRange,
+} from "@/server/repository/automations/automation-execution.repository";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 
+interface DataPoint {
+  label: string;
+  value: number;
+}
+
 /**
- * Gets the total number of automation executions for a user within a specified range
+ * Gets the total number of automation executions and time-series data for a user
  */
 export async function getOutreachImpactStats(
   clerkId: string,
   rangeLabel: string,
 ) {
-  // Get internal user ID from Clerk ID
-  const user = await findUserByClerkId(clerkId);
-  if (!user) {
-    throw new ApiRouteError("User not found", "NOT_FOUND", 404);
+  const nowUtc = new Date();
+  const todayUtc = new Date(
+    Date.UTC(
+      nowUtc.getUTCFullYear(),
+      nowUtc.getUTCMonth(),
+      nowUtc.getUTCDate(),
+    ),
+  );
+
+  let daysParam = 7;
+  const rangeMatch = rangeLabel.match(/^Last (\d+)\s*(days?)$/i);
+  if (rangeMatch) {
+    daysParam = parseInt(rangeMatch[1], 10);
+  } else if (rangeLabel === "Last 30 days") {
+    daysParam = 30;
+  } else if (rangeLabel === "All time") {
+    daysParam = 30; // Caps visual chart to 30 days to avoid overcrowding, but keeps total count accurate
   }
 
-  const now = new Date();
-  let startDate: Date | undefined;
+  const startDateUtc = new Date(
+    todayUtc.getTime() - (daysParam - 1) * 24 * 60 * 60 * 1000,
+  );
 
-  // Check for dynamic format "Last X days" or "Last X hours"
-  const rangeMatch = rangeLabel.match(/^Last (\d+)\s*(hour|hours|day|days)$/i);
-
-  if (rangeMatch) {
-    const amount = parseInt(rangeMatch[1], 10);
-    const unit = rangeMatch[2].toLowerCase();
-    const multiplier = unit.startsWith("hour")
-      ? 60 * 60 * 1000
-      : 24 * 60 * 60 * 1000;
-
-    startDate = new Date(now.getTime() - amount * multiplier);
-  } else {
-    // Handle specific exact matches
-    switch (rangeLabel) {
-      case "Today":
-        startDate = new Date(now.setHours(0, 0, 0, 0));
-        break;
-      case "Yesterday":
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
-        startDate = yesterday;
-        // For "Yesterday", we cap the end date to the start of today
-        const endOfYesterday = new Date(now.setHours(0, 0, 0, 0));
-        return await countExecutionsByDateRange(
-          user.id,
-          startDate,
-          endOfYesterday,
-        );
-      case "Since you joined":
-      case "All time":
-      default:
-        startDate = undefined; // Null means since the beginning
-        break;
-    }
+  // Still calculate exact total count accurately regardless of chart bucketing
+  let totalCountStartDate: Date | undefined = startDateUtc;
+  if (rangeLabel === "All time") {
+    totalCountStartDate = undefined; // Fetch everything for the big number
   }
 
   // Count executions from start date to now
-  return await countExecutionsByDateRange(user.id, startDate);
+  const count = await countExecutionsByDateRange(clerkId, totalCountStartDate);
+
+  // Fetch dates for charting
+  const executions = await getExecutionDatesByDateRange(clerkId, startDateUtc);
+
+  // Bucket into days
+  const chartData: DataPoint[] = [];
+  const bucketMap = new Map<number, number>();
+
+  executions.forEach((exec) => {
+    // Truncate to UTC day
+    const d = new Date(
+      Date.UTC(
+        exec.executedAt.getUTCFullYear(),
+        exec.executedAt.getUTCMonth(),
+        exec.executedAt.getUTCDate(),
+      ),
+    );
+    const time = d.getTime();
+    bucketMap.set(time, (bucketMap.get(time) || 0) + 1);
+  });
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  for (let i = 0; i < daysParam; i++) {
+    const currentDayUtc = new Date(
+      startDateUtc.getTime() + i * 24 * 60 * 60 * 1000,
+    );
+    const dayTime = currentDayUtc.getTime();
+
+    const dailyCount = bucketMap.get(dayTime) || 0;
+
+    const day = currentDayUtc.getUTCDate();
+    const month = monthNames[currentDayUtc.getUTCMonth()];
+
+    chartData.push({
+      label: `${day} ${month}`,
+      value: dailyCount,
+    });
+  }
+
+  return {
+    count,
+    data: chartData,
+  };
 }

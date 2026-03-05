@@ -17,4 +17,6 @@ export const statsKeys = {
   all: ["stats"] as const,
   outreachImpact: (range: string) =>
     [...statsKeys.all, "outreach-impact", range] as const,
+  followersGrowth: (range: string) =>
+    [...statsKeys.all, "followers-growth", range] as const,
 };

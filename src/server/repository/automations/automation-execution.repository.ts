@@ -125,7 +125,7 @@ export async function findExecutionsByCommentId(commentId: string) {
  * This is the basis for the "Outreach Impact" / "Automation Reach" widget
  */
 export async function countExecutionsByDateRange(
-  userId: string,
+  clerkId: string,
   startDate?: Date,
   endDate?: Date,
 ): Promise<number> {
@@ -134,7 +134,9 @@ export async function countExecutionsByDateRange(
       prisma.automationExecution.count({
         where: {
           automation: {
-            userId: userId,
+            user: {
+              clerkId: clerkId,
+            },
           },
           ...(startDate || endDate
             ? {
@@ -150,6 +152,49 @@ export async function countExecutionsByDateRange(
       operation: "countExecutionsByDateRange",
       model: "AutomationExecution",
       fallback: 0,
+      retries: 1,
+    },
+  );
+}
+
+/**
+ * Gets executedAt dates for automation executions within a date range
+ * Used for building charts and time-series data
+ */
+export async function getExecutionDatesByDateRange(
+  clerkId: string,
+  startDate?: Date,
+  endDate?: Date,
+) {
+  return executeWithErrorHandling(
+    () =>
+      prisma.automationExecution.findMany({
+        where: {
+          automation: {
+            user: {
+              clerkId: clerkId,
+            },
+          },
+          ...(startDate || endDate
+            ? {
+                executedAt: {
+                  ...(startDate && { gte: startDate }),
+                  ...(endDate && { lte: endDate }),
+                },
+              }
+            : {}),
+        },
+        select: {
+          executedAt: true,
+        },
+        orderBy: {
+          executedAt: "asc",
+        },
+      }),
+    {
+      operation: "getExecutionDatesByDateRange",
+      model: "AutomationExecution",
+      fallback: [],
       retries: 1,
     },
   );
