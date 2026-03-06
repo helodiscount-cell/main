@@ -37,14 +37,8 @@ export async function getBestPerformerStats(
   }
 
   // Determine date range for the widget
-  const nowUtc = new Date();
-  const todayUtc = new Date(
-    Date.UTC(
-      nowUtc.getUTCFullYear(),
-      nowUtc.getUTCMonth(),
-      nowUtc.getUTCDate(),
-    ),
-  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   let daysParam = 7;
   const rangeMatch = rangeLabel.match(/^Last (\d+)\s*(days?)$/i);
@@ -56,8 +50,8 @@ export async function getBestPerformerStats(
     daysParam = 365 * 10; // essentially all time
   }
 
-  const startDateUtc = new Date(
-    todayUtc.getTime() - (daysParam - 1) * 24 * 60 * 60 * 1000,
+  const startDate = new Date(
+    today.getTime() - (daysParam - 1) * 24 * 60 * 60 * 1000,
   );
 
   // Find automations triggered within the time window
@@ -70,13 +64,13 @@ export async function getBestPerformerStats(
       },
       executions: {
         some: {
-          executedAt: { gte: startDateUtc },
+          executedAt: { gte: startDate },
         },
       },
     },
     include: {
       executions: {
-        where: { executedAt: { gte: startDateUtc } },
+        where: { executedAt: { gte: startDate } },
       },
     },
   });
@@ -123,22 +117,45 @@ export async function getBestPerformerStats(
   });
 
   const chartData: BestPerformerStats[] = top3.map((item, idx) => {
+    const post = (item.automation as any).post;
     const fallbackImage =
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100&h=100";
     return {
       id: item.automation.id,
       date: `${formattedDates[idx].day} ${formattedDates[idx].month}`,
       value: item.score,
-      imageUrl: fallbackImage,
+      imageUrl: post?.mediaUrl || fallbackImage,
     };
   });
 
-  // Calculate Best Time To Post based on the #1 performing post (or aggregate)
+  // Calculate Best Time To Post based on the peak activity window of these top performers
   let bestTimeData: BestTimeStats;
 
   if (top3.length > 0) {
-    const absoluteBest = top3[0];
-    const bestDateObj = formattedDates[0].fullDateObj;
+    // Collect all execution hours from top 3 performing posts
+    const allExecutionHours = top3.flatMap((item) =>
+      item.automation.executions.map((ex) =>
+        new Date(ex.executedAt).getUTCHours(),
+      ),
+    );
+
+    // Find the most frequent hour (the mode)
+    const hourFrequency: Record<number, number> = {};
+    let peakHour = 0;
+    let maxCount = 0;
+
+    allExecutionHours.forEach((hour) => {
+      hourFrequency[hour] = (hourFrequency[hour] || 0) + 1;
+      if (hourFrequency[hour] > maxCount) {
+        maxCount = hourFrequency[hour];
+        peakHour = hour;
+      }
+    });
+
+    // If no executions (shouldn't happen due to filter), fallback to first post's creation hour
+    if (allExecutionHours.length === 0) {
+      peakHour = new Date(top3[0].automation.createdAt).getUTCHours();
+    }
 
     const dayNames = [
       "Sunday",
@@ -165,11 +182,12 @@ export async function getBestPerformerStats(
       "December",
     ];
 
+    const bestDateObj = formattedDates[0].fullDateObj;
     const dayName = dayNames[bestDateObj.getUTCDay()];
     const fullDate = `${bestDateObj.getUTCDate()} ${fullMonthNames[bestDateObj.getUTCMonth()]}, ${bestDateObj.getUTCFullYear()}`;
 
-    // 1 hour window e.g 4:00 p.m. - 5:00 p.m.
-    const startHour = bestDateObj.getUTCHours();
+    // 1 hour window based on peakHour
+    const startHour = peakHour;
     const endHour = (startHour + 1) % 24;
 
     const formatHour = (hour: number) => {
@@ -195,11 +213,8 @@ export async function getBestPerformerStats(
     };
   }
 
-  // Ensure chartData is ascending by date for a chronological chart, if desired.
-  // The UI mock showed [3 Nov, 5 Nov, 8 Nov], implying chronological.
-  // Wait, the prompt specifically says "shows top 3 performing posts of a user". So the order could be chronological.
+  // Ensure chartData is ascending by date for the widget display
   chartData.sort((a, b) => {
-    // simple sort by day of month, assumes same month/year or just display order
     return parseInt(a.date.split(" ")[0]) - parseInt(b.date.split(" ")[0]);
   });
 

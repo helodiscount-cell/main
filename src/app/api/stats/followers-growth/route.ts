@@ -14,9 +14,6 @@ export async function GET(req: NextRequest) {
 
     const stats = await getFollowersGrowthStats(clerkId, rangeLabel);
 
-    return {
-      success: true,
-      result: stats,
-    };
+    return stats;
   });
 }

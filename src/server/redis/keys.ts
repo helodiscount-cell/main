@@ -19,6 +19,7 @@ export const TTL = {
   // Cool Downs and Rate Limits
   DEFAULT_COOLDOWN: 24 * 60 * 60, // 24 hours (can be overridden)
   API_USAGE: 60 * 60, // 1 hour rolling window approximation
+  INSTAGRAM_DATA: 15 * 60, // 15 minutes
 };
 
 // Key generation functions
@@ -50,4 +51,9 @@ export const KEYS = {
     `ig:automations_post:${userId}:${mediaId}`,
   AUTOMATIONS_BY_STORY: (userId: string, storyId: string) =>
     `ig:automations_story:${userId}:${storyId}`,
+
+  // Domain: Instagram Data
+  INSTAGRAM_POSTS: (instagramUserId: string) => `ig:posts:${instagramUserId}`,
+  INSTAGRAM_STORIES: (instagramUserId: string) =>
+    `ig:stories:${instagramUserId}`,
 };

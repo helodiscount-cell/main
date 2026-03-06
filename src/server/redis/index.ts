@@ -38,3 +38,6 @@ export {
   getAutomationsByStory,
   invalidateAutomations,
 } from "./operations/automation";
+
+// Instagram Global Data
+export { getCachedPosts, getCachedStories } from "./operations/instagram";

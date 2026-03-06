@@ -1,4 +1,5 @@
 "use client";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/components/dash/automations/AutomationLayout";
@@ -10,6 +11,7 @@ import { FreshHeader } from "@/components/headers/FreshHeader";
 import { LiveHeader } from "@/components/headers/LiveHeader";
 import { useAutomationManager } from "@/hooks/use-automations";
 import AskToFollow from "@/components/dash/automations/AskToFollow";
+import { instagramKeys } from "@/keys/react-query";
 import {
   AUTOMATION_CONFIGS,
   commentsAutomationSchema,
@@ -28,6 +30,7 @@ const DEFAULT_REPLY_TEXT = "Open your DMs, it's there!";
 export function CommentsAutomationForm({
   post_id,
 }: CommentsAutomationFormProps) {
+  const queryClient = useQueryClient();
   const {
     form: { control },
     existingAutomation,
@@ -52,22 +55,37 @@ export function CommentsAutomationForm({
     },
     findExistingAutomation: (a) =>
       a.post?.id === post_id && a.status !== "DELETED",
-    onBuildPayload: (form) => ({
-      postId: post_id,
-      triggers: form.keywords,
-      matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
-      actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
-      replyMessage: form.dmMessage,
-      replyImage: form.dmImage,
-      useVariables: true,
-      // Pass each public reply as a separate array entry — worker picks one randomly
-      ...(form.publicReplyEnabled && form.publicReplies.length > 0
-        ? { commentReplyWhenDm: form.publicReplies.map((r) => r.text) }
-        : {}),
-      askToFollowEnabled: form.askToFollowEnabled,
-      askToFollowMessage: form.askToFollowMessage,
-      askToFollowLink: form.askToFollowLink,
-    }),
+    onBuildPayload: (form) => {
+      // Find the specific post to include its metadata (mediaUrl, permalink, timestamp)
+      // This is crucial for the "Best Performer" widget which needs snapshots of these values
+      const postsResponse = queryClient.getQueryData<any>(
+        instagramKeys.posts(),
+      );
+      const posts = postsResponse?.result?.data?.data || [];
+
+      const selectedPost = posts.find((p: any) => p.id === post_id);
+
+      return {
+        postId: post_id,
+        postCaption: selectedPost?.caption ?? form.keywords[0] ?? "",
+        postMediaUrl: selectedPost?.media_url ?? null,
+        postPermalink: selectedPost?.permalink ?? null,
+        postTimestamp: selectedPost?.timestamp ?? null,
+        triggers: form.keywords,
+        matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
+        actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
+        replyMessage: form.dmMessage,
+        replyImage: form.dmImage,
+        useVariables: true,
+        // Pass each public reply as a separate array entry — worker picks one randomly
+        ...(form.publicReplyEnabled && form.publicReplies.length > 0
+          ? { commentReplyWhenDm: form.publicReplies.map((r) => r.text) }
+          : {}),
+        askToFollowEnabled: form.askToFollowEnabled,
+        askToFollowMessage: form.askToFollowMessage,
+        askToFollowLink: form.askToFollowLink,
+      };
+    },
     onPopulateForm: (automation) => ({
       keywords: automation.triggers || [],
       dmMessage: automation.replyMessage || "",

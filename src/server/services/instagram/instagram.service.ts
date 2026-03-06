@@ -13,6 +13,8 @@ import {
   getUserStoriesFromInstagram,
 } from "@/server/instagram/user";
 
+import { getCachedPosts, getCachedStories } from "@/server/redis";
+
 /**
  * Gets Instagram posts for a user
  * @param clerkId - The Clerk ID of the user
@@ -33,7 +35,10 @@ export async function getUserPosts(clerkId: string) {
   // Gets valid access token (refreshes if needed)
   const accessToken = await getValidAccessToken(user.instaAccount);
 
-  const result = await getUserPostsFromInstagram(instagramUserId, accessToken);
+  // Wrap the fetch in a cache check to avoid rate limiting and speed up response
+  const result = await getCachedPosts(instagramUserId, async () => {
+    return await getUserPostsFromInstagram(instagramUserId, accessToken);
+  });
 
   return result;
 }
@@ -56,10 +61,10 @@ export async function getUserStories(clerkId: string) {
 
   const accessToken = await getValidAccessToken(user.instaAccount);
 
-  const result = await getUserStoriesFromInstagram(
-    instagramUserId,
-    accessToken,
-  );
+  // Wrap the fetch in a cache check
+  const result = await getCachedStories(instagramUserId, async () => {
+    return await getUserStoriesFromInstagram(instagramUserId, accessToken);
+  });
 
   return {
     stories: result.data.data,

@@ -11,6 +11,9 @@ import { invalidateAutomations } from "@/server/redis";
 export interface CreateAutomationData {
   postId: string;
   postCaption?: string | null;
+  postMediaUrl?: string | null;
+  postPermalink?: string | null;
+  postTimestamp?: string | null;
   triggers: string[];
   matchType: string;
   actionType: string;
@@ -67,6 +70,9 @@ export async function createAutomation(
                 post: {
                   id: data.postId,
                   caption: data.postCaption ?? null,
+                  mediaUrl: data.postMediaUrl ?? null,
+                  permalink: data.postPermalink ?? null,
+                  timestamp: data.postTimestamp ?? null,
                 },
               }
             : {}),

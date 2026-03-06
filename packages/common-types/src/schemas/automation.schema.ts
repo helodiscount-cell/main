@@ -57,6 +57,9 @@ export const CreateAutomationSchema = z
       )
       .optional()
       .transform((val) => (val ? sanitizePostCaption(val) : null)),
+    postMediaUrl: z.string().url().max(2048).optional().nullable(),
+    postPermalink: z.string().url().max(2048).optional().nullable(),
+    postTimestamp: z.string().max(100).optional().nullable(),
     story: StoryTargetInputSchema.optional(),
     triggers: z
       .array(
