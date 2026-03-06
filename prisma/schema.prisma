@@ -74,8 +74,11 @@ model InstaFollowerSnapshot {
 
 // Embedded document for post-based automations
 type PostTarget {
-  id      String
-  caption String?
+  id        String
+  caption   String?
+  mediaUrl  String?
+  permalink String?
+  timestamp String? // ISO timestamp
 }
 
 // Embedded document for story-based automations
@@ -99,13 +102,18 @@ model Automation {
   story       StoryTarget?
 
   // Trigger configuration
-  triggers  String[] // Keywords/phrases to match
-  matchType String   @default("CONTAINS") // CONTAINS, EXACT, REGEX
-
+  triggers           String[] // Keywords/phrases to match
+  matchType          String   @default("CONTAINS") // CONTAINS, EXACT, REGE
   // Action configuration
   actionType         String // DM | COMMENT_REPLY
-  replyMessage       String
-  commentReplyWhenDm String?
+  replyMessage       String // Fixed DM message
+  replyImage         String? // Uploaded image URL for DM
+  commentReplyWhenDm String[] @default([]) // Multiple public replies — worker picks one randomly
+
+  // Ask to Follow — gate applied before DM delivery
+  askToFollowEnabled Boolean @default(false)
+  askToFollowMessage String? // Message sent when commenter doesn't follow yet
+  askToFollowLink    String? // Profile link appended to the Ask to Follow message
 
   useVariables Boolean @default(true)
 

@@ -46,6 +46,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     existingAutomation,
     pageState,
     isCreating,
+    isUpdating,
     isStopping,
     stopAutomation,
     isReRunning,
@@ -80,9 +81,15 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         matchType: AUTOMATION_CONFIGS.STORY_REPLY.matchType,
         actionType: AUTOMATION_CONFIGS.STORY_REPLY.actionType,
         replyMessage: form.dmMessage,
+        replyImage: form.dmImage,
         useVariables: true,
       };
     },
+    onPopulateForm: (automation) => ({
+      keywords: automation.triggers || [],
+      dmMessage: automation.replyMessage || "",
+      dmImage: automation.replyImage ?? undefined,
+    }),
     onPayloadInvalid: () => {
       toast.error("Story data not available. Please try again.");
     },
@@ -105,6 +112,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         isStopping={isStopping}
         onReRun={handleReRun}
         isReRunning={isReRunning}
+        isUpdating={isUpdating}
         breadcrumb={AUTOMATION_CONFIGS.STORY_REPLY.breadcrumb}
         label={
           existingAutomation.story?.caption
@@ -134,7 +142,18 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
             control={control}
             name="dmMessage"
             render={({ field }) => (
-              <SendDm message={field.value} onMessageChange={field.onChange} />
+              <Controller
+                control={control}
+                name="dmImage"
+                render={({ field: imageField }) => (
+                  <SendDm
+                    message={field.value}
+                    onMessageChange={field.onChange}
+                    imageUrl={imageField.value}
+                    onImageChange={imageField.onChange}
+                  />
+                )}
+              />
             )}
           />
         }

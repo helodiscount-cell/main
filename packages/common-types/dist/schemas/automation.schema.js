@@ -38,12 +38,19 @@ exports.CreateAutomationSchema = zod_1.z
     triggerType: zod_1.z
       .enum(["COMMENT_ON_POST", "STORY_REPLY"])
       .default("COMMENT_ON_POST"),
+    // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: zod_1.z
-      .string()
-      .max(
-        sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
-        `Comment reply when DM must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+      .array(
+        zod_1.z
+          .string()
+          .min(1)
+          .max(
+            sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
+            `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+          )
+          .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
       )
+      .max(10, "Maximum 10 comment replies allowed")
       .optional(),
     postId: zod_1.z
       .string()
@@ -81,6 +88,7 @@ exports.CreateAutomationSchema = zod_1.z
       .transform((val) => (0, sanitize_1.sanitizeTriggers)(val)),
     matchType: zod_1.z.enum(["CONTAINS", "EXACT", "REGEX"]).default("CONTAINS"),
     actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]),
+    // Single fixed DM message
     replyMessage: zod_1.z
       .string()
       .min(1, "Reply message is required")
@@ -89,7 +97,12 @@ exports.CreateAutomationSchema = zod_1.z
         `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
       )
       .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
+    replyImage: zod_1.z.string().url("Invalid image URL").nullable().optional(),
     useVariables: zod_1.z.boolean().default(true),
+    // Ask to Follow gate — optional
+    askToFollowEnabled: zod_1.z.boolean().default(false),
+    askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
+    askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
   })
   .refine(
     (data) => {
@@ -124,6 +137,7 @@ exports.UpdateAutomationSchema = zod_1.z.object({
     .optional(),
   matchType: zod_1.z.enum(["CONTAINS", "EXACT", "REGEX"]).optional(),
   actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]).optional(),
+  // Single fixed DM message
   replyMessage: zod_1.z
     .string()
     .min(1, "Reply message cannot be empty")
@@ -133,13 +147,21 @@ exports.UpdateAutomationSchema = zod_1.z.object({
     )
     .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val))
     .optional(),
+  // Array of public comment replies (optional)
   commentReplyWhenDm: zod_1.z
-    .string()
-    .max(
-      sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
-      `Comment reply when DM must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+    .array(
+      zod_1.z
+        .string()
+        .min(1)
+        .max(
+          sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
+          `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+        )
+        .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
     )
+    .max(10, "Maximum 10 comment replies allowed")
     .optional(),
+  replyImage: zod_1.z.string().url("Invalid image URL").nullable().optional(),
   status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 // Query parameters for listing automations
@@ -182,7 +204,8 @@ exports.AutomationResponseSchema = zod_1.z.object({
   matchType: zod_1.z.enum(["CONTAINS", "EXACT", "REGEX"]),
   actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]),
   replyMessage: zod_1.z.string(),
-  commentReplyWhenDm: zod_1.z.string().nullable().optional(),
+  replyImage: zod_1.z.string().nullable().optional(),
+  commentReplyWhenDm: zod_1.z.array(zod_1.z.string()).optional(),
   status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: zod_1.z.number(),
   lastTriggeredAt: zod_1.z.date().nullable(),
@@ -243,7 +266,7 @@ exports.UpdateAutomationResponseSchema = zod_1.z.object({
     matchType: zod_1.z.enum(["CONTAINS", "EXACT", "REGEX"]),
     actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]),
     replyMessage: zod_1.z.string(),
-    commentReplyWhenDm: zod_1.z.string().nullable().optional(),
+    commentReplyWhenDm: zod_1.z.array(zod_1.z.string()).optional(),
     status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: zod_1.z.date(),
   }),

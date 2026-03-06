@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import {
   automationService,
   AutomationListItem,
@@ -30,6 +31,9 @@ interface UseAutomationManagerProps<TFormValues extends FieldValues> {
   defaultValues: DefaultValues<TFormValues>;
   findExistingAutomation: (automation: AutomationListItem) => boolean;
   onBuildPayload: (data: TFormValues) => Record<string, unknown> | null;
+  onPopulateForm?: (
+    automation: AutomationListItem,
+  ) => DefaultValues<TFormValues>;
   onPayloadInvalid?: () => void;
   successMessage: string;
   stopMessage: string;
@@ -40,6 +44,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   defaultValues,
   findExistingAutomation,
   onBuildPayload,
+  onPopulateForm,
   onPayloadInvalid,
   successMessage,
   stopMessage,
@@ -53,13 +58,40 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   });
 
   const existingAutomation = data?.automations.find(findExistingAutomation);
-  const pageState = derivePageState(isLoading, existingAutomation);
+
+  // Fetch automation details if existingAutomation is found
+  const { data: detailsData, isLoading: isDetailsLoading } = useQuery({
+    queryKey: automationKeys.detail(existingAutomation?.id as string),
+    queryFn: () => automationService.getById(existingAutomation!.id),
+    enabled: !!existingAutomation?.id,
+  });
+
+  const automationDetails = detailsData?.automation;
+  const pageState = derivePageState(
+    isLoading || isDetailsLoading,
+    existingAutomation,
+  );
 
   // Form setup
   const form = useForm<TFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
   });
+
+  const lastResetId = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Only reset if we have details and a population function
+    // AND we haven't already reset for this specific automation ID
+    if (
+      automationDetails?.id &&
+      onPopulateForm &&
+      lastResetId.current !== automationDetails.id
+    ) {
+      form.reset(onPopulateForm(automationDetails) as any);
+      lastResetId.current = automationDetails.id;
+    }
+  }, [automationDetails, onPopulateForm, form]);
 
   // Mutations
   const { mutate: createAutomation, isPending: isCreating } = useMutation({
@@ -94,6 +126,28 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     },
   );
 
+  const { mutate: updateAutomation, isPending: isUpdating } = useMutation({
+    mutationFn: (payload: Record<string, unknown>) => {
+      if (!existingAutomation?.id) {
+        return Promise.reject(new Error("No automation to update."));
+      }
+      return automationService.update(existingAutomation.id, payload);
+    },
+    onSuccess: (result) => {
+      toast.success("Automation updated successfully!");
+      if (onPopulateForm) {
+        form.reset(onPopulateForm(result.automation) as any);
+      }
+      queryClient.invalidateQueries({ queryKey: automationKeys.all });
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to update automation.";
+      toast.error(msg);
+    },
+  });
+
   const stopAutomation = () => stopAutomationMutation();
   const isReRunning = false;
   const handleReRun = () => toast.info("Re-Run coming soon.");
@@ -108,7 +162,12 @@ export function useAutomationManager<TFormValues extends FieldValues>({
       }
       return;
     }
-    createAutomation(payload);
+
+    if (pageState === "live" && existingAutomation) {
+      updateAutomation(payload);
+    } else {
+      createAutomation(payload);
+    }
   };
 
   const onInvalid = (errs: any) => {
@@ -126,6 +185,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     existingAutomation,
     pageState,
     isCreating,
+    isUpdating,
     isStopping,
     stopAutomation,
     isReRunning,

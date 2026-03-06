@@ -2,8 +2,8 @@ import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 import { CreateAutomationDialog } from "@/components/CreateAutomation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { FollowersWidget } from "@/components/dash/followers-widget";
-import { OutreachImpactWidget } from "./outreach-impact-widget";
+import { GrowthWidget } from "@/components/dash/growth-widget";
+import { BestPerformerWidget } from "@/components/dash/best-performer-widget";
 
 export default async function Page() {
   return (
@@ -27,9 +27,11 @@ export default async function Page() {
         </div>
       </header>
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <FollowersWidget />
-        <OutreachImpactWidget />
-        <div className="bg-muted/50 aspect-square rounded-xl" />
+        <GrowthWidget type="followers" />
+        <GrowthWidget type="outreach" />
+        <div className="md:col-span-3 lg:col-span-2">
+          <BestPerformerWidget />
+        </div>
       </div>
       <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
     </div>

@@ -11,7 +11,9 @@ export declare const CreateAutomationSchema: z.ZodObject<
         STORY_REPLY: "STORY_REPLY";
       }>
     >;
-    commentReplyWhenDm: z.ZodOptional<z.ZodString>;
+    commentReplyWhenDm: z.ZodOptional<
+      z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>
+    >;
     postId: z.ZodOptional<
       z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>
     >;
@@ -51,7 +53,11 @@ export declare const CreateAutomationSchema: z.ZodObject<
       COMMENT_REPLY: "COMMENT_REPLY";
     }>;
     replyMessage: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
+    replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     useVariables: z.ZodDefault<z.ZodBoolean>;
+    askToFollowEnabled: z.ZodDefault<z.ZodBoolean>;
+    askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
   },
   z.core.$strip
 >;
@@ -79,7 +85,10 @@ export declare const UpdateAutomationSchema: z.ZodObject<
     replyMessage: z.ZodOptional<
       z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>
     >;
-    commentReplyWhenDm: z.ZodOptional<z.ZodString>;
+    commentReplyWhenDm: z.ZodOptional<
+      z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>
+    >;
+    replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     status: z.ZodOptional<
       z.ZodEnum<{
         ACTIVE: "ACTIVE";
@@ -136,7 +145,8 @@ export declare const AutomationResponseSchema: z.ZodObject<
       COMMENT_REPLY: "COMMENT_REPLY";
     }>;
     replyMessage: z.ZodString;
-    commentReplyWhenDm: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
     status: z.ZodEnum<{
       ACTIVE: "ACTIVE";
       PAUSED: "PAUSED";
@@ -188,7 +198,8 @@ export declare const AutomationDetailResponseSchema: z.ZodObject<
           COMMENT_REPLY: "COMMENT_REPLY";
         }>;
         replyMessage: z.ZodString;
-        commentReplyWhenDm: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
         status: z.ZodEnum<{
           ACTIVE: "ACTIVE";
           PAUSED: "PAUSED";
@@ -249,7 +260,8 @@ export declare const AutomationListResponseSchema: z.ZodObject<
             COMMENT_REPLY: "COMMENT_REPLY";
           }>;
           replyMessage: z.ZodString;
-          commentReplyWhenDm: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+          replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+          commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
           status: z.ZodEnum<{
             ACTIVE: "ACTIVE";
             PAUSED: "PAUSED";
@@ -306,7 +318,7 @@ export declare const UpdateAutomationResponseSchema: z.ZodObject<
           COMMENT_REPLY: "COMMENT_REPLY";
         }>;
         replyMessage: z.ZodString;
-        commentReplyWhenDm: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
         status: z.ZodEnum<{
           ACTIVE: "ACTIVE";
           PAUSED: "PAUSED";

@@ -11,6 +11,7 @@ export const automationKeys = {
   list: (filters?: { status?: string }) =>
     [...automationKeys.all, "list", filters] as const,
   create: () => [...automationKeys.all, "create"] as const,
+  detail: (id: string) => [...automationKeys.all, "detail", id] as const,
 };
 
 export const statsKeys = {
@@ -19,4 +20,6 @@ export const statsKeys = {
     [...statsKeys.all, "outreach-impact", range] as const,
   followersGrowth: (range: string) =>
     [...statsKeys.all, "followers-growth", range] as const,
+  bestPerformer: (range: string) =>
+    [...statsKeys.all, "best-performer", range] as const,
 };

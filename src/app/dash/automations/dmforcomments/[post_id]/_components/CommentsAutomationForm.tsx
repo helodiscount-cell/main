@@ -9,6 +9,7 @@ import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
 import { FreshHeader } from "@/components/headers/FreshHeader";
 import { LiveHeader } from "@/components/headers/LiveHeader";
 import { useAutomationManager } from "@/hooks/use-automations";
+import AskToFollow from "@/components/dash/automations/AskToFollow";
 import {
   AUTOMATION_CONFIGS,
   commentsAutomationSchema,
@@ -21,6 +22,9 @@ interface CommentsAutomationFormProps {
   post_id: string;
 }
 
+const DEFAULT_REPLY_ID = "default-reply-1";
+const DEFAULT_REPLY_TEXT = "Open your DMs, it's there!";
+
 export function CommentsAutomationForm({
   post_id,
 }: CommentsAutomationFormProps) {
@@ -29,6 +33,7 @@ export function CommentsAutomationForm({
     existingAutomation,
     pageState,
     isCreating,
+    isUpdating,
     isStopping,
     stopAutomation,
     isReRunning,
@@ -40,9 +45,10 @@ export function CommentsAutomationForm({
       keywords: [],
       dmMessage: "",
       publicReplyEnabled: true,
-      publicReplies: [
-        { id: crypto.randomUUID(), text: "Open your DMs, it's there!" },
-      ],
+      publicReplies: [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
+      askToFollowEnabled: false,
+      askToFollowMessage: "",
+      askToFollowLink: "",
     },
     findExistingAutomation: (a) =>
       a.post?.id === post_id && a.status !== "DELETED",
@@ -52,14 +58,34 @@ export function CommentsAutomationForm({
       matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
       actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
       replyMessage: form.dmMessage,
+      replyImage: form.dmImage,
       useVariables: true,
+      // Pass each public reply as a separate array entry — worker picks one randomly
       ...(form.publicReplyEnabled && form.publicReplies.length > 0
-        ? {
-            commentReplyWhenDm: form.publicReplies
-              .map((r) => r.text)
-              .join(" | "),
-          }
+        ? { commentReplyWhenDm: form.publicReplies.map((r) => r.text) }
         : {}),
+      askToFollowEnabled: form.askToFollowEnabled,
+      askToFollowMessage: form.askToFollowMessage,
+      askToFollowLink: form.askToFollowLink,
+    }),
+    onPopulateForm: (automation) => ({
+      keywords: automation.triggers || [],
+      dmMessage: automation.replyMessage || "",
+      dmImage: automation.replyImage ?? undefined,
+      publicReplyEnabled:
+        !!automation.commentReplyWhenDm &&
+        automation.commentReplyWhenDm.length > 0,
+      publicReplies:
+        automation.commentReplyWhenDm &&
+        automation.commentReplyWhenDm.length > 0
+          ? automation.commentReplyWhenDm.map((text) => ({
+              id: crypto.randomUUID(), // This is fine here as it's only called during reset
+              text,
+            }))
+          : [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
+      askToFollowEnabled: automation.askToFollowEnabled || false,
+      askToFollowMessage: automation.askToFollowMessage || "",
+      askToFollowLink: automation.askToFollowLink || "",
     }),
     successMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.successMessage,
     stopMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.stopMessage,
@@ -76,6 +102,7 @@ export function CommentsAutomationForm({
         isStopping={isStopping}
         onReRun={handleReRun}
         isReRunning={isReRunning}
+        isUpdating={isUpdating}
       />
     ) : null,
   };
@@ -119,9 +146,43 @@ export function CommentsAutomationForm({
               control={control}
               name="dmMessage"
               render={({ field }) => (
-                <SendDm
-                  message={field.value}
-                  onMessageChange={field.onChange}
+                <Controller
+                  control={control}
+                  name="dmImage"
+                  render={({ field: imageField }) => (
+                    <SendDm
+                      message={field.value}
+                      onMessageChange={field.onChange}
+                      imageUrl={imageField.value}
+                      onImageChange={imageField.onChange}
+                    />
+                  )}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="askToFollowEnabled"
+              render={({ field: enabledField }) => (
+                <Controller
+                  control={control}
+                  name="askToFollowMessage"
+                  render={({ field: messageField }) => (
+                    <Controller
+                      control={control}
+                      name="askToFollowLink"
+                      render={({ field: linkField }) => (
+                        <AskToFollow
+                          enabled={enabledField.value}
+                          onEnabledChange={enabledField.onChange}
+                          message={messageField.value || ""}
+                          onMessageChange={messageField.onChange}
+                          link={linkField.value || ""}
+                          onLinkChange={linkField.onChange}
+                        />
+                      )}
+                    />
+                  )}
                 />
               )}
             />

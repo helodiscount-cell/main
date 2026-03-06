@@ -29,12 +29,19 @@ export const CreateAutomationSchema = z
     triggerType: z
       .enum(["COMMENT_ON_POST", "STORY_REPLY"])
       .default("COMMENT_ON_POST"),
+    // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: z
-      .string()
-      .max(
-        MAX_LENGTHS.REPLY_MESSAGE,
-        `Comment reply when DM must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+      .array(
+        z
+          .string()
+          .min(1)
+          .max(
+            MAX_LENGTHS.REPLY_MESSAGE,
+            `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+          )
+          .transform((val) => sanitizeReplyMessage(val)),
       )
+      .max(10, "Maximum 10 comment replies allowed")
       .optional(),
     postId: z
       .string()
@@ -70,6 +77,7 @@ export const CreateAutomationSchema = z
       .transform((val) => sanitizeTriggers(val)),
     matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]).default("CONTAINS"),
     actionType: z.enum(["DM", "COMMENT_REPLY"]),
+    // Single fixed DM message
     replyMessage: z
       .string()
       .min(1, "Reply message is required")
@@ -78,7 +86,12 @@ export const CreateAutomationSchema = z
         `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
       )
       .transform((val) => sanitizeReplyMessage(val)),
+    replyImage: z.string().url("Invalid image URL").nullable().optional(),
     useVariables: z.boolean().default(true),
+    // Ask to Follow gate — optional
+    askToFollowEnabled: z.boolean().default(false),
+    askToFollowMessage: z.string().max(1000).optional().nullable(),
+    askToFollowLink: z.string().max(2048).optional().nullable(),
   })
   .refine(
     (data) => {
@@ -114,6 +127,7 @@ export const UpdateAutomationSchema = z.object({
     .optional(),
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]).optional(),
   actionType: z.enum(["DM", "COMMENT_REPLY"]).optional(),
+  // Single fixed DM message
   replyMessage: z
     .string()
     .min(1, "Reply message cannot be empty")
@@ -123,13 +137,24 @@ export const UpdateAutomationSchema = z.object({
     )
     .transform((val) => sanitizeReplyMessage(val))
     .optional(),
+  // Array of public comment replies (optional)
   commentReplyWhenDm: z
-    .string()
-    .max(
-      MAX_LENGTHS.REPLY_MESSAGE,
-      `Comment reply when DM must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(
+          MAX_LENGTHS.REPLY_MESSAGE,
+          `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+        )
+        .transform((val) => sanitizeReplyMessage(val)),
     )
+    .max(10, "Maximum 10 comment replies allowed")
     .optional(),
+  replyImage: z.string().url("Invalid image URL").nullable().optional(),
+  askToFollowEnabled: z.boolean().optional(),
+  askToFollowMessage: z.string().max(1000).optional().nullable(),
+  askToFollowLink: z.string().max(2048).optional().nullable(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 
@@ -170,7 +195,11 @@ export const AutomationResponseSchema = z.object({
   matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),
   actionType: z.enum(["DM", "COMMENT_REPLY"]),
   replyMessage: z.string(),
-  commentReplyWhenDm: z.string().nullable().optional(),
+  replyImage: z.string().nullable().optional(),
+  commentReplyWhenDm: z.array(z.string()).optional(),
+  askToFollowEnabled: z.boolean().optional(),
+  askToFollowMessage: z.string().max(1000).optional().nullable(),
+  askToFollowLink: z.string().max(2048).optional().nullable(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: z.number(),
   lastTriggeredAt: z.date().nullable(),
@@ -236,7 +265,10 @@ export const UpdateAutomationResponseSchema = z.object({
     matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),
     actionType: z.enum(["DM", "COMMENT_REPLY"]),
     replyMessage: z.string(),
-    commentReplyWhenDm: z.string().nullable().optional(),
+    commentReplyWhenDm: z.array(z.string()).optional(),
+    askToFollowEnabled: z.boolean().optional(),
+    askToFollowMessage: z.string().max(1000).optional().nullable(),
+    askToFollowLink: z.string().max(2048).optional().nullable(),
     status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: z.date(),
   }),

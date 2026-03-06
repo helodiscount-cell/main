@@ -14,9 +14,14 @@ export interface CreateAutomationData {
   triggers: string[];
   matchType: string;
   actionType: string;
-  replyMessage: string;
+  replyMessage: string; // Fixed DM message
+  replyImage?: string | null; // Optional image URL for DM
   useVariables: boolean;
-  commentReplyWhenDm?: string | null;
+  commentReplyWhenDm?: string[]; // Optional public replies for DM flows
+  // Ask to Follow gate fields
+  askToFollowEnabled?: boolean;
+  askToFollowMessage?: string | null;
+  askToFollowLink?: string | null;
 }
 
 export interface UpdateAutomationData {
@@ -24,9 +29,13 @@ export interface UpdateAutomationData {
   triggers?: string[];
   matchType?: string;
   actionType?: string;
-  replyMessage?: string;
-  commentReplyWhenDm?: string | null;
+  replyMessage?: string; // Fixed DM message
+  replyImage?: string | null; // Optional image URL for DM
+  commentReplyWhenDm?: string[]; // Optional public replies for DM flows
   useVariables?: boolean;
+  askToFollowEnabled?: boolean;
+  askToFollowMessage?: string | null;
+  askToFollowLink?: string | null;
   status?: string;
 }
 
@@ -78,9 +87,13 @@ export async function createAutomation(
           matchType: data.matchType,
           actionType: data.actionType,
           replyMessage: data.replyMessage,
+          replyImage: data.replyImage,
           useVariables: data.useVariables,
           status: "ACTIVE",
           commentReplyWhenDm: data.commentReplyWhenDm,
+          askToFollowEnabled: data.askToFollowEnabled ?? false,
+          askToFollowMessage: data.askToFollowMessage ?? null,
+          askToFollowLink: data.askToFollowLink ?? null,
         },
       }),
     {

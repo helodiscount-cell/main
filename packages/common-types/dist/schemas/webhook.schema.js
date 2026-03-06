@@ -8,6 +8,10 @@ exports.WebhookProcessingResponseSchema =
   exports.WebhookVerificationResponseSchema =
   exports.WebhookPayloadSchema =
   exports.WebhookEntrySchema =
+  exports.WebhookPayloadOfStoriesSchema =
+  exports.WebhookEntryOfStoriesSchema =
+  exports.WebhookPayloadOfPostsSchema =
+  exports.WebhookEntryOfPostsSchema =
   exports.WebhookMessagingEventSchema =
   exports.WebhookChangeSchema =
   exports.WebhookCommentValueSchema =
@@ -54,18 +58,37 @@ exports.WebhookMessagingEventSchema = zod_1.z.object({
     })
     .optional(),
 });
-// Webhook entry object
-exports.WebhookEntrySchema = zod_1.z.object({
-  id: zod_1.z.string(),
+// Webhook entry object for posts/reels (comments)
+exports.WebhookEntryOfPostsSchema = zod_1.z.object({
+  id: zod_1.z.string().optional(),
   time: zod_1.z.number(),
-  changes: zod_1.z.array(exports.WebhookChangeSchema).optional(),
-  messaging: zod_1.z.array(exports.WebhookMessagingEventSchema).optional(),
+  changes: zod_1.z.array(exports.WebhookChangeSchema),
 });
-// Complete webhook payload
-exports.WebhookPayloadSchema = zod_1.z.object({
+// Complete webhook payload for posts/reels
+exports.WebhookPayloadOfPostsSchema = zod_1.z.object({
   object: zod_1.z.string(),
-  entry: zod_1.z.array(exports.WebhookEntrySchema),
+  entry: zod_1.z.array(exports.WebhookEntryOfPostsSchema),
 });
+// Webhook entry object for stories (messaging)
+exports.WebhookEntryOfStoriesSchema = zod_1.z.object({
+  id: zod_1.z.string().optional(),
+  time: zod_1.z.number(),
+  messaging: zod_1.z.array(exports.WebhookMessagingEventSchema),
+});
+// Complete webhook payload for stories
+exports.WebhookPayloadOfStoriesSchema = zod_1.z.object({
+  object: zod_1.z.string(),
+  entry: zod_1.z.array(exports.WebhookEntryOfStoriesSchema),
+});
+// For backward compatibility / generic processing
+exports.WebhookEntrySchema = zod_1.z.union([
+  exports.WebhookEntryOfPostsSchema,
+  exports.WebhookEntryOfStoriesSchema,
+]);
+exports.WebhookPayloadSchema = zod_1.z.union([
+  exports.WebhookPayloadOfPostsSchema,
+  exports.WebhookPayloadOfStoriesSchema,
+]);
 // Webhook verification success response
 exports.WebhookVerificationResponseSchema = zod_1.z.string();
 // Webhook processing success response

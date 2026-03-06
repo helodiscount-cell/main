@@ -1,40 +1,69 @@
 "use client";
 
-import { ImageIcon, X, SmilePlus, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  ImageIcon,
+  X,
+  SmilePlus,
+  ChevronUp,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
 import { useRef, useState } from "react";
+import { useUploadThing } from "@/lib/uploadthing";
+import { toast } from "sonner";
 
 const MAX_CHARS = 1000;
 
 type Props = {
   message: string;
   onMessageChange: (msg: string) => void;
+  imageUrl?: string;
+  onImageChange?: (url: string) => void;
 };
 
-const SendDm = ({ message, onMessageChange }: Props) => {
+const SendDm = ({
+  message,
+  onMessageChange,
+  imageUrl,
+  onImageChange,
+}: Props) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [media, setMedia] = useState<File | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { startUpload } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res) => {
+      setIsUploading(false);
+      if (res?.[0]) {
+        onImageChange?.(res[0].url);
+        toast.success("Image uploaded successfully");
+      }
+    },
+    onUploadError: (error: Error) => {
+      setIsUploading(false);
+      toast.error(`Upload failed: ${error.message}`);
+    },
+    onUploadBegin: () => {
+      setIsUploading(true);
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setMedia(file);
-    setMediaPreview(URL.createObjectURL(file));
+    await startUpload([file]);
   };
 
   const removeMedia = () => {
-    setMedia(null);
-    setMediaPreview(null);
+    onImageChange?.("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
-    setMedia(file);
-    setMediaPreview(URL.createObjectURL(file));
+    await startUpload([file]);
   };
 
   return (
@@ -53,7 +82,7 @@ const SendDm = ({ message, onMessageChange }: Props) => {
       {!collapsed && (
         <div className="px-4 pb-4 space-y-3">
           {/* Media upload area */}
-          {!mediaPreview ? (
+          {!imageUrl && !isUploading ? (
             <div
               onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
@@ -65,21 +94,20 @@ const SendDm = ({ message, onMessageChange }: Props) => {
                 Select/Drop an image
               </span>
             </div>
+          ) : isUploading ? (
+            <div className="flex flex-col items-center justify-center gap-2 border border-dashed border-purple-300 rounded-lg py-6 bg-purple-50/50">
+              <Loader2 size={24} className="text-purple-500 animate-spin" />
+              <span className="text-sm text-purple-600 font-medium">
+                Uploading image...
+              </span>
+            </div>
           ) : (
             <div className="relative rounded-lg overflow-hidden border border-purple-200">
-              {media?.type.startsWith("video/") ? (
-                <video
-                  src={mediaPreview}
-                  className="w-full max-h-40 object-cover"
-                  controls
-                />
-              ) : (
-                <img
-                  src={mediaPreview}
-                  alt="Preview"
-                  className="w-full max-h-40 object-cover"
-                />
-              )}
+              <img
+                src={imageUrl}
+                alt="Preview"
+                className="w-full max-h-40 object-cover"
+              />
               <button
                 onClick={removeMedia}
                 className="absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow text-slate-500 hover:text-red-400 transition-colors"

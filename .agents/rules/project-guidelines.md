@@ -6,6 +6,8 @@ this project strcitly uses Bun and not npm or npx. in case its required to use n
 stop generating the .md files unless asked to.
 stop explaining the code unless asked to.
 
+the code must always be configuration driven. no in-line noise. modular. and all operations have
+
 One more thing you need to put human readable comments (not very longs and industry level ones just the // ones over the major parts so that others dont have to read the full code to understand what it does
 
 Role

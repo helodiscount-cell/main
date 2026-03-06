@@ -37,11 +37,15 @@ export const baseAutomationSchema = z.object({
       FORM_VALIDATION_MESSAGES.dmMessage.min,
       FORM_VALIDATION_MESSAGES.dmMessage.message,
     ),
+  dmImage: z.string().optional(),
 });
 
 export const commentsAutomationSchema = baseAutomationSchema.extend({
   publicReplyEnabled: z.boolean(),
   publicReplies: z.array(z.object({ id: z.string(), text: z.string() })),
+  askToFollowEnabled: z.boolean(),
+  askToFollowMessage: z.string().max(1000).optional(),
+  askToFollowLink: z.string().optional(),
 });
 
 export const storyAutomationSchema = baseAutomationSchema;

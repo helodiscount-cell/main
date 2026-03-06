@@ -8,6 +8,7 @@ interface LiveHeaderProps {
   isStopping: boolean;
   onReRun: () => void;
   isReRunning: boolean;
+  isUpdating?: boolean;
   breadcrumb?: string;
   label?: string;
 }
@@ -18,6 +19,7 @@ export function LiveHeader({
   isStopping,
   onReRun,
   isReRunning,
+  isUpdating,
   breadcrumb = "DM For Comment",
   label,
 }: LiveHeaderProps) {
@@ -62,6 +64,20 @@ export function LiveHeader({
           <Square size={13} fill="currentColor" />
         )}
         {isStopping ? "Stopping…" : "Stop"}
+      </Button>
+
+      {/* Update */}
+      <Button
+        type="submit"
+        disabled={isUpdating}
+        className="bg-indigo-600 hover:bg-indigo-700 h-9 transition-all"
+      >
+        {isUpdating ? (
+          <RefreshCw size={13} className="animate-spin" />
+        ) : (
+          <RefreshCw size={13} />
+        )}
+        {isUpdating ? "Updating…" : "Update"}
       </Button>
 
       {/* Live badge */}

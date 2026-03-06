@@ -34,4 +34,13 @@ export const statsService = {
     );
     return envelope.result;
   },
+
+  getBestPerformerStats: async (range: string): Promise<any> => {
+    const envelope = await request(
+      api.get<ApiResponse<any>>(
+        `/stats/best-performer?range=${encodeURIComponent(range)}`,
+      ),
+    );
+    return envelope.result;
+  },
 };

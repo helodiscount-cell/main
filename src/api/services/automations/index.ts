@@ -19,6 +19,11 @@ export interface AutomationListItem {
   matchType: string;
   actionType: string;
   replyMessage: string;
+  replyImage: string | null;
+  commentReplyWhenDm?: string[];
+  askToFollowEnabled?: boolean;
+  askToFollowMessage?: string | null;
+  askToFollowLink?: string | null;
   status: string;
   timesTriggered: number;
   lastTriggeredAt: string | null;
@@ -59,9 +64,31 @@ export const automationService = {
     return envelope.result;
   },
 
+  getById: async (id: string): Promise<{ automation: AutomationListItem }> => {
+    const envelope = await request(
+      api.get<ApiResponse<{ automation: AutomationListItem }>>(
+        `/automations/${id}`,
+      ),
+    );
+    return envelope.result;
+  },
+
   delete: async (id: string): Promise<{ message: string }> => {
     const envelope = await request(
       api.delete<ApiResponse<{ message: string }>>(`/automations/${id}`),
+    );
+    return envelope.result;
+  },
+
+  update: async (
+    id: string,
+    payload: Record<string, unknown>,
+  ): Promise<{ automation: AutomationListItem }> => {
+    const envelope = await request(
+      api.patch<ApiResponse<{ automation: AutomationListItem }>>(
+        `/automations/${id}`,
+        payload,
+      ),
     );
     return envelope.result;
   },
