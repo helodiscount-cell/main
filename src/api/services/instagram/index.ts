@@ -1,10 +1,10 @@
 import { api, request } from "@/api/client";
-import type {
-  ApiResponse,
+import { ApiResponse } from "@/types/api";
+import {
   UserProfileResult,
   PostsResult,
   StoriesResult,
-} from "./types";
+} from "@/types/instagram";
 
 export const instagramService = {
   oauth: {

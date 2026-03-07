@@ -11,21 +11,7 @@ import {
 } from "@/server/config/instagram.config";
 import { fetchWithTimeout } from "@/server/utils/fetch-with-timeout";
 
-export interface SendMessageOptions {
-  recipientId: string;
-  commentId?: string;
-  message: string;
-  accessToken: string;
-  messagingType?: "RESPONSE" | "UPDATE" | "MESSAGE_TAG";
-  tag?: string;
-  instagramUserId?: string;
-}
-
-export interface SendMessageResult {
-  success: boolean;
-  messageId?: string;
-  error?: string;
-}
+import { SendMessageOptions, SendMessageResult } from "@/types/instagram";
 
 /**
  * Sends a direct message on Instagram

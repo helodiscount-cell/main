@@ -13,12 +13,7 @@ import { NextResponse } from "next/server";
 import { logger } from "../../utils/pino";
 import { ApiRouteError } from "./classes";
 
-export type ErrorResponse = {
-  success: false;
-  error: string;
-  code?: string;
-  details?: any;
-};
+import { ErrorResponse } from "@/types/error";
 
 type HandlerFunction<T> = (clerkId: string) => Promise<T>;
 

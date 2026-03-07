@@ -6,18 +6,7 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 
-export interface CreateUserData {
-  clerkId: string;
-  fullName?: string;
-  email?: string;
-  imageUrl?: string | null;
-}
-
-export interface UpdateUserData {
-  fullName?: string;
-  email?: string;
-  imageUrl?: string | null;
-}
+import { CreateUserData, UpdateUserData } from "@/types/user";
 
 /**
  * Finds a user by Clerk ID

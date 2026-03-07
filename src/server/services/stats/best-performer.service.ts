@@ -2,26 +2,11 @@ import { findUserWithInstaAccount } from "@/server/repository/user/user.reposito
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { prisma } from "@/server/db";
 
-export interface BestPerformerStats {
-  id: string;
-  date: string;
-  value: number;
-  imageUrl: string;
-}
-
-export interface BestTimeStats {
-  imageUrl: string;
-  fullDate: string;
-  day: string;
-  timeWindow: string;
-}
-
-export interface BestPerformerWidgetConfig {
-  title: string;
-  dropdownOptions: string[];
-  chartData: BestPerformerStats[];
-  bestTimeData: BestTimeStats;
-}
+import {
+  BestPerformerStats,
+  BestTimeStats,
+  BestPerformerWidgetConfig,
+} from "@/types/stats";
 
 export async function getBestPerformerStats(
   clerkId: string,

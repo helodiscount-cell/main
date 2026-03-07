@@ -8,46 +8,11 @@ import { executeWithErrorHandling } from "../repository-utils";
 import { CreateAutomationInput } from "@dm-broo/common-types";
 import { invalidateAutomations } from "@/server/redis";
 
-export interface CreateAutomationData {
-  postId: string;
-  postCaption?: string | null;
-  postMediaUrl?: string | null;
-  postPermalink?: string | null;
-  postTimestamp?: string | null;
-  triggers: string[];
-  matchType: string;
-  actionType: string;
-  replyMessage: string; // Fixed DM message
-  replyImage?: string | null; // Optional image URL for DM
-  useVariables: boolean;
-  commentReplyWhenDm?: string[]; // Optional public replies for DM flows
-  // Ask to Follow gate fields
-  askToFollowEnabled?: boolean;
-  askToFollowMessage?: string | null;
-  askToFollowLink?: string | null;
-}
-
-export interface UpdateAutomationData {
-  postCaption?: string | null;
-  triggers?: string[];
-  matchType?: string;
-  actionType?: string;
-  replyMessage?: string; // Fixed DM message
-  replyImage?: string | null; // Optional image URL for DM
-  commentReplyWhenDm?: string[]; // Optional public replies for DM flows
-  useVariables?: boolean;
-  askToFollowEnabled?: boolean;
-  askToFollowMessage?: string | null;
-  askToFollowLink?: string | null;
-  status?: string;
-}
-
-export interface AutomationFilters {
-  userId: string;
-  status?: string | string[];
-  skip?: number;
-  take?: number;
-}
+import {
+  CreateAutomationData,
+  UpdateAutomationData,
+  AutomationFilters,
+} from "@/types/automation";
 
 /**
  * Creates a new automation

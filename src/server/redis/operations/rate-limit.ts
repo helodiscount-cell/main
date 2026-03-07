@@ -1,6 +1,5 @@
 import { getRedisClient } from "../client";
 import { KEYS, TTL } from "../keys";
-import { RedisError } from "../errors";
 import { logger } from "../../utils/pino";
 import { RATE_LIMIT_THRESHOLDS } from "@/server/config/instagram.config";
 import { InstagramRateLimitError } from "@/server/instagram/rate-limiter";
@@ -13,7 +12,7 @@ import { InstagramRateLimitError } from "@/server/instagram/rate-limiter";
 /**
  * Stores limits extracted dynamically from the "X-App-Usage" headers.
  */
-export async function updateRateLimitsFromHeaders(
+export async function updateRateLimitsFromHeadersR(
   instagramUserId: string,
   appUsage: Record<string, any> | null,
   businessUsage: Record<string, any> | null,

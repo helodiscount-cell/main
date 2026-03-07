@@ -16,7 +16,7 @@ import { logger } from "../../utils/pino";
  * @param dbFallback The fallback function to query MongoDB if Redis misses
  * @returns true if connected, false if disconnected
  */
-export async function isUserConnected(
+export async function isUserConnectedR(
   instagramUserId: string,
   dbFallback: () => Promise<boolean>,
 ): Promise<boolean> {

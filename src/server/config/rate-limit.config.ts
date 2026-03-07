@@ -3,7 +3,7 @@ export const RATE_LIMIT_TIERS = {
   PRO: "PRO",
 } as const;
 
-export type UserTier = (typeof RATE_LIMIT_TIERS)[keyof typeof RATE_LIMIT_TIERS];
+import { UserTier } from "@/types/config";
 
 export const RATE_LIMIT_CONFIG = {
   IGNORED_ROUTES: ["/api/webhooks/instagram"], // Explicitly ignored routes

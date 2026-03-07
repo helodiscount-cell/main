@@ -12,13 +12,13 @@ export { RedisError } from "./errors";
 
 // User Connections
 export {
-  isUserConnected,
+  isUserConnectedR,
   setUserConnected,
   invalidateUser,
 } from "./operations/user";
 
 // Tokens
-export { getAccessToken, cacheAccessToken } from "./operations/token";
+export { getAccessTokenR, cacheAccessTokenR } from "./operations/token";
 
 // Idempotency Locks
 export { isCommentProcessed } from "./operations/comment";
@@ -28,7 +28,7 @@ export { isUserOnCooldown } from "./operations/cooldown";
 
 // Meta API Rate Limits
 export {
-  updateRateLimitsFromHeaders,
+  updateRateLimitsFromHeadersR,
   checkRateLimits,
 } from "./operations/rate-limit";
 // Automations and DB Account Caching

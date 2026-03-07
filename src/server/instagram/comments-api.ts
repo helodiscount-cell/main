@@ -10,18 +10,7 @@ import {
 } from "@/server/config/instagram.config";
 import { fetchWithTimeout } from "@/server/utils/fetch-with-timeout";
 
-export interface ReplyToCommentOptions {
-  commentId: string;
-  message: string;
-  accessToken: string;
-  instagramUserId?: string;
-}
-
-export interface ReplyToCommentResult {
-  success: boolean;
-  replyId?: string;
-  error?: string;
-}
+import { ReplyToCommentOptions, ReplyToCommentResult } from "@/types/instagram";
 
 /**
  * Replies to a comment on Instagram

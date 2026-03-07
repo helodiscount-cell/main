@@ -1,42 +1,10 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "../instagram/types";
-
-export type AutomationStatus = "ACTIVE" | "PAUSED";
-
-export interface AutomationListItem {
-  id: string;
-  triggerType: "COMMENT_ON_POST" | "STORY_REPLY";
-  post: { id: string; caption: string | null } | null;
-  story: {
-    id: string;
-    mediaUrl: string;
-    mediaType: string;
-    caption: string | null;
-    permalink: string;
-    timestamp: string;
-  } | null;
-  triggers: string[];
-  matchType: string;
-  actionType: string;
-  replyMessage: string;
-  replyImage: string | null;
-  commentReplyWhenDm?: string[];
-  askToFollowEnabled?: boolean;
-  askToFollowMessage?: string | null;
-  askToFollowLink?: string | null;
-  status: string;
-  timesTriggered: number;
-  lastTriggeredAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  _count: {
-    executions: number;
-  };
-}
-
-interface AutomationListResponse {
-  automations: AutomationListItem[];
-}
+import { ApiResponse } from "@/types/api";
+import {
+  AutomationStatus,
+  AutomationListItem,
+  AutomationListResponse,
+} from "@/types/automation";
 
 export const automationService = {
   list: async (filters?: {

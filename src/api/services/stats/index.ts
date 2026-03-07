@@ -1,20 +1,10 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "../instagram/types";
-
-export interface OutreachImpactResponse {
-  count: number;
-  data: ChartDataPoint[];
-}
-
-export interface ChartDataPoint {
-  label: string;
-  value: number;
-}
-
-export interface FollowerGrowthResponse {
-  growth: number;
-  data: ChartDataPoint[];
-}
+import { ApiResponse } from "@/types/api";
+import {
+  OutreachImpactResponse,
+  FollowerGrowthResponse,
+  BestPerformerWidgetConfig,
+} from "@/types/stats";
 
 export const statsService = {
   getOutreachImpact: async (range: string): Promise<OutreachImpactResponse> => {

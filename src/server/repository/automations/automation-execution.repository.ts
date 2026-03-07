@@ -6,18 +6,7 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 
-export interface CreateExecutionData {
-  automationId: string;
-  commentId: string;
-  commentText: string;
-  commentUsername: string;
-  commentUserId: string;
-  actionType: string;
-  sentMessage: string;
-  status: string;
-  errorMessage?: string | null;
-  instagramMessageId?: string | null;
-}
+import { CreateExecutionData } from "@/types/automation";
 
 /**
  * Creates a new automation execution record

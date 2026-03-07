@@ -19,11 +19,7 @@ import { fetchWithTimeout } from "@/server/utils/fetch-with-timeout";
 import { executeWithErrorHandling } from "@/server/repository/repository-utils";
 import { InstaAccount } from "@prisma/client";
 
-export interface RefreshTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
+import { RefreshTokenResponse } from "@/types/instagram";
 
 /**
  * Refreshes an Instagram access token

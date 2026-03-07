@@ -3,16 +3,10 @@
  * Tracks and enforces Meta Graph API Rate Limits globally between frontend and worker.
  */
 
-import { getRedisClient } from "@/server/redis";
+import { getRedisClient } from "@/server/redis/client";
+import { KEYS } from "@/server/redis/keys";
 import { RATE_LIMIT_THRESHOLDS } from "@/server/config/instagram.config";
 import { logger } from "@/server/utils/pino";
-
-// Since we share budget with the worker, we use the same Redis instance and keys
-const KEYS = {
-  APP_USAGE: "instagram:rate_limit:app_usage",
-  ACCOUNT_USAGE: (accountId: string) =>
-    `instagram:rate_limit:account:${accountId}`,
-};
 
 export class InstagramRateLimitError extends Error {
   isAppLevel: boolean;
@@ -27,7 +21,7 @@ export class InstagramRateLimitError extends Error {
 /**
  * Updates Redis with new usage percentages extracted from headers
  */
-export async function updateRateLimitsFromHeaders(
+export async function updateRateLimitsFromHeadersR(
   instagramUserId: string,
   appUsage: Record<string, any> | null,
   businessUsage: Record<string, any> | null,
@@ -38,8 +32,7 @@ export async function updateRateLimitsFromHeaders(
 
   if (appUsage && typeof appUsage.call_count === "number") {
     // App usage metric: 1 hour rolling window from Meta usually, but the header is live.
-    // We store it with a 5-minute expire so if it goes stale we don't lock forever.
-    pipeline.set(KEYS.APP_USAGE, appUsage.call_count, "EX", 300);
+    pipeline.set(KEYS.APP_USAGE(), appUsage.call_count, "EX", 300);
   }
 
   if (businessUsage) {
@@ -76,7 +69,7 @@ export async function checkRateLimits(instagramUserId: string): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
   const [appUsageStr, accountUsageStr] = await redis.mget(
-    KEYS.APP_USAGE,
+    KEYS.APP_USAGE(),
     KEYS.ACCOUNT_USAGE(instagramUserId),
   );
 
@@ -117,7 +110,7 @@ export async function getRateLimitStats(instagramUserId: string) {
   const redis = getRedisClient();
   if (!redis) return { appUsagePercent: 0, accountUsagePercent: 0 };
   const [appUsage, accountUsage] = await redis.mget(
-    KEYS.APP_USAGE,
+    KEYS.APP_USAGE(),
     KEYS.ACCOUNT_USAGE(instagramUserId),
   );
   return {

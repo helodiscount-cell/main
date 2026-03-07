@@ -15,7 +15,7 @@ import { logger } from "../../utils/pino";
  * @param accountId Intenal Instagram Account DB ID
  * @param dbFallback Database fallback query returning a guaranteed valid token
  */
-export async function getAccessToken(
+export async function getAccessTokenR(
   accountId: string,
   dbFallback: () => Promise<string>,
 ): Promise<string> {
@@ -63,7 +63,7 @@ export async function getAccessToken(
 /**
  * Forces a token into Redis cache (typically right after the backend refreshes and stores it)
  */
-export async function cacheAccessToken(
+export async function cacheAccessTokenR(
   accountId: string,
   token: string,
 ): Promise<void> {

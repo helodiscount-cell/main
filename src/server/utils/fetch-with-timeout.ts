@@ -4,7 +4,7 @@
  */
 
 import { logger } from "./pino";
-import { updateRateLimitsFromHeaders } from "@/server/instagram/rate-limiter";
+import { updateRateLimitsFromHeadersR } from "@/server/instagram/rate-limiter";
 
 /**
  * Default timeout for API requests (in milliseconds)
@@ -52,18 +52,7 @@ function calculateBackoffDelay(
   return Math.min(baseDelay * Math.pow(2, attempt), 10000); // Max 10 seconds
 }
 
-export interface FetchWithTimeoutOptions extends RequestInit {
-  timeout?: number;
-  retries?: number;
-  retryDelay?: number;
-  instagramUserId?: string; // Passed to update rate limits from Meta headers
-}
-
-export interface FetchResult<T = any> {
-  data: T;
-  status: number;
-  statusText: string;
-}
+import { FetchWithTimeoutOptions, FetchResult } from "../../types/fetch";
 
 /**
  * Fetches a resource with timeout and retry logic
@@ -172,7 +161,7 @@ export async function fetchWithTimeout<T = any>(
               : null;
 
             if (appUsage || businessUsage) {
-              await updateRateLimitsFromHeaders(
+              await updateRateLimitsFromHeadersR(
                 options.instagramUserId,
                 appUsage,
                 businessUsage,

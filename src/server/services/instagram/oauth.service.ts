@@ -38,7 +38,7 @@ import {
   setUserConnected,
   invalidateUser,
 } from "@/server/redis/operations/user";
-import { cacheAccessToken } from "@/server/redis/operations/token";
+import { cacheAccessTokenR } from "@/server/redis/operations/token";
 import { createClerkClient } from "@clerk/nextjs/server";
 
 /**
@@ -246,7 +246,7 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     // Actively populate Redis cache so the worker is instantly aware of the connection
     await setUserConnected(String(instagramUser.id));
-    await cacheAccessToken(instaAccount.id, longLivedToken.access_token);
+    await cacheAccessTokenR(instaAccount.id, longLivedToken.access_token);
 
     return {
       returnUrl: returnUrl || "/dash",
@@ -275,7 +275,7 @@ export async function refreshAccessToken(clerkId: string) {
   const { accessToken, expiresAt } = await refreshToken(user.instaAccount);
 
   // Actively push new token to cache so the worker doesn't miss
-  await cacheAccessToken(user.instaAccount.id, accessToken);
+  await cacheAccessTokenR(user.instaAccount.id, accessToken);
 
   return {
     message: "Token refreshed successfully",

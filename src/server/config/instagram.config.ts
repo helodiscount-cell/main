@@ -179,7 +179,7 @@ export function addQueryParams(url: URL, params: Record<string, string>): URL {
 /**
  * Gets access token from environment with validation (legacy - for migration)
  */
-export function getAccessToken(): string | null {
+export function getAccessTokenR(): string | null {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   return token || null;
 }
