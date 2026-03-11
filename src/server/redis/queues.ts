@@ -4,7 +4,7 @@
  */
 
 import { Queue } from "bullmq";
-import { getRedisClient } from "@/server/redis";
+import { getQueueRedisClientR } from "@/server/redis";
 import type { WebhookPayload } from "@dm-broo/common-types";
 
 /**
@@ -12,11 +12,13 @@ import type { WebhookPayload } from "@dm-broo/common-types";
  * Handles incoming webhook events from Instagram
  */
 export const webhookQueue = new Queue<WebhookPayload>("webhook-processing", {
-  connection: getRedisClient() || {
-    host: process.env.UPSTASH_REDIS_HOST,
-    port: 6379,
-    username: process.env.UPSTASH_REDIS_USERNAME,
-    password: process.env.UPSTASH_REDIS_PASSWORD,
+  connection: getQueueRedisClientR() || {
+    host: process.env.QUEUE_REDIS_HOST,
+    port: process.env.QUEUE_REDIS_PORT
+      ? parseInt(process.env.QUEUE_REDIS_PORT, 10)
+      : 6379,
+    username: process.env.QUEUE_REDIS_USERNAME,
+    password: process.env.QUEUE_REDIS_PASSWORD,
     tls: {},
   },
   defaultJobOptions: {

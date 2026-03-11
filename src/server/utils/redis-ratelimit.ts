@@ -4,8 +4,8 @@ import { Redis } from "@upstash/redis";
 import {
   RATE_LIMIT_CONFIG,
   RATE_LIMIT_TIERS,
-  UserTier,
 } from "@/server/config/rate-limit.config";
+import { UserTier } from "@/types/config";
 
 // Lazy-initialize Redis only if needed to avoid startup crashes if env is missing
 let redisClient: Redis | null = null;

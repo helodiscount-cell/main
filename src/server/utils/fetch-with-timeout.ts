@@ -4,7 +4,7 @@
  */
 
 import { logger } from "./pino";
-import { updateRateLimitsFromHeadersR } from "@/server/instagram/rate-limiter";
+import { updateRateLimitsFromHeadersR } from "@/server/redis";
 
 /**
  * Default timeout for API requests (in milliseconds)
@@ -137,11 +137,35 @@ export async function fetchWithTimeout<T = any>(
             errorData = { message: response.statusText };
           }
 
-          throw new Error(
+          const errorMessage =
             errorData.error?.message ||
-              errorData.message ||
-              `HTTP ${response.status}: ${response.statusText}`,
-          );
+            errorData.message ||
+            `HTTP ${response.status}: ${response.statusText}`;
+
+          // Log detailed error information for Meta Rate Limits
+          if (
+            response.status === 429 ||
+            errorData.error?.code === 4 ||
+            errorData.error?.code === 17 ||
+            errorData.error?.code === 32 ||
+            errorData.error?.code === 613
+          ) {
+            logger.warn(
+              {
+                instagramUserId: options.instagramUserId,
+                errorCode: errorData.error?.code,
+                errorSubcode: errorData.error?.error_subcode,
+                message: errorMessage,
+                // Stability throttle codes
+                throttled: errorData.error?.throttled,
+                backend_qps: errorData.error?.backend_qps,
+                complexity_score: errorData.error?.complexity_score,
+              },
+              "Instagram Rate Limit/Throttling detected",
+            );
+          }
+
+          throw new Error(errorMessage);
         }
 
         // Parses response
@@ -154,17 +178,20 @@ export async function fetchWithTimeout<T = any>(
             const businessUsageHeader = response.headers.get(
               "x-business-use-case-usage",
             );
+            const adUsageHeader = response.headers.get("x-ad-account-usage");
 
             const appUsage = appUsageHeader ? JSON.parse(appUsageHeader) : null;
             const businessUsage = businessUsageHeader
               ? JSON.parse(businessUsageHeader)
               : null;
+            const adUsage = adUsageHeader ? JSON.parse(adUsageHeader) : null;
 
-            if (appUsage || businessUsage) {
+            if (appUsage || businessUsage || adUsage) {
               await updateRateLimitsFromHeadersR(
                 options.instagramUserId,
                 appUsage,
                 businessUsage,
+                adUsage,
               ).catch((err) => {
                 logger.error(
                   { err },

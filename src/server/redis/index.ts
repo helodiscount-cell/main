@@ -7,7 +7,7 @@
  */
 
 // Connection
-export { getRedisClient } from "./client";
+export { getRedisClient, getQueueRedisClientR } from "./client";
 export { RedisError } from "./errors";
 
 // User Connections
