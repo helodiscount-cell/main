@@ -14,7 +14,7 @@ const UserSection = async () => {
     );
   }
 
-  const profilePictureUrl = data.publicMetadata.instaProfilePictureUrl;
+  const profilePictureUrl = data.imageUrl;
   const username = data.publicMetadata.instaUsername || data.username || "User";
 
   return (

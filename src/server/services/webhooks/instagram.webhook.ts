@@ -63,47 +63,8 @@ export async function processWebhookEvent(payload: string, signature: string) {
     throw new Error("Invalid JSON");
   }
 
-  // FILTERS OUT SELF-COMMENTS BEFORE QUEUEING
-  if (parsedPayload.entry && Array.isArray(parsedPayload.entry)) {
-    for (const entry of parsedPayload.entry) {
-      if ("changes" in entry && Array.isArray(entry.changes)) {
-        entry.changes = entry.changes.filter((change: any) => {
-          // Skips self-comments before queueing
-          if (
-            change.field === "comments" &&
-            change.value?.from?.self_ig_scoped_id
-          ) {
-            return false; // Removes from array
-          }
-          return true; // Keep all other events
-        });
-      }
-
-      if ("messaging" in entry && Array.isArray(entry.messaging)) {
-        entry.messaging = entry.messaging.filter((messagingEvent: any) => {
-          // Skips self-sent "echo" DMs to prevent infinite automation loops
-          if (messagingEvent.message?.is_echo === true) {
-            return false; // Removes from array
-          }
-          return true; // Keep all other events
-        });
-      }
-    }
-
-    // Removes entries with no changes left after filtering, unless they have messaging events
-    parsedPayload.entry = (parsedPayload.entry as any[]).filter(
-      (entry: any) =>
-        (entry.changes && entry.changes.length > 0) ||
-        (entry.messaging && entry.messaging.length > 0),
-    );
-  }
-
-  // Returns success if all events were filtered out
-  if (!parsedPayload.entry || parsedPayload.entry.length === 0)
-    return { success: true as const };
-
   // Adds webhook event to queue for processing
-  // Returns immediately to Instagram
+  // Filters and validation happen at the worker level (Pipeline Stage 2)
   try {
     await webhookQueue.add("webhook-event", parsedPayload, {
       jobId: `webhook-${Date.now()}-${Math.random().toString(36).substring(7)}`,

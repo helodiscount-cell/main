@@ -1,13 +1,13 @@
-export default function Page() {
+import React from "react";
+import { ContactsHeader, ContactsTable } from "@/components/dash/contacts";
+
+export default function ContactsPage() {
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 text-center">
-      <div className="text-6xl animate-bounce">🚧</div>
-      <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-        Work in Progress
-      </h1>
-      <p className="text-lg text-gray-500 max-w-md">
-        We are currently building this feature. Check back soon for updates!
-      </p>
+    <div className="flex flex-col h-full bg-transparent">
+      <ContactsHeader />
+      <div className="mx-4 mb-4 flex-1 flex flex-col">
+        <ContactsTable />
+      </div>
     </div>
   );
 }
