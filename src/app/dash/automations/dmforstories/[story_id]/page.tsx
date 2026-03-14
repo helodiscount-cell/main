@@ -81,8 +81,10 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         matchType: AUTOMATION_CONFIGS.STORY_REPLY.matchType,
         actionType: AUTOMATION_CONFIGS.STORY_REPLY.actionType,
         replyMessage: form.dmMessage,
-        replyImage: form.dmImage,
+        replyImage: form.dmImage || null,
         useVariables: true,
+        // Story replies don't have public replies in this version, but we keep it consistent
+        commentReplyWhenDm: [],
       };
     },
     onPopulateForm: (automation) => ({

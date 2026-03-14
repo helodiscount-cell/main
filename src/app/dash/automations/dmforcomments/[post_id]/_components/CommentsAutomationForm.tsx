@@ -77,13 +77,14 @@ export function CommentsAutomationForm({
         replyMessage: form.dmMessage,
         replyImage: form.dmImage,
         useVariables: true,
-        // Pass each public reply as a separate array entry — worker picks one randomly
-        ...(form.publicReplyEnabled && form.publicReplies.length > 0
-          ? { commentReplyWhenDm: form.publicReplies.map((r) => r.text) }
-          : {}),
+        // Always pass commentReplyWhenDm to ensure it clears if toggled off
+        commentReplyWhenDm:
+          form.publicReplyEnabled && form.publicReplies.length > 0
+            ? form.publicReplies.map((r) => r.text)
+            : [],
         askToFollowEnabled: form.askToFollowEnabled,
-        askToFollowMessage: form.askToFollowMessage,
-        askToFollowLink: form.askToFollowLink,
+        askToFollowMessage: form.askToFollowMessage || null,
+        askToFollowLink: form.askToFollowLink || null,
       };
     },
     onPopulateForm: (automation) => ({

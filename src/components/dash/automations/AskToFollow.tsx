@@ -75,17 +75,6 @@ const AskToFollow = ({
                 Visit Profile
               </span>
             </div>
-
-            <button
-              type="button"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6A06E4] hover:bg-white transition-all shadow-none hover:shadow-sm"
-              onClick={() => {
-                const newLink = prompt("Enter profile link:", link);
-                if (newLink !== null) onLinkChange(newLink);
-              }}
-            >
-              <Edit2 size={16} />
-            </button>
           </div>
         </div>
       )}

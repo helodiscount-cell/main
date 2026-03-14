@@ -28,7 +28,7 @@ export const RATE_LIMIT_CONFIG = {
   QUERY: {
     MATCHERS: ["/api/automations/list", "/api/user", "/api/instagram"],
     LIMITS: {
-      [RATE_LIMIT_TIERS.FREE]: { limit: 3, windowMs: "1 m" },
+      [RATE_LIMIT_TIERS.FREE]: { limit: 100, windowMs: "1 m" },
       [RATE_LIMIT_TIERS.PRO]: { limit: 500, windowMs: "1 m" },
     },
   },
