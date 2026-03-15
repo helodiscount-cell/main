@@ -37,6 +37,7 @@ const FIELD_VALIDATORS: Partial<
     v.every((item) =>
       ((f.options ?? []) as any[]).some((o: any) => o.label === item),
     ),
+  upload: (v) => typeof v === "string" && v.startsWith("https://"),
 };
 
 // Creates a form for the signed-in user, returns the public slug
@@ -131,6 +132,7 @@ export async function submitForm(
     const answer = input.answers[field.id];
     const isEmpty =
       answer === undefined ||
+      answer === null ||
       answer === "" ||
       (Array.isArray(answer) && answer.length === 0);
 

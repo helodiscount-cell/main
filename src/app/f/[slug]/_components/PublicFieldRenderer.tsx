@@ -7,7 +7,9 @@ import type {
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
-import { Star } from "lucide-react";
+import { Star, Upload, FileCheck, Loader2 } from "lucide-react";
+import { UploadDropzone } from "@/lib/uploadthing";
+import { toast } from "sonner";
 
 type PublicFieldRendererProps = {
   field: FormField;
@@ -156,6 +158,62 @@ export const PublicFieldRenderer = ({
             </button>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (field.type === "upload") {
+    const fileUrl = watch(field.id) as string | undefined;
+
+    return (
+      <div className="space-y-1.5">
+        <label className="text-sm font-semibold text-slate-700">
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+
+        {fileUrl ? (
+          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl animate-in fade-in zoom-in duration-300">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+              <FileCheck size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-emerald-900 truncate">
+                File uploaded successfully
+              </p>
+              <button
+                type="button"
+                onClick={() => setValue(field.id, "")}
+                className="text-xs text-emerald-600 hover:underline"
+              >
+                Remove and re-upload
+              </button>
+            </div>
+          </div>
+        ) : (
+          <UploadDropzone
+            endpoint="formAttachment"
+            onClientUploadComplete={(res) => {
+              if (res?.[0]) {
+                setValue(field.id, res[0].url);
+                toast.success("File uploaded!");
+              }
+            }}
+            onUploadError={(error: Error) => {
+              toast.error(`Upload failed: ${error.message}`);
+            }}
+            appearance={{
+              container:
+                "border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 transition-colors duration-200 py-8",
+              label: "text-[#6A06E4] hover:text-[#5a05c4]",
+              button:
+                "bg-[#6A06E4] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
+              allowedContent: "text-slate-400 text-[10px]",
+            }}
+          />
+        )}
+        {/* Hidden input to satisfy react-hook-form registry if needed, though setValue works directly */}
+        <input type="hidden" {...register(field.id)} />
       </div>
     );
   }

@@ -55,7 +55,7 @@ export const FormStatusSchema = z.enum(["DRAFT", "PUBLISHED"]);
 // A single answer — string for text-based fields, string[] for checkbox
 export const FormSubmissionAnswerSchema = z.record(
   z.string(),
-  z.union([z.string(), z.array(z.string())]),
+  z.union([z.string(), z.array(z.string()), z.null()]),
 );
 
 // What an anonymous visitor POSTs to submit a form

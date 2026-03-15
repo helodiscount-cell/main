@@ -31,6 +31,25 @@ export const ourFileRouter = {
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { uploadedBy: metadata.userId };
     }),
+
+  // Add a route for public form attachments — anonymous users allowed
+  formAttachment: f({
+    image: { maxFileSize: "4MB", maxFileCount: 1 },
+    pdf: { maxFileSize: "4MB", maxFileCount: 1 },
+    "application/msword": { maxFileSize: "4MB", maxFileCount: 1 },
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(async () => {
+      // No auth requirement for public form submissions
+      return { isPublic: true };
+    })
+    .onUploadComplete(async ({ file }) => {
+      console.log("Public form attachment uploaded:", file.url);
+      return { url: file.url };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

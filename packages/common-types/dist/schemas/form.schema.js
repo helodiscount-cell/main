@@ -59,7 +59,11 @@ exports.FormStatusSchema = zod_1.z.enum(["DRAFT", "PUBLISHED"]);
 // A single answer — string for text-based fields, string[] for checkbox
 exports.FormSubmissionAnswerSchema = zod_1.z.record(
   zod_1.z.string(),
-  zod_1.z.union([zod_1.z.string(), zod_1.z.array(zod_1.z.string())]),
+  zod_1.z.union([
+    zod_1.z.string(),
+    zod_1.z.array(zod_1.z.string()),
+    zod_1.z.null(),
+  ]),
 );
 // What an anonymous visitor POSTs to submit a form
 exports.SubmitFormSchema = zod_1.z.object({

@@ -89,7 +89,7 @@ export async function findFormBySlug(slug: string): Promise<Form | null> {
 // Saves a submission + atomically increments submissionCount
 export async function createFormSubmission(
   formId: string,
-  answers: Record<string, string | string[]>,
+  answers: Record<string, string | string[] | null>,
   meta: { ipAddress?: string; userAgent?: string },
 ): Promise<FormSubmission> {
   const [submission] = await prisma.$transaction([

@@ -154,13 +154,13 @@ export declare const FormStatusSchema: z.ZodEnum<{
 }>;
 export declare const FormSubmissionAnswerSchema: z.ZodRecord<
   z.ZodString,
-  z.ZodUnion<readonly [z.ZodString, z.ZodArray<z.ZodString>]>
+  z.ZodUnion<readonly [z.ZodString, z.ZodArray<z.ZodString>, z.ZodNull]>
 >;
 export declare const SubmitFormSchema: z.ZodObject<
   {
     answers: z.ZodRecord<
       z.ZodString,
-      z.ZodUnion<readonly [z.ZodString, z.ZodArray<z.ZodString>]>
+      z.ZodUnion<readonly [z.ZodString, z.ZodArray<z.ZodString>, z.ZodNull]>
     >;
   },
   z.core.$strip

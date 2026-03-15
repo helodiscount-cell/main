@@ -8,6 +8,7 @@ export const PUBLIC_ROUTES = [
   "/auth",
   "/auth/sso-callback",
   "/api/webhooks/instagram",
+  "/f",
 ] as const;
 
 export const AUTH_ROUTE = "/auth";
