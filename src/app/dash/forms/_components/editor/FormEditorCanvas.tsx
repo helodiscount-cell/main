@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useForm, useFieldArray, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { FormValuesSchema } from "@dm-broo/common-types";
 import type { FormValues, FieldType } from "@dm-broo/common-types";
+import { formService } from "@/api/services/forms";
 import { CoverImageUpload } from "./CoverImageUpload";
 import { FormTitleSection } from "./FormTitleSection";
 import { FieldCard } from "./FieldCard";
 import { AddFieldButton } from "./AddFieldButton";
 import { SubmitButton } from "./SubmitButton";
-
-import { toast } from "sonner";
+import { EditorHeader } from "./EditorHeader";
 
 const DEFAULT_FORM_VALUES: FormValues = {
   title: "",
@@ -20,8 +22,11 @@ const DEFAULT_FORM_VALUES: FormValues = {
   fields: [],
 };
 
-// Orchestrates the canvas: form state, field array, submit handler
+// Orchestrates the full editor — form state, field array, save & publish
 export const FormEditorCanvas = () => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const methods = useForm<FormValues>({
     resolver: zodResolver(FormValuesSchema),
     defaultValues: DEFAULT_FORM_VALUES,
@@ -32,7 +37,7 @@ export const FormEditorCanvas = () => {
     name: "fields",
   });
 
-  // Appends a new field with sensible defaults
+  // Adds a new field card with sensible defaults
   const handleAddField = useCallback(
     (type: FieldType) => {
       const isChoice = type === "dropdown" || type === "checkbox";
@@ -51,46 +56,89 @@ export const FormEditorCanvas = () => {
     [append],
   );
 
-  // Final submit — logs entire form to console for now
-  const handleSubmit = methods.handleSubmit(
-    (data) => {
-      console.log("[FormEditor] Submit:", data);
-      toast.success("Form data logged to console!");
+  // Saves the form to the backend with the given status
+  const save = useCallback(
+    async (status: "DRAFT" | "PUBLISHED") => {
+      const isValid = await methods.trigger();
+
+      if (!isValid) {
+        toast.error("Please fix the errors before saving.");
+        return;
+      }
+
+      const data = methods.getValues();
+      setIsLoading(true);
+
+      try {
+        const result = await formService.create({ ...data, status });
+        toast.success(
+          status === "PUBLISHED"
+            ? `Published! Public URL: /f/${result.slug}`
+            : "Saved as draft.",
+        );
+        router.push("/dash/forms");
+      } catch (error: any) {
+        const message =
+          error?.response?.data?.error ?? "Something went wrong. Try again.";
+        toast.error(message);
+      } finally {
+        setIsLoading(false);
+      }
     },
-    (errors) => {
-      console.error("[FormEditor] Errors:", errors);
-      toast.error("Please fix the errors in the form.");
-    },
+    [methods, router],
+  );
+
+  // Separate save handlers for header buttons
+  const handleSaveDraft = useCallback(() => save("DRAFT"), [save]);
+  const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
+
+  // Final submit button inside the canvas also publishes
+  const handleCanvasSubmit = methods.handleSubmit(
+    () => save("PUBLISHED"),
+    () => toast.error("Please fix the errors in the form."),
   );
 
   return (
-    <div className="flex-1 bg-[#E0E0E0] overflow-y-auto p-6 m-4 rounded-xl">
-      <FormProvider {...methods}>
-        <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-4">
-          {/* Cover image banner */}
-          <CoverImageUpload />
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Header with save/publish wired up */}
+      <EditorHeader
+        onSaveDraft={handleSaveDraft}
+        onPublish={handlePublish}
+        isLoading={isLoading}
+      />
 
-          {/* Title + description */}
-          <FormTitleSection />
+      {/* Canvas area */}
+      <div className="flex-1 bg-[#E0E0E0] overflow-y-auto p-6 m-4 rounded-xl">
+        <FormProvider {...methods}>
+          <form
+            onSubmit={handleCanvasSubmit}
+            className="max-w-lg mx-auto space-y-4"
+          >
+            {/* Cover image banner */}
+            <CoverImageUpload />
 
-          {/* Dynamic field cards */}
-          <div className="space-y-4 h-[calc(100vh-600px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {fields.map((field, index) => (
-              <FieldCard
-                key={field.id}
-                index={index}
-                onRemove={() => remove(index)}
-              />
-            ))}
-          </div>
+            {/* Title + description */}
+            <FormTitleSection />
 
-          {/* Add field picker */}
-          <AddFieldButton onAddField={handleAddField} />
+            {/* Dynamic field cards */}
+            <div className="space-y-4 h-[calc(100vh-600px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {fields.map((field, index) => (
+                <FieldCard
+                  key={field.id}
+                  index={index}
+                  onRemove={() => remove(index)}
+                />
+              ))}
+            </div>
 
-          {/* Submit */}
-          <SubmitButton />
-        </form>
-      </FormProvider>
+            {/* Add field picker */}
+            <AddFieldButton onAddField={handleAddField} />
+
+            {/* Publish via the canvas submit button */}
+            <SubmitButton disabled={isLoading} />
+          </form>
+        </FormProvider>
+      </div>
     </div>
   );
 };

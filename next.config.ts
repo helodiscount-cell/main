@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "b2fnc5isks.ufs.sh",
+      },
     ],
   },
   // Configures API route body size limits

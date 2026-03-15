@@ -65,6 +65,11 @@ import {
   FieldTypeSchema,
   FormFieldSchema,
   FormValuesSchema,
+  FormFieldOptionSchema,
+  CreateFormSchema,
+  SubmitFormSchema,
+  FormStatusSchema,
+  FormSubmissionAnswerSchema,
 } from "./schemas/form.schema";
 export type CreateAutomationInput = z.infer<typeof CreateAutomationSchema>;
 export type UpdateAutomationInput = z.infer<typeof UpdateAutomationSchema>;
@@ -148,6 +153,11 @@ export type ClerkUserData = z.infer<typeof ClerkUserDataSchema>;
 export type FieldType = z.infer<typeof FieldTypeSchema>;
 export type FormField = z.infer<typeof FormFieldSchema>;
 export type FormValues = z.infer<typeof FormValuesSchema>;
+export type FormFieldOption = z.infer<typeof FormFieldOptionSchema>;
+export type CreateFormInput = z.infer<typeof CreateFormSchema>;
+export type SubmitFormInput = z.infer<typeof SubmitFormSchema>;
+export type FormStatus = z.infer<typeof FormStatusSchema>;
+export type FormSubmissionAnswer = z.infer<typeof FormSubmissionAnswerSchema>;
 export type ErrorResponse = {
   success: false;
   error: string;

@@ -6,8 +6,24 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { EDITOR_HEADER_CONFIG, HEADER_ACTIONS } from "./config";
 
-// Breadcrumb + 4 action buttons (Refresh, Copy Link, Preview, Publish)
-export const EditorHeader = () => {
+type EditorHeaderProps = {
+  onSaveDraft: () => void;
+  onPublish: () => void;
+  isLoading?: boolean;
+};
+
+// Breadcrumb + action buttons — Refresh saves as draft, Publish publishes
+export const EditorHeader = ({
+  onSaveDraft,
+  onPublish,
+  isLoading,
+}: EditorHeaderProps) => {
+  // Maps action id to its click handler
+  const ACTION_HANDLERS: Record<string, () => void> = {
+    refresh: onSaveDraft,
+    publish: onPublish,
+  };
+
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="-ml-1" />
@@ -34,6 +50,8 @@ export const EditorHeader = () => {
             action.variant === "primary" ? (
               <Button
                 key={action.id}
+                disabled={isLoading}
+                onClick={ACTION_HANDLERS[action.id]}
                 className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4"
               >
                 <action.icon size={15} />

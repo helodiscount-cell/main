@@ -1,0 +1,129 @@
+import { prisma } from "@/server/db";
+import { executeWithErrorHandling } from "../repository-utils";
+import type { CreateFormInput } from "@dm-broo/common-types";
+import type { Form, FormSubmission } from "@prisma/client";
+
+// Generates a short 8-char alphanumeric slug from a UUID
+function generateSlug(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+}
+
+// Creates a form. Retries up to 5 times on slug collision (P2002)
+export async function createForm(
+  userId: string,
+  data: CreateFormInput,
+): Promise<Form> {
+  let attempts = 0;
+
+  while (attempts < 5) {
+    const slug = generateSlug();
+
+    try {
+      return await prisma.form.create({
+        data: {
+          userId,
+          title: data.title,
+          description: data.description ?? "",
+          coverImage: data.coverImage ?? null,
+          fields: (data.fields ?? []) as any,
+          slug,
+          status: data.status ?? "DRAFT",
+        },
+      });
+    } catch (error: any) {
+      // Retry only on unique constraint violation (slug collision)
+      if (error?.code === "P2002") {
+        attempts++;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error("Failed to generate a unique slug after 5 attempts");
+}
+
+// All forms for a user, ordered newest first
+export async function findFormsByUserId(userId: string): Promise<Form[]> {
+  return executeWithErrorHandling(
+    () =>
+      prisma.form.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      }),
+    { operation: "findFormsByUserId", model: "Form", fallback: [] },
+  );
+}
+
+// Single form by DB id — no ownership check (caller must verify)
+export async function findFormById(formId: string): Promise<Form | null> {
+  return executeWithErrorHandling(
+    () => prisma.form.findUnique({ where: { id: formId } }),
+    { operation: "findFormById", model: "Form", fallback: null },
+  );
+}
+
+// Ownership-scoped get — returns null if form doesn't belong to the user
+export async function findFormByIdAndUserId(
+  formId: string,
+  userId: string,
+): Promise<Form | null> {
+  return executeWithErrorHandling(
+    () =>
+      prisma.form.findFirst({
+        where: { id: formId, userId },
+        include: { submissions: false },
+      }),
+    { operation: "findFormByIdAndUserId", model: "Form", fallback: null },
+  );
+}
+
+// Used by the public page and submission handler
+export async function findFormBySlug(slug: string): Promise<Form | null> {
+  return executeWithErrorHandling(
+    () => prisma.form.findUnique({ where: { slug } }),
+    { operation: "findFormBySlug", model: "Form", fallback: null },
+  );
+}
+
+// Saves a submission + atomically increments submissionCount
+export async function createFormSubmission(
+  formId: string,
+  answers: Record<string, string | string[]>,
+  meta: { ipAddress?: string; userAgent?: string },
+): Promise<FormSubmission> {
+  const [submission] = await prisma.$transaction([
+    prisma.formSubmission.create({
+      data: {
+        formId,
+        answers,
+        ipAddress: meta.ipAddress ?? null,
+        userAgent: meta.userAgent ?? null,
+      },
+    }),
+    prisma.form.update({
+      where: { id: formId },
+      data: { submissionCount: { increment: 1 } },
+    }),
+  ]);
+
+  return submission;
+}
+
+// All submissions for a form, newest first
+export async function findSubmissionsByFormId(
+  formId: string,
+): Promise<FormSubmission[]> {
+  return executeWithErrorHandling(
+    () =>
+      prisma.formSubmission.findMany({
+        where: { formId },
+        orderBy: { submittedAt: "desc" },
+      }),
+    {
+      operation: "findSubmissionsByFormId",
+      model: "FormSubmission",
+      fallback: [],
+    },
+  );
+}

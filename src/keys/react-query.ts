@@ -23,3 +23,11 @@ export const statsKeys = {
   bestPerformer: (range: string) =>
     [...statsKeys.all, "best-performer", range] as const,
 };
+
+export const formKeys = {
+  all: ["forms"] as const,
+  list: (filters?: { status?: string }) =>
+    [...formKeys.all, "list", filters] as const,
+  detail: (id: string) => [...formKeys.all, "detail", id] as const,
+  submissions: (id: string) => [...formKeys.all, "submissions", id] as const,
+};

@@ -1,6 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FormValuesSchema =
+exports.SubmitFormSchema =
+  exports.FormSubmissionAnswerSchema =
+  exports.FormStatusSchema =
+  exports.CreateFormSchema =
+  exports.FormValuesSchema =
   exports.FormFieldSchema =
   exports.FormFieldOptionSchema =
   exports.FieldTypeSchema =
@@ -41,4 +45,23 @@ exports.FormValuesSchema = zod_1.z.object({
   description: zod_1.z.string(),
   coverImage: zod_1.z.string().optional(),
   fields: zod_1.z.array(exports.FormFieldSchema),
+});
+// What the frontend POSTs to save a form
+exports.CreateFormSchema = zod_1.z.object({
+  title: zod_1.z.string().min(1, "Title is required"),
+  description: zod_1.z.string().default(""),
+  coverImage: zod_1.z.string().url().optional(),
+  fields: zod_1.z.array(exports.FormFieldSchema),
+  status: zod_1.z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
+});
+// Status values for a form
+exports.FormStatusSchema = zod_1.z.enum(["DRAFT", "PUBLISHED"]);
+// A single answer — string for text-based fields, string[] for checkbox
+exports.FormSubmissionAnswerSchema = zod_1.z.record(
+  zod_1.z.string(),
+  zod_1.z.union([zod_1.z.string(), zod_1.z.array(zod_1.z.string())]),
+);
+// What an anonymous visitor POSTs to submit a form
+exports.SubmitFormSchema = zod_1.z.object({
+  answers: exports.FormSubmissionAnswerSchema,
 });
