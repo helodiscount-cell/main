@@ -7,6 +7,7 @@ export * from "./schemas/automation.schema";
 export * from "./schemas/instagram.schema";
 export * from "./schemas/webhook.schema";
 export * from "./schemas/user.schema";
+export * from "./schemas/form.schema";
 import {
   CreateAutomationSchema,
   UpdateAutomationSchema,
@@ -60,6 +61,11 @@ import {
   EnsureUserResponseSchema,
   ClerkUserDataSchema,
 } from "./schemas/user.schema";
+import {
+  FieldTypeSchema,
+  FormFieldSchema,
+  FormValuesSchema,
+} from "./schemas/form.schema";
 export type CreateAutomationInput = z.infer<typeof CreateAutomationSchema>;
 export type UpdateAutomationInput = z.infer<typeof UpdateAutomationSchema>;
 export type AutomationListQuery = z.infer<typeof AutomationListQuerySchema>;
@@ -139,6 +145,9 @@ export type WebhookProcessingResponse = z.infer<
 >;
 export type EnsureUserResponse = z.infer<typeof EnsureUserResponseSchema>;
 export type ClerkUserData = z.infer<typeof ClerkUserDataSchema>;
+export type FieldType = z.infer<typeof FieldTypeSchema>;
+export type FormField = z.infer<typeof FormFieldSchema>;
+export type FormValues = z.infer<typeof FormValuesSchema>;
 export type ErrorResponse = {
   success: false;
   error: string;

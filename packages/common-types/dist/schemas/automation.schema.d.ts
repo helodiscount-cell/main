@@ -21,6 +21,9 @@ export declare const CreateAutomationSchema: z.ZodObject<
       z.ZodOptional<z.ZodString>,
       z.ZodTransform<string | null, string | undefined>
     >;
+    postMediaUrl: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    postPermalink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    postTimestamp: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     story: z.ZodOptional<
       z.ZodObject<
         {
@@ -89,6 +92,9 @@ export declare const UpdateAutomationSchema: z.ZodObject<
       z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>
     >;
     replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
+    askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     status: z.ZodOptional<
       z.ZodEnum<{
         ACTIVE: "ACTIVE";
@@ -147,6 +153,9 @@ export declare const AutomationResponseSchema: z.ZodObject<
     replyMessage: z.ZodString;
     replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
+    askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     status: z.ZodEnum<{
       ACTIVE: "ACTIVE";
       PAUSED: "PAUSED";
@@ -200,6 +209,9 @@ export declare const AutomationDetailResponseSchema: z.ZodObject<
         replyMessage: z.ZodString;
         replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
+        askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
+        askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+        askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         status: z.ZodEnum<{
           ACTIVE: "ACTIVE";
           PAUSED: "PAUSED";
@@ -262,6 +274,9 @@ export declare const AutomationListResponseSchema: z.ZodObject<
           replyMessage: z.ZodString;
           replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
           commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
+          askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
+          askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+          askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
           status: z.ZodEnum<{
             ACTIVE: "ACTIVE";
             PAUSED: "PAUSED";
@@ -319,6 +334,9 @@ export declare const UpdateAutomationResponseSchema: z.ZodObject<
         }>;
         replyMessage: z.ZodString;
         commentReplyWhenDm: z.ZodOptional<z.ZodArray<z.ZodString>>;
+        askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
+        askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+        askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         status: z.ZodEnum<{
           ACTIVE: "ACTIVE";
           PAUSED: "PAUSED";

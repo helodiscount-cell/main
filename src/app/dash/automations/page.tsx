@@ -91,12 +91,8 @@ const AutomationPage = () => {
       {/* Table */}
       <div className="m-4 bg-white rounded-xl overflow-hidden flex-1">
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] items-center px-4 py-3 gap-4 border-b border-slate-100">
+        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-4 py-3 gap-4 border-b border-slate-100">
           <span className="text-sm font-medium text-slate-700">Automation</span>
-          <div className="flex items-center gap-2">
-            <ColHeader label="Triggers" />
-            <div className="w-px h-4 bg-slate-200" />
-          </div>
 
           {/* Status column with filter dropdown */}
           <div className="flex items-center gap-2">
@@ -128,9 +124,7 @@ const AutomationPage = () => {
             <div className="w-px h-4 bg-slate-200" />
           </div>
           <ColHeader label="Last Triggered" />
-          <button className="bg-slate-900 text-white rounded-md p-1.5 hover:bg-slate-700 transition-colors">
-            <SlidersHorizontal size={14} />
-          </button>
+          <SlidersHorizontal size={14} />
         </div>
 
         {/* Rows */}

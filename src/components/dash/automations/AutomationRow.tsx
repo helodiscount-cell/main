@@ -3,9 +3,7 @@ import { useState } from "react";
 import { ActionsMenu } from "./ActionMenu";
 import { StatusBadge } from "./StatusBadge";
 import Link from "next/link";
-
-type AutomationListItem =
-  import("@/api/services/automations").AutomationListItem;
+import { AutomationListItem } from "@/types/automation";
 
 // Automation row
 export const AutomationRow = ({
@@ -17,7 +15,7 @@ export const AutomationRow = ({
 
   return (
     <>
-      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] items-center px-4 py-4 gap-4">
+      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-4 py-4 gap-4">
         {/* Name + target */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-md bg-slate-100 shrink-0 flex items-center justify-center text-xs font-bold text-slate-400">
@@ -40,14 +38,6 @@ export const AutomationRow = ({
                 "Untitled"}
             </span>
           </Link>
-        </div>
-
-        {/* Triggers */}
-        <div className="flex items-center gap-2">
-          <span className="text-[#6A06E4] font-semibold text-sm">
-            {automation.triggers.length}
-          </span>
-          <div className="w-px h-4 bg-slate-200" />
         </div>
 
         {/* Status */}

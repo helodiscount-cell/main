@@ -68,6 +68,9 @@ exports.CreateAutomationSchema = zod_1.z
       .transform((val) =>
         val ? (0, sanitize_1.sanitizePostCaption)(val) : null,
       ),
+    postMediaUrl: zod_1.z.string().url().max(2048).optional().nullable(),
+    postPermalink: zod_1.z.string().url().max(2048).optional().nullable(),
+    postTimestamp: zod_1.z.string().max(100).optional().nullable(),
     story: StoryTargetInputSchema.optional(),
     triggers: zod_1.z
       .array(
@@ -162,6 +165,9 @@ exports.UpdateAutomationSchema = zod_1.z.object({
     .max(10, "Maximum 10 comment replies allowed")
     .optional(),
   replyImage: zod_1.z.string().url("Invalid image URL").nullable().optional(),
+  askToFollowEnabled: zod_1.z.boolean().optional(),
+  askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
+  askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
   status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 // Query parameters for listing automations
@@ -206,6 +212,9 @@ exports.AutomationResponseSchema = zod_1.z.object({
   replyMessage: zod_1.z.string(),
   replyImage: zod_1.z.string().nullable().optional(),
   commentReplyWhenDm: zod_1.z.array(zod_1.z.string()).optional(),
+  askToFollowEnabled: zod_1.z.boolean().optional(),
+  askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
+  askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
   status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: zod_1.z.number(),
   lastTriggeredAt: zod_1.z.date().nullable(),
@@ -267,6 +276,9 @@ exports.UpdateAutomationResponseSchema = zod_1.z.object({
     actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]),
     replyMessage: zod_1.z.string(),
     commentReplyWhenDm: zod_1.z.array(zod_1.z.string()).optional(),
+    askToFollowEnabled: zod_1.z.boolean().optional(),
+    askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
+    askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
     status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: zod_1.z.date(),
   }),

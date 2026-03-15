@@ -39,3 +39,4 @@ __exportStar(require("./schemas/automation.schema"), exports);
 __exportStar(require("./schemas/instagram.schema"), exports);
 __exportStar(require("./schemas/webhook.schema"), exports);
 __exportStar(require("./schemas/user.schema"), exports);
+__exportStar(require("./schemas/form.schema"), exports);

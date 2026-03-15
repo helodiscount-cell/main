@@ -10,6 +10,7 @@ export * from "./schemas/automation.schema";
 export * from "./schemas/instagram.schema";
 export * from "./schemas/webhook.schema";
 export * from "./schemas/user.schema";
+export * from "./schemas/form.schema";
 
 // Import schemas for type inference
 import {
@@ -68,6 +69,12 @@ import {
   EnsureUserResponseSchema,
   ClerkUserDataSchema,
 } from "./schemas/user.schema";
+
+import {
+  FieldTypeSchema,
+  FormFieldSchema,
+  FormValuesSchema,
+} from "./schemas/form.schema";
 
 // Automation Types
 export type CreateAutomationInput = z.infer<typeof CreateAutomationSchema>;
@@ -155,6 +162,11 @@ export type WebhookProcessingResponse = z.infer<
 // User Types
 export type EnsureUserResponse = z.infer<typeof EnsureUserResponseSchema>;
 export type ClerkUserData = z.infer<typeof ClerkUserDataSchema>;
+
+// Form Editor Types
+export type FieldType = z.infer<typeof FieldTypeSchema>;
+export type FormField = z.infer<typeof FormFieldSchema>;
+export type FormValues = z.infer<typeof FormValuesSchema>;
 
 // Common Error Types
 export type ErrorResponse = {
