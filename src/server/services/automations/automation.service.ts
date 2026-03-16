@@ -23,11 +23,11 @@ import {
   softDeleteAutomation,
   findActiveAutomationsByPost,
   findActiveAutomationsByStory,
-  AutomationFilters,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/utils/automation-cache";
 import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
+import { AutomationFilters } from "@/types/automation";
 
 /**
  * Creates a new automation for a user.

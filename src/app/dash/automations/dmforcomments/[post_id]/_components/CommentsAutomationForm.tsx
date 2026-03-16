@@ -97,7 +97,7 @@ export function CommentsAutomationForm({
       publicReplies:
         automation.commentReplyWhenDm &&
         automation.commentReplyWhenDm.length > 0
-          ? automation.commentReplyWhenDm.map((text) => ({
+          ? (automation.commentReplyWhenDm as string[]).map((text) => ({
               id: crypto.randomUUID(), // This is fine here as it's only called during reset
               text,
             }))

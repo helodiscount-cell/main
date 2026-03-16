@@ -1,9 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import {
-  automationService,
-  AutomationListItem,
-} from "@/api/services/automations";
+import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
 import { toast } from "sonner";
 import {
@@ -14,6 +11,7 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AutomationListItem } from "@/types/automation";
 
 export type PageState = "loading" | "fresh" | "live";
 
