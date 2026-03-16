@@ -7,20 +7,20 @@ import { Queue } from "bullmq";
 import { getQueueRedisClientR } from "@/server/redis";
 import type { WebhookPayload } from "@dm-broo/common-types";
 
+const redisConnection = getQueueRedisClientR();
+
+if (!redisConnection) {
+  throw new Error(
+    "QUEUE_REDIS_HOST or QUEUE_REDIS_PASSWORD is missing. Webhook queue cannot be initialized.",
+  );
+}
+
 /**
  * Webhook processing queue
  * Handles incoming webhook events from Instagram
  */
 export const webhookQueue = new Queue<WebhookPayload>("webhook-processing", {
-  connection: getQueueRedisClientR() || {
-    host: process.env.QUEUE_REDIS_HOST,
-    port: process.env.QUEUE_REDIS_PORT
-      ? parseInt(process.env.QUEUE_REDIS_PORT, 10)
-      : 6379,
-    username: process.env.QUEUE_REDIS_USERNAME,
-    password: process.env.QUEUE_REDIS_PASSWORD,
-    tls: {},
-  },
+  connection: redisConnection,
   defaultJobOptions: {
     attempts: 5,
     backoff: {

@@ -19,11 +19,20 @@ export async function GET() {
     await prisma.instaAccount.deleteMany({});
     await prisma.user.deleteMany({});
 
-    // Clear Redis cache (wipes all keys, including BullMQ and auth sessions)
-    const { getRedisClient } = await import("@/server/redis");
-    const redis = getRedisClient();
-    if (redis) {
-      await redis.flushdb();
+    // Clear Redis caches
+    const { getRedisClient, getQueueRedisClientR } =
+      await import("@/server/redis");
+
+    // Clear Upstash Redis
+    const upstashRedis = getRedisClient();
+    if (upstashRedis) {
+      await upstashRedis.flushdb();
+    }
+
+    // Clear Queue Redis (BullMQ)
+    const queueRedis = getQueueRedisClientR();
+    if (queueRedis) {
+      await queueRedis.flushdb();
     }
 
     return NextResponse.json({

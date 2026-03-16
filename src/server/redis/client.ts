@@ -50,34 +50,26 @@ let queueRedisClient: Redis | null = null;
 
 /**
  * Returns the Redis instance specifically dedicated to BullMQ.
- * Uses QUEUE_REDIS_* env vars, falls back to UPSTASH_REDIS_* if not provided.
+ * Strictly uses QUEUE_REDIS_* env vars. No fallbacks.
  */
 export function getQueueRedisClientR(): Redis | null {
   if (!queueRedisClient) {
-    const host = process.env.QUEUE_REDIS_HOST || process.env.UPSTASH_REDIS_HOST;
-    const port =
-      Number(process.env.QUEUE_REDIS_PORT) ||
-      Number(process.env.UPSTASH_REDIS_PORT) ||
-      6379;
-    const username =
-      process.env.QUEUE_REDIS_USERNAME ||
-      process.env.UPSTASH_REDIS_USERNAME ||
-      "default";
-    const password =
-      process.env.QUEUE_REDIS_PASSWORD || process.env.UPSTASH_REDIS_PASSWORD;
+    const host = process.env.QUEUE_REDIS_HOST;
+    const port = Number(process.env.QUEUE_REDIS_PORT) || 6379;
+    const username = process.env.QUEUE_REDIS_USERNAME || "default";
+    const password = process.env.QUEUE_REDIS_PASSWORD;
 
     if (host && password) {
-      const isUpstash = host.includes("upstash");
       const isRedisLabs = host.includes("redislabs");
 
       queueRedisClient = new Redis({
         host,
         port,
-        // For some providers, 'default' username is required; for others, it must be omitted.
-        // We favor provided username but fall back to 'default' if it's Upstash.
-        username: username || "default",
+        username,
         password,
-        tls: isUpstash ? {} : undefined,
+        // RedisLabs usually doesn't need TLS for basic connections unless specified,
+        // but we'll respect the host if it's redislabs.
+        tls: isRedisLabs ? {} : undefined,
         maxRetriesPerRequest: null, // BullMQ needs this to be null
         enableReadyCheck: true,
         retryStrategy(times) {
@@ -93,7 +85,9 @@ export function getQueueRedisClientR(): Redis | null {
         logger.error({ err }, "Queue Redis Client Error");
       });
     } else {
-      logger.warn("Queue Redis disabled: Missing host or password");
+      logger.warn(
+        "Queue Redis disabled: Missing QUEUE_REDIS_HOST or QUEUE_REDIS_PASSWORD",
+      );
     }
   }
   return queueRedisClient;
