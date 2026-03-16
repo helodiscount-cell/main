@@ -1,4 +1,3 @@
-// POST /api/forms/public/[slug]/submit — anonymous form submission
 import { NextRequest } from "next/server";
 import { SubmitFormSchema } from "@dm-broo/common-types";
 import { submitForm } from "@/server/services/forms";
