@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { statsService } from "@/api/services/stats";
 import { statsKeys } from "@/keys/react-query";
-import { ChartDataPoint } from "@/api/services/stats";
+import { ChartDataPoint } from "@/types/stats";
 
 // Internal configuration for different widget types
 const WIDGET_CONFIGS = {

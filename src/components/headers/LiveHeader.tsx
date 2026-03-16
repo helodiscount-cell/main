@@ -1,4 +1,4 @@
-import { AutomationListItem } from "@/api/services/automations";
+import { AutomationListItem } from "@/types/automation";
 import { Button } from "../ui/button";
 import { Play, RefreshCw, RotateCcw, Square } from "lucide-react";
 

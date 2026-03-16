@@ -7,7 +7,7 @@ import Testimony from "@/components/home/Testimony";
 export default function LandingPage() {
   return (
     // Uses grid pattern background according to brand style
-    <div className="bg-[#FCF9FF] bg-[linear-gradient(to_right,rgba(106,6,228,0.18),transparent_20%,transparent_80%,rgba(106,6,228,0.18))]">
+    <div className=" bg-[#FCF9FF] bg-[linear-gradient(to_right,rgba(106,6,228,0.18),transparent_20%,transparent_80%,rgba(106,6,228,0.18))]">
       <LandingHeader />
       <HeroSection />
       <Section2 />
