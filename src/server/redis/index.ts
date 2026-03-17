@@ -20,24 +20,11 @@ export {
 // Tokens
 export { getAccessTokenR, cacheAccessTokenR } from "./operations/token";
 
-// Idempotency Locks
-export { isCommentProcessed } from "./operations/comment";
-
-// User Cooldowns
-export { isUserOnCooldown } from "./operations/cooldown";
-
 // Meta API Rate Limits
-export {
-  updateRateLimitsFromHeadersR,
-  checkRateLimits,
-} from "./operations/rate-limit";
+export { updateRateLimitsFromHeadersR } from "./operations/rate-limit";
+
 // Automations and DB Account Caching
-export {
-  getAccountByInstagramId,
-  getAutomationsByPost,
-  getAutomationsByStory,
-  invalidateAutomations,
-} from "./operations/automation";
+export { invalidateAutomations } from "./operations/automation";
 
 // Instagram Global Data
 export { getCachedPosts, getCachedStories } from "./operations/instagram";

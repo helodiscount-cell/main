@@ -13,11 +13,7 @@ export const TTL = {
   USER_CONNECTED: 24 * 60 * 60, // 24 hours
   ACCESS_TOKEN: 2 * 60 * 60, // 2 hours
 
-  // Automations and Processing
-  COMMENT_PROCESSED: 24 * 60 * 60, // 24 hours
-
-  // Cool Downs and Rate Limits
-  DEFAULT_COOLDOWN: 24 * 60 * 60, // 24 hours (can be overridden)
+  // Meta API Rate Limits
   API_USAGE: 60 * 60, // 1 hour rolling window approximation
   INSTAGRAM_DATA: 15 * 60, // 15 minutes
 };
@@ -32,14 +28,6 @@ export const KEYS = {
 
   // Domain: Tokens
   ACCESS_TOKEN: (accountId: string) => `ig:access_token:${accountId}`,
-
-  // Domain: Comments / Idempotency
-  COMMENT_PROCESSED: (commentId: string, automationId: string) =>
-    `ig:processed:${commentId}:${automationId}`,
-
-  // Domain: Cooldowns
-  USER_COOLDOWN: (instagramUserId: string, automationId: string) =>
-    `ig:cooldown:${instagramUserId}:${automationId}`,
 
   // Domain: Meta API Rate Limits
   APP_USAGE: () => `ig:rate_limit:app_usage`,

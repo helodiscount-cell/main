@@ -35,11 +35,11 @@ export async function GET() {
           clerkClient.users.updateUserMetadata(u.id, {
             publicMetadata: {
               isConnected: false,
-              instaUsername: null,
-              instaProfilePictureUrl: null,
-              instaUserId: null,
-              instaAccountType: null,
-              lastSync: null,
+              instaUsername: null! as string,
+              instaProfilePictureUrl: null! as string,
+              instaUserId: null! as string,
+              instaAccountType: null! as string,
+              lastSync: null! as string,
             },
           }),
         ),
