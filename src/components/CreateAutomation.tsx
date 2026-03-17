@@ -48,7 +48,10 @@ export function CreateAutomationDialog({ title }: { title: string }) {
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold tracking-tight">
-            {activeTab ? "Configure Automation" : "Choose a Template"}
+            <div className="flex flex-1 justify-between">
+              {activeTab ? "Configure Automation" : "Choose a Template"}
+              <Button variant={"ghost"}>Refresh</Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
         <div>{renderContent()}</div>

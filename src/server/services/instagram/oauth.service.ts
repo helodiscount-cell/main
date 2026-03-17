@@ -87,17 +87,24 @@ export async function handleOAuthCallback(code: string, state: string) {
     const currentClerkUser = await clerkClient.users.getUser(clerkId);
 
     // Exchanges code for short-lived token (returns user_id too)
+    console.log("Exchanging code for short-lived token...");
     const shortLivedToken = await exchangeCodeForToken(code);
 
     // Exchanges for long-lived token (60 days)
+    console.log("Exchanging for long-lived token...");
     const longLivedToken = await getLongLivedToken(
       shortLivedToken.access_token,
     );
 
     // Fetches Instagram user data using the token
-    // Passes user_id from token exchange for direct access
+    console.log("Fetching Instagram user data...");
     const instagramUser = await fetchInstagramUserData(
       longLivedToken.access_token,
+    );
+
+    console.log(
+      "Instagram user data fetched successfully:",
+      instagramUser.username,
     );
 
     // Validates account type (must be BUSINESS or MEDIA_CREATOR)
@@ -302,16 +309,6 @@ export async function disconnectAccount(clerkId: string) {
     );
   }
 
-  // Clear Redis cache to ensure no stale profile data remains
-  try {
-    const redisClient = getRedisClient();
-    if (redisClient) {
-      await redisClient.del(KEYS.USER_CONNECTION(clerkId));
-    }
-  } catch (redisError) {
-    console.error("Failed to clear Redis cache on disconnect:", redisError);
-  }
-
   // Finds user with Instagram account
   const user = await findUserWithInstaAccount(clerkId);
 
@@ -325,14 +322,6 @@ export async function disconnectAccount(clerkId: string) {
     );
     // Deactivates the Instagram account (leaves it intact for history but inactive)
     await deactivateInstaAccount(user.instaAccount.id, clerkId);
-  } else {
-    // Just in case Prisma is out of sync but Redis isn't, attempt a blind wipe of clerk profile
-    try {
-      const redisClient = getRedisClient();
-      if (redisClient) {
-        await redisClient.del(KEYS.USER_CONNECTION(clerkId)); // Using temporary fallback
-      }
-    } catch {}
   }
 
   return {

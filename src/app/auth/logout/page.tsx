@@ -4,6 +4,7 @@ import { useClerk } from "@clerk/nextjs";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { cleanupOnLogout } from "./actions";
 
 const LogoutPage = () => {
   const { signOut } = useClerk();
@@ -12,13 +13,13 @@ const LogoutPage = () => {
   useEffect(() => {
     const handleLogout = async () => {
       try {
-        // Disconnect Instagram first while we still have an active session
-        const { instagramService } = await import("@/api/services/instagram");
-        await instagramService.oauth.disconnect();
+        // Server action: clears Clerk metadata + disconnects Instagram server-side.
+        // Running server-side guarantees metadata is wiped even if Instagram cleanup fails.
+        await cleanupOnLogout();
       } catch (e) {
-        console.error("Failed to disconnect Instagram during logout:", e);
+        console.error("Failed to cleanup during logout:", e);
       } finally {
-        // Always sign out of Clerk regardless of disconnect success
+        // Always sign out of Clerk regardless of cleanup success
         await signOut();
         router.push("/");
       }

@@ -11,13 +11,6 @@ import {
 import { prisma } from "@/server/db";
 import { fetchWithTimeout } from "@/server/utils/fetch-with-timeout";
 
-// export interface WebhookSubscription {
-//   object: string;
-//   callback_url: string;
-//   fields: string[];
-//   verify_token: string;
-// }
-
 /**
  * Subscribes to Instagram webhooks
  * With Instagram Login, webhooks are primarily configured in the app dashboard
@@ -78,45 +71,4 @@ export async function markWebhooksEnabled(
       webhooksEnabled: enabled,
     },
   });
-}
-
-/**
- * Gets webhook subscription status
- * With Instagram Login, webhooks are configured at the app level
- */
-export async function getWebhookSubscriptionStatus(
-  accessToken: string,
-  instagramUserId: string,
-): Promise<{
-  subscribed: boolean;
-  fields: string[];
-}> {
-  try {
-    // Verifies the token is valid and account is accessible
-    const url = buildGraphApiUrl(instagramUserId);
-    url.searchParams.set("fields", "id");
-    url.searchParams.set("access_token", accessToken);
-
-    try {
-      const result = await fetchWithTimeout<any>(url.toString(), {
-        method: "GET",
-        timeout: 10000,
-        retries: 1,
-      });
-
-      if (result.data.id) {
-        // Account is accessible, webhooks should be receiving events
-        return {
-          subscribed: true,
-          fields: ["comments", "messages"],
-        };
-      }
-
-      return { subscribed: false, fields: [] };
-    } catch (error) {
-      return { subscribed: false, fields: [] };
-    }
-  } catch (error) {
-    return { subscribed: false, fields: [] };
-  }
 }

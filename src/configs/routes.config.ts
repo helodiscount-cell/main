@@ -3,13 +3,16 @@
  * Centralized route categories for authentication and authorization logic
  */
 
+// Exact-match only — these routes are accessible without authentication
 export const PUBLIC_ROUTES = [
   "/",
   "/auth",
   "/auth/sso-callback",
   "/api/webhooks/instagram",
-  "/f",
 ] as const;
+
+// Prefix-match routes — these routes AND all their sub-paths are public
+export const PUBLIC_PREFIX_ROUTES = ["/f"] as const;
 
 export const AUTH_ROUTE = "/auth";
 export const CONNECT_ROUTE = "/auth/connect";
@@ -19,9 +22,11 @@ export const DASHBOARD_ROUTE = "/dash";
  * Route Matchers
  */
 export const isPublicRoute = (pathname: string) => {
-  return PUBLIC_ROUTES.some(
+  const exactMatch = (PUBLIC_ROUTES as readonly string[]).includes(pathname);
+  const prefixMatch = PUBLIC_PREFIX_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
+  return exactMatch || prefixMatch;
 };
 
 export const isAuthRoute = (pathname: string) => pathname === AUTH_ROUTE;

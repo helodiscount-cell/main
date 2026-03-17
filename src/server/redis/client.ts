@@ -60,16 +60,11 @@ export function getQueueRedisClientR(): Redis | null {
     const password = process.env.QUEUE_REDIS_PASSWORD;
 
     if (host && password) {
-      const isRedisLabs = host.includes("redislabs");
-
       queueRedisClient = new Redis({
         host,
         port,
         username,
         password,
-        // RedisLabs usually doesn't need TLS for basic connections unless specified,
-        // but we'll respect the host if it's redislabs.
-        tls: isRedisLabs ? {} : undefined,
         maxRetriesPerRequest: null, // BullMQ needs this to be null
         enableReadyCheck: true,
         retryStrategy(times) {
@@ -77,7 +72,7 @@ export function getQueueRedisClientR(): Redis | null {
             logger.error("Queue Redis connection failed. Retrying slowly.");
             return 5000;
           }
-          return Math.min(times * 100, 2000);
+          return Math.min(times * 1000, 2000);
         },
       });
 

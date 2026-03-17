@@ -53,14 +53,6 @@ export const DMForComments = ({ onBack }: { onBack: () => void }) => {
           </div>
         ))}
       </div>
-      <div className="flex justify-end pt-4">
-        <Button
-          disabled
-          className="bg-gray-100 text-gray-400 cursor-not-allowed"
-        >
-          Continue
-        </Button>
-      </div>
     </div>
   );
 };

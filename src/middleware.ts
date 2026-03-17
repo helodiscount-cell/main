@@ -73,10 +73,33 @@ export default clerkMiddleware(async (auth, request) => {
   // User is logged in
 
   // 1st Check: Fast path (JWT Claims)
-  let isConnected = (sessionClaims?.metadata as any)?.isConnected === true;
+  const metadata = sessionClaims?.metadata as any;
+  let isConnected = metadata?.isConnected === true;
+  const instaUserId = metadata?.instaUserId as string | undefined;
 
-  // 2nd Check: Fallback path (Live Metadata check)
-  // We do this if the JWT is stale (e.g., immediately after first connection)
+  // 2nd Check: If JWT says connected, verify against Redis (source of truth)
+  // Prevents stale Clerk metadata from bypassing /auth/connect after logout
+  if (isConnected && instaUserId) {
+    try {
+      const { getRedisClient } = await import("@/server/redis/client");
+      const { KEYS } = await import("@/server/redis/keys");
+      const redis = getRedisClient();
+      if (redis) {
+        const cached = await redis.get(KEYS.USER_CONNECTION(instaUserId));
+        if (cached !== null) {
+          // Cache hit: Redis is the source of truth
+          isConnected = cached === "1";
+        }
+        // Cache miss: fall through to Clerk live API fallback below
+      }
+    } catch (e) {
+      console.error("Middleware Redis verification failed:", e);
+      // fail-open: proceed to Clerk live API fallback
+    }
+  }
+
+  // 3rd Check: Fallback path (Live Clerk metadata)
+  // Runs when JWT says not connected OR Redis had a cache miss
   if (!isConnected && userId) {
     try {
       const { createClerkClient } = await import("@clerk/nextjs/server");
@@ -85,13 +108,8 @@ export default clerkMiddleware(async (auth, request) => {
       });
       const user = await clerkClient.users.getUser(userId);
       isConnected = user.publicMetadata?.isConnected === true;
-
-      // If we found it's actually connected, we should trust this
-      console.log(
-        `Middleware fallback for ${userId}: isConnected=${isConnected}`,
-      );
     } catch (e) {
-      console.error("Middleware fallback check failed:", e);
+      console.error("Middleware Clerk fallback check failed:", e);
     }
   }
 
