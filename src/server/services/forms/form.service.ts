@@ -7,6 +7,7 @@ import {
   findFormBySlug,
   createFormSubmission,
   findSubmissionsByFormId,
+  deleteFormById,
 } from "@/server/repository/forms";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import type {
@@ -182,4 +183,24 @@ export async function getFormSubmissions(clerkId: string, formId: string) {
   }
 
   return findSubmissionsByFormId(formId);
+}
+
+// Deletes a form — ownership verified before deletion
+export async function deleteForm(clerkId: string, formId: string) {
+  const user = await findUserByClerkId(clerkId);
+
+  if (!user) {
+    throw new ApiRouteError("User not found", "NO_USER", 404);
+  }
+
+  // Ownership check — returns null if formId doesn't belong to this user
+  const form = await findFormByIdAndUserId(formId, user.id);
+
+  if (!form) {
+    throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
+  }
+
+  await deleteFormById(formId);
+
+  return { message: "Form deleted successfully" };
 }

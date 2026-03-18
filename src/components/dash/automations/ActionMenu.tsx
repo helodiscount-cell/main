@@ -1,49 +1,24 @@
 import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
+import { AutomationListItem } from "@/types/automation";
+import { ActionsMenu } from "@/components/dash/shared/ActionsMenu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Copy, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-// Row actions menu
-const MENU_ITEMS = [
-  {
-    key: "duplicate",
-    label: "Duplicate",
-    icon: Copy,
-    className: "text-purple-500",
-    bg: "hover:bg-purple-50",
-  },
-  {
-    key: "edit",
-    label: "Edit",
-    icon: Pencil,
-    className: "text-amber-500",
-    bg: "hover:bg-amber-50",
-  },
-  {
-    key: "delete",
-    label: "Delete",
-    icon: Trash2,
-    className: "text-red-500",
-    bg: "hover:bg-red-50",
-  },
-] as const;
-
-type MenuKey = (typeof MENU_ITEMS)[number]["key"];
-
-export function ActionsMenu({
-  automationId,
+// Automation-specific wrapper around the shared ActionsMenu
+export function AutomationActionsMenu({
   onClose,
+  fullAutomation,
 }: {
-  automationId: string;
   onClose: () => void;
+  fullAutomation: AutomationListItem;
 }) {
+  const navigate = useRouter();
   const queryClient = useQueryClient();
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const { mutate: deleteAutomation, isPending: isDeleting } = useMutation({
-    mutationFn: () => automationService.delete(automationId),
+    mutationFn: () => automationService.delete(fullAutomation.id),
     onSuccess: () => {
       toast.success("Automation deleted.");
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
@@ -57,43 +32,21 @@ export function ActionsMenu({
     },
   });
 
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onClose]);
-
-  const handleAction = (key: MenuKey) => {
-    if (key === "delete") {
-      deleteAutomation();
-      return;
-    }
-    // Duplicate / Edit — not yet implemented
-    toast.info(`${key.charAt(0).toUpperCase() + key.slice(1)} coming soon.`);
-    onClose();
+  // Navigate to the correct editor route based on trigger type
+  const handleEdit = () => {
+    navigate.push(
+      fullAutomation.triggerType === "STORY_REPLY"
+        ? `/dash/automations/dmforstories/${fullAutomation.story?.id}`
+        : `/dash/automations/dmforcomments/${fullAutomation.post?.id}`,
+    );
   };
 
   return (
-    <div
-      ref={menuRef}
-      className="absolute right-0 top-8 z-50 min-w-[150px] rounded-xl border border-slate-100 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100"
-    >
-      {MENU_ITEMS.map(({ key, label, icon: Icon, className, bg }) => (
-        <button
-          key={key}
-          disabled={key === "delete" && isDeleting}
-          onClick={() => handleAction(key)}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium ${className} ${bg} transition-colors disabled:opacity-50`}
-        >
-          <Icon size={14} />
-          {key === "delete" && isDeleting ? "Deleting…" : label}
-        </button>
-      ))}
-    </div>
+    <ActionsMenu
+      onClose={onClose}
+      isDeleting={isDeleting}
+      onDelete={() => deleteAutomation()}
+      onEdit={handleEdit}
+    />
   );
 }

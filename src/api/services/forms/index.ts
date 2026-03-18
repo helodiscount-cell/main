@@ -63,4 +63,12 @@ export const formService = {
     );
     return envelope.result;
   },
+
+  // Deletes a form (owner only)
+  delete: async (formId: string): Promise<{ message: string }> => {
+    const envelope = await request(
+      api.delete<ApiResponse<{ message: string }>>(`/forms/${formId}`),
+    );
+    return envelope.result;
+  },
 };

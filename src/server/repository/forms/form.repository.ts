@@ -110,6 +110,14 @@ export async function createFormSubmission(
   return submission;
 }
 
+// Hard deletes a form by id (submissions cascade via DB constraint)
+export async function deleteFormById(formId: string): Promise<void> {
+  await executeWithErrorHandling(
+    () => prisma.form.delete({ where: { id: formId } }),
+    { operation: "deleteFormById", model: "Form" },
+  );
+}
+
 // All submissions for a form, newest first
 export async function findSubmissionsByFormId(
   formId: string,

@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { useForm, useFieldArray, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 import { FormValuesSchema } from "@dm-broo/common-types";
 import type { FormValues, FieldType } from "@dm-broo/common-types";
 import { formService } from "@/api/services/forms";
+import { formKeys } from "@/keys/react-query";
 import { CoverImageUpload } from "./CoverImageUpload";
 import { FormTitleSection } from "./FormTitleSection";
 import { FieldCard } from "./FieldCard";
 import { AddFieldButton } from "./AddFieldButton";
 import { SubmitButton } from "./SubmitButton";
 import { EditorHeader } from "./EditorHeader";
+import { useQueryClient } from "@tanstack/react-query";
 
 const DEFAULT_FORM_VALUES: FormValues = {
   title: "",
@@ -25,7 +28,7 @@ const DEFAULT_FORM_VALUES: FormValues = {
 // Orchestrates the full editor — form state, field array, save & publish
 export const FormEditorCanvas = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(FormValuesSchema),
@@ -37,11 +40,51 @@ export const FormEditorCanvas = () => {
     name: "fields",
   });
 
+  // Mutation handles loading state, error handling, and cache invalidation
+  const { mutate: saveForm, isPending: isLoading } = useMutation({
+    mutationFn: (payload: FormValues & { status: "DRAFT" | "PUBLISHED" }) =>
+      formService.create(payload),
+    onSuccess: (result, variables) => {
+      toast.success(
+        variables.status === "PUBLISHED"
+          ? `Published! Public URL: /f/${result.slug}`
+          : "Saved as draft.",
+      );
+      // Invalidate the forms list so the dashboard reflects the new entry
+      queryClient.invalidateQueries({ queryKey: formKeys.all });
+      router.push("/dash/forms");
+    },
+    onError: (err: unknown) => {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Something went wrong. Try again.";
+      toast.error(message);
+    },
+  });
+
+  // Validates form fields before triggering the mutation
+  const save = useCallback(
+    async (status: "DRAFT" | "PUBLISHED") => {
+      const isValid = await methods.trigger();
+
+      if (!isValid) {
+        toast.error("Please fix the errors before saving.");
+        return;
+      }
+
+      const data = methods.getValues();
+      saveForm({ ...data, status });
+    },
+    [methods, saveForm],
+  );
+
+  const handleSaveDraft = useCallback(() => save("DRAFT"), [save]);
+  const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
+
   // Adds a new field card with sensible defaults
   const handleAddField = useCallback(
     (type: FieldType) => {
       const isChoice = type === "dropdown" || type === "checkbox";
-
       append({
         id: crypto.randomUUID(),
         type,
@@ -56,43 +99,7 @@ export const FormEditorCanvas = () => {
     [append],
   );
 
-  // Saves the form to the backend with the given status
-  const save = useCallback(
-    async (status: "DRAFT" | "PUBLISHED") => {
-      const isValid = await methods.trigger();
-
-      if (!isValid) {
-        toast.error("Please fix the errors before saving.");
-        return;
-      }
-
-      const data = methods.getValues();
-      setIsLoading(true);
-
-      try {
-        const result = await formService.create({ ...data, status });
-        toast.success(
-          status === "PUBLISHED"
-            ? `Published! Public URL: /f/${result.slug}`
-            : "Saved as draft.",
-        );
-        router.push("/dash/forms");
-      } catch (error: any) {
-        const message =
-          error?.response?.data?.error ?? "Something went wrong. Try again.";
-        toast.error(message);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [methods, router],
-  );
-
-  // Separate save handlers for header buttons
-  const handleSaveDraft = useCallback(() => save("DRAFT"), [save]);
-  const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
-
-  // Final submit button inside the canvas also publishes
+  // Canvas submit button also publishes
   const handleCanvasSubmit = methods.handleSubmit(
     () => save("PUBLISHED"),
     () => toast.error("Please fix the errors in the form."),

@@ -1,9 +1,10 @@
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
-import { ActionsMenu } from "./ActionMenu";
+import { AutomationActionsMenu } from "./ActionMenu";
 import { StatusBadge } from "./StatusBadge";
 import Link from "next/link";
 import { AutomationListItem } from "@/types/automation";
+import Image from "next/image";
 
 // Automation row
 export const AutomationRow = ({
@@ -19,9 +20,23 @@ export const AutomationRow = ({
         {/* Name + target */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-md bg-slate-100 shrink-0 flex items-center justify-center text-xs font-bold text-slate-400">
-            {(automation.post?.id ?? automation.story?.id ?? "")
+            {/* {(automation.post?.id ?? automation.story?.id ?? "")
               .slice(0, 2)
-              .toUpperCase()}
+              .toUpperCase()} */}
+            {automation.post?.mediaUrl || automation.story?.mediaUrl ? (
+              <Image
+                alt=""
+                src={
+                  (automation.post?.mediaUrl as string) ||
+                  (automation.story?.mediaUrl as string)
+                }
+                width={100}
+                height={100}
+                className="rounded-md object-cover"
+              />
+            ) : (
+              <span className="text-[10px] text-slate-400">IMG</span>
+            )}
           </div>
           <Link
             href={
@@ -71,9 +86,9 @@ export const AutomationRow = ({
           </button>
 
           {menuOpen && (
-            <ActionsMenu
-              automationId={automation.id}
+            <AutomationActionsMenu
               onClose={() => setMenuOpen(false)}
+              fullAutomation={automation}
             />
           )}
         </div>

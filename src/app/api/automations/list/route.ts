@@ -15,18 +15,32 @@ const AutomationListQuerySchema = z.object({
 
 export async function POST(request: NextRequest) {
   return runWithErrorHandling(async (clerkId) => {
-    const { searchParams } = new URL(request.url);
-    const queryData = {
-      status: searchParams.get("status") || undefined,
-    };
+    // Extract filters from the request body as confirmed by frontend implementation
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch (error) {
+      // Body can be empty for default "ALL" filters
+      body = {};
+    }
 
-    const validation = AutomationListQuerySchema.safeParse(queryData);
+    console.log("Automation list request body:", JSON.stringify(body));
+
+    const validation = AutomationListQuerySchema.safeParse(body);
+
+    console.log("Validation result:", JSON.stringify(validation));
 
     if (!validation.success) {
-      throw new ApiRouteError("Invalid status filter", "INVALID_INPUT", 400);
+      throw new ApiRouteError(
+        "Invalid status filter. Recommended: ACTIVE, PAUSED",
+        "INVALID_INPUT",
+        400,
+      );
     }
 
     const automations = await getUserAutomations(clerkId, validation.data);
+
+    // console.log(automations);
 
     return { automations };
   });

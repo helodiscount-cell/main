@@ -37,7 +37,6 @@ api.interceptors.response.use(
     return res;
   },
   async (error: AxiosError<any>) => {
-    console.log("axios incoming res error " + error);
     const status = error.response?.status;
     const message = error.response?.data?.message || error.message;
 
@@ -49,6 +48,7 @@ api.interceptors.response.use(
       toast.error("You are moving too fast. Please wait a moment.");
     }
 
+    toast.error(error.message);
     return Promise.reject(error);
   },
 );

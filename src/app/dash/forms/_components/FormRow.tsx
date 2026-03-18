@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
-import { FileText, ExternalLink, Copy } from "lucide-react";
+import React, { useState } from "react";
+import { FileText, ExternalLink, Copy, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import type { FormListItem } from "@/types/form";
+import { FormActionsMenu } from "./FormActionsMenu";
 
 type FormRowProps = {
   form: FormListItem;
@@ -17,6 +18,8 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const FormRow = ({ form }: FormRowProps) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   // Copy the public link to clipboard
   const handleCopyLink = () => {
     const url = `${window.location.origin}/f/${form.slug}`;
@@ -65,7 +68,7 @@ const FormRow = ({ form }: FormRowProps) => {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 relative">
         {/* Copy public link */}
         <button
           onClick={handleCopyLink}
@@ -84,6 +87,22 @@ const FormRow = ({ form }: FormRowProps) => {
         >
           <ExternalLink size={14} />
         </Link>
+
+        {/* More actions menu */}
+        <button
+          onClick={() => setMenuOpen((o) => !o)}
+          className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          title="More actions"
+        >
+          <MoreVertical size={14} />
+        </button>
+
+        {menuOpen && (
+          <FormActionsMenu
+            formId={form.id}
+            onClose={() => setMenuOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ export type AutomationStatus = "ACTIVE" | "PAUSED";
 export interface AutomationListItem {
   id: string;
   triggerType: "COMMENT_ON_POST" | "STORY_REPLY";
-  post: { id: string; caption: string | null } | null;
+  post: { id: string; caption: string | null; mediaUrl: string } | null;
   story: {
     id: string;
     mediaUrl: string;

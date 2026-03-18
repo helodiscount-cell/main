@@ -6,7 +6,7 @@ export const StatusBadge = ({ status }: { status: string }) => {
   };
   const labelMap: Record<string, string> = {
     ACTIVE: "Live",
-    PAUSED: "Draft",
+    PAUSED: "Paused",
     DELETED: "Deleted",
   };
   return (

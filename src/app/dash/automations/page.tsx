@@ -29,7 +29,7 @@ type StatusFilter = "ACTIVE" | "PAUSED" | "ALL";
 const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
   { label: "All", value: "ALL" },
   { label: "Live", value: "ACTIVE" },
-  { label: "Draft", value: "PAUSED" },
+  { label: "Paused", value: "PAUSED" },
 ];
 
 const AutomationPage = () => {
