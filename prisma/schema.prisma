@@ -116,6 +116,11 @@ model Automation {
   askToFollowMessage String? // Message sent when commenter doesn't follow yet
   askToFollowLink    String? // Profile link appended to the Ask to Follow message
 
+  // Opening Message
+  openingMessageEnabled Boolean @default(true)
+  openingMessage        String? // Message sent first (Ice-breaker)
+  openingButtonText     String? // Text for the interactive button
+
   useVariables Boolean @default(true)
 
   status          String    @default("ACTIVE") // ACTIVE, PAUSED, DELETED

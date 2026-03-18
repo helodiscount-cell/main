@@ -65,6 +65,9 @@ export async function createAutomation(
           askToFollowEnabled: data.askToFollowEnabled ?? false,
           askToFollowMessage: data.askToFollowMessage ?? null,
           askToFollowLink: data.askToFollowLink ?? null,
+          openingMessageEnabled: data.openingMessageEnabled ?? true,
+          openingMessage: data.openingMessage ?? null,
+          openingButtonText: data.openingButtonText ?? null,
         },
       }),
     {

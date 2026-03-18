@@ -23,6 +23,9 @@ export interface AutomationListItem {
   askToFollowEnabled?: boolean;
   askToFollowMessage?: string | null;
   askToFollowLink?: string | null;
+  openingMessageEnabled?: boolean;
+  openingMessage?: string | null;
+  openingButtonText?: string | null;
   status: string;
   timesTriggered: number;
   lastTriggeredAt: string | null;
@@ -53,6 +56,9 @@ export interface CreateAutomationData {
   askToFollowEnabled?: boolean;
   askToFollowMessage?: string | null;
   askToFollowLink?: string | null;
+  openingMessageEnabled?: boolean;
+  openingMessage?: string | null;
+  openingButtonText?: string | null;
 }
 
 export interface UpdateAutomationData {
@@ -67,6 +73,9 @@ export interface UpdateAutomationData {
   askToFollowEnabled?: boolean;
   askToFollowMessage?: string | null;
   askToFollowLink?: string | null;
+  openingMessageEnabled?: boolean;
+  openingMessage?: string | null;
+  openingButtonText?: string | null;
   status?: string;
 }
 

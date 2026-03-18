@@ -11,6 +11,8 @@ import { FreshHeader } from "@/components/headers/FreshHeader";
 import { LiveHeader } from "@/components/headers/LiveHeader";
 import { useAutomationManager } from "@/hooks/use-automations";
 import AskToFollow from "@/components/dash/automations/AskToFollow";
+import OpeningMessage from "@/components/dash/automations/OpeningMessage";
+import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { instagramKeys } from "@/keys/react-query";
 import {
   AUTOMATION_CONFIGS,
@@ -52,6 +54,9 @@ export function CommentsAutomationForm({
       askToFollowEnabled: false,
       askToFollowMessage: "",
       askToFollowLink: "",
+      openingMessageEnabled: true,
+      openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+      openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
     },
     findExistingAutomation: (a) =>
       a.post?.id === post_id && a.status !== "DELETED",
@@ -85,6 +90,9 @@ export function CommentsAutomationForm({
         askToFollowEnabled: form.askToFollowEnabled,
         askToFollowMessage: form.askToFollowMessage || null,
         askToFollowLink: form.askToFollowLink || null,
+        openingMessageEnabled: form.openingMessageEnabled,
+        openingMessage: form.openingMessage,
+        openingButtonText: form.openingButtonText,
       };
     },
     onPopulateForm: (automation) => ({
@@ -105,6 +113,12 @@ export function CommentsAutomationForm({
       askToFollowEnabled: automation.askToFollowEnabled || false,
       askToFollowMessage: automation.askToFollowMessage || "",
       askToFollowLink: automation.askToFollowLink || "",
+      openingMessageEnabled: automation.openingMessageEnabled ?? true,
+      openingMessage:
+        automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+      openingButtonText:
+        automation.openingButtonText ||
+        OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
     }),
     successMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.successMessage,
     stopMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.stopMessage,
@@ -156,6 +170,32 @@ export function CommentsAutomationForm({
                       onEnabledChange={enabledField.onChange}
                       replies={repliesField.value as Reply[]}
                       onRepliesChange={repliesField.onChange}
+                    />
+                  )}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="openingMessageEnabled"
+              render={({ field: enabledField }) => (
+                <Controller
+                  control={control}
+                  name="openingMessage"
+                  render={({ field: messageField }) => (
+                    <Controller
+                      control={control}
+                      name="openingButtonText"
+                      render={({ field: buttonField }) => (
+                        <OpeningMessage
+                          enabled={enabledField.value}
+                          onEnabledChange={enabledField.onChange}
+                          message={messageField.value || ""}
+                          onMessageChange={messageField.onChange}
+                          buttonText={buttonField.value || ""}
+                          onButtonTextChange={buttonField.onChange}
+                        />
+                      )}
                     />
                   )}
                 />

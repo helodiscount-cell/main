@@ -38,6 +38,9 @@ export const baseAutomationSchema = z.object({
       FORM_VALIDATION_MESSAGES.dmMessage.message,
     ),
   dmImage: z.string().optional(),
+  openingMessageEnabled: z.boolean().default(true),
+  openingMessage: z.string().optional(),
+  openingButtonText: z.string().optional(),
 });
 
 export const commentsAutomationSchema = baseAutomationSchema.extend({

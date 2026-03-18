@@ -15,7 +15,6 @@ import {
 } from "@/server/repository/user/user.repository";
 import {
   createAutomation as createAutomationRecord,
-  findAutomationById,
   findAutomationByIdAndUserId,
   findAutomationByIdAndUserIdForUpdate,
   findUserAutomations,
@@ -24,7 +23,7 @@ import {
   findActiveAutomationsByPost,
   findActiveAutomationsByStory,
 } from "@/server/repository/automations/automation.repository";
-import { invalidateAutomationCache } from "@/server/utils/automation-cache";
+import { invalidateAutomationCache } from "@/server/redis";
 import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { AutomationFilters } from "@/types/automation";
@@ -129,6 +128,9 @@ export async function getAutomation(userId: string, automationId: string) {
     askToFollowEnabled: automation.askToFollowEnabled,
     askToFollowMessage: automation.askToFollowMessage,
     askToFollowLink: automation.askToFollowLink,
+    openingMessageEnabled: automation.openingMessageEnabled,
+    openingMessage: automation.openingMessage,
+    openingButtonText: automation.openingButtonText,
     status: automation.status,
     timesTriggered: automation.timesTriggered,
     lastTriggeredAt: automation.lastTriggeredAt,
@@ -237,6 +239,9 @@ export async function updateAutomation(
     askToFollowEnabled: updatedAutomation.askToFollowEnabled,
     askToFollowMessage: updatedAutomation.askToFollowMessage,
     askToFollowLink: updatedAutomation.askToFollowLink,
+    openingMessageEnabled: updatedAutomation.openingMessageEnabled,
+    openingMessage: updatedAutomation.openingMessage,
+    openingButtonText: updatedAutomation.openingButtonText,
     status: updatedAutomation.status,
     updatedAt: updatedAutomation.updatedAt,
   };

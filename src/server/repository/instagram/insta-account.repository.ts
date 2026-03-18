@@ -140,7 +140,7 @@ export async function deleteInstaAccount(
   // Clears all cache related to this account
   if (account) {
     const { clearAllUserCache } =
-      await import("@/server/utils/automation-cache");
+      await import("@/server/redis/operations/automation");
     // Uses webhookUserId for cache key (matches webhook handler)
     const webhookUserId =
       account.webhookUserId || account.instagramUserId || "";

@@ -9,6 +9,8 @@ import { instagramKeys } from "@/keys/react-query";
 import { AutomationLayout } from "@/components/dash/automations/AutomationLayout";
 import AddKeywords from "@/components/dash/automations/AddKeywords";
 import SendDm from "@/components/dash/automations/SendDm";
+import OpeningMessage from "@/components/dash/automations/OpeningMessage";
+import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
 import { FreshHeader } from "@/components/headers/FreshHeader";
 import { LiveHeader } from "@/components/headers/LiveHeader";
@@ -57,6 +59,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     defaultValues: {
       keywords: [],
       dmMessage: "",
+      openingMessageEnabled: true,
+      openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+      openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
     },
     findExistingAutomation: (a) =>
       a.triggerType === AUTOMATION_CONFIGS.STORY_REPLY.triggerType &&
@@ -83,6 +88,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         replyMessage: form.dmMessage,
         replyImage: form.dmImage || null,
         useVariables: true,
+        openingMessageEnabled: form.openingMessageEnabled,
+        openingMessage: form.openingMessage,
+        openingButtonText: form.openingButtonText,
         // Story replies don't have public replies in this version, but we keep it consistent
         commentReplyWhenDm: [],
       };
@@ -91,6 +99,12 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       keywords: automation.triggers || [],
       dmMessage: automation.replyMessage || "",
       dmImage: automation.replyImage ?? undefined,
+      openingMessageEnabled: automation.openingMessageEnabled ?? true,
+      openingMessage:
+        automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+      openingButtonText:
+        automation.openingButtonText ||
+        OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
     }),
     onPayloadInvalid: () => {
       toast.error("Story data not available. Please try again.");
@@ -140,24 +154,53 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
           />
         }
         rightCol={
-          <Controller
-            control={control}
-            name="dmMessage"
-            render={({ field }) => (
-              <Controller
-                control={control}
-                name="dmImage"
-                render={({ field: imageField }) => (
-                  <SendDm
-                    message={field.value}
-                    onMessageChange={field.onChange}
-                    imageUrl={imageField.value}
-                    onImageChange={imageField.onChange}
-                  />
-                )}
-              />
-            )}
-          />
+          <div className="space-y-4">
+            <Controller
+              control={control}
+              name="openingMessageEnabled"
+              render={({ field: enabledField }) => (
+                <Controller
+                  control={control}
+                  name="openingMessage"
+                  render={({ field: messageField }) => (
+                    <Controller
+                      control={control}
+                      name="openingButtonText"
+                      render={({ field: buttonField }) => (
+                        <OpeningMessage
+                          enabled={enabledField.value}
+                          onEnabledChange={enabledField.onChange}
+                          message={messageField.value || ""}
+                          onMessageChange={messageField.onChange}
+                          buttonText={buttonField.value || ""}
+                          onButtonTextChange={buttonField.onChange}
+                        />
+                      )}
+                    />
+                  )}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="dmMessage"
+              render={({ field }) => (
+                <Controller
+                  control={control}
+                  name="dmImage"
+                  render={({ field: imageField }) => (
+                    <SendDm
+                      message={field.value}
+                      onMessageChange={field.onChange}
+                      imageUrl={imageField.value}
+                      onImageChange={imageField.onChange}
+                    />
+                  )}
+                />
+              )}
+            />
+          </div>
         }
       />
     </form>

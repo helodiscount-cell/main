@@ -95,6 +95,10 @@ export const CreateAutomationSchema = z
     askToFollowEnabled: z.boolean().default(false),
     askToFollowMessage: z.string().max(1000).optional().nullable(),
     askToFollowLink: z.string().max(2048).optional().nullable(),
+    // Opening Message
+    openingMessageEnabled: z.boolean().default(true),
+    openingMessage: z.string().max(2000).optional().nullable(),
+    openingButtonText: z.string().max(100).optional().nullable(),
   })
   .refine(
     (data) => {
@@ -158,6 +162,9 @@ export const UpdateAutomationSchema = z.object({
   askToFollowEnabled: z.boolean().optional(),
   askToFollowMessage: z.string().max(1000).optional().nullable(),
   askToFollowLink: z.string().max(2048).optional().nullable(),
+  openingMessageEnabled: z.boolean().optional(),
+  openingMessage: z.string().max(2000).optional().nullable(),
+  openingButtonText: z.string().max(100).optional().nullable(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 
@@ -203,6 +210,9 @@ export const AutomationResponseSchema = z.object({
   askToFollowEnabled: z.boolean().optional(),
   askToFollowMessage: z.string().max(1000).optional().nullable(),
   askToFollowLink: z.string().max(2048).optional().nullable(),
+  openingMessageEnabled: z.boolean().optional(),
+  openingMessage: z.string().nullable().optional(),
+  openingButtonText: z.string().nullable().optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: z.number(),
   lastTriggeredAt: z.date().nullable(),
@@ -272,6 +282,9 @@ export const UpdateAutomationResponseSchema = z.object({
     askToFollowEnabled: z.boolean().optional(),
     askToFollowMessage: z.string().max(1000).optional().nullable(),
     askToFollowLink: z.string().max(2048).optional().nullable(),
+    openingMessageEnabled: z.boolean().optional(),
+    openingMessage: z.string().nullable().optional(),
+    openingButtonText: z.string().nullable().optional(),
     status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: z.date(),
   }),

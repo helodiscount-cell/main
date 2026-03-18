@@ -98,7 +98,7 @@ export async function setUserConnected(instagramUserId: string): Promise<void> {
  */
 export async function invalidateUser(
   instagramUserId: string,
-  clerkId: string,
+  userId: string,
   accountId?: string,
 ): Promise<void> {
   const redis = getRedisClient();
@@ -112,14 +112,14 @@ export async function invalidateUser(
       pipeline.del(KEYS.ACCESS_TOKEN(accountId));
     }
 
-    // Delete all automations for this user matching the pattern ig:automation:clerkId:*
+    // Delete all automations for this user matching the pattern ig:automation:*:userId:*
     // Requires a safe SCAN operation
     let cursor = "0";
     do {
       const [nextCursor, keys] = await redis.scan(
         cursor,
         "MATCH",
-        `ig:automation:${clerkId}:*`,
+        `ig:automation:*:${userId}:*`,
         "COUNT",
         100,
       );
@@ -131,12 +131,12 @@ export async function invalidateUser(
 
     await pipeline.exec();
     logger.info(
-      { instagramUserId, clerkId, accountId },
+      { instagramUserId, userId, accountId },
       "[Redis:User] All user cache invalidated",
     );
   } catch (error: any) {
     logger.error(
-      { instagramUserId, clerkId, error: error.message },
+      { instagramUserId, userId, error: error.message },
       "[Redis:User] Failed to invalidate cache",
     );
   }

@@ -317,9 +317,10 @@ export async function disconnectAccount(clerkId: string) {
     // Actively invalidate Redis Cache using all Identifiers
     await invalidateUser(
       user.instaAccount.instagramUserId,
-      clerkId,
+      user.id,
       user.instaAccount.id,
     );
+
     // Deactivates the Instagram account (leaves it intact for history but inactive)
     await deactivateInstaAccount(user.instaAccount.id, clerkId);
   }

@@ -24,7 +24,13 @@ export { getAccessTokenR, cacheAccessTokenR } from "./operations/token";
 export { updateRateLimitsFromHeadersR } from "./operations/rate-limit";
 
 // Automations and DB Account Caching
-export { invalidateAutomations } from "./operations/automation";
+export {
+  invalidateAutomations,
+  invalidateAutomationCache,
+  isCommentProcessedCached,
+  markCommentProcessed,
+  clearAllUserCache,
+} from "./operations/automation";
 
 // Instagram Global Data
 export { getCachedPosts, getCachedStories } from "./operations/instagram";
