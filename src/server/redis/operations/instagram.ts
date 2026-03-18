@@ -8,6 +8,23 @@ import { logger } from "../../utils/pino";
  */
 
 /**
+ * Deletes cached posts and stories for a user — forces fresh fetch from Instagram API
+ */
+export async function invalidateInstagramCache(
+  instagramUserId: string,
+): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+
+  const pipeline = redis.pipeline();
+  pipeline.del(KEYS.INSTAGRAM_POSTS(instagramUserId));
+  pipeline.del(KEYS.INSTAGRAM_STORIES(instagramUserId));
+
+  await pipeline.exec();
+  logger.info({ instagramUserId }, "[Redis:Instagram] Cache invalidated");
+}
+
+/**
  * Retrieves cached Instagram posts or executes fallback
  */
 export async function getCachedPosts<T>(

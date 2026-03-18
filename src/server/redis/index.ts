@@ -33,4 +33,8 @@ export {
 } from "./operations/automation";
 
 // Instagram Global Data
-export { getCachedPosts, getCachedStories } from "./operations/instagram";
+export {
+  getCachedPosts,
+  getCachedStories,
+  invalidateInstagramCache,
+} from "./operations/instagram";

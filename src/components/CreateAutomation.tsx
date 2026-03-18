@@ -8,14 +8,37 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DMForComments } from "./dash/automations/DmForComments";
 import { DmForStories } from "./dash/automations/DmForStories";
 import { TabSelector } from "./dash/automations/TabSelector";
+import { useQueryClient } from "@tanstack/react-query";
+import { instagramKeys } from "@/keys/react-query";
+import { api, request } from "@/api/client";
+import { toast } from "sonner";
 
 export function CreateAutomationDialog({ title }: { title: string }) {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Clears Redis cache then invalidates React Query so the next render fetches fresh data
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await request(api.delete("/instagram/cache"));
+      await queryClient.invalidateQueries({ queryKey: instagramKeys.posts() });
+      await queryClient.invalidateQueries({
+        queryKey: instagramKeys.stories(),
+      });
+      toast.success("Feed refreshed!");
+    } catch {
+      toast.error("Failed to refresh. Try again.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -50,7 +73,17 @@ export function CreateAutomationDialog({ title }: { title: string }) {
           <DialogTitle className="text-2xl font-semibold tracking-tight">
             <div className="flex flex-1 justify-between">
               {activeTab ? "Configure Automation" : "Choose a Template"}
-              <Button variant={"ghost"}>Refresh</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCwIcon
+                  className={`w-4 h-4 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
             </div>
           </DialogTitle>
         </DialogHeader>
