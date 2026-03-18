@@ -51,7 +51,11 @@ export const commentsAutomationSchema = baseAutomationSchema.extend({
   askToFollowLink: z.string().optional(),
 });
 
-export const storyAutomationSchema = baseAutomationSchema;
+export const storyAutomationSchema = baseAutomationSchema.extend({
+  askToFollowEnabled: z.boolean(),
+  askToFollowMessage: z.string().max(1000).optional(),
+  askToFollowLink: z.string().optional(),
+});
 
 export type CommentsFormValues = z.infer<typeof commentsAutomationSchema>;
 export type StoryFormValues = z.infer<typeof storyAutomationSchema>;

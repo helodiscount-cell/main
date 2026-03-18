@@ -10,6 +10,7 @@ import { AutomationLayout } from "@/components/dash/automations/AutomationLayout
 import AddKeywords from "@/components/dash/automations/AddKeywords";
 import SendDm from "@/components/dash/automations/SendDm";
 import OpeningMessage from "@/components/dash/automations/OpeningMessage";
+import AskToFollow from "@/components/dash/automations/AskToFollow";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
 import { FreshHeader } from "@/components/headers/FreshHeader";
@@ -59,6 +60,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     defaultValues: {
       keywords: [],
       dmMessage: "",
+      askToFollowEnabled: false,
+      askToFollowMessage: "",
+      askToFollowLink: "",
       openingMessageEnabled: true,
       openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
       openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
@@ -88,6 +92,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         replyMessage: form.dmMessage,
         replyImage: form.dmImage || null,
         useVariables: true,
+        askToFollowEnabled: form.askToFollowEnabled,
+        askToFollowMessage: form.askToFollowMessage || null,
+        askToFollowLink: form.askToFollowLink || null,
         openingMessageEnabled: form.openingMessageEnabled,
         openingMessage: form.openingMessage,
         openingButtonText: form.openingButtonText,
@@ -99,6 +106,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       keywords: automation.triggers || [],
       dmMessage: automation.replyMessage || "",
       dmImage: automation.replyImage ?? undefined,
+      askToFollowEnabled: automation.askToFollowEnabled || false,
+      askToFollowMessage: automation.askToFollowMessage || "",
+      askToFollowLink: automation.askToFollowLink || "",
       openingMessageEnabled: automation.openingMessageEnabled ?? true,
       openingMessage:
         automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
@@ -195,6 +205,33 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
                       onMessageChange={field.onChange}
                       imageUrl={imageField.value}
                       onImageChange={imageField.onChange}
+                    />
+                  )}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="askToFollowEnabled"
+              render={({ field: enabledField }) => (
+                <Controller
+                  control={control}
+                  name="askToFollowMessage"
+                  render={({ field: messageField }) => (
+                    <Controller
+                      control={control}
+                      name="askToFollowLink"
+                      render={({ field: linkField }) => (
+                        <AskToFollow
+                          enabled={enabledField.value}
+                          onEnabledChange={enabledField.onChange}
+                          message={messageField.value || ""}
+                          onMessageChange={messageField.onChange}
+                          link={linkField.value || ""}
+                          onLinkChange={linkField.onChange}
+                        />
+                      )}
                     />
                   )}
                 />
