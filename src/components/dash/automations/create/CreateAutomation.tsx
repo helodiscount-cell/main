@@ -10,15 +10,17 @@ import {
 } from "@/components/ui/dialog";
 import { PlusIcon, RefreshCwIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { DMForComments } from "./dash/automations/DmForComments";
-import { DmForStories } from "./dash/automations/DmForStories";
-import { TabSelector } from "./dash/automations/TabSelector";
 import { useQueryClient } from "@tanstack/react-query";
 import { instagramKeys } from "@/keys/react-query";
 import { api, request } from "@/api/client";
 import { toast } from "sonner";
+import {
+  DMForComments,
+  DmForStories,
+  TabSelector,
+} from "@/components/dash/automations/create";
 
-export function CreateAutomationDialog({ title }: { title: string }) {
+export default function CreateAutomationDialog({ title }: { title: string }) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -46,6 +48,7 @@ export function CreateAutomationDialog({ title }: { title: string }) {
         return <DMForComments onBack={() => setActiveTab(null)} />;
       case "dm-from-stories":
         return <DmForStories onSetActiveTab={setActiveTab} />;
+      case "respond-to-all-dms":
       default:
         return <TabSelector setActiveTab={setActiveTab} />;
     }

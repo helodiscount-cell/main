@@ -1,4 +1,3 @@
-import { ColHeader } from "@/components/dash/automations/ColHeader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import React from "react";
+import ColHeader from "./ColHeader";
 
 export type StatusFilter = "ACTIVE" | "PAUSED" | "ALL";
 interface Props {
@@ -23,7 +23,7 @@ export const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
   { label: "Paused", value: "PAUSED" },
 ];
 
-export const TableHeader = ({
+const TableHeader = ({
   title,
   selectedLabel,
   statusFilter,
@@ -64,3 +64,5 @@ export const TableHeader = ({
     </div>
   );
 };
+
+export default TableHeader;

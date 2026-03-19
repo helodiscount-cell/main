@@ -8,13 +8,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
 import { formKeys } from "@/keys/react-query";
-import TableRow from "../_components/TableRow";
-import { DashboardHeader } from "../_components/Header";
-import {
-  TableHeader,
-  StatusFilter,
-  STATUS_OPTIONS,
-} from "../_components/TableHeader";
+import { DashboardHeader, TableHeader, TableRow } from "../_components";
+import { StatusFilter, STATUS_OPTIONS } from "../_components/TableHeader";
 
 export default function FormsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");

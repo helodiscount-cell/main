@@ -10,7 +10,7 @@ interface Props {
   childComp: React.ReactNode;
 }
 
-export function DashboardHeader({ showSearch, childComp }: Props) {
+function DashboardHeader({ showSearch, childComp }: Props) {
   const pathname = usePathname();
 
   const title = pathname
@@ -51,3 +51,5 @@ export function DashboardHeader({ showSearch, childComp }: Props) {
     </header>
   );
 }
+
+export default DashboardHeader;

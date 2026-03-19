@@ -1,8 +1,8 @@
 import { RefreshCw, Play } from "lucide-react";
-import { RefreshInstaDialog } from "../auth/RefreshInstaDialog";
+import { RefreshInstaDialog } from "../../../auth/RefreshInstaDialog";
 import { Button } from "@/components/ui/button";
 
-export function FreshHeader({
+export default function FreshHeader({
   isPending,
   breadcrumb = "DM For Comment",
 }: {

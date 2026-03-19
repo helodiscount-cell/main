@@ -16,11 +16,11 @@ const tabs = [
   },
 ];
 
-export const TabSelector = ({
+export default function TabSelector({
   setActiveTab,
 }: {
   setActiveTab: (value: string | null) => void;
-}) => {
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
       {tabs.map((tab) => (
@@ -42,4 +42,4 @@ export const TabSelector = ({
       ))}
     </div>
   );
-};
+}

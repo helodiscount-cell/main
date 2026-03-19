@@ -1,7 +1,7 @@
 import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
 import { AutomationListItem } from "@/types/automation";
-import { ActionsMenu } from "@/components/dash/shared/ActionsMenu";
+import { ActionsMenu } from "@/components/shared/ActionsMenu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";

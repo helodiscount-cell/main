@@ -6,9 +6,11 @@ import { ArrowLeft, Clock, ImageIcon, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export const DmForStories: React.FC<{
+export default function DmForStories({
+  onSetActiveTab,
+}: {
   onSetActiveTab: (value: string | null) => void;
-}> = ({ onSetActiveTab }) => {
+}) {
   const { data: storiesData, isLoading } = useQuery({
     queryKey: instagramKeys.stories(),
     queryFn: () => instagramService.profile.getUserStories(),
@@ -83,4 +85,4 @@ export const DmForStories: React.FC<{
       )}
     </div>
   );
-};
+}

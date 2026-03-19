@@ -7,7 +7,7 @@ import { FileText, ExternalLink, Copy, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import type { AutomationListItem } from "@/types/automation";
 import type { FormListItem } from "@/types/form";
-import { StatusBadge } from "@/components/dash/automations/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
 
@@ -35,7 +35,7 @@ export interface TableRowUIProps {
 /**
  * Purely presentational component that renders the table row structure.
  */
-export const TableRowUI = ({
+const TableRowUI = ({
   icon,
   title,
   subtitle,

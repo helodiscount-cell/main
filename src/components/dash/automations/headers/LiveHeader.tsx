@@ -1,5 +1,5 @@
 import { AutomationListItem } from "@/types/automation";
-import { Button } from "../ui/button";
+import { Button } from "../../../ui/button";
 import { Play, RefreshCw, RotateCcw, Square } from "lucide-react";
 
 interface LiveHeaderProps {
@@ -13,7 +13,7 @@ interface LiveHeaderProps {
   label?: string;
 }
 
-export function LiveHeader({
+export default function LiveHeader({
   automation,
   onStop,
   isStopping,

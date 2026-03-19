@@ -1,6 +1,6 @@
 import { ArrowDown } from "lucide-react";
 
-export const ColHeader = ({ label }: { label: string }) => (
+const ColHeader = ({ label }: { label: string }) => (
   <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
     {label}
     <ArrowDown
@@ -9,3 +9,5 @@ export const ColHeader = ({ label }: { label: string }) => (
     />
   </div>
 );
+
+export default ColHeader;

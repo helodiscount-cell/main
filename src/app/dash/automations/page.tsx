@@ -1,18 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { CreateAutomationDialog } from "@/components/CreateAutomation";
+import { CreateAutomationDialog } from "@/components/dash/automations/create";
 import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 import { useQuery } from "@tanstack/react-query";
 import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
-import TableRow from "../_components/TableRow";
-import { DashboardHeader } from "../_components/Header";
-import {
-  TableHeader,
-  StatusFilter,
-  STATUS_OPTIONS,
-} from "../_components/TableHeader";
+import { DashboardHeader, TableHeader, TableRow } from "../_components";
+import { StatusFilter, STATUS_OPTIONS } from "../_components/TableHeader";
 
 const AutomationPage = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");

@@ -1,8 +1,8 @@
-import { GrowthWidget } from "@/components/dash/growth-widget";
-import { BestPerformerWidget } from "@/components/dash/best-performer-widget";
-import { DashboardHeader } from "./_components/Header";
+import { GrowthWidget } from "@/components/dash/GrowthWidget";
+import { BestPerformerWidget } from "@/components/dash/BestPerformer";
 import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
-import { CreateAutomationDialog } from "@/components/CreateAutomation";
+import { CreateAutomationDialog } from "@/components/dash/automations/create";
+import { DashboardHeader } from "./_components";
 
 export default async function Page() {
   return (

@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export const DMForComments = ({ onBack }: { onBack: () => void }) => {
+export default function DMForComments({ onBack }: { onBack: () => void }) {
   const { data } = useQuery({
     queryKey: instagramKeys.posts(),
     queryFn: () => instagramService.profile.getUserPosts(),
@@ -55,4 +55,4 @@ export const DMForComments = ({ onBack }: { onBack: () => void }) => {
       </div>
     </div>
   );
-};
+}

@@ -6,21 +6,22 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
-import { AutomationLayout } from "@/components/dash/automations/AutomationLayout";
-import AddKeywords from "@/components/dash/automations/AddKeywords";
-import SendDm from "@/components/dash/automations/SendDm";
-import OpeningMessage from "@/components/dash/automations/OpeningMessage";
-import AskToFollow from "@/components/dash/automations/AskToFollow";
+import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
-import { FreshHeader } from "@/components/headers/FreshHeader";
-import { LiveHeader } from "@/components/headers/LiveHeader";
 import { useAutomationManager } from "@/hooks/use-automations";
+import {
+  AddKeywords,
+  AskToFollow,
+  OpeningMessage,
+  SendDm,
+} from "../../_components/widgets";
 import {
   AUTOMATION_CONFIGS,
   storyAutomationSchema,
   StoryFormValues,
 } from "@/configs/automations";
+import { FreshHeader, LiveHeader } from "@/components/dash/automations/headers";
 
 type StoryMeta = {
   id: string;
