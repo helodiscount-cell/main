@@ -128,7 +128,17 @@ const useTableRowMapper = (
         ) : (
           <span className="text-[10px] text-slate-400">IMG</span>
         ),
-      status: <StatusBadge status={automation.status} />,
+      status: (
+        <StatusBadge
+          status={
+            automation.story &&
+            Date.now() - new Date(automation.story.timestamp).getTime() >=
+              24 * 60 * 60 * 1000
+              ? "EXPIRED"
+              : automation.status
+          }
+        />
+      ),
       stats: automation._count.executions,
       date: automation.lastTriggeredAt
         ? new Date(automation.lastTriggeredAt).toLocaleDateString()
@@ -155,17 +165,9 @@ const useTableRowMapper = (
 
   // Map Form data
   const form = data as FormListItem;
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const url = `${window.location.origin}/f/${form.slug}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success("Public link copied!");
-    });
-  };
 
   return {
-    title: form.title || "Untitled form",
+    title: form.title || "Untitled Form",
     subtitle: form.description || "No description",
     href: `/dash/forms/${form.id}/submissions`,
     icon: <FileText size={15} className="text-slate-400" />,
@@ -192,6 +194,7 @@ const useTableRowMapper = (
             <FormActionsMenu
               formId={form.id}
               onClose={() => setMenuOpen(false)}
+              slug={form.slug}
             />
           )}
         </div>

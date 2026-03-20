@@ -35,9 +35,11 @@ const MENU_ITEMS = [
 export function FormActionsMenu({
   onClose,
   formId,
+  slug,
 }: {
   onClose: () => void;
   formId: string;
+  slug: string;
 }) {
   const navigate = useRouter();
   const queryClient = useQueryClient();
@@ -58,7 +60,7 @@ export function FormActionsMenu({
   });
 
   const copyToClipboard = () => {
-    const url = `${window.location.origin}/f/${formId}`;
+    const url = `${window.location.origin}/f/${slug}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
   };

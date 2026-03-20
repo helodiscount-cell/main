@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const AUTOMATION_CONFIGS = {
   COMMENT_REPLY: {
-    triggerType: "COMMENT" as const,
+    triggerType: "COMMENT_ON_POST" as const,
     breadcrumb: "DM For Comment",
     matchType: "CONTAINS" as const,
     actionType: "DM" as const,

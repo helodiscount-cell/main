@@ -1,6 +1,6 @@
 "use client";
+import { use } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
@@ -26,7 +26,8 @@ type Reply = { id: string; text: string };
 const DEFAULT_REPLY_ID = "default-reply-1";
 const DEFAULT_REPLY_TEXT = "Open your DMs, it's there!";
 
-const Page = ({ post_id }: { post_id: string }) => {
+const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
+  const { post_id } = use(params);
   const queryClient = useQueryClient();
   const {
     form: { control },
@@ -66,6 +67,7 @@ const Page = ({ post_id }: { post_id: string }) => {
       const selectedPost = posts.find((p: any) => p.id === post_id);
 
       return {
+        triggerType: AUTOMATION_CONFIGS.COMMENT_REPLY.triggerType,
         postId: post_id,
         postCaption: selectedPost?.caption ?? form.keywords[0] ?? "",
         postMediaUrl: selectedPost?.media_url ?? null,
