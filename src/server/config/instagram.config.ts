@@ -6,7 +6,7 @@
 
 // Graph API configuration - uses Instagram Graph API directly
 export const GRAPH_API = {
-  VERSION: "v21.0",
+  VERSION: process.env.NEXT_PUBLIC_INSTAGRAM_API_VERSION,
   BASE_URL: "https://graph.instagram.com",
   ENDPOINTS: {
     REFRESH_TOKEN: (accessToken: string) =>

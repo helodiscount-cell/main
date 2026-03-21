@@ -16,6 +16,7 @@ export const PUBLIC_PREFIX_ROUTES = ["/f"] as const;
 
 export const AUTH_ROUTE = "/auth";
 export const CONNECT_ROUTE = "/auth/connect";
+export const CLAIM_ROUTE = "/auth/claim";
 export const DASHBOARD_ROUTE = "/dash";
 
 /**
@@ -30,7 +31,8 @@ export const isPublicRoute = (pathname: string) => {
 };
 
 export const isAuthRoute = (pathname: string) => pathname === AUTH_ROUTE;
-export const isConnectRoute = (pathname: string) => pathname === CONNECT_ROUTE;
+export const isConnectRoute = (pathname: string) =>
+  pathname === CONNECT_ROUTE || pathname === CLAIM_ROUTE;
 export const isApiRoute = (pathname: string) => pathname.startsWith("/api/");
 export const isDashboardRoute = (pathname: string) =>
   pathname.startsWith(DASHBOARD_ROUTE);

@@ -12,6 +12,7 @@ enum RedirectUrls {
   ERROR_OAUTH_DECLINED = "/dash?error=oauth_declined",
   ERROR_OAUTH_INVALID = "/dash?error=oauth_invalid",
   ERROR_OAUTH_FAILED = "/dash?error=oauth_failed",
+  ERROR_ACCOUNT_CLAIMED = "/auth/claim",
 }
 
 export async function GET(request: NextRequest) {
@@ -65,7 +66,14 @@ export async function GET(request: NextRequest) {
       errorInstance.message,
     );
 
-    const errorUrl = RedirectUrls.ERROR_OAUTH_FAILED;
+    const isAccountClaimed =
+      errorInstance.message.includes("already connected") ||
+      (errorInstance as any).code === "IG_ACCOUNT_ALREADY_CLAIMED";
+
+    const errorUrl = isAccountClaimed
+      ? RedirectUrls.ERROR_ACCOUNT_CLAIMED
+      : RedirectUrls.ERROR_OAUTH_FAILED;
+
     const redirectUrl = new URL(errorUrl, request.url);
 
     // Fixes protocol for localhost (dev environment)

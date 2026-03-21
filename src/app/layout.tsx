@@ -11,6 +11,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { clogger } from "@/server/utils/consola";
 
+import { Suspense } from "react";
+import { OAuthErrorListener } from "@/components/auth/OAuthErrorListener";
+
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-jakarta",
@@ -49,6 +52,9 @@ export default function RootLayout({
           >
             <QueryProvider>
               <TooltipProvider>
+                <Suspense fallback={null}>
+                  <OAuthErrorListener />
+                </Suspense>
                 {children}
                 <Toaster />
               </TooltipProvider>

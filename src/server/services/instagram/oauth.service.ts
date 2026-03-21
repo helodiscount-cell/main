@@ -127,11 +127,13 @@ export async function handleOAuthCallback(code: string, state: string) {
     const { instaAccount } = await executeTransaction(
       async (tx) => {
         // Finds or creates user
+        console.log("TX: Finding user with clerkId:", clerkId);
         let user = await tx.user.findUnique({
           where: { clerkId },
         });
 
         if (!user) {
+          console.log("TX: Creating new user for clerkId:", clerkId);
           user = await tx.user.create({
             data: {
               clerkId,
@@ -141,11 +143,40 @@ export async function handleOAuthCallback(code: string, state: string) {
             },
           });
         }
+        console.log("TX: User ID is:", user.id);
+
+        // PRE-FLIGHT CHECK: Ensure this Instagram account isn't already claimed by someone else
+        const instagramUserIdString = String(instagramUser.id);
+        console.log(
+          "TX: Performing pre-flight check for IG ID:",
+          instagramUserIdString,
+        );
+        const existingAccount = await tx.instaAccount.findUnique({
+          where: { instagramUserId: instagramUserIdString },
+          select: { userId: true, username: true },
+        });
+
+        if (existingAccount) {
+          console.log(
+            "TX: Found existing account owned by userId:",
+            existingAccount.userId,
+            "Username:",
+            existingAccount.username,
+          );
+          if (existingAccount.userId !== user.id) {
+            console.log("TX: Ownership conflict detected! Throwing 409...");
+            throw new ApiRouteError(
+              "This Instagram account is already connected to another Dmbroo account.",
+              "IG_ACCOUNT_ALREADY_CLAIMED",
+              409,
+            );
+          }
+        } else {
+          console.log("TX: No existing account found for this IG ID.");
+        }
 
         // Upserts Instagram account
-        // Ensures Instagram user ID is stored as a string
-        const instagramUserIdString = String(instagramUser.id);
-
+        console.log("TX: Starting upsert for userId:", user.id);
         const instaAccount = await tx.instaAccount.upsert({
           where: { userId: user.id },
           update: {
@@ -184,6 +215,7 @@ export async function handleOAuthCallback(code: string, state: string) {
             grantedScopes,
           },
         });
+        console.log("TX: Upsert completed. Account ID:", instaAccount.id);
 
         // Atomic baseline snapshot for follower tracking
         const nowUtc = new Date();
@@ -195,7 +227,21 @@ export async function handleOAuthCallback(code: string, state: string) {
           ),
         );
 
-        try {
+        console.log(
+          "TX: Checking for existing follower snapshot for today:",
+          todayUtc,
+        );
+        const existingSnapshot = await tx.instaFollowerSnapshot.findUnique({
+          where: {
+            instaAccountId_date: {
+              instaAccountId: instaAccount.id,
+              date: todayUtc,
+            },
+          },
+        });
+
+        if (!existingSnapshot) {
+          console.log("TX: No snapshot found, creating one...");
           await tx.instaFollowerSnapshot.create({
             data: {
               instaAccountId: instaAccount.id,
@@ -203,11 +249,9 @@ export async function handleOAuthCallback(code: string, state: string) {
               date: todayUtc,
             },
           });
-        } catch (e: any) {
-          // Ignore P2002 unique constraint if they re-connect on the exact same day
-          if (e.code !== "P2002") {
-            throw e;
-          }
+          console.log("TX: Snapshot created successfully.");
+        } else {
+          console.log("TX: Snapshot already exists for today, skipping.");
         }
 
         return { user, instaAccount };
