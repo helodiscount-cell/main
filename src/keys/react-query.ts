@@ -32,7 +32,15 @@ export const formKeys = {
   submissions: (id: string) => [...formKeys.all, "submissions", id] as const,
 };
 
+export interface ContactFilters {
+  status?: string;
+  search?: string;
+  limit?: number;
+  cursor?: string;
+}
+
 export const contactKeys = {
   all: ["contacts"] as const,
-  list: (filters?: any) => [...contactKeys.all, "list", filters] as const,
+  list: (filters?: ContactFilters) =>
+    [...contactKeys.all, "list", filters] as const,
 };
