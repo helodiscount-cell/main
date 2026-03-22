@@ -31,3 +31,8 @@ export const formKeys = {
   detail: (id: string) => [...formKeys.all, "detail", id] as const,
   submissions: (id: string) => [...formKeys.all, "submissions", id] as const,
 };
+
+export const contactKeys = {
+  all: ["contacts"] as const,
+  list: (filters?: any) => [...contactKeys.all, "list", filters] as const,
+};

@@ -11,6 +11,7 @@ import {
 import { useRef, useState } from "react";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const MAX_CHARS = 1000;
 
@@ -19,6 +20,8 @@ type Props = {
   onMessageChange: (msg: string) => void;
   imageUrl?: string;
   onImageChange?: (url: string) => void;
+  links?: string[];
+  onLinksChange?: (links: string[]) => void;
 };
 
 const SendDm = ({
@@ -26,6 +29,8 @@ const SendDm = ({
   onMessageChange,
   imageUrl,
   onImageChange,
+  links = [],
+  onLinksChange,
 }: Props) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -66,6 +71,20 @@ const SendDm = ({
     await startUpload([file]);
   };
 
+  const addLink = () => {
+    onLinksChange?.([...links, ""]);
+  };
+
+  const updateLink = (index: number, value: string) => {
+    const newLinks = [...links];
+    newLinks[index] = value;
+    onLinksChange?.(newLinks);
+  };
+
+  const removeLink = (index: number) => {
+    onLinksChange?.(links.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden">
       {/* Header */}
@@ -82,41 +101,42 @@ const SendDm = ({
       {!collapsed && (
         <div className="px-4 pb-4 space-y-3">
           {/* Media upload area */}
-          {!imageUrl && !isUploading ? (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDrop={handleDrop}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex items-center justify-center gap-2 border border-dashed border-purple-300 rounded-lg py-3 cursor-pointer hover:bg-purple-50 transition-colors"
-            >
-              <ImageIcon size={16} className="text-slate-400" />
-              <span className="text-sm text-slate-400">
-                Select/Drop an image
-              </span>
-            </div>
-          ) : isUploading ? (
-            <div className="flex flex-col items-center justify-center gap-2 border border-dashed border-purple-300 rounded-lg py-6 bg-purple-50/50">
-              <Loader2 size={24} className="text-purple-500 animate-spin" />
-              <span className="text-sm text-purple-600 font-medium">
-                Uploading image...
-              </span>
-            </div>
-          ) : (
-            <div className="relative rounded-lg overflow-hidden border border-purple-200">
-              <img
-                src={imageUrl}
-                alt="Preview"
-                className="w-full max-h-40 object-cover"
-              />
-              <button
-                onClick={removeMedia}
-                className="absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow text-slate-500 hover:text-red-400 transition-colors"
+          <div>
+            {!imageUrl && !isUploading ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className="flex items-center justify-center gap-2 border border-dashed border-purple-300 rounded-lg py-3 cursor-pointer hover:bg-purple-50 transition-colors"
               >
-                <X size={14} />
-              </button>
-            </div>
-          )}
-
+                <ImageIcon size={16} className="text-slate-400" />
+                <span className="text-sm text-slate-400">
+                  Select/Drop an image
+                </span>
+              </div>
+            ) : isUploading ? (
+              <div className="flex flex-col items-center justify-center gap-2 border border-dashed border-purple-300 rounded-lg py-6 bg-purple-50/50">
+                <Loader2 size={24} className="text-purple-500 animate-spin" />
+                <span className="text-sm text-purple-600 font-medium">
+                  Uploading image...
+                </span>
+              </div>
+            ) : (
+              <div className="relative rounded-lg overflow-hidden border border-purple-200">
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="w-full max-h-40 object-cover"
+                />
+                <button
+                  onClick={removeMedia}
+                  className="absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow text-slate-500 hover:text-red-400 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -145,6 +165,39 @@ const SendDm = ({
               {message.length}/{MAX_CHARS}
             </div>
           </div>
+
+          {/* Links Section */}
+          <div className="space-y-2">
+            {links.map((link, index) => (
+              <div
+                key={index}
+                className="bg-[#F5F5F5] rounded-lg px-3 py-2 flex items-center gap-2 border border-purple-100"
+              >
+                <input
+                  type="url"
+                  value={link}
+                  onChange={(e) => updateLink(index, e.target.value)}
+                  placeholder="Paste your link here (https://...)"
+                  className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+                />
+                <button
+                  onClick={() => removeLink(index)}
+                  className="text-slate-400 hover:text-red-400 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Always Visible Add Link Button */}
+          <Button
+            variant={"ghost"}
+            onClick={addLink}
+            className="w-full flex items-center gap-2 bg-[#F7F0FF] text-[#6A06E4]"
+          >
+            <span className="text-xs font-normal">Add Link</span>
+          </Button>
         </div>
       )}
     </div>

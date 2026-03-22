@@ -4,6 +4,7 @@ export const CONTACTS_CONFIG = {
   EMPTY_STATE_MESSAGE: "No contacts found.",
   COLUMNS: [
     { key: "username", label: "Username", sortable: false, width: "flex-2" },
+    { key: "type", label: "Type", sortable: false, width: "flex-1" },
     {
       key: "email",
       label: "Email ID",
