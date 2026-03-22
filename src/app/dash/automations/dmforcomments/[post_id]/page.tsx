@@ -53,6 +53,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       openingMessageEnabled: true,
       openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
       openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
+      dmLinks: [],
     },
     findExistingAutomation: (a) =>
       a.post?.id === post_id && a.status !== "DELETED",
@@ -78,11 +79,12 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
         replyMessage: form.dmMessage,
         replyImage: form.dmImage,
+        dmLinks: form.dmLinks || [],
         useVariables: true,
         // Always pass commentReplyWhenDm to ensure it clears if toggled off
         commentReplyWhenDm:
           form.publicReplyEnabled && form.publicReplies.length > 0
-            ? form.publicReplies.map((r) => r.text)
+            ? form.publicReplies.map((r: any) => r.text)
             : [],
         askToFollowEnabled: form.askToFollowEnabled,
         askToFollowMessage: form.askToFollowMessage || null,
@@ -96,6 +98,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       keywords: automation.triggers || [],
       dmMessage: automation.replyMessage || "",
       dmImage: automation.replyImage ?? undefined,
+      dmLinks: (automation as any).dmLinks || [],
       publicReplyEnabled:
         !!automation.commentReplyWhenDm &&
         automation.commentReplyWhenDm.length > 0,
@@ -206,11 +209,19 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
                   control={control}
                   name="dmImage"
                   render={({ field: imageField }) => (
-                    <SendDm
-                      message={field.value}
-                      onMessageChange={field.onChange}
-                      imageUrl={imageField.value}
-                      onImageChange={imageField.onChange}
+                    <Controller
+                      control={control}
+                      name="dmLinks"
+                      render={({ field: linksField }) => (
+                        <SendDm
+                          message={field.value}
+                          onMessageChange={field.onChange}
+                          imageUrl={imageField.value}
+                          onImageChange={imageField.onChange}
+                          links={linksField.value || []}
+                          onLinksChange={linksField.onChange}
+                        />
+                      )}
                     />
                   )}
                 />

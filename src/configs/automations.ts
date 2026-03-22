@@ -41,6 +41,15 @@ export const baseAutomationSchema = z.object({
   openingMessageEnabled: z.boolean().default(true),
   openingMessage: z.string().optional(),
   openingButtonText: z.string().optional(),
+  dmLinks: z
+    .array(
+      z.object({
+        title: z.string(),
+        url: z.string().url("Enter a valid URL"),
+      }),
+    )
+    .max(3, "Maximum 3 links allowed")
+    .optional(),
 });
 
 export const commentsAutomationSchema = baseAutomationSchema.extend({

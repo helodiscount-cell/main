@@ -13,6 +13,11 @@ import {
 } from "../lib/utils/sanitize";
 import { sanitizeQueryParam } from "../lib/utils/validation";
 
+const DmLinkSchema = z.object({
+  title: z.string().min(1).max(100),
+  url: z.string().url("Invalid link URL").max(2048),
+});
+
 // Embedded story target for creation payload
 const StoryTargetInputSchema = z.object({
   id: z.string().min(1).max(100),
@@ -99,6 +104,7 @@ export const CreateAutomationSchema = z
     openingMessageEnabled: z.boolean().default(true),
     openingMessage: z.string().max(2000).optional().nullable(),
     openingButtonText: z.string().max(100).optional().nullable(),
+    dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
   })
   .refine(
     (data) => {
@@ -165,6 +171,7 @@ export const UpdateAutomationSchema = z.object({
   openingMessageEnabled: z.boolean().optional(),
   openingMessage: z.string().max(2000).optional().nullable(),
   openingButtonText: z.string().max(100).optional().nullable(),
+  dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 
@@ -213,6 +220,7 @@ export const AutomationResponseSchema = z.object({
   openingMessageEnabled: z.boolean().optional(),
   openingMessage: z.string().nullable().optional(),
   openingButtonText: z.string().nullable().optional(),
+  dmLinks: z.array(DmLinkSchema).optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: z.number(),
   lastTriggeredAt: z.date().nullable(),
@@ -285,6 +293,7 @@ export const UpdateAutomationResponseSchema = z.object({
     openingMessageEnabled: z.boolean().optional(),
     openingMessage: z.string().nullable().optional(),
     openingButtonText: z.string().nullable().optional(),
+    dmLinks: z.array(DmLinkSchema).optional(),
     status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: z.date(),
   }),

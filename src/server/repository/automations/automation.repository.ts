@@ -68,6 +68,7 @@ export async function createAutomation(
           openingMessageEnabled: data.openingMessageEnabled ?? true,
           openingMessage: data.openingMessage ?? null,
           openingButtonText: data.openingButtonText ?? null,
+          dmLinks: data.dmLinks ?? [],
         },
       }),
     {

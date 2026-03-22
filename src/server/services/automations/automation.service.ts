@@ -131,6 +131,7 @@ export async function getAutomation(userId: string, automationId: string) {
     openingMessageEnabled: automation.openingMessageEnabled,
     openingMessage: automation.openingMessage,
     openingButtonText: automation.openingButtonText,
+    dmLinks: automation.dmLinks || [],
     status: automation.status,
     timesTriggered: automation.timesTriggered,
     lastTriggeredAt: automation.lastTriggeredAt,
@@ -242,6 +243,7 @@ export async function updateAutomation(
     openingMessageEnabled: updatedAutomation.openingMessageEnabled,
     openingMessage: updatedAutomation.openingMessage,
     openingButtonText: updatedAutomation.openingButtonText,
+    dmLinks: updatedAutomation.dmLinks || [],
     status: updatedAutomation.status,
     updatedAt: updatedAutomation.updatedAt,
   };

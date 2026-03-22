@@ -67,6 +67,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       openingMessageEnabled: true,
       openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
       openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
+      dmLinks: [],
     },
     findExistingAutomation: (a) =>
       a.triggerType === AUTOMATION_CONFIGS.STORY_REPLY.triggerType &&
@@ -99,6 +100,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         openingMessageEnabled: form.openingMessageEnabled,
         openingMessage: form.openingMessage,
         openingButtonText: form.openingButtonText,
+        dmLinks: form.dmLinks || [],
         // Story replies don't have public replies in this version, but we keep it consistent
         commentReplyWhenDm: [],
       };
@@ -116,6 +118,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       openingButtonText:
         automation.openingButtonText ||
         OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
+      dmLinks: (automation as any).dmLinks || [],
     }),
     onPayloadInvalid: () => {
       toast.error("Story data not available. Please try again.");
@@ -201,11 +204,19 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
                   control={control}
                   name="dmImage"
                   render={({ field: imageField }) => (
-                    <SendDm
-                      message={field.value}
-                      onMessageChange={field.onChange}
-                      imageUrl={imageField.value}
-                      onImageChange={imageField.onChange}
+                    <Controller
+                      control={control}
+                      name="dmLinks"
+                      render={({ field: linksField }) => (
+                        <SendDm
+                          message={field.value}
+                          onMessageChange={field.onChange}
+                          imageUrl={imageField.value}
+                          onImageChange={imageField.onChange}
+                          links={linksField.value || []}
+                          onLinksChange={linksField.onChange}
+                        />
+                      )}
                     />
                   )}
                 />

@@ -1,5 +1,3 @@
-import type { Automation } from "@prisma/client";
-
 export type AutomationStatus = "ACTIVE" | "PAUSED";
 
 export interface AutomationListItem {
@@ -26,6 +24,7 @@ export interface AutomationListItem {
   openingMessageEnabled?: boolean;
   openingMessage?: string | null;
   openingButtonText?: string | null;
+  dmLinks?: { title: string; url: string }[];
   status: string;
   timesTriggered: number;
   lastTriggeredAt: string | null;
@@ -59,6 +58,7 @@ export interface CreateAutomationData {
   openingMessageEnabled?: boolean;
   openingMessage?: string | null;
   openingButtonText?: string | null;
+  dmLinks?: { title: string; url: string }[];
 }
 
 export interface UpdateAutomationData {
@@ -76,6 +76,7 @@ export interface UpdateAutomationData {
   openingMessageEnabled?: boolean;
   openingMessage?: string | null;
   openingButtonText?: string | null;
+  dmLinks?: { title: string; url: string }[];
   status?: string;
 }
 
