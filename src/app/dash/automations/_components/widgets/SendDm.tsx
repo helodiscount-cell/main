@@ -24,13 +24,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+import { DmLink } from "@dm-broo/common-types";
+
 const MAX_CHARS = 1000;
 const MAX_LINKS = 3;
-
-type DmLink = {
-  title: string;
-  url: string;
-};
 
 type Props = {
   message: string;
@@ -76,9 +73,18 @@ const SendDm = ({
     },
   });
 
+  // Handle file selection from the hidden input
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Restrict to image files only
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     await startUpload([file]);
   };
 
@@ -87,10 +93,18 @@ const SendDm = ({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Handle files dropped into the upload area
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
+
+    // Restrict to image files only
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please drop an image file.");
+      return;
+    }
+
     await startUpload([file]);
   };
 
@@ -109,8 +123,20 @@ const SendDm = ({
   };
 
   const saveLink = () => {
+    // Ensure mutation handler exists before performing changes
+    if (!onLinksChange) {
+      toast.error("Error: Unable to update links. Please try again.");
+      return;
+    }
+
     if (!title || !url) {
       toast.error("Please fill in both title and URL.");
+      return;
+    }
+
+    // Verify limit again before adding new link (fail closed)
+    if (editingIndex === null && links.length >= MAX_LINKS) {
+      toast.error(`Maximum ${MAX_LINKS} links reached.`);
       return;
     }
 
@@ -127,10 +153,10 @@ const SendDm = ({
     if (editingIndex !== null) {
       const newLinks = [...links];
       newLinks[editingIndex] = newLink;
-      onLinksChange?.(newLinks);
+      onLinksChange(newLinks);
       toast.success("Link updated successfully!");
     } else {
-      onLinksChange?.([...links, newLink]);
+      onLinksChange([...links, newLink]);
       toast.success("Link added successfully!");
     }
 
@@ -141,7 +167,11 @@ const SendDm = ({
   };
 
   const removeLink = (index: number) => {
-    onLinksChange?.(links.filter((_, i) => i !== index));
+    if (!onLinksChange) {
+      toast.error("Error: Unable to remove link. Please try again.");
+      return;
+    }
+    onLinksChange(links.filter((_, i) => i !== index));
     toast.success("Link removed");
   };
 
@@ -200,7 +230,7 @@ const SendDm = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept="image/*"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -324,7 +354,8 @@ const SendDm = ({
                 <Button
                   type="button"
                   onClick={saveLink}
-                  className="w-full bg-[#6A06E4] hover:bg-[#5805BD] text-white rounded-xl py-6 font-bold text-base shadow-lg transition-all active:scale-[0.98]"
+                  disabled={editingIndex === null && links.length >= MAX_LINKS}
+                  className="w-full bg-[#6A06E4] hover:bg-[#5805BD] text-white rounded-xl py-6 font-bold text-base shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingIndex !== null ? "Update Link" : "Add Link"}
                 </Button>

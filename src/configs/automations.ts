@@ -44,8 +44,8 @@ export const baseAutomationSchema = z.object({
   dmLinks: z
     .array(
       z.object({
-        title: z.string(),
-        url: z.string().url("Enter a valid URL"),
+        title: z.string().min(1).max(100),
+        url: z.string().url("Invalid link URL").max(2048),
       }),
     )
     .max(3, "Maximum 3 links allowed")

@@ -1,12 +1,22 @@
 "use client";
 
 import React from "react";
-import { ArrowDown, Loader2 } from "lucide-react";
+import { ArrowDown, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { CONTACTS_CONFIG } from "./config";
 import { useContacts } from "@/hooks/use-contacts";
 
 export const ContactsTable = () => {
-  const { contacts, isLoading, isError } = useContacts();
+  const {
+    contacts,
+    isLoading,
+    isError,
+    refetch,
+    handleNext,
+    handlePrev,
+    canGoNext,
+    canGoPrev,
+    currentPage,
+  } = useContacts();
 
   if (isLoading) {
     return (
@@ -26,7 +36,7 @@ export const ContactsTable = () => {
           Failed to load contacts.
         </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           className="mt-4 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm hover:bg-slate-200 transition-colors"
         >
           Try Again
@@ -36,7 +46,7 @@ export const ContactsTable = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden flex-1 mt-4 flex flex-col pt-2">
+    <div className="bg-white rounded-xl overflow-hidden flex-1 mt-4 flex flex-col pt-2 shadow-sm border border-slate-100">
       {/* Table header */}
       <div className="grid grid-cols-[1.5fr_0.8fr_auto_1.5fr_auto_1fr] items-center px-6 py-4 border-b border-slate-100">
         <span className="text-sm font-medium text-slate-500">
@@ -69,7 +79,7 @@ export const ContactsTable = () => {
         ) : (
           contacts.map((contact, index) => (
             <div key={contact.id}>
-              <div className="grid grid-cols-[1.5fr_0.8fr_auto_1.5fr_auto_1fr] items-center px-6 py-4">
+              <div className="grid grid-cols-[1.5fr_0.8fr_auto_1.5fr_auto_1fr] items-center px-6 py-4 group hover:bg-slate-50/50 transition-colors">
                 {/* Username Column */}
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative">
@@ -110,13 +120,38 @@ export const ContactsTable = () => {
                   {contact.lastInteractedAt}
                 </span>
               </div>
-              {/* Add a divider below row only if it's not the last one */}
+              {/* Divider */}
               {index < contacts.length - 1 && (
                 <div className="border-b border-slate-50 mx-6" />
               )}
             </div>
           ))
         )}
+      </div>
+
+      {/* Pagination Footer */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+        <span className="text-xs text-slate-500 font-medium">
+          Page {currentPage}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            title="Previous Page"
+            className="p-1.5 rounded-lg border border-slate-200 bg-white shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all active:scale-95"
+          >
+            <ChevronLeft size={18} className="text-slate-600" />
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!canGoNext}
+            title="Next Page"
+            className="p-1.5 rounded-lg border border-slate-200 bg-white shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all active:scale-95"
+          >
+            <ChevronRight size={18} className="text-slate-600" />
+          </button>
+        </div>
       </div>
     </div>
   );

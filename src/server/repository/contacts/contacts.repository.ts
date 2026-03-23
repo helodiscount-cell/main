@@ -10,58 +10,84 @@ import { executeWithErrorHandling } from "../repository-utils";
  * Fetches unique contacts (people who interacted) for a specific user
  * A contact is uniquely identified by their commentUserId or commentUsername
  */
-export async function getUniqueContactsForUser(userId: string) {
+export async function getUniqueContactsForUser(
+  userId: string,
+  limit: number = 20,
+  cursor?: string,
+) {
   return executeWithErrorHandling(
     async () => {
-      // Find all executions for this user's automations
+      // Fetch unique contacts using Prisma's distinct feature for efficient pagination
       const executions = await prisma.automationExecution.findMany({
         where: {
           automation: {
             userId: userId,
           },
         },
+        // We use distinct on commentUserId to ensure each contact appears once
+        distinct: ["commentUserId"],
         include: {
           automation: {
             select: {
               triggerType: true,
-              post: true,
-              story: true,
             },
           },
         },
         orderBy: {
           executedAt: "desc",
         },
+        // Fetch one extra to determine if there are more results
+        take: limit + 1,
+        // Use the execution ID as the cursor
+        cursor: cursor ? { id: cursor } : undefined,
+        // Skip the cursor itself when requesting the next page
+        skip: cursor ? 1 : 0,
       });
 
-      // Group by commentUserId to get unique contacts
-      const contactMap = new Map();
-
-      for (const execution of executions) {
-        if (!contactMap.has(execution.commentUserId)) {
-          // Determine type: mapping triggerType to UI labels
-          let type: "Post" | "Reel" = "Post";
-          if (execution.automation.triggerType === "STORY_REPLY") {
-            type = "Reel"; // Or "Story", following mock data preference
-          }
-
-          contactMap.set(execution.commentUserId, {
-            id: execution.commentUserId,
-            username: execution.commentUsername,
-            avatarUrl: `https://i.pravatar.cc/150?u=${execution.commentUsername}`, // Placeholder as we don't store avatar
-            type: type,
-            email: null, // Email not available in executions
-            lastInteractedAt: execution.executedAt,
-          });
-        }
+      // Interface for normalized contact data
+      interface RepositoryContact {
+        id: string; // The commentUserId
+        username: string;
+        avatarUrl: string;
+        type: "Post" | "Reel" | "Story";
+        email: null;
+        lastInteractedAt: Date;
+        lastExecutionId: string; // Stored to serve as the next cursor
       }
 
-      return Array.from(contactMap.values());
+      // Map the executions to the normalized contact format
+      const contacts: RepositoryContact[] = executions
+        .slice(0, limit)
+        .map((execution) => {
+          let type: "Post" | "Reel" | "Story" = "Post";
+          if (execution.automation.triggerType === "STORY_REPLY") {
+            type = "Story";
+          }
+
+          return {
+            id: execution.commentUserId,
+            username: execution.commentUsername,
+            avatarUrl: `https://i.pravatar.cc/150?u=${execution.commentUsername}`,
+            type: type,
+            email: null,
+            lastInteractedAt: execution.executedAt,
+            lastExecutionId: execution.id,
+          };
+        });
+
+      // Determine the cursor for the next page
+      const nextCursor =
+        executions.length > limit ? executions[limit].id : undefined;
+
+      return {
+        contacts,
+        nextCursor,
+      };
     },
     {
       operation: "getUniqueContactsForUser",
       model: "AutomationExecution",
-      fallback: [],
+      fallback: { contacts: [], nextCursor: undefined },
       retries: 1,
     },
   );

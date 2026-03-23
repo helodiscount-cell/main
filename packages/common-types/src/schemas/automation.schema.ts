@@ -13,7 +13,7 @@ import {
 } from "../lib/utils/sanitize";
 import { sanitizeQueryParam } from "../lib/utils/validation";
 
-const DmLinkSchema = z.object({
+export const DmLinkSchema = z.object({
   title: z.string().min(1).max(100),
   url: z.string().url("Invalid link URL").max(2048),
 });

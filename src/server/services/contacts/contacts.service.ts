@@ -9,20 +9,29 @@ import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 
 /**
- * Gets unique contacts for a user identified by Clerk ID
+ * Gets unique contacts for a user identified by Clerk ID with pagination
  */
-export async function getUserContacts(clerkId: string) {
+export async function getUserContacts(
+  clerkId: string,
+  limit: number = 20,
+  cursor?: string,
+) {
   const user = await findUserByClerkId(clerkId);
 
   if (!user) {
     throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER, "NO_USER");
   }
 
-  const contacts = await getUniqueContactsForUser(user.id);
+  // Fetch paginated contacts from repository
+  const { contacts, nextCursor } = await getUniqueContactsForUser(
+    user.id,
+    limit,
+    cursor,
+  );
 
-  return contacts.map((contact) => ({
+  // Format dates for UI consistency
+  const formattedContacts = contacts.map((contact) => ({
     ...contact,
-    // Format date for frontend consistency if needed, but repository already returns Date objects
     lastInteractedAt:
       contact.lastInteractedAt.toLocaleDateString("en-US", {
         year: "numeric",
@@ -33,6 +42,11 @@ export async function getUserContacts(clerkId: string) {
       getTimeAgo(contact.lastInteractedAt) +
       ")",
   }));
+
+  return {
+    contacts: formattedContacts,
+    nextCursor,
+  };
 }
 
 /**
@@ -42,6 +56,10 @@ function getTimeAgo(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
+  // Handle future dates or extremely recent events
+  if (diffInSeconds <= 0) return "Just now";
+
+  // Less than 1 minute ago
   if (diffInSeconds < 60) return "Just now";
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
