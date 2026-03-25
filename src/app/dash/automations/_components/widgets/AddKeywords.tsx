@@ -42,6 +42,7 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
   return (
     <div className="bg-white rounded-xl border border-purple-300 overflow-hidden w-full">
       <button
+        type="button"
         className="w-full flex items-center justify-between px-4 py-3.5 text-left"
         onClick={() => setOpen((o) => !o)}
       >

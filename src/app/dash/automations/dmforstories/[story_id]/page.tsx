@@ -8,6 +8,7 @@ import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
 import { useAutomationManager } from "@/hooks/use-automations";
 import {
@@ -62,7 +63,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       keywords: [],
       dmMessage: "",
       askToFollowEnabled: false,
-      askToFollowMessage: "",
+      askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
       askToFollowLink: "",
       openingMessageEnabled: true,
       openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
@@ -98,8 +99,8 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         askToFollowMessage: form.askToFollowMessage || null,
         askToFollowLink: form.askToFollowLink || null,
         openingMessageEnabled: form.openingMessageEnabled,
-        openingMessage: form.openingMessage,
-        openingButtonText: form.openingButtonText,
+        openingMessage: form.openingMessage || null,
+        openingButtonText: form.openingButtonText || null,
         dmLinks: form.dmLinks || [],
         // Story replies don't have public replies in this version, but we keep it consistent
         commentReplyWhenDm: [],
@@ -110,7 +111,8 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       dmMessage: automation.replyMessage || "",
       dmImage: automation.replyImage ?? undefined,
       askToFollowEnabled: automation.askToFollowEnabled || false,
-      askToFollowMessage: automation.askToFollowMessage || "",
+      askToFollowMessage:
+        automation.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
       askToFollowLink: automation.askToFollowLink || "",
       openingMessageEnabled: automation.openingMessageEnabled ?? true,
       openingMessage:

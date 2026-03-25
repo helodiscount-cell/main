@@ -2,6 +2,7 @@
 
 import { Pencil } from "lucide-react";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import { useState } from "react";
 
 type Props = {
   enabled: boolean;
@@ -20,6 +21,8 @@ const OpeningMessage = ({
   buttonText,
   onButtonTextChange,
 }: Props) => {
+  const [isEditable, setIsEditable] = useState(false);
+
   return (
     <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden shadow-sm">
       {/* Header section with toggle */}
@@ -57,6 +60,7 @@ const OpeningMessage = ({
           {/* Button text preview/edit area */}
           <div className="bg-[#F6EFFF] rounded-xl px-4 py-3.5 flex items-center justify-between border border-purple-100 group">
             <input
+              disabled={!isEditable}
               type="text"
               value={buttonText}
               onChange={(e) => onButtonTextChange(e.target.value)}
@@ -64,8 +68,9 @@ const OpeningMessage = ({
               placeholder="Button text..."
             />
             <button
+              onClick={() => setIsEditable(!isEditable)}
               type="button"
-              className="text-[#6A06E4] opacity-80 hover:opacity-100 transition-opacity"
+              className={`text-[#6A06E4] opacity-80 hover:opacity-100 transition-opacity ${isEditable ? "text-green-500" : ""}`}
             >
               <Pencil size={18} />
             </button>

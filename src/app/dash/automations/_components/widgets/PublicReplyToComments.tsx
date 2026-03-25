@@ -58,6 +58,7 @@ const PublicReplyToComments = ({
           Public Reply to Comment
         </span>
         <button
+          type="button"
           onClick={() => onEnabledChange(!enabled)}
           className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
             enabled ? "bg-[#6A06E4]" : "bg-slate-200"
@@ -81,11 +82,14 @@ const PublicReplyToComments = ({
               <span className="flex-1 text-sm text-slate-700 truncate">
                 {reply.text}
               </span>
-              <button className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
+              <button
+                type="button"
+                className="text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+              >
                 <SmilePlus size={16} />
               </button>
               <button
-                onClick={() => removeReply(reply.id)}
+                type="button"
                 className="text-slate-400 hover:text-red-400 transition-colors shrink-0"
               >
                 <Trash2 size={15} />
@@ -110,6 +114,7 @@ const PublicReplyToComments = ({
 
           {!showInput && (
             <button
+              type="button"
               onClick={handleAddClick}
               className="flex items-center gap-1.5 text-sm font-medium text-[#6A06E4] hover:text-[#5a05c4] transition-colors pt-1"
             >

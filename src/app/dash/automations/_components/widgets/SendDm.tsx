@@ -5,7 +5,6 @@ import {
   ChevronUp,
   ChevronDown,
   Loader2,
-  Plus,
   Type,
   Link as LinkIcon,
   Pencil,
@@ -22,7 +21,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
 import { DmLink } from "@dm-broo/common-types";
 
@@ -140,10 +138,11 @@ const SendDm = ({
       return;
     }
 
-    try {
-      new URL(url.startsWith("http") ? url : `https://${url}`);
-    } catch (e) {
-      toast.error("Please enter a valid URL.");
+    // Regular expression for a more strict web URL validation
+    const urlRegex = /^(https?:\/\/)?([\w.-]+\.[a-z]{2,})(\/.*)?$/i;
+
+    if (!urlRegex.test(url)) {
+      toast.error("Please enter a valid web URL (e.g., example.com).");
       return;
     }
 
@@ -181,6 +180,7 @@ const SendDm = ({
       <div className="flex items-center justify-between px-4 py-3.5">
         <span className="text-sm font-semibold text-slate-800">Send a DM</span>
         <button
+          type="button"
           onClick={() => setCollapsed((c) => !c)}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
@@ -219,6 +219,7 @@ const SendDm = ({
                   className="w-full max-h-40 object-cover"
                 />
                 <button
+                  type="button"
                   onClick={removeMedia}
                   className="absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow text-slate-500 hover:text-red-400 transition-colors"
                 >
@@ -247,7 +248,10 @@ const SendDm = ({
                 rows={3}
                 className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none resize-none"
               />
-              <button className="text-slate-400 hover:text-slate-600 transition-colors mt-0.5 shrink-0">
+              <button
+                type="button"
+                className="text-slate-400 hover:text-slate-600 transition-colors mt-0.5 shrink-0"
+              >
                 <SmilePlus size={18} />
               </button>
             </div>

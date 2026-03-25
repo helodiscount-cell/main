@@ -6,6 +6,7 @@ import { AutomationLayout } from "@/app/dash/automations/_components/AutomationL
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
 import { useAutomationManager } from "@/hooks/use-automations";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
 import { instagramKeys } from "@/keys/react-query";
 import {
   AUTOMATION_CONFIGS,
@@ -48,7 +49,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       publicReplyEnabled: true,
       publicReplies: [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
       askToFollowEnabled: false,
-      askToFollowMessage: "",
+      askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
       askToFollowLink: "",
       openingMessageEnabled: true,
       openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
@@ -78,7 +79,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
         actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
         replyMessage: form.dmMessage,
-        replyImage: form.dmImage,
+        replyImage: form.dmImage || null,
         dmLinks: form.dmLinks || [],
         useVariables: true,
         // Always pass commentReplyWhenDm to ensure it clears if toggled off
@@ -90,8 +91,8 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         askToFollowMessage: form.askToFollowMessage || null,
         askToFollowLink: form.askToFollowLink || null,
         openingMessageEnabled: form.openingMessageEnabled,
-        openingMessage: form.openingMessage,
-        openingButtonText: form.openingButtonText,
+        openingMessage: form.openingMessage || null,
+        openingButtonText: form.openingButtonText || null,
       };
     },
     onPopulateForm: (automation) => ({
@@ -111,7 +112,8 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
             }))
           : [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
       askToFollowEnabled: automation.askToFollowEnabled || false,
-      askToFollowMessage: automation.askToFollowMessage || "",
+      askToFollowMessage:
+        automation.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
       askToFollowLink: automation.askToFollowLink || "",
       openingMessageEnabled: automation.openingMessageEnabled ?? true,
       openingMessage:

@@ -169,11 +169,20 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   };
 
   const onInvalid = (errs: any) => {
-    const first =
-      errs.keywords?.message ??
-      errs.dmMessage?.message ??
-      "Please fill in all required fields.";
-    toast.error(first as string);
+    // Extract the first available error message dynamically
+    const getFirstErrorMessage = (obj: any): string | null => {
+      if (!obj) return null;
+      if (typeof obj.message === "string") return obj.message;
+      for (const key in obj) {
+        const msg = getFirstErrorMessage(obj[key]);
+        if (msg) return msg;
+      }
+      return null;
+    };
+
+    const firstError =
+      getFirstErrorMessage(errs) ?? "Please fill in all required fields.";
+    toast.error(firstError);
   };
 
   const handleSubmit = form.handleSubmit(onSubmit, onInvalid);
