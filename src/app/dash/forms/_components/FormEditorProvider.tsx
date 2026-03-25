@@ -1,0 +1,125 @@
+"use client";
+
+import React, { createContext, useContext, useCallback } from "react";
+import { useForm, UseFormReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormValuesSchema } from "@dm-broo/common-types";
+import type { FormValues, FieldType } from "@dm-broo/common-types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useEffect } from "react";
+import { formService } from "@/api/services/forms";
+import { formKeys } from "@/keys/react-query";
+
+// Default empty form state
+const DEFAULT_FORM_VALUES: FormValues = {
+  title: "",
+  description: "",
+  coverImage: undefined,
+  fields: [],
+};
+
+interface FormEditorContextType {
+  methods: UseFormReturn<FormValues>;
+  save: (status: "DRAFT" | "PUBLISHED") => Promise<void>;
+  isLoading: boolean;
+}
+
+const FormEditorContext = createContext<FormEditorContextType | null>(null);
+
+/**
+ * FormEditorProvider wraps the form editor layout and pages.
+ * It manages the shared react-hook-form state and the save/publish mutation.
+ */
+export const FormEditorProvider = ({
+  children,
+  formId,
+}: {
+  children: React.ReactNode;
+  formId?: string;
+}) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Initialize form with defaults
+  const methods = useForm<FormValues>({
+    resolver: zodResolver(FormValuesSchema),
+    defaultValues: DEFAULT_FORM_VALUES,
+  });
+
+  // Fetch form data if in "edit" mode
+  const { data: form, isLoading: isFetching } = useQuery({
+    queryKey: formKeys.detail(formId!),
+    queryFn: () => formService.getById(formId!),
+    enabled: !!formId,
+  });
+
+  // Pre-fill the form once data is loaded
+  useEffect(() => {
+    if (form) {
+      methods.reset({
+        title: form.title,
+        description: form.description || "",
+        coverImage: form.coverImage || undefined,
+        fields: (form.fields || []) as any,
+      });
+    }
+  }, [form, methods]);
+
+  // Mutation for creating or updating
+  const { mutate: saveForm, isPending: isSaving } = useMutation({
+    mutationFn: (payload: FormValues & { status: "DRAFT" | "PUBLISHED" }) =>
+      formId
+        ? formService.update(formId, payload)
+        : formService.create(payload),
+    onSuccess: (result, variables) => {
+      toast.success(
+        variables.status === "PUBLISHED"
+          ? `Published! Public URL: /f/${result.slug}`
+          : "Saved successfully.",
+      );
+      queryClient.invalidateQueries({ queryKey: formKeys.all });
+      queryClient.invalidateQueries({ queryKey: formKeys.detail(formId!) });
+      router.push("/dash/forms");
+    },
+    onError: (err: unknown) => {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Something went wrong. Try again.";
+      toast.error(message);
+    },
+  });
+
+  // Combined loading state for header and canvas
+  const isLoading = isFetching || isSaving;
+
+  // Core save handler
+  const save = useCallback(
+    async (status: "DRAFT" | "PUBLISHED") => {
+      const isValid = await methods.trigger();
+      if (!isValid) {
+        toast.error("Please fix the errors before saving.");
+        return;
+      }
+      const data = methods.getValues();
+      saveForm({ ...data, status });
+    },
+    [methods, saveForm],
+  );
+
+  return (
+    <FormEditorContext.Provider value={{ methods, save, isLoading }}>
+      {children}
+    </FormEditorContext.Provider>
+  );
+};
+
+// Hook for components in the layout or page to access the form state
+export const useFormEditor = () => {
+  const context = useContext(FormEditorContext);
+  if (!context) {
+    throw new Error("useFormEditor must be used within a FormEditorProvider");
+  }
+  return context;
+};

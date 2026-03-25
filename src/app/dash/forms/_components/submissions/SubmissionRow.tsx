@@ -1,0 +1,48 @@
+"use client";
+
+import React from "react";
+import { Layers } from "lucide-react";
+import type { FormField } from "@dm-broo/common-types";
+import type { FormSubmission } from "@/types/form";
+import { getDisplayName, formatDate } from "./submission-utils";
+
+interface SubmissionRowProps {
+  submission: FormSubmission;
+  fields: FormField[];
+  onClick: () => void;
+}
+
+/**
+ * Individual row in the submissions list.
+ * Handles display logic for user identity and timestamp.
+ */
+export const SubmissionRow = ({
+  submission,
+  fields,
+  onClick,
+}: SubmissionRowProps) => {
+  const name = getDisplayName(fields, submission);
+  const formattedDate = formatDate(submission.submittedAt);
+
+  return (
+    <div
+      onClick={onClick}
+      className="grid grid-cols-[1fr_auto] items-center px-8 py-5 hover:bg-slate-100/30 transition-all cursor-pointer group"
+    >
+      {/* User Identity Column */}
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-lg bg-[#F5F3FF] flex items-center justify-center text-[#6A06E4] group-hover:bg-[#6A06E4] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#E9E4FF]">
+          <Layers size={18} />
+        </div>
+        <span className="text-sm font-medium text-slate-700 group-hover:text-[#6A06E4] transition-colors">
+          {name}
+        </span>
+      </div>
+
+      {/* Timestamp Column */}
+      <div className="text-sm text-slate-400 font-medium whitespace-nowrap">
+        {formattedDate}
+      </div>
+    </div>
+  );
+};

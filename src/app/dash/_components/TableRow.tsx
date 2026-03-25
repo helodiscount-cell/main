@@ -169,7 +169,7 @@ const useTableRowMapper = (
   return {
     title: form.title || "Untitled Form",
     subtitle: form.description || "No description",
-    href: `/dash/forms/${form.id}/submissions`,
+    href: `/dash/forms/${form.id}`,
     icon: <FileText size={15} className="text-slate-400" />,
     status: (
       <span

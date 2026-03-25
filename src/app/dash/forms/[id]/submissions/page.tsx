@@ -2,7 +2,7 @@ import React from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getFormById, getFormSubmissions } from "@/server/services/forms";
-import { SubmissionsTable } from "../../_components/SubmissionsTable";
+import { SubmissionsList } from "../../_components/SubmissionsList";
 import type { FormField } from "@dm-broo/common-types";
 import type { FormSubmission } from "@/types/form";
 
@@ -36,15 +36,9 @@ export default async function SubmissionsPage({
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-xl font-bold text-slate-900">{form.title}</h1>
-        <p className="text-sm text-slate-500">
-          {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
-        </p>
-      </div>
-
-      <SubmissionsTable
+    <div className="p-8 space-y-8 min-h-screen">
+      {/* Main Submissions List Component */}
+      <SubmissionsList
         fields={form.fields as FormField[]}
         submissions={submissions as FormSubmission[]}
       />
