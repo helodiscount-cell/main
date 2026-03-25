@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { AutomationInput } from "./AutomationInput";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,6 @@ const SendDm = ({
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { startUpload } = useUploadThing("imageUploader", {
@@ -236,29 +236,13 @@ const SendDm = ({
             onChange={handleFileChange}
           />
 
-          {/* Message textarea */}
-          <div className="bg-[#F5F5F5] rounded-lg px-3 pt-3 pb-2">
-            <div className="flex items-start gap-2">
-              <textarea
-                value={message}
-                onChange={(e) =>
-                  onMessageChange(e.target.value.slice(0, MAX_CHARS))
-                }
-                placeholder="Enter your message here..."
-                rows={3}
-                className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none resize-none"
-              />
-              <button
-                type="button"
-                className="text-slate-400 hover:text-slate-600 transition-colors mt-0.5 shrink-0"
-              >
-                <SmilePlus size={18} />
-              </button>
-            </div>
-            <div className="text-xs text-slate-400 text-left mt-1">
-              {message.length}/{MAX_CHARS}
-            </div>
-          </div>
+          {/* Unified Automation Message Input */}
+          <AutomationInput
+            value={message}
+            onChange={onMessageChange}
+            maxLength={MAX_CHARS}
+            placeholder="Enter your message here..."
+          />
 
           {/* Links DisplaySection */}
           {links.length > 0 && (
@@ -326,12 +310,13 @@ const SendDm = ({
                       <span className="text-sm font-medium text-slate-400 min-w-20">
                         Enter Title
                       </span>
-                      <input
-                        autoFocus
+                      <AutomationInput
+                        variant="mini"
+                        type="input"
                         placeholder="Open Link"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="flex-1 bg-transparent text-sm text-slate-800 font-medium placeholder:text-slate-300 outline-none"
+                        onChange={setTitle}
+                        className="flex-1"
                       />
                     </div>
                   </div>

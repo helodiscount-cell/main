@@ -1,7 +1,8 @@
 "use client";
 
-import { Plus, Trash2, SmilePlus } from "lucide-react";
-import { useRef, useState, KeyboardEvent } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { AutomationInput } from "./AutomationInput";
 
 type Reply = {
   id: string;
@@ -23,7 +24,6 @@ const PublicReplyToComments = ({
 }: Props) => {
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const addReply = () => {
     const trimmed = inputValue.trim();
@@ -38,17 +38,8 @@ const PublicReplyToComments = ({
     onRepliesChange(replies.filter((r) => r.id !== id));
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") addReply();
-    if (e.key === "Escape") {
-      setShowInput(false);
-      setInputValue("");
-    }
-  };
-
   const handleAddClick = () => {
     setShowInput(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   return (
@@ -84,12 +75,7 @@ const PublicReplyToComments = ({
               </span>
               <button
                 type="button"
-                className="text-slate-400 hover:text-slate-600 transition-colors shrink-0"
-              >
-                <SmilePlus size={16} />
-              </button>
-              <button
-                type="button"
+                onClick={() => removeReply(reply.id)}
                 className="text-slate-400 hover:text-red-400 transition-colors shrink-0"
               >
                 <Trash2 size={15} />
@@ -98,18 +84,23 @@ const PublicReplyToComments = ({
           ))}
 
           {showInput && (
-            <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-lg px-3 py-2.5 border border-purple-300">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={addReply}
-                placeholder="Type a reply…"
-                className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
-              />
-            </div>
+            <AutomationInput
+              type="input"
+              value={inputValue}
+              onChange={setInputValue}
+              placeholder="Type a reply..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addReply();
+                if (e.key === "Escape") {
+                  setShowInput(false);
+                  setInputValue("");
+                }
+              }}
+              onBlur={() => {
+                if (inputValue.trim()) addReply();
+                else setShowInput(false);
+              }}
+            />
           )}
 
           {!showInput && (

@@ -1,7 +1,8 @@
 "use client";
 
 import { X, ChevronUp, ChevronDown } from "lucide-react";
-import { useState, useRef, KeyboardEvent } from "react";
+import { useState, KeyboardEvent } from "react";
+import { AutomationInput } from "./AutomationInput";
 
 type Props = {
   value: string[];
@@ -12,7 +13,6 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
   const [open, setOpen] = useState(true);
   const [input, setInput] = useState("");
   const [removingIndex, setRemovingIndex] = useState<number | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const addKeyword = () => {
     const trimmed = input.trim();
@@ -22,7 +22,7 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
     setInput("");
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addKeyword();
@@ -77,21 +77,16 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
             </div>
           )}
 
-          <div
-            className="flex items-center bg-[#F5F5F5] rounded-lg px-3 py-2.5 cursor-text"
-            onClick={() => inputRef.current?.focus()}
-          >
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={addKeyword}
-              placeholder="Type Any Keyword"
-              className="flex-1 bg-transparent text-sm text-slate-500 placeholder:text-slate-400 outline-none"
-            />
-          </div>
+          <AutomationInput
+            type="input"
+            value={input}
+            onChange={setInput}
+            onKeyDown={handleKeyDown}
+            onBlur={addKeyword}
+            placeholder="Type Any Keyword"
+            showEmojiPicker={false}
+            showCharCount={false}
+          />
         </div>
       )}
     </div>
