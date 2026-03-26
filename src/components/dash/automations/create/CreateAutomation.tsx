@@ -76,17 +76,6 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
           <DialogTitle className="text-2xl font-semibold tracking-tight">
             <div className="flex flex-1 justify-between">
               {activeTab ? "Configure Automation" : "Choose a Template"}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                <RefreshCwIcon
-                  className={`w-4 h-4 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </Button>
             </div>
           </DialogTitle>
         </DialogHeader>

@@ -1,7 +1,6 @@
 import {
   ImageIcon,
   X,
-  SmilePlus,
   ChevronUp,
   ChevronDown,
   Loader2,
@@ -138,15 +137,24 @@ const SendDm = ({
       return;
     }
 
+    // Pre-check for insecure protocol to give specific feedback
+    if (url.toLowerCase().startsWith("http://")) {
+      toast.error("Please use a secure HTTPS link (https://)");
+      return;
+    }
+
     // Regular expression for a more strict web URL validation
     const urlRegex = /^(https?:\/\/)?([\w.-]+\.[a-z]{2,})(\/.*)?$/i;
 
     if (!urlRegex.test(url)) {
-      toast.error("Please enter a valid web URL (e.g., example.com).");
+      toast.error("Please enter a valid web URL.");
       return;
     }
 
-    const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
+    // Always prepend https:// if no protocol is provided, or ensure it's already there
+    const formattedUrl = url.toLowerCase().startsWith("https://")
+      ? url
+      : `https://${url}`;
     const newLink: DmLink = { title, url: formattedUrl };
 
     if (editingIndex !== null) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { X, ChevronUp, ChevronDown } from "lucide-react";
-import { useState, KeyboardEvent } from "react";
+import { useState } from "react";
 import { AutomationInput } from "./AutomationInput";
 
 type Props = {
@@ -13,6 +13,16 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
   const [open, setOpen] = useState(true);
   const [input, setInput] = useState("");
   const [removingIndex, setRemovingIndex] = useState<number | null>(null);
+
+  const [isAnyKeyword, setIsAnyKeyword] = useState(keywords.length === 0);
+
+  const handleToggleAny = () => {
+    const nextState = !isAnyKeyword;
+    setIsAnyKeyword(nextState);
+    if (nextState) {
+      onChange([]);
+    }
+  };
 
   const addKeyword = () => {
     const trimmed = input.trim();
@@ -57,36 +67,60 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
       </button>
 
       {open && (
-        <div className="px-4 pb-4 space-y-3">
-          {keywords.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {keywords.map((kw, i) => (
-                <span
-                  key={kw}
-                  onClick={() => removeKeyword(i)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-medium cursor-pointer select-none transition-all duration-200"
-                  style={{
-                    opacity: removingIndex === i ? 0 : 1,
-                    transform: removingIndex === i ? "scale(0.8)" : "scale(1)",
-                  }}
-                >
-                  {kw}
-                  <X size={11} className="text-purple-400" />
-                </span>
-              ))}
+        <div className="px-4 pb-4 space-y-4">
+          <div className="flex items-center justify-between py-1 border-b border-slate-100 pb-3">
+            <span className="text-sm font-medium text-slate-800">
+              Any Keyword
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleAny}
+              className={`relative w-10 h-5.5 rounded-full transition-colors duration-200 ${
+                isAnyKeyword ? "bg-[#6A06E4]" : "bg-slate-200"
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                  isAnyKeyword ? "translate-x-4.5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {!isAnyKeyword && (
+            <div className="space-y-3">
+              {keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((kw, i) => (
+                    <span
+                      key={kw}
+                      onClick={() => removeKeyword(i)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-medium cursor-pointer select-none transition-all duration-200"
+                      style={{
+                        opacity: removingIndex === i ? 0 : 1,
+                        transform:
+                          removingIndex === i ? "scale(0.8)" : "scale(1)",
+                      }}
+                    >
+                      {kw}
+                      <X size={11} className="text-purple-400" />
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <AutomationInput
+                type="input"
+                value={input}
+                onChange={setInput}
+                onKeyDown={handleKeyDown}
+                onBlur={addKeyword}
+                placeholder="Type Any Keyword"
+                showEmojiPicker={false}
+                showCharCount={false}
+              />
             </div>
           )}
-
-          <AutomationInput
-            type="input"
-            value={input}
-            onChange={setInput}
-            onKeyDown={handleKeyDown}
-            onBlur={addKeyword}
-            placeholder="Type Any Keyword"
-            showEmojiPicker={false}
-            showCharCount={false}
-          />
         </div>
       )}
     </div>

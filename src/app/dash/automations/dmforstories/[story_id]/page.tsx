@@ -53,7 +53,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     isCreating,
     isUpdating,
     isStopping,
+    isStarting,
     stopAutomation,
+    startAutomation,
     isReRunning,
     handleReRun,
     handleSubmit,
@@ -142,6 +144,8 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         automation={existingAutomation}
         onStop={stopAutomation}
         isStopping={isStopping}
+        onStart={startAutomation}
+        isStarting={isStarting}
         onReRun={handleReRun}
         isReRunning={isReRunning}
         isUpdating={isUpdating}
