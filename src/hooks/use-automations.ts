@@ -114,7 +114,9 @@ export function useAutomationManager<TFormValues extends FieldValues>({
         if (!existingAutomation?.id) {
           return Promise.reject(new Error("No automation to stop."));
         }
-        return automationService.delete(existingAutomation.id);
+        return automationService.update(existingAutomation.id, {
+          status: "PAUSED",
+        });
       },
       onSuccess: () => {
         toast.success(stopMessage);
@@ -146,7 +148,25 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     },
   });
 
+  const { mutate: startAutomationMutation, isPending: isStarting } =
+    useMutation({
+      mutationFn: () => {
+        if (!existingAutomation?.id) {
+          return Promise.reject(new Error("No automation to start."));
+        }
+        return automationService.update(existingAutomation.id, {
+          status: "ACTIVE",
+        });
+      },
+      onSuccess: () => {
+        toast.success("Automation is now LIVE! 🚀");
+        queryClient.invalidateQueries({ queryKey: automationKeys.all });
+      },
+      onError: () => toast.error("Failed to start automation."),
+    });
+
   const stopAutomation = () => stopAutomationMutation();
+  const startAutomation = () => startAutomationMutation();
   const isReRunning = false;
   const handleReRun = () => toast.info("Re-Run coming soon.");
 
@@ -169,11 +189,20 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   };
 
   const onInvalid = (errs: any) => {
-    const first =
-      errs.keywords?.message ??
-      errs.dmMessage?.message ??
-      "Please fill in all required fields.";
-    toast.error(first as string);
+    // Extract the first available error message dynamically
+    const getFirstErrorMessage = (obj: any): string | null => {
+      if (!obj) return null;
+      if (typeof obj.message === "string") return obj.message;
+      for (const key in obj) {
+        const msg = getFirstErrorMessage(obj[key]);
+        if (msg) return msg;
+      }
+      return null;
+    };
+
+    const firstError =
+      getFirstErrorMessage(errs) ?? "Please fill in all required fields.";
+    toast.error(firstError);
   };
 
   const handleSubmit = form.handleSubmit(onSubmit, onInvalid);
@@ -185,9 +214,17 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     isCreating,
     isUpdating,
     isStopping,
+    isStarting,
     stopAutomation,
+    startAutomation,
     isReRunning,
     handleReRun,
     handleSubmit,
+    handleNameChange: (name: string) => {
+      form.setValue("automationName" as any, name as any);
+      if (pageState === "live" && existingAutomation?.id) {
+        updateAutomation({ automationName: name });
+      }
+    },
   };
 }

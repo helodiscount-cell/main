@@ -13,8 +13,18 @@ import {
 } from "../lib/utils/sanitize";
 import { sanitizeQueryParam } from "../lib/utils/validation";
 
+const NO_ANGLE_BRACKETS_MSG = "Angle brackets (<, >) are not allowed";
+const noAngleBrackets = (val: string | null | undefined) => {
+  if (!val) return true;
+  return !/[<>]/g.test(val);
+};
+
 export const DmLinkSchema = z.object({
-  title: z.string().min(1).max(100),
+  title: z
+    .string()
+    .min(1)
+    .max(100)
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
   url: z.string().url("Invalid link URL").max(2048),
 });
 
@@ -34,6 +44,10 @@ export const CreateAutomationSchema = z
     triggerType: z
       .enum(["COMMENT_ON_POST", "STORY_REPLY"])
       .default("COMMENT_ON_POST"),
+    automationName: z
+      .string()
+      .min(1, "Please define a name for this automation")
+      .max(100),
     // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: z
       .array(
@@ -44,6 +58,7 @@ export const CreateAutomationSchema = z
             MAX_LENGTHS.REPLY_MESSAGE,
             `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
           )
+          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
           .transform((val) => sanitizeReplyMessage(val)),
       )
       .max(10, "Maximum 10 comment replies allowed")
@@ -75,9 +90,9 @@ export const CreateAutomationSchema = z
             MAX_LENGTHS.TRIGGER,
             `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`,
           )
+          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
           .transform((val) => sanitizeTrigger(val)),
       )
-      .min(1, "At least one trigger is required")
       .max(
         MAX_LENGTHS.TRIGGERS_ARRAY,
         `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`,
@@ -93,17 +108,43 @@ export const CreateAutomationSchema = z
         MAX_LENGTHS.REPLY_MESSAGE,
         `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
       )
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
       .transform((val) => sanitizeReplyMessage(val)),
-    replyImage: z.string().url("Invalid image URL").nullable().optional(),
+    replyImage: z
+      .preprocess(
+        (val) => (val === "" ? null : val),
+        z.string().url("Invalid image URL").nullable(),
+      )
+      .optional(),
     useVariables: z.boolean().default(true),
     // Ask to Follow gate — optional
     askToFollowEnabled: z.boolean().default(false),
-    askToFollowMessage: z.string().max(1000).optional().nullable(),
-    askToFollowLink: z.string().max(2048).optional().nullable(),
+    askToFollowMessage: z
+      .string()
+      .max(1000)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    askToFollowLink: z
+      .string()
+      .max(2048)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
     // Opening Message
     openingMessageEnabled: z.boolean().default(true),
-    openingMessage: z.string().max(2000).optional().nullable(),
-    openingButtonText: z.string().max(100).optional().nullable(),
+    openingMessage: z
+      .string()
+      .max(2000)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    openingButtonText: z
+      .string()
+      .max(100)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
     dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
   })
   .refine(
@@ -121,6 +162,7 @@ export const CreateAutomationSchema = z
 
 // Input schema for updating an existing automation
 export const UpdateAutomationSchema = z.object({
+  automationName: z.string().min(1).max(100).optional(),
   triggers: z
     .array(
       z
@@ -130,6 +172,7 @@ export const UpdateAutomationSchema = z.object({
           MAX_LENGTHS.TRIGGER,
           `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`,
         )
+        .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
         .transform((val) => sanitizeTrigger(val)),
     )
     .max(
@@ -148,6 +191,7 @@ export const UpdateAutomationSchema = z.object({
       MAX_LENGTHS.REPLY_MESSAGE,
       `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
     )
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
     .transform((val) => sanitizeReplyMessage(val))
     .optional(),
   // Array of public comment replies (optional)
@@ -164,13 +208,38 @@ export const UpdateAutomationSchema = z.object({
     )
     .max(10, "Maximum 10 comment replies allowed")
     .optional(),
-  replyImage: z.string().url("Invalid image URL").nullable().optional(),
+  replyImage: z
+    .preprocess(
+      (val) => (val === "" ? null : val),
+      z.string().url("Invalid image URL").nullable(),
+    )
+    .optional(),
   askToFollowEnabled: z.boolean().optional(),
-  askToFollowMessage: z.string().max(1000).optional().nullable(),
-  askToFollowLink: z.string().max(2048).optional().nullable(),
+  askToFollowMessage: z
+    .string()
+    .max(1000)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  askToFollowLink: z
+    .string()
+    .max(2048)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
   openingMessageEnabled: z.boolean().optional(),
-  openingMessage: z.string().max(2000).optional().nullable(),
-  openingButtonText: z.string().max(100).optional().nullable(),
+  openingMessage: z
+    .string()
+    .max(2000)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  openingButtonText: z
+    .string()
+    .max(100)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
   dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
@@ -206,6 +275,7 @@ export const AutomationListQuerySchema = z.object({
 // Single automation response schema
 export const AutomationResponseSchema = z.object({
   id: z.string(),
+  automationName: z.string().nullable(),
   postId: z.string(),
   postCaption: z.string().nullable(),
   triggers: z.array(z.string()),
@@ -268,6 +338,7 @@ export const CreateAutomationResponseSchema = z.object({
   success: z.literal(true),
   automation: z.object({
     id: z.string(),
+    automationName: z.string().nullable(),
     postId: z.string(),
     actionType: z.enum(["DM", "COMMENT_REPLY"]),
     triggers: z.array(z.string()),
@@ -281,6 +352,7 @@ export const UpdateAutomationResponseSchema = z.object({
   success: z.literal(true),
   automation: z.object({
     id: z.string(),
+    automationName: z.string().nullable(),
     postId: z.string(),
     triggers: z.array(z.string()),
     matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),

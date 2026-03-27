@@ -1,8 +1,8 @@
 import { z } from "zod";
 export declare const FieldTypeSchema: z.ZodEnum<{
   number: "number";
-  date: "date";
   url: "url";
+  date: "date";
   text: "text";
   email: "email";
   phone: "phone";
@@ -25,8 +25,8 @@ export declare const FormFieldSchema: z.ZodObject<
     id: z.ZodString;
     type: z.ZodEnum<{
       number: "number";
-      date: "date";
       url: "url";
+      date: "date";
       text: "text";
       email: "email";
       phone: "phone";
@@ -65,8 +65,8 @@ export declare const FormValuesSchema: z.ZodObject<
           id: z.ZodString;
           type: z.ZodEnum<{
             number: "number";
-            date: "date";
             url: "url";
+            date: "date";
             text: "text";
             email: "email";
             phone: "phone";
@@ -109,8 +109,8 @@ export declare const CreateFormSchema: z.ZodObject<
           id: z.ZodString;
           type: z.ZodEnum<{
             number: "number";
-            date: "date";
             url: "url";
+            date: "date";
             text: "text";
             email: "email";
             phone: "phone";

@@ -45,8 +45,8 @@ export const PublicFieldRenderer = ({
   const inputClass =
     "w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#6A06E4] focus:ring-1 focus:ring-[#6A06E4] transition-colors";
 
-  // Standard text-like inputs
-  if (INPUT_TYPE_MAP[field.type as FieldType]) {
+  // Standard text-like inputs (excluding phone which we customize)
+  if (INPUT_TYPE_MAP[field.type as FieldType] && field.type !== "phone") {
     return (
       <div className="space-y-1.5">
         <label className="text-sm font-semibold text-slate-700">
@@ -60,6 +60,61 @@ export const PublicFieldRenderer = ({
           className={inputClass}
           required={field.required}
         />
+      </div>
+    );
+  }
+
+  // Phone — custom dual-input renderer for country code + 10-digit number
+  if (field.type === "phone") {
+    const fullValue = (watch(field.id) as string) || "";
+
+    // Helper to join code and number
+    const handlePhoneChange = (code: string, num: string) => {
+      const cleanCode = code.replace(/\D/g, "").slice(0, 4);
+      const cleanNum = num.replace(/\D/g, "").slice(0, 10);
+
+      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
+    };
+
+    // Extract code and number from the joined value (+CODE|phone|NUMBER)
+    const parts = fullValue.replace("+", "").split("|phone|");
+    const code = parts[0] || "";
+    const number = parts[1] || "";
+
+    return (
+      <div className="space-y-1.5">
+        <label className="text-sm font-semibold text-slate-700">
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        <div className="flex gap-2">
+          {/* Country Code */}
+          <div className="relative w-24 shrink-0">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+              +
+            </span>
+            <input
+              type="text"
+              placeholder="91"
+              value={code}
+              onChange={(e) => handlePhoneChange(e.target.value, number)}
+              className={`${inputClass} pl-6 pr-2`}
+              maxLength={4}
+            />
+          </div>
+          {/* Main Number */}
+          <input
+            type="text"
+            placeholder="9998887776"
+            value={number}
+            onChange={(e) => handlePhoneChange(code, e.target.value)}
+            className={inputClass}
+            maxLength={10}
+            required={field.required}
+          />
+        </div>
+        {/* Hidden input to hold the joined E.164-like value for react-hook-form */}
+        <input type="hidden" {...register(field.id)} />
       </div>
     );
   }

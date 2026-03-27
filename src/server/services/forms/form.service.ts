@@ -8,6 +8,7 @@ import {
   createFormSubmission,
   findSubmissionsByFormId,
   deleteFormById,
+  updateForm as updateFormRecord,
 } from "@/server/repository/forms";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import type {
@@ -23,8 +24,12 @@ const FIELD_VALIDATORS: Partial<
 > = {
   email: (v) => z.string().email().safeParse(v).success,
   url: (v) => z.string().url().safeParse(v).success,
-  number: (v) => typeof v === "string" && !isNaN(Number(v)) && v.trim() !== "",
-  phone: (v) => typeof v === "string" && /^\+?[\d\s\-()\u00d7]{7,15}$/.test(v),
+  number: (v) =>
+    typeof v === "string" &&
+    !isNaN(Number(v)) &&
+    v.trim() !== "" &&
+    v.length <= 15,
+  phone: (v) => typeof v === "string" && /^\+\d{11,14}$/.test(v),
   rating: (v) =>
     typeof v === "string" &&
     Number(v) >= 1 &&
@@ -203,4 +208,34 @@ export async function deleteForm(clerkId: string, formId: string) {
   await deleteFormById(formId);
 
   return { message: "Form deleted successfully" };
+}
+
+/**
+ * Updates an existing form owned by the user.
+ * Verified ownership before applying the prisma update.
+ */
+export async function updateForm(
+  clerkId: string,
+  formId: string,
+  input: Partial<CreateFormInput>,
+) {
+  const user = await findUserByClerkId(clerkId);
+  if (!user) {
+    throw new ApiRouteError("User not found", "NO_USER", 404);
+  }
+
+  // Ownership check
+  const existingForm = await findFormByIdAndUserId(formId, user.id);
+  if (!existingForm) {
+    throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
+  }
+
+  const updated = await updateFormRecord(formId, input);
+
+  return {
+    id: updated.id,
+    slug: updated.slug,
+    status: updated.status,
+    updatedAt: updated.updatedAt,
+  };
 }

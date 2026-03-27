@@ -1,7 +1,8 @@
 "use client";
 
-import { Plus, Trash2, SmilePlus } from "lucide-react";
-import { useRef, useState, KeyboardEvent } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { AutomationInput } from "./AutomationInput";
 
 type Reply = {
   id: string;
@@ -23,7 +24,6 @@ const PublicReplyToComments = ({
 }: Props) => {
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const addReply = () => {
     const trimmed = inputValue.trim();
@@ -38,17 +38,8 @@ const PublicReplyToComments = ({
     onRepliesChange(replies.filter((r) => r.id !== id));
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") addReply();
-    if (e.key === "Escape") {
-      setShowInput(false);
-      setInputValue("");
-    }
-  };
-
   const handleAddClick = () => {
     setShowInput(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   return (
@@ -58,6 +49,7 @@ const PublicReplyToComments = ({
           Public Reply to Comment
         </span>
         <button
+          type="button"
           onClick={() => onEnabledChange(!enabled)}
           className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
             enabled ? "bg-[#6A06E4]" : "bg-slate-200"
@@ -81,10 +73,8 @@ const PublicReplyToComments = ({
               <span className="flex-1 text-sm text-slate-700 truncate">
                 {reply.text}
               </span>
-              <button className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
-                <SmilePlus size={16} />
-              </button>
               <button
+                type="button"
                 onClick={() => removeReply(reply.id)}
                 className="text-slate-400 hover:text-red-400 transition-colors shrink-0"
               >
@@ -94,22 +84,46 @@ const PublicReplyToComments = ({
           ))}
 
           {showInput && (
-            <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-lg px-3 py-2.5 border border-purple-300">
-              <input
-                ref={inputRef}
-                type="text"
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+              <AutomationInput
+                type="input"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={addReply}
-                placeholder="Type a reply…"
-                className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+                onChange={setInputValue}
+                placeholder="Type a reply..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addReply();
+                  if (e.key === "Escape") {
+                    setShowInput(false);
+                    setInputValue("");
+                  }
+                }}
+                autoFocus
               />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInput(false);
+                    setInputValue("");
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={addReply}
+                  className="px-4 py-1.5 text-xs font-semibold bg-[#6A06E4] text-white rounded-lg hover:bg-[#5a05c4] transition-colors shadow-sm"
+                >
+                  Add Reply
+                </button>
+              </div>
             </div>
           )}
 
           {!showInput && (
             <button
+              type="button"
               onClick={handleAddClick}
               className="flex items-center gap-1.5 text-sm font-medium text-[#6A06E4] hover:text-[#5a05c4] transition-colors pt-1"
             >

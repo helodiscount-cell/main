@@ -44,14 +44,18 @@ exports.FormValuesSchema = zod_1.z.object({
   title: zod_1.z.string().min(1, "Title is required"),
   description: zod_1.z.string(),
   coverImage: zod_1.z.string().optional(),
-  fields: zod_1.z.array(exports.FormFieldSchema),
+  fields: zod_1.z
+    .array(exports.FormFieldSchema)
+    .min(1, "Please provide atleast one fields"),
 });
 // What the frontend POSTs to save a form
 exports.CreateFormSchema = zod_1.z.object({
   title: zod_1.z.string().min(1, "Title is required"),
   description: zod_1.z.string().default(""),
   coverImage: zod_1.z.string().url().optional(),
-  fields: zod_1.z.array(exports.FormFieldSchema),
+  fields: zod_1.z
+    .array(exports.FormFieldSchema)
+    .min(1, "Please provide atleast one fields"),
   status: zod_1.z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
 });
 // Status values for a form

@@ -2,18 +2,29 @@ import { RefreshCw, Play } from "lucide-react";
 import { RefreshInstaDialog } from "../../../auth/RefreshInstaDialog";
 import { Button } from "@/components/ui/button";
 
+import { EditableAutomationName } from "./EditableAutomationName";
+
 export default function FreshHeader({
   isPending,
+  automationName,
+  onNameChange,
   breadcrumb = "DM For Comment",
 }: {
   isPending: boolean;
+  automationName: string;
+  onNameChange: (name: string) => void;
   breadcrumb?: string;
 }) {
   return (
     <div className="flex w-full gap-3 items-center animate-in fade-in duration-300">
       <div className="flex-2 bg-white rounded-md px-4 flex items-center h-9">
-        <p className="text-sm font-semibold">
-          <span className="opacity-50">Automation </span>/ {breadcrumb}
+        <p className="text-sm font-semibold flex gap-1">
+          <span className="opacity-50">Automation </span>/{" "}
+          <span className="opacity-50">{breadcrumb}</span>/{" "}
+          <EditableAutomationName
+            value={automationName}
+            onChange={onNameChange}
+          />
         </p>
       </div>
 

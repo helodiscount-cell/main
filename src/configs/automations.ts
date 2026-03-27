@@ -25,12 +25,8 @@ export const FORM_VALIDATION_MESSAGES = {
 } as const;
 
 export const baseAutomationSchema = z.object({
-  keywords: z
-    .array(z.string())
-    .min(
-      FORM_VALIDATION_MESSAGES.keywords.min,
-      FORM_VALIDATION_MESSAGES.keywords.message,
-    ),
+  automationName: z.string().min(1, "Please define a name for this automation"),
+  keywords: z.array(z.string()),
   dmMessage: z
     .string()
     .min(
@@ -45,7 +41,11 @@ export const baseAutomationSchema = z.object({
     .array(
       z.object({
         title: z.string().min(1).max(100),
-        url: z.string().url("Invalid link URL").max(2048),
+        url: z
+          .string()
+          .url("Invalid link URL")
+          .startsWith("https://", "Only HTTPS links are allowed")
+          .max(2048),
       }),
     )
     .max(3, "Maximum 3 links allowed")
@@ -57,13 +57,23 @@ export const commentsAutomationSchema = baseAutomationSchema.extend({
   publicReplies: z.array(z.object({ id: z.string(), text: z.string() })),
   askToFollowEnabled: z.boolean(),
   askToFollowMessage: z.string().max(1000).optional(),
-  askToFollowLink: z.string().optional(),
+  askToFollowLink: z
+    .string()
+    .url("Invalid link URL")
+    .startsWith("https://", "Only HTTPS links are allowed")
+    .or(z.literal(""))
+    .optional(),
 });
 
 export const storyAutomationSchema = baseAutomationSchema.extend({
   askToFollowEnabled: z.boolean(),
   askToFollowMessage: z.string().max(1000).optional(),
-  askToFollowLink: z.string().optional(),
+  askToFollowLink: z
+    .string()
+    .url("Invalid link URL")
+    .startsWith("https://", "Only HTTPS links are allowed")
+    .or(z.literal(""))
+    .optional(),
 });
 
 export type CommentsFormValues = z.infer<typeof commentsAutomationSchema>;

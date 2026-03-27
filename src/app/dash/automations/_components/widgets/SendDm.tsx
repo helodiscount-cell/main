@@ -1,17 +1,16 @@
 import {
   ImageIcon,
   X,
-  SmilePlus,
   ChevronUp,
   ChevronDown,
   Loader2,
-  Plus,
   Type,
   Link as LinkIcon,
   Pencil,
   Trash2,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { AutomationInput } from "./AutomationInput";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
 import { DmLink } from "@dm-broo/common-types";
 
@@ -53,7 +51,6 @@ const SendDm = ({
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { startUpload } = useUploadThing("imageUploader", {
@@ -140,14 +137,24 @@ const SendDm = ({
       return;
     }
 
-    try {
-      new URL(url.startsWith("http") ? url : `https://${url}`);
-    } catch (e) {
-      toast.error("Please enter a valid URL.");
+    // Pre-check for insecure protocol to give specific feedback
+    if (url.toLowerCase().startsWith("http://")) {
+      toast.error("Please use a secure HTTPS link (https://)");
       return;
     }
 
-    const formattedUrl = url.startsWith("http") ? url : `https://${url}`;
+    // Regular expression for a more strict web URL validation
+    const urlRegex = /^(https?:\/\/)?([\w.-]+\.[a-z]{2,})(\/.*)?$/i;
+
+    if (!urlRegex.test(url)) {
+      toast.error("Please enter a valid web URL.");
+      return;
+    }
+
+    // Always prepend https:// if no protocol is provided, or ensure it's already there
+    const formattedUrl = url.toLowerCase().startsWith("https://")
+      ? url
+      : `https://${url}`;
     const newLink: DmLink = { title, url: formattedUrl };
 
     if (editingIndex !== null) {
@@ -181,6 +188,7 @@ const SendDm = ({
       <div className="flex items-center justify-between px-4 py-3.5">
         <span className="text-sm font-semibold text-slate-800">Send a DM</span>
         <button
+          type="button"
           onClick={() => setCollapsed((c) => !c)}
           className="text-slate-400 hover:text-slate-600 transition-colors"
         >
@@ -219,6 +227,7 @@ const SendDm = ({
                   className="w-full max-h-40 object-cover"
                 />
                 <button
+                  type="button"
                   onClick={removeMedia}
                   className="absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow text-slate-500 hover:text-red-400 transition-colors"
                 >
@@ -235,26 +244,13 @@ const SendDm = ({
             onChange={handleFileChange}
           />
 
-          {/* Message textarea */}
-          <div className="bg-[#F5F5F5] rounded-lg px-3 pt-3 pb-2">
-            <div className="flex items-start gap-2">
-              <textarea
-                value={message}
-                onChange={(e) =>
-                  onMessageChange(e.target.value.slice(0, MAX_CHARS))
-                }
-                placeholder="Enter your message here..."
-                rows={3}
-                className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none resize-none"
-              />
-              <button className="text-slate-400 hover:text-slate-600 transition-colors mt-0.5 shrink-0">
-                <SmilePlus size={18} />
-              </button>
-            </div>
-            <div className="text-xs text-slate-400 text-left mt-1">
-              {message.length}/{MAX_CHARS}
-            </div>
-          </div>
+          {/* Unified Automation Message Input */}
+          <AutomationInput
+            value={message}
+            onChange={onMessageChange}
+            maxLength={MAX_CHARS}
+            placeholder="Enter your message here..."
+          />
 
           {/* Links DisplaySection */}
           {links.length > 0 && (
@@ -322,12 +318,13 @@ const SendDm = ({
                       <span className="text-sm font-medium text-slate-400 min-w-20">
                         Enter Title
                       </span>
-                      <input
-                        autoFocus
+                      <AutomationInput
+                        variant="mini"
+                        type="input"
                         placeholder="Open Link"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="flex-1 bg-transparent text-sm text-slate-800 font-medium placeholder:text-slate-300 outline-none"
+                        onChange={setTitle}
+                        className="flex-1"
                       />
                     </div>
                   </div>

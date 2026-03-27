@@ -1,4 +1,5 @@
 import { Link as LinkIcon, Edit2, SmilePlus } from "lucide-react";
+import { AutomationInput } from "./AutomationInput";
 
 interface AskToFollowProps {
   enabled: boolean;
@@ -41,29 +42,13 @@ const AskToFollow = ({
 
       {enabled && (
         <div className="px-5 pb-5 space-y-4">
-          {/* Message input area */}
-          <div className="relative bg-[#F8FAFC] rounded-xl p-4 border border-transparent focus-within:border-purple-200 transition-colors">
-            <textarea
-              value={message}
-              onChange={(e) => onMessageChange(e.target.value)}
-              placeholder="Enter follow message..."
-              className="w-full bg-transparent text-[#334155] text-[15px] leading-relaxed resize-none outline-none min-h-[100px] placeholder:text-slate-400"
-              maxLength={maxChars}
-            />
-
-            {/* Action buttons and character count inside the message box */}
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100/50">
-              <span className="text-[13px] font-medium text-slate-400">
-                {message.length}/{maxChars}
-              </span>
-              <button
-                type="button"
-                className="text-slate-400 hover:text-[#6A06E4] transition-colors p-1"
-              >
-                <SmilePlus size={20} />
-              </button>
-            </div>
-          </div>
+          {/* Unified Automation Input */}
+          <AutomationInput
+            value={message}
+            onChange={onMessageChange}
+            maxLength={maxChars}
+            placeholder="Enter follow message..."
+          />
 
           {/* Visit Profile / Link display section */}
           <div className="flex items-center justify-between bg-[#F5F3FF] rounded-xl px-4 py-3 border border-purple-50 group transition-all hover:bg-[#EDE9FE]">

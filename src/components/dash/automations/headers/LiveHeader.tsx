@@ -1,42 +1,49 @@
 import { AutomationListItem } from "@/types/automation";
 import { Button } from "../../../ui/button";
 import { Play, RefreshCw, RotateCcw, Square } from "lucide-react";
+import { EditableAutomationName } from "./EditableAutomationName";
 
 interface LiveHeaderProps {
   automation: AutomationListItem;
   onStop: () => void;
   isStopping: boolean;
+  onStart: () => void;
+  isStarting: boolean;
   onReRun: () => void;
   isReRunning: boolean;
   isUpdating?: boolean;
   breadcrumb?: string;
   label?: string;
+  onNameChange: (name: string) => void;
 }
 
 export default function LiveHeader({
   automation,
   onStop,
   isStopping,
+  onStart,
+  isStarting,
   onReRun,
   isReRunning,
   isUpdating,
   breadcrumb = "DM For Comment",
   label,
+  onNameChange,
 }: LiveHeaderProps) {
-  const displayLabel =
-    label ??
-    (automation.post?.caption
-      ? automation.post.caption.slice(0, 30) +
-        (automation.post.caption.length > 30 ? "…" : "")
-      : automation.post?.id);
+  const automationName = automation.automationName || "";
+
+  const isActive = automation.status === "ACTIVE";
 
   return (
     <div className="flex w-full gap-2 items-center animate-in fade-in slide-in-from-top-2 duration-300">
       {/* Breadcrumb pill */}
       <div className="flex items-center gap-2 bg-white rounded-md px-4 h-9 flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">
-          <span className="opacity-50">Automation / {breadcrumb}/ </span>
-          <span>{displayLabel}</span>
+          <span className="opacity-50">Automation / {breadcrumb} / </span>
+          <EditableAutomationName
+            value={automationName}
+            onChange={onNameChange}
+          />
         </p>
       </div>
 
@@ -51,20 +58,22 @@ export default function LiveHeader({
         {isReRunning ? "Running…" : "Re-Run"}
       </Button>
 
-      {/* Stop */}
-      <Button
-        type="button"
-        onClick={onStop}
-        disabled={isStopping}
-        className="bg-red-500 hover:bg-red-600 h-9 transition-all"
-      >
-        {isStopping ? (
-          <RefreshCw size={13} className="animate-spin" />
-        ) : (
-          <Square size={13} fill="currentColor" />
-        )}
-        {isStopping ? "Stopping…" : "Stop"}
-      </Button>
+      {/* Stop - Only visible when Active */}
+      {isActive && (
+        <Button
+          type="button"
+          onClick={onStop}
+          disabled={isStopping}
+          className="bg-red-500 hover:bg-red-600 h-9 transition-all"
+        >
+          {isStopping ? (
+            <RefreshCw size={13} className="animate-spin" />
+          ) : (
+            <Square size={13} fill="currentColor" />
+          )}
+          {isStopping ? "Stopping…" : "Stop"}
+        </Button>
+      )}
 
       {/* Update */}
       <Button
@@ -80,11 +89,27 @@ export default function LiveHeader({
         {isUpdating ? "Updating…" : "Update"}
       </Button>
 
-      {/* Live badge */}
-      <div className="h-9 px-4 rounded-md border-2 border-green-500 text-green-600 text-sm font-semibold flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-        Live
-      </div>
+      {/* Live Button/Badge */}
+      {isActive ? (
+        <div className="h-9 px-4 rounded-md border-2 border-green-500 text-green-600 text-sm font-semibold flex items-center gap-1.5 shrink-0">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          Live
+        </div>
+      ) : (
+        <Button
+          type="button"
+          onClick={onStart}
+          disabled={isStarting}
+          className="bg-green-500 hover:bg-green-600 h-9 text-white font-semibold transition-all px-4"
+        >
+          {isStarting ? (
+            <RefreshCw size={13} className="animate-spin" />
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-white mr-1" />
+          )}
+          {isStarting ? "Starting…" : "Live"}
+        </Button>
+      )}
     </div>
   );
 }

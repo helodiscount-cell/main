@@ -103,12 +103,7 @@ const useTableRowMapper = (
   if (isAutomation) {
     const automation = data as AutomationListItem;
     return {
-      title:
-        automation.post?.caption ??
-        automation.story?.caption ??
-        automation.post?.id ??
-        automation.story?.id ??
-        "Untitled",
+      title: automation.automationName as string,
       href:
         automation.triggerType === "STORY_REPLY"
           ? `/dash/automations/dmforstories/${automation.story?.id}`
@@ -169,7 +164,7 @@ const useTableRowMapper = (
   return {
     title: form.title || "Untitled Form",
     subtitle: form.description || "No description",
-    href: `/dash/forms/${form.id}/submissions`,
+    href: `/dash/forms/${form.id}`,
     icon: <FileText size={15} className="text-slate-400" />,
     status: (
       <span

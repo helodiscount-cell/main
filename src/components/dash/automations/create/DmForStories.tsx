@@ -1,36 +1,41 @@
 import { instagramService } from "@/api/services/instagram";
-import { Button } from "@/components/ui/button";
 import { instagramKeys } from "@/keys/react-query";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Clock, ImageIcon, Video } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Clock, ImageIcon, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { TemplateHeader } from "./TemplateHeader";
 
 export default function DmForStories({
   onSetActiveTab,
 }: {
   onSetActiveTab: (value: string | null) => void;
 }) {
-  const { data: storiesData, isLoading } = useQuery({
+  const queryClient = useQueryClient();
+
+  const {
+    data: storiesData,
+    isLoading,
+    isRefetching,
+  } = useQuery({
     queryKey: instagramKeys.stories(),
     queryFn: () => instagramService.profile.getUserStories(),
   });
+
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: instagramKeys.stories() });
+  };
 
   const stories = storiesData?.result.stories ?? [];
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onSetActiveTab(null)}
-          className="h-8 w-8 rounded-full hover:bg-gray-100"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <h3 className="text-lg font-medium">Select Story</h3>
-      </div>
+      <TemplateHeader
+        title="Select Story"
+        onBack={() => onSetActiveTab(null)}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefetching}
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">

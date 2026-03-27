@@ -7,6 +7,7 @@ import { formService } from "@/api/services/forms";
 import { PublicFieldRenderer } from "./PublicFieldRenderer";
 import type { FormPublic } from "@/types/form";
 import type { FormField } from "@dm-broo/common-types";
+import { useRouter } from "next/navigation";
 
 type PublicFormViewProps = {
   form: FormPublic;
@@ -15,17 +16,29 @@ type PublicFormViewProps = {
 
 // Renders the interactive public form that anonymous users fill and submit
 export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
-  const [submitted, setSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const { register, handleSubmit, setValue, watch } = useForm<
     Record<string, string | string[]>
   >({ defaultValues: {} });
 
   const onSubmit = async (answers: Record<string, string | string[]>) => {
     setIsLoading(true);
+
+    // Reformat phone fields by stripping the internal '|phone|' separator
+    const cleanedAnswers = Object.fromEntries(
+      Object.entries(answers).map(([key, value]) => [
+        key,
+        typeof value === "string" && value.includes("|phone|")
+          ? value.replace("|phone|", "")
+          : value,
+      ]),
+    ) as Record<string, string | string[]>;
+
     try {
-      await formService.submit(slug, answers);
+      await formService.submit(slug, cleanedAnswers);
       setSubmitted(true);
     } catch (error: any) {
       const message =
@@ -38,17 +51,7 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
   };
 
   // Replace the form with a thank-you screen after successful submission
-  if (submitted) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
-        <div className="text-5xl">🎉</div>
-        <h2 className="text-2xl font-bold text-slate-900">Thank you!</h2>
-        <p className="text-slate-500 max-w-sm">
-          Your response has been recorded. We&apos;ll be in touch.
-        </p>
-      </div>
-    );
-  }
+  if (submitted) router.push(`/f/${slug}/submitted`);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

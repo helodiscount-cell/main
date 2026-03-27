@@ -2,6 +2,8 @@
 
 import { Pencil } from "lucide-react";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import { useState } from "react";
+import { AutomationInput } from "./AutomationInput";
 
 type Props = {
   enabled: boolean;
@@ -20,6 +22,8 @@ const OpeningMessage = ({
   buttonText,
   onButtonTextChange,
 }: Props) => {
+  const [isEditable, setIsEditable] = useState(false);
+
   return (
     <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden shadow-sm">
       {/* Header section with toggle */}
@@ -44,28 +48,31 @@ const OpeningMessage = ({
 
       {enabled && (
         <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          {/* Main message area */}
-          <div className="bg-[#F8F9FB] rounded-xl p-4 border border-slate-100 mb-3">
-            <textarea
-              value={message}
-              onChange={(e) => onMessageChange(e.target.value)}
-              className="w-full bg-transparent text-[15px] leading-relaxed text-slate-700 outline-none resize-none placeholder:text-slate-400 min-h-[100px]"
-              placeholder="Type your opening message..."
-            />
-          </div>
+          {/* Unified Message Input */}
+          <AutomationInput
+            value={message}
+            onChange={onMessageChange}
+            placeholder="Type your opening message..."
+            className="mb-3"
+          />
 
           {/* Button text preview/edit area */}
-          <div className="bg-[#F6EFFF] rounded-xl px-4 py-3.5 flex items-center justify-between border border-purple-100 group">
-            <input
-              type="text"
-              value={buttonText}
-              onChange={(e) => onButtonTextChange(e.target.value)}
-              className="bg-transparent text-[14px] font-medium text-slate-700 outline-none w-full"
-              placeholder="Button text..."
-            />
+          <div className="bg-[#F6EFFF] rounded-xl flex items-center justify-between border border-purple-100 group">
+            <div className="flex-1 flex items-center gap-2">
+              <AutomationInput
+                variant="mini"
+                type="input"
+                value={buttonText}
+                onChange={onButtonTextChange}
+                placeholder="Button text..."
+                className={`p-3 border-none bg-transparent w-full ${!isEditable ? "pointer-events-none opacity-80" : ""}`}
+                showEmojiPicker={isEditable}
+              />
+            </div>
             <button
+              onClick={() => setIsEditable(!isEditable)}
               type="button"
-              className="text-[#6A06E4] opacity-80 hover:opacity-100 transition-opacity"
+              className={`text-[#6A06E4] opacity-80 hover:opacity-100 transition-opacity p-2 ${isEditable ? "text-green-500" : ""}`}
             >
               <Pencil size={18} />
             </button>

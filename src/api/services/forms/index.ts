@@ -18,6 +18,17 @@ export const formService = {
     return envelope.result;
   },
 
+  // Updates an existing form
+  update: async (
+    id: string,
+    payload: CreateFormInput,
+  ): Promise<FormSaveResult> => {
+    const envelope = await request(
+      api.patch<ApiResponse<FormSaveResult>>(`/forms/${id}`, payload),
+    );
+    return envelope.result;
+  },
+
   // Lists all forms for the dashboard
   list: async (): Promise<FormListItem[]> => {
     const envelope = await request(
