@@ -31,7 +31,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   const { post_id } = use(params);
   const queryClient = useQueryClient();
   const {
-    form: { control },
+    form: { control, watch },
     existingAutomation,
     pageState,
     isCreating,
@@ -43,9 +43,11 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
     isReRunning,
     handleReRun,
     handleSubmit,
+    handleNameChange,
   } = useAutomationManager<CommentsFormValues>({
     schema: commentsAutomationSchema,
     defaultValues: {
+      automationName: "",
       keywords: [],
       dmMessage: "",
       publicReplyEnabled: true,
@@ -73,6 +75,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       return {
         triggerType: AUTOMATION_CONFIGS.COMMENT_REPLY.triggerType,
         postId: post_id,
+        automationName: form.automationName,
         postCaption: selectedPost?.caption ?? form.keywords[0] ?? "",
         postMediaUrl: selectedPost?.media_url ?? null,
         postPermalink: selectedPost?.permalink ?? null,
@@ -98,6 +101,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       };
     },
     onPopulateForm: (automation) => ({
+      automationName: automation.automationName || "",
       keywords: automation.triggers || [],
       dmMessage: automation.replyMessage || "",
       dmImage: automation.replyImage ?? undefined,
@@ -128,10 +132,18 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
     stopMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.stopMessage,
   });
 
+  const automationName = watch("automationName");
+
   // Select the appropriate header content based on the automation's current state (loading, fresh, or live)
   const headerContent = {
     loading: <HeaderSkeleton />,
-    fresh: <FreshHeader isPending={isCreating} />,
+    fresh: (
+      <FreshHeader
+        isPending={isCreating}
+        automationName={automationName}
+        onNameChange={handleNameChange}
+      />
+    ),
     live: existingAutomation ? (
       <LiveHeader
         automation={existingAutomation}
@@ -142,6 +154,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         onReRun={handleReRun}
         isReRunning={isReRunning}
         isUpdating={isUpdating}
+        onNameChange={handleNameChange}
       />
     ) : null,
   };

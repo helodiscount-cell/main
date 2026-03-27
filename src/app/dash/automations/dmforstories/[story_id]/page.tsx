@@ -47,7 +47,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
   );
 
   const {
-    form: { control },
+    form: { control, watch },
     existingAutomation,
     pageState,
     isCreating,
@@ -59,9 +59,11 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     isReRunning,
     handleReRun,
     handleSubmit,
+    handleNameChange,
   } = useAutomationManager<StoryFormValues>({
     schema: storyAutomationSchema,
     defaultValues: {
+      automationName: "",
       keywords: [],
       dmMessage: "",
       askToFollowEnabled: false,
@@ -90,6 +92,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
 
       return {
         triggerType: AUTOMATION_CONFIGS.STORY_REPLY.triggerType,
+        automationName: form.automationName,
         story: storyMeta,
         triggers: form.keywords,
         matchType: AUTOMATION_CONFIGS.STORY_REPLY.matchType,
@@ -109,6 +112,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       };
     },
     onPopulateForm: (automation) => ({
+      automationName: automation.automationName || "",
       keywords: automation.triggers || [],
       dmMessage: automation.replyMessage || "",
       dmImage: automation.replyImage ?? undefined,
@@ -131,11 +135,15 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     stopMessage: AUTOMATION_CONFIGS.STORY_REPLY.stopMessage,
   });
 
+  const automationName = watch("automationName");
+
   const headerContent = {
     loading: <HeaderSkeleton />,
     fresh: (
       <FreshHeader
         isPending={isCreating}
+        automationName={automationName}
+        onNameChange={handleNameChange}
         breadcrumb={AUTOMATION_CONFIGS.STORY_REPLY.breadcrumb}
       />
     ),
@@ -149,13 +157,8 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         onReRun={handleReRun}
         isReRunning={isReRunning}
         isUpdating={isUpdating}
+        onNameChange={handleNameChange}
         breadcrumb={AUTOMATION_CONFIGS.STORY_REPLY.breadcrumb}
-        label={
-          existingAutomation.story?.caption
-            ? existingAutomation.story.caption.slice(0, 30) +
-              (existingAutomation.story.caption.length > 30 ? "…" : "")
-            : `Story ${existingAutomation.story?.id.slice(0, 8) ?? ""}`
-        }
       />
     ) : null,
   };

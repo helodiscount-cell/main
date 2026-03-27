@@ -220,5 +220,11 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     isReRunning,
     handleReRun,
     handleSubmit,
+    handleNameChange: (name: string) => {
+      form.setValue("automationName" as any, name as any);
+      if (pageState === "live" && existingAutomation?.id) {
+        updateAutomation({ automationName: name });
+      }
+    },
   };
 }

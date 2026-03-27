@@ -28,6 +28,7 @@ export interface AutomationListItem {
   status: string;
   timesTriggered: number;
   lastTriggeredAt: string | null;
+  automationName: string | null;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -41,6 +42,7 @@ export interface AutomationListResponse {
 
 export interface CreateAutomationData {
   postId: string;
+  automationName: string;
   postCaption?: string | null;
   postMediaUrl?: string | null;
   postPermalink?: string | null;
@@ -62,6 +64,7 @@ export interface CreateAutomationData {
 }
 
 export interface UpdateAutomationData {
+  automationName?: string;
   postCaption?: string | null;
   triggers?: string[];
   matchType?: string;

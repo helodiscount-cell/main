@@ -96,6 +96,7 @@ export async function createAutomation(
   return {
     id: automation.id,
     triggerType: automation.triggerType,
+    automationName: automation.automationName,
     createdAt: automation.createdAt,
   };
 }
@@ -117,6 +118,7 @@ export async function getAutomation(userId: string, automationId: string) {
   return {
     id: automation.id,
     triggerType: automation.triggerType,
+    automationName: automation.automationName,
     post: automation.post,
     story: automation.story,
     triggers: automation.triggers,
@@ -229,6 +231,7 @@ export async function updateAutomation(
   return {
     id: updatedAutomation.id,
     triggerType: updatedAutomation.triggerType,
+    automationName: updatedAutomation.automationName,
     post: updatedAutomation.post,
     story: updatedAutomation.story,
     triggers: updatedAutomation.triggers,

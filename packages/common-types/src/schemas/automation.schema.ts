@@ -44,6 +44,10 @@ export const CreateAutomationSchema = z
     triggerType: z
       .enum(["COMMENT_ON_POST", "STORY_REPLY"])
       .default("COMMENT_ON_POST"),
+    automationName: z
+      .string()
+      .min(1, "Please define a name for this automation")
+      .max(100),
     // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: z
       .array(
@@ -159,6 +163,7 @@ export const CreateAutomationSchema = z
 
 // Input schema for updating an existing automation
 export const UpdateAutomationSchema = z.object({
+  automationName: z.string().min(1).max(100).optional(),
   triggers: z
     .array(
       z
@@ -271,6 +276,7 @@ export const AutomationListQuerySchema = z.object({
 // Single automation response schema
 export const AutomationResponseSchema = z.object({
   id: z.string(),
+  automationName: z.string().nullable(),
   postId: z.string(),
   postCaption: z.string().nullable(),
   triggers: z.array(z.string()),
@@ -333,6 +339,7 @@ export const CreateAutomationResponseSchema = z.object({
   success: z.literal(true),
   automation: z.object({
     id: z.string(),
+    automationName: z.string().nullable(),
     postId: z.string(),
     actionType: z.enum(["DM", "COMMENT_REPLY"]),
     triggers: z.array(z.string()),
@@ -346,6 +353,7 @@ export const UpdateAutomationResponseSchema = z.object({
   success: z.literal(true),
   automation: z.object({
     id: z.string(),
+    automationName: z.string().nullable(),
     postId: z.string(),
     triggers: z.array(z.string()),
     matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),

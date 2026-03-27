@@ -1,6 +1,7 @@
 import { AutomationListItem } from "@/types/automation";
 import { Button } from "../../../ui/button";
 import { Play, RefreshCw, RotateCcw, Square } from "lucide-react";
+import { EditableAutomationName } from "./EditableAutomationName";
 
 interface LiveHeaderProps {
   automation: AutomationListItem;
@@ -13,6 +14,7 @@ interface LiveHeaderProps {
   isUpdating?: boolean;
   breadcrumb?: string;
   label?: string;
+  onNameChange: (name: string) => void;
 }
 
 export default function LiveHeader({
@@ -26,13 +28,9 @@ export default function LiveHeader({
   isUpdating,
   breadcrumb = "DM For Comment",
   label,
+  onNameChange,
 }: LiveHeaderProps) {
-  const displayLabel =
-    label ??
-    (automation.post?.caption
-      ? automation.post.caption.slice(0, 30) +
-        (automation.post.caption.length > 30 ? "…" : "")
-      : automation.post?.id);
+  const automationName = automation.automationName || "";
 
   const isActive = automation.status === "ACTIVE";
 
@@ -41,8 +39,11 @@ export default function LiveHeader({
       {/* Breadcrumb pill */}
       <div className="flex items-center gap-2 bg-white rounded-md px-4 h-9 flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">
-          <span className="opacity-50">Automation / {breadcrumb}/ </span>
-          <span>{displayLabel}</span>
+          <span className="opacity-50">Automation / {breadcrumb} / </span>
+          <EditableAutomationName
+            value={automationName}
+            onChange={onNameChange}
+          />
         </p>
       </div>
 

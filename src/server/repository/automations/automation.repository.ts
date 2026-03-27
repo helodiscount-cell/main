@@ -28,6 +28,7 @@ export async function createAutomation(
       prisma.automation.create({
         data: {
           userId: userId,
+          automationName: data.automationName,
           triggerType,
           // Embedded post target (only for COMMENT_ON_POST)
           ...(triggerType === "COMMENT_ON_POST" && data.postId

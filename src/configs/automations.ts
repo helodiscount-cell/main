@@ -25,6 +25,7 @@ export const FORM_VALIDATION_MESSAGES = {
 } as const;
 
 export const baseAutomationSchema = z.object({
+  automationName: z.string().min(1, "Please define a name for this automation"),
   keywords: z.array(z.string()),
   dmMessage: z
     .string()
