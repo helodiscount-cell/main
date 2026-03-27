@@ -36,7 +36,7 @@ export default async function SubmissionsPage({
   }
 
   return (
-    <div className="p-8 space-y-8 min-h-screen">
+    <div className="space-y-8">
       {/* Main Submissions List Component */}
       <SubmissionsList
         fields={form.fields as FormField[]}

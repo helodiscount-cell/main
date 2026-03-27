@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getDisplayName, getInitials, formatDate } from "./submission-utils";
+import { SubmissionAnswerValue } from "./SubmissionAnswerValue";
 
 interface SubmissionDetailDialogProps {
   submission: FormSubmission | null;
@@ -78,7 +79,7 @@ export const SubmissionDetailDialog = ({
                 const answer = submission.answers[field.id];
                 const displayValue = Array.isArray(answer)
                   ? answer.join(", ")
-                  : answer || "—";
+                  : (answer as string) || "—";
 
                 return (
                   <div
@@ -88,9 +89,8 @@ export const SubmissionDetailDialog = ({
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
                       {field.label}
                     </label>
-                    <p className="text-sm font-semibold text-slate-800 break-all leading-relaxed">
-                      {displayValue}
-                    </p>
+                    {/* Smart renderer: image preview, file download, or plain text */}
+                    <SubmissionAnswerValue value={displayValue} />
                   </div>
                 );
               })}

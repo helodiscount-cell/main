@@ -99,7 +99,13 @@ export const FormEditorProvider = ({
     async (status: "DRAFT" | "PUBLISHED") => {
       const isValid = await methods.trigger();
       if (!isValid) {
-        toast.error("Please fix the errors before saving.");
+        if (methods.formState.errors.fields) {
+          toast.error("Form cannot be empty", {
+            description: "Please provide atleast one fields",
+          });
+        } else {
+          toast.error("Please fix the errors before saving.");
+        }
         return;
       }
       const data = methods.getValues();

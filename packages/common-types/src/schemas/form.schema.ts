@@ -37,7 +37,7 @@ export const FormValuesSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string(),
   coverImage: z.string().optional(),
-  fields: z.array(FormFieldSchema),
+  fields: z.array(FormFieldSchema).min(1, "Please provide atleast one fields"),
 });
 
 // What the frontend POSTs to save a form
@@ -45,7 +45,7 @@ export const CreateFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().default(""),
   coverImage: z.string().url().optional(),
-  fields: z.array(FormFieldSchema),
+  fields: z.array(FormFieldSchema).min(1, "Please provide atleast one fields"),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
 });
 

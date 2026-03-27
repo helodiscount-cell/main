@@ -8,18 +8,23 @@ import {
 import { EditorHeader } from "../_components/editor/EditorHeader";
 import { FormTabs } from "../_components/editor/FormTabs";
 
+import { useSearchParams } from "next/navigation";
+
 export default function FormEditorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const searchParams = useSearchParams();
+  const formId = searchParams.get("id") || undefined;
+
   return (
-    <FormEditorProvider>
+    <FormEditorProvider formId={formId}>
       <div className="flex flex-col h-full min-h-screen">
         <EditorLayoutHeader />
 
         {/* Child components (the page canvas) */}
-        <div className="flex-1 overflow-hidden">{children}</div>
+        {children}
       </div>
     </FormEditorProvider>
   );

@@ -39,15 +39,15 @@ export const FormEditorCanvas = () => {
   );
 
   // Form submit handler that triggers the save mutation
-  const handleCanvasSubmit = methods.handleSubmit(
-    () => save("PUBLISHED"),
-    () => toast.error("Please fix the errors in the form."),
-  );
+  const handleCanvasSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    save("PUBLISHED");
+  };
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden">
       {/* Canvas scrollable area */}
-      <div className="flex-1 overflow-y-auto p-6 m-4 mt-2 rounded-xl shadow-inner-sm">
+      <div className="flex-1 overflow-y-auto mt-2 rounded-xl shadow-inner-sm">
         <FormProvider {...methods}>
           <form
             onSubmit={handleCanvasSubmit}

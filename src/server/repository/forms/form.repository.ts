@@ -135,3 +135,24 @@ export async function findSubmissionsByFormId(
     },
   );
 }
+
+// Updates an existing form
+export async function updateForm(
+  formId: string,
+  data: Partial<CreateFormInput>,
+): Promise<Form> {
+  return executeWithErrorHandling(
+    () =>
+      prisma.form.update({
+        where: { id: formId },
+        data: {
+          title: data.title,
+          description: data.description,
+          coverImage: data.coverImage,
+          fields: (data.fields ?? []) as any,
+          status: data.status,
+        },
+      }),
+    { operation: "updateForm", model: "Form" },
+  );
+}
