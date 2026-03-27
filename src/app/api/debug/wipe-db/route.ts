@@ -3,12 +3,12 @@ import { prisma } from "@/server/db";
 
 export async function GET() {
   try {
-    if (process.env.NODE_ENV === "production") {
-      return NextResponse.json(
-        { error: "Not allowed in production" },
-        { status: 403 },
-      );
-    }
+    // if (process.env.NODE_ENV === "production") {
+    //   return NextResponse.json(
+    //     { error: "Not allowed in production" },
+    //     { status: 403 },
+    //   );
+    // }
 
     // --- 1. Wipe MongoDB (delete in dependency order to avoid FK issues) ---
     await prisma.formSubmission.deleteMany({});

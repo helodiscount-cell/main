@@ -103,12 +103,7 @@ const useTableRowMapper = (
   if (isAutomation) {
     const automation = data as AutomationListItem;
     return {
-      title:
-        automation.post?.caption ??
-        automation.story?.caption ??
-        automation.post?.id ??
-        automation.story?.id ??
-        "Untitled",
+      title: automation.automationName as string,
       href:
         automation.triggerType === "STORY_REPLY"
           ? `/dash/automations/dmforstories/${automation.story?.id}`

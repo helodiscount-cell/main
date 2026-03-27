@@ -15,10 +15,24 @@ exports.ErrorResponseSchema =
   exports.AutomationListQuerySchema =
   exports.UpdateAutomationSchema =
   exports.CreateAutomationSchema =
+  exports.DmLinkSchema =
     void 0;
 const zod_1 = require("zod");
 const sanitize_1 = require("../lib/utils/sanitize");
 const validation_1 = require("../lib/utils/validation");
+const NO_ANGLE_BRACKETS_MSG = "Angle brackets (<, >) are not allowed";
+const noAngleBrackets = (val) => {
+  if (!val) return true;
+  return !/[<>]/g.test(val);
+};
+exports.DmLinkSchema = zod_1.z.object({
+  title: zod_1.z
+    .string()
+    .min(1)
+    .max(100)
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  url: zod_1.z.string().url("Invalid link URL").max(2048),
+});
 // Embedded story target for creation payload
 const StoryTargetInputSchema = zod_1.z.object({
   id: zod_1.z.string().min(1).max(100),
@@ -38,6 +52,10 @@ exports.CreateAutomationSchema = zod_1.z
     triggerType: zod_1.z
       .enum(["COMMENT_ON_POST", "STORY_REPLY"])
       .default("COMMENT_ON_POST"),
+    automationName: zod_1.z
+      .string()
+      .min(1, "Please define a name for this automation")
+      .max(100),
     // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: zod_1.z
       .array(
@@ -48,6 +66,7 @@ exports.CreateAutomationSchema = zod_1.z
             sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
             `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
           )
+          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
           .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
       )
       .max(10, "Maximum 10 comment replies allowed")
@@ -81,9 +100,9 @@ exports.CreateAutomationSchema = zod_1.z
             sanitize_1.MAX_LENGTHS.TRIGGER,
             `Trigger must be no more than ${sanitize_1.MAX_LENGTHS.TRIGGER} characters`,
           )
+          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
           .transform((val) => (0, sanitize_1.sanitizeTrigger)(val)),
       )
-      .min(1, "At least one trigger is required")
       .max(
         sanitize_1.MAX_LENGTHS.TRIGGERS_ARRAY,
         `Maximum ${sanitize_1.MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`,
@@ -99,13 +118,47 @@ exports.CreateAutomationSchema = zod_1.z
         sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
         `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
       )
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
       .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
-    replyImage: zod_1.z.string().url("Invalid image URL").nullable().optional(),
+    replyImage: zod_1.z
+      .preprocess(
+        (val) => (val === "" ? null : val),
+        zod_1.z.string().url("Invalid image URL").nullable(),
+      )
+      .optional(),
     useVariables: zod_1.z.boolean().default(true),
     // Ask to Follow gate — optional
     askToFollowEnabled: zod_1.z.boolean().default(false),
-    askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
-    askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
+    askToFollowMessage: zod_1.z
+      .string()
+      .max(1000)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    askToFollowLink: zod_1.z
+      .string()
+      .max(2048)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    // Opening Message
+    openingMessageEnabled: zod_1.z.boolean().default(true),
+    openingMessage: zod_1.z
+      .string()
+      .max(2000)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    openingButtonText: zod_1.z
+      .string()
+      .max(100)
+      .optional()
+      .nullable()
+      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    dmLinks: zod_1.z
+      .array(exports.DmLinkSchema)
+      .max(3, "Maximum 3 links allowed")
+      .optional(),
   })
   .refine(
     (data) => {
@@ -121,6 +174,7 @@ exports.CreateAutomationSchema = zod_1.z
   );
 // Input schema for updating an existing automation
 exports.UpdateAutomationSchema = zod_1.z.object({
+  automationName: zod_1.z.string().min(1).max(100).optional(),
   triggers: zod_1.z
     .array(
       zod_1.z
@@ -130,6 +184,7 @@ exports.UpdateAutomationSchema = zod_1.z.object({
           sanitize_1.MAX_LENGTHS.TRIGGER,
           `Trigger must be no more than ${sanitize_1.MAX_LENGTHS.TRIGGER} characters`,
         )
+        .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
         .transform((val) => (0, sanitize_1.sanitizeTrigger)(val)),
     )
     .max(
@@ -148,6 +203,7 @@ exports.UpdateAutomationSchema = zod_1.z.object({
       sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
       `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
     )
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
     .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val))
     .optional(),
   // Array of public comment replies (optional)
@@ -164,10 +220,42 @@ exports.UpdateAutomationSchema = zod_1.z.object({
     )
     .max(10, "Maximum 10 comment replies allowed")
     .optional(),
-  replyImage: zod_1.z.string().url("Invalid image URL").nullable().optional(),
+  replyImage: zod_1.z
+    .preprocess(
+      (val) => (val === "" ? null : val),
+      zod_1.z.string().url("Invalid image URL").nullable(),
+    )
+    .optional(),
   askToFollowEnabled: zod_1.z.boolean().optional(),
-  askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
-  askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
+  askToFollowMessage: zod_1.z
+    .string()
+    .max(1000)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  askToFollowLink: zod_1.z
+    .string()
+    .max(2048)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  openingMessageEnabled: zod_1.z.boolean().optional(),
+  openingMessage: zod_1.z
+    .string()
+    .max(2000)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  openingButtonText: zod_1.z
+    .string()
+    .max(100)
+    .optional()
+    .nullable()
+    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+  dmLinks: zod_1.z
+    .array(exports.DmLinkSchema)
+    .max(3, "Maximum 3 links allowed")
+    .optional(),
   status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
 // Query parameters for listing automations
@@ -204,6 +292,7 @@ exports.AutomationListQuerySchema = zod_1.z.object({
 // Single automation response schema
 exports.AutomationResponseSchema = zod_1.z.object({
   id: zod_1.z.string(),
+  automationName: zod_1.z.string().nullable(),
   postId: zod_1.z.string(),
   postCaption: zod_1.z.string().nullable(),
   triggers: zod_1.z.array(zod_1.z.string()),
@@ -215,6 +304,10 @@ exports.AutomationResponseSchema = zod_1.z.object({
   askToFollowEnabled: zod_1.z.boolean().optional(),
   askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
   askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
+  openingMessageEnabled: zod_1.z.boolean().optional(),
+  openingMessage: zod_1.z.string().nullable().optional(),
+  openingButtonText: zod_1.z.string().nullable().optional(),
+  dmLinks: zod_1.z.array(exports.DmLinkSchema).optional(),
   status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]),
   timesTriggered: zod_1.z.number(),
   lastTriggeredAt: zod_1.z.date().nullable(),
@@ -258,6 +351,7 @@ exports.CreateAutomationResponseSchema = zod_1.z.object({
   success: zod_1.z.literal(true),
   automation: zod_1.z.object({
     id: zod_1.z.string(),
+    automationName: zod_1.z.string().nullable(),
     postId: zod_1.z.string(),
     actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]),
     triggers: zod_1.z.array(zod_1.z.string()),
@@ -270,6 +364,7 @@ exports.UpdateAutomationResponseSchema = zod_1.z.object({
   success: zod_1.z.literal(true),
   automation: zod_1.z.object({
     id: zod_1.z.string(),
+    automationName: zod_1.z.string().nullable(),
     postId: zod_1.z.string(),
     triggers: zod_1.z.array(zod_1.z.string()),
     matchType: zod_1.z.enum(["CONTAINS", "EXACT", "REGEX"]),
@@ -279,6 +374,10 @@ exports.UpdateAutomationResponseSchema = zod_1.z.object({
     askToFollowEnabled: zod_1.z.boolean().optional(),
     askToFollowMessage: zod_1.z.string().max(1000).optional().nullable(),
     askToFollowLink: zod_1.z.string().max(2048).optional().nullable(),
+    openingMessageEnabled: zod_1.z.boolean().optional(),
+    openingMessage: zod_1.z.string().nullable().optional(),
+    openingButtonText: zod_1.z.string().nullable().optional(),
+    dmLinks: zod_1.z.array(exports.DmLinkSchema).optional(),
     status: zod_1.z.enum(["ACTIVE", "PAUSED", "DELETED"]),
     updatedAt: zod_1.z.date(),
   }),

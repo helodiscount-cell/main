@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AutomationInput } from "./AutomationInput";
 
 type Reply = {
@@ -84,23 +84,41 @@ const PublicReplyToComments = ({
           ))}
 
           {showInput && (
-            <AutomationInput
-              type="input"
-              value={inputValue}
-              onChange={setInputValue}
-              placeholder="Type a reply..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addReply();
-                if (e.key === "Escape") {
-                  setShowInput(false);
-                  setInputValue("");
-                }
-              }}
-              onBlur={() => {
-                if (inputValue.trim()) addReply();
-                else setShowInput(false);
-              }}
-            />
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+              <AutomationInput
+                type="input"
+                value={inputValue}
+                onChange={setInputValue}
+                placeholder="Type a reply..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addReply();
+                  if (e.key === "Escape") {
+                    setShowInput(false);
+                    setInputValue("");
+                  }
+                }}
+                autoFocus
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInput(false);
+                    setInputValue("");
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={addReply}
+                  className="px-4 py-1.5 text-xs font-semibold bg-[#6A06E4] text-white rounded-lg hover:bg-[#5a05c4] transition-colors shadow-sm"
+                >
+                  Add Reply
+                </button>
+              </div>
+            </div>
           )}
 
           {!showInput && (

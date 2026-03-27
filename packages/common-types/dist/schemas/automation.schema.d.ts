@@ -3,6 +3,13 @@
  * Defines validation schemas for automation-related API endpoints
  */
 import { z } from "zod";
+export declare const DmLinkSchema: z.ZodObject<
+  {
+    title: z.ZodString;
+    url: z.ZodString;
+  },
+  z.core.$strip
+>;
 export declare const CreateAutomationSchema: z.ZodObject<
   {
     triggerType: z.ZodDefault<
@@ -11,6 +18,7 @@ export declare const CreateAutomationSchema: z.ZodObject<
         STORY_REPLY: "STORY_REPLY";
       }>
     >;
+    automationName: z.ZodString;
     commentReplyWhenDm: z.ZodOptional<
       z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>
     >;
@@ -56,16 +64,33 @@ export declare const CreateAutomationSchema: z.ZodObject<
       COMMENT_REPLY: "COMMENT_REPLY";
     }>;
     replyMessage: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
-    replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    replyImage: z.ZodOptional<
+      z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodNullable<z.ZodString>>
+    >;
     useVariables: z.ZodDefault<z.ZodBoolean>;
     askToFollowEnabled: z.ZodDefault<z.ZodBoolean>;
     askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    openingMessageEnabled: z.ZodDefault<z.ZodBoolean>;
+    openingMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    openingButtonText: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    dmLinks: z.ZodOptional<
+      z.ZodArray<
+        z.ZodObject<
+          {
+            title: z.ZodString;
+            url: z.ZodString;
+          },
+          z.core.$strip
+        >
+      >
+    >;
   },
   z.core.$strip
 >;
 export declare const UpdateAutomationSchema: z.ZodObject<
   {
+    automationName: z.ZodOptional<z.ZodString>;
     triggers: z.ZodOptional<
       z.ZodPipe<
         z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>,
@@ -91,10 +116,26 @@ export declare const UpdateAutomationSchema: z.ZodObject<
     commentReplyWhenDm: z.ZodOptional<
       z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>
     >;
-    replyImage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    replyImage: z.ZodOptional<
+      z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodNullable<z.ZodString>>
+    >;
     askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
     askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    openingMessageEnabled: z.ZodOptional<z.ZodBoolean>;
+    openingMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    openingButtonText: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    dmLinks: z.ZodOptional<
+      z.ZodArray<
+        z.ZodObject<
+          {
+            title: z.ZodString;
+            url: z.ZodString;
+          },
+          z.core.$strip
+        >
+      >
+    >;
     status: z.ZodOptional<
       z.ZodEnum<{
         ACTIVE: "ACTIVE";
@@ -138,6 +179,7 @@ export declare const AutomationListQuerySchema: z.ZodObject<
 export declare const AutomationResponseSchema: z.ZodObject<
   {
     id: z.ZodString;
+    automationName: z.ZodNullable<z.ZodString>;
     postId: z.ZodString;
     postCaption: z.ZodNullable<z.ZodString>;
     triggers: z.ZodArray<z.ZodString>;
@@ -156,6 +198,20 @@ export declare const AutomationResponseSchema: z.ZodObject<
     askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
     askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    openingMessageEnabled: z.ZodOptional<z.ZodBoolean>;
+    openingMessage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    openingButtonText: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    dmLinks: z.ZodOptional<
+      z.ZodArray<
+        z.ZodObject<
+          {
+            title: z.ZodString;
+            url: z.ZodString;
+          },
+          z.core.$strip
+        >
+      >
+    >;
     status: z.ZodEnum<{
       ACTIVE: "ACTIVE";
       PAUSED: "PAUSED";
@@ -194,6 +250,7 @@ export declare const AutomationDetailResponseSchema: z.ZodObject<
     data: z.ZodObject<
       {
         id: z.ZodString;
+        automationName: z.ZodNullable<z.ZodString>;
         postId: z.ZodString;
         postCaption: z.ZodNullable<z.ZodString>;
         triggers: z.ZodArray<z.ZodString>;
@@ -212,6 +269,20 @@ export declare const AutomationDetailResponseSchema: z.ZodObject<
         askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
         askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+        openingMessageEnabled: z.ZodOptional<z.ZodBoolean>;
+        openingMessage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        openingButtonText: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        dmLinks: z.ZodOptional<
+          z.ZodArray<
+            z.ZodObject<
+              {
+                title: z.ZodString;
+                url: z.ZodString;
+              },
+              z.core.$strip
+            >
+          >
+        >;
         status: z.ZodEnum<{
           ACTIVE: "ACTIVE";
           PAUSED: "PAUSED";
@@ -259,6 +330,7 @@ export declare const AutomationListResponseSchema: z.ZodObject<
       z.ZodObject<
         {
           id: z.ZodString;
+          automationName: z.ZodNullable<z.ZodString>;
           postId: z.ZodString;
           postCaption: z.ZodNullable<z.ZodString>;
           triggers: z.ZodArray<z.ZodString>;
@@ -277,6 +349,20 @@ export declare const AutomationListResponseSchema: z.ZodObject<
           askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
           askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
           askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+          openingMessageEnabled: z.ZodOptional<z.ZodBoolean>;
+          openingMessage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+          openingButtonText: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+          dmLinks: z.ZodOptional<
+            z.ZodArray<
+              z.ZodObject<
+                {
+                  title: z.ZodString;
+                  url: z.ZodString;
+                },
+                z.core.$strip
+              >
+            >
+          >;
           status: z.ZodEnum<{
             ACTIVE: "ACTIVE";
             PAUSED: "PAUSED";
@@ -301,6 +387,7 @@ export declare const CreateAutomationResponseSchema: z.ZodObject<
     automation: z.ZodObject<
       {
         id: z.ZodString;
+        automationName: z.ZodNullable<z.ZodString>;
         postId: z.ZodString;
         actionType: z.ZodEnum<{
           DM: "DM";
@@ -321,6 +408,7 @@ export declare const UpdateAutomationResponseSchema: z.ZodObject<
     automation: z.ZodObject<
       {
         id: z.ZodString;
+        automationName: z.ZodNullable<z.ZodString>;
         postId: z.ZodString;
         triggers: z.ZodArray<z.ZodString>;
         matchType: z.ZodEnum<{
@@ -337,6 +425,20 @@ export declare const UpdateAutomationResponseSchema: z.ZodObject<
         askToFollowEnabled: z.ZodOptional<z.ZodBoolean>;
         askToFollowMessage: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         askToFollowLink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+        openingMessageEnabled: z.ZodOptional<z.ZodBoolean>;
+        openingMessage: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        openingButtonText: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        dmLinks: z.ZodOptional<
+          z.ZodArray<
+            z.ZodObject<
+              {
+                title: z.ZodString;
+                url: z.ZodString;
+              },
+              z.core.$strip
+            >
+          >
+        >;
         status: z.ZodEnum<{
           ACTIVE: "ACTIVE";
           PAUSED: "PAUSED";

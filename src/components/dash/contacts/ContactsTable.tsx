@@ -1,7 +1,13 @@
 "use client";
 
 import React from "react";
-import { ArrowDown, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowDown,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  User,
+} from "lucide-react";
 import { CONTACTS_CONFIG } from "./config";
 import { useContacts } from "@/hooks/use-contacts";
 
@@ -82,13 +88,19 @@ export const ContactsTable = () => {
               <div className="grid grid-cols-[1.5fr_0.8fr_auto_1.5fr_auto_1fr] items-center px-6 py-4 group hover:bg-slate-50/50 transition-colors">
                 {/* Username Column */}
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0 relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={contact.avatarUrl}
-                      alt={contact.username}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-50 border border-slate-200 shrink-0 relative flex items-center justify-center">
+                    {contact.avatarUrl ? (
+                      <img
+                        src={contact.avatarUrl}
+                        alt={contact.username}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User
+                        className="w-4 h-4 text-slate-300"
+                        strokeWidth={2.5}
+                      />
+                    )}
                   </div>
                   <span className="text-sm font-medium text-slate-700">
                     {contact.username}

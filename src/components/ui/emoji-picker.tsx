@@ -33,7 +33,7 @@ export function EmojiPicker({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -46,6 +46,9 @@ export function EmojiPicker({
         side="bottom"
         align="end"
         className="p-0 border-none shadow-2xl rounded-2xl overflow-hidden"
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+        }}
       >
         <Picker
           onEmojiClick={(emojiData) => {

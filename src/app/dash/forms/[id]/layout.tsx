@@ -47,7 +47,7 @@ export default function FormDetailLayout({
     <FormEditorProvider formId={id}>
       <div className="flex flex-col h-full min-h-screen">
         <FormLayoutHeader formId={id} />
-        <div className="flex-1 overflow-hidden bg-white m-4 rounded-xl ">
+        <div className="flex-1 overflow-hidden bg-[#F1F1F1] m-4 rounded-xl ">
           {children}
         </div>
       </div>

@@ -93,7 +93,6 @@ export const CreateAutomationSchema = z
           .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
           .transform((val) => sanitizeTrigger(val)),
       )
-      .min(1, "At least one trigger is required")
       .max(
         MAX_LENGTHS.TRIGGERS_ARRAY,
         `Maximum ${MAX_LENGTHS.TRIGGERS_ARRAY} triggers allowed`,

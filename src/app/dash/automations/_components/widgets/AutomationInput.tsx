@@ -16,6 +16,7 @@ interface AutomationInputProps {
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
   variant?: "standard" | "mini";
+  autoFocus?: boolean;
 }
 
 /**
@@ -35,6 +36,7 @@ export function AutomationInput({
   onKeyDown,
   onBlur,
   variant = "standard",
+  autoFocus,
 }: AutomationInputProps) {
   // Use our centralized hook for emoji insertion
   const { ref, handleEmojiSelect } = useEmojiInsertion<any>(
@@ -61,6 +63,7 @@ export function AutomationInput({
             onBlur={onBlur}
             placeholder={placeholder}
             rows={rows}
+            autoFocus={autoFocus}
             className="w-full bg-transparent text-[#334155] text-[15px] leading-relaxed resize-none outline-none placeholder:text-slate-400"
           />
         ) : (
@@ -72,11 +75,14 @@ export function AutomationInput({
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}
+            autoFocus={autoFocus}
             className="w-full bg-transparent text-[#334155] text-[15px] font-medium outline-none placeholder:text-slate-400"
           />
         )}
         {isMini && showEmojiPicker && (
-          <EmojiPicker onEmojiSelect={handleEmojiSelect} size={16} />
+          <div onMouseDown={(e) => e.preventDefault()}>
+            <EmojiPicker onEmojiSelect={handleEmojiSelect} size={16} />
+          </div>
         )}
       </div>
 
@@ -91,7 +97,9 @@ export function AutomationInput({
             ) : null}
           </div>
           {showEmojiPicker && (
-            <EmojiPicker onEmojiSelect={handleEmojiSelect} size={18} />
+            <div onMouseDown={(e) => e.preventDefault()}>
+              <EmojiPicker onEmojiSelect={handleEmojiSelect} size={18} />
+            </div>
           )}
         </div>
       )}

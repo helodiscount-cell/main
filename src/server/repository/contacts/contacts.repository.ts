@@ -67,7 +67,7 @@ export async function getUniqueContactsForUser(
           return {
             id: execution.commentUserId,
             username: execution.commentUsername,
-            avatarUrl: `https://i.pravatar.cc/150?u=${execution.commentUsername}`,
+            avatarUrl: "",
             type: type,
             email: null,
             lastInteractedAt: execution.executedAt,

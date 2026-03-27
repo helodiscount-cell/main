@@ -19,6 +19,7 @@ import {
   UpdateAutomationResponseSchema,
   DeleteAutomationResponseSchema,
   ExecutionRecordSchema,
+  DmLinkSchema,
 } from "./schemas/automation.schema";
 import {
   InstagramPostSchema,
@@ -91,6 +92,7 @@ export type DeleteAutomationResponse = z.infer<
   typeof DeleteAutomationResponseSchema
 >;
 export type ExecutionRecord = z.infer<typeof ExecutionRecordSchema>;
+export type DmLink = z.infer<typeof DmLinkSchema>;
 export type InstagramPost = z.infer<typeof InstagramPostSchema>;
 export type InstagramPostsResponse = z.infer<
   typeof InstagramPostsResponseSchema
