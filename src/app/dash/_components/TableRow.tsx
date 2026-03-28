@@ -124,14 +124,6 @@ const useTableRowMapper = (
             width={32}
             height={32}
             className="rounded-md object-cover w-full h-full"
-            unoptimized={
-              (
-                automation.post?.thumbnailUrl ??
-                automation.post?.mediaUrl ??
-                automation.story?.thumbnailUrl ??
-                automation.story?.mediaUrl
-              )?.includes("fbcdn.net") || false
-            }
           />
         ) : (
           <span className="text-[10px] text-slate-400 font-bold uppercase">

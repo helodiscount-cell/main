@@ -26,29 +26,30 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
         isRefreshing={isRefetching}
       />
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-        {data?.result.data.data.map((item) => (
-          <div
-            key={item.id}
-            className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
-          >
-            {item.id && (
+        {data?.result.data.data.map((item) => {
+          const previewUrl =
+            (item as any).thumbnail_url || item.media_url || "";
+
+          return (
+            <div
+              key={item.id}
+              className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
+            >
               <Link
                 href={`/dash/automations/dmforcomments/${item.id}`}
                 className="w-full h-full"
               >
                 <Image
-                  src={(item as any).thumbnail_url || item.media_url}
+                  src={previewUrl}
                   alt={item.caption || "Post preview"}
                   fill
                   className="object-cover"
-                  unoptimized={(
-                    (item as any).thumbnail_url || item.media_url
-                  ).includes("fbcdn.net")}
+                  unoptimized={previewUrl?.includes("fbcdn.net")}
                 />
               </Link>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
