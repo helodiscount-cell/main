@@ -28,6 +28,7 @@ type StoryMeta = {
   id: string;
   mediaUrl: string;
   mediaType: string;
+  thumbnailUrl?: string | null;
   caption?: string | null;
   permalink: string;
   timestamp: string;
@@ -79,12 +80,13 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       a.story?.id === story_id &&
       a.status !== "DELETED",
     onBuildPayload: (form) => {
-      if (!currentStory) return null;
+      if (!currentStory || !currentStory.media_url) return null;
 
       const storyMeta: StoryMeta = {
         id: currentStory.id,
         mediaUrl: currentStory.media_url,
         mediaType: currentStory.media_type,
+        thumbnailUrl: (currentStory as any).thumbnail_url ?? null,
         caption: currentStory.caption ?? null,
         permalink: currentStory.permalink,
         timestamp: currentStory.timestamp,

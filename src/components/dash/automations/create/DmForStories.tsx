@@ -53,39 +53,34 @@ export default function DmForStories({
         </div>
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-          {stories.map((story) => (
-            <Link
-              key={story.id}
-              href={`/dash/automations/dmforstories/${story.id}`}
-            >
-              <div className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group">
-                {story.media_type === "IMAGE" ? (
+          {stories.map((story) => {
+            const previewUrl =
+              (story as any).thumbnail_url || story.media_url || "";
+
+            return (
+              <Link
+                key={story.id}
+                href={`/dash/automations/dmforstories/${story.id}`}
+              >
+                <div className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group">
                   <Image
-                    src={story.media_url}
-                    alt={story.caption ?? "Story"}
+                    src={previewUrl}
+                    alt={story.caption ?? "Story preview"}
                     fill
                     className="object-cover"
+                    unoptimized={previewUrl?.includes("fbcdn.net")}
                   />
-                ) : (
-                  <video
-                    src={story.media_url}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                <div className="absolute bottom-1 right-1 bg-black/50 rounded p-0.5">
-                  {story.media_type === "VIDEO" ? (
-                    <Video className="w-3 h-3 text-white" />
-                  ) : (
-                    <ImageIcon className="w-3 h-3 text-white" />
-                  )}
+                  <div className="absolute bottom-1 right-1 bg-black/50 rounded p-0.5">
+                    {story.media_type === "VIDEO" ? (
+                      <Video className="w-3 h-3 text-white" />
+                    ) : (
+                      <ImageIcon className="w-3 h-3 text-white" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

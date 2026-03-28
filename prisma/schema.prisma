@@ -75,22 +75,25 @@ model InstaFollowerSnapshot {
 
 // Embedded document for post-based automations
 type PostTarget {
-  id        String
-  caption   String?
-  mediaUrl  String?
-  permalink String?
-  timestamp String? // ISO timestamp
+  id           String
+  caption      String?
+  mediaUrl     String?
+  mediaType    String? // IMAGE | VIDEO
+  thumbnailUrl String? // Only for VIDEO
+  permalink    String?
+  timestamp    String? // ISO timestamp
 }
 
 // Embedded document for story-based automations
 // Snapshotted at creation — story media expires after 24h
 type StoryTarget {
-  id        String
-  mediaUrl  String
-  mediaType String // IMAGE | VIDEO
-  caption   String?
-  permalink String
-  timestamp String // ISO timestamp
+  id           String
+  mediaUrl     String
+  mediaType    String // IMAGE | VIDEO
+  thumbnailUrl String? // Only for VIDEO
+  caption      String?
+  permalink    String
+  timestamp    String // ISO timestamp
 }
 
 model Automation {

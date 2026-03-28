@@ -3,11 +3,18 @@ export type AutomationStatus = "ACTIVE" | "PAUSED";
 export interface AutomationListItem {
   id: string;
   triggerType: "COMMENT_ON_POST" | "STORY_REPLY";
-  post: { id: string; caption: string | null; mediaUrl: string } | null;
+  post: {
+    id: string;
+    caption: string | null;
+    mediaUrl: string | null;
+    mediaType: string | null;
+    thumbnailUrl: string | null;
+  } | null;
   story: {
     id: string;
     mediaUrl: string;
     mediaType: string;
+    thumbnailUrl: string | null;
     caption: string | null;
     permalink: string;
     timestamp: string;
@@ -45,6 +52,8 @@ export interface CreateAutomationData {
   automationName: string;
   postCaption?: string | null;
   postMediaUrl?: string | null;
+  postMediaType?: string | null;
+  postThumbnailUrl?: string | null;
   postPermalink?: string | null;
   postTimestamp?: string | null;
   triggers: string[];

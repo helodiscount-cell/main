@@ -77,6 +77,14 @@ export async function createAutomation(
 
   const automation = await createAutomationRecord(user.id, input);
 
+  if (!automation) {
+    throw new ApiRouteError(
+      "Failed to create automation. Please try again.",
+      "CREATE_FAILED",
+      500,
+    );
+  }
+
   // Cache invalidation — use the relevant target ID
   const cacheTargetId =
     triggerType === "STORY_REPLY" ? input.story?.id : input.postId;

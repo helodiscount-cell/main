@@ -15,6 +15,21 @@ import {
 } from "@/types/automation";
 
 /**
+ * Payload interface for post media metadata
+ */
+interface PostMediaPayload {
+  postMediaType?: string | null;
+  postThumbnailUrl?: string | null;
+}
+
+/**
+ * Payload interface for story media metadata
+ */
+interface StoryMediaPayload {
+  thumbnailUrl?: string | null;
+}
+
+/**
  * Creates a new automation
  */
 export async function createAutomation(
@@ -37,6 +52,9 @@ export async function createAutomation(
                   id: data.postId,
                   caption: data.postCaption ?? null,
                   mediaUrl: data.postMediaUrl ?? null,
+                  mediaType: (data as PostMediaPayload).postMediaType ?? null,
+                  thumbnailUrl:
+                    (data as PostMediaPayload).postThumbnailUrl ?? null,
                   permalink: data.postPermalink ?? null,
                   timestamp: data.postTimestamp ?? null,
                 },
@@ -49,6 +67,8 @@ export async function createAutomation(
                   id: data.story.id,
                   mediaUrl: data.story.mediaUrl,
                   mediaType: data.story.mediaType,
+                  thumbnailUrl:
+                    (data.story as StoryMediaPayload).thumbnailUrl ?? null,
                   caption: data.story.caption ?? null,
                   permalink: data.story.permalink,
                   timestamp: data.story.timestamp,
