@@ -109,19 +109,34 @@ const useTableRowMapper = (
           ? `/dash/automations/dmforstories/${automation.story?.id}`
           : `/dash/automations/dmforcomments/${automation.post?.id}`,
       icon:
-        automation.post?.mediaUrl || automation.story?.mediaUrl ? (
+        automation.post?.thumbnailUrl ||
+        automation.post?.mediaUrl ||
+        automation.story?.thumbnailUrl ||
+        automation.story?.mediaUrl ? (
           <Image
-            alt=""
+            alt="Media preview"
             src={
-              (automation.post?.mediaUrl ??
+              (automation.post?.thumbnailUrl ??
+                automation.post?.mediaUrl ??
+                automation.story?.thumbnailUrl ??
                 automation.story?.mediaUrl) as string
             }
-            width={100}
-            height={100}
-            className="rounded-md object-cover"
+            width={32}
+            height={32}
+            className="rounded-md object-cover w-full h-full"
+            unoptimized={
+              (
+                automation.post?.thumbnailUrl ??
+                automation.post?.mediaUrl ??
+                automation.story?.thumbnailUrl ??
+                automation.story?.mediaUrl
+              )?.includes("fbcdn.net") || false
+            }
           />
         ) : (
-          <span className="text-[10px] text-slate-400">IMG</span>
+          <span className="text-[10px] text-slate-400 font-bold uppercase">
+            {automation.triggerType === "STORY_REPLY" ? "Story" : "Post"}
+          </span>
         ),
       status: (
         <StatusBadge

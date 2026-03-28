@@ -38,6 +38,7 @@ const StoryTargetInputSchema = zod_1.z.object({
   id: zod_1.z.string().min(1).max(100),
   mediaUrl: zod_1.z.string().min(1).max(2048),
   mediaType: zod_1.z.enum(["IMAGE", "VIDEO"]),
+  thumbnailUrl: zod_1.z.string().url().max(2048).optional().nullable(),
   caption: zod_1.z
     .string()
     .max(sanitize_1.MAX_LENGTHS.POST_CAPTION)
@@ -88,6 +89,8 @@ exports.CreateAutomationSchema = zod_1.z
         val ? (0, sanitize_1.sanitizePostCaption)(val) : null,
       ),
     postMediaUrl: zod_1.z.string().url().max(2048).optional().nullable(),
+    postMediaType: zod_1.z.string().max(100).optional().nullable(),
+    postThumbnailUrl: zod_1.z.string().url().max(2048).optional().nullable(),
     postPermalink: zod_1.z.string().url().max(2048).optional().nullable(),
     postTimestamp: zod_1.z.string().max(100).optional().nullable(),
     story: StoryTargetInputSchema.optional(),

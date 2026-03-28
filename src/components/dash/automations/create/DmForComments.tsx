@@ -31,24 +31,19 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
             key={item.id}
             className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
           >
-            {item.media_type === "IMAGE" ? (
-              <Link href={`/dash/automations/dmforcomments/${item.id}`}>
+            {item.id && (
+              <Link
+                href={`/dash/automations/dmforcomments/${item.id}`}
+                className="w-full h-full"
+              >
                 <Image
-                  src={item.media_url}
-                  alt={item.caption as string}
+                  src={(item as any).thumbnail_url || item.media_url}
+                  alt={item.caption || "Post preview"}
                   fill
                   className="object-cover"
-                />
-              </Link>
-            ) : (
-              <Link href={`/dash/automations/dmforcomments/${item.id}`}>
-                <video
-                  src={item.media_url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="w-full h-full object-cover"
+                  unoptimized={(
+                    (item as any).thumbnail_url || item.media_url
+                  ).includes("fbcdn.net")}
                 />
               </Link>
             )}

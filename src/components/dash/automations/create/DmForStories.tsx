@@ -59,23 +59,15 @@ export default function DmForStories({
               href={`/dash/automations/dmforstories/${story.id}`}
             >
               <div className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group">
-                {story.media_type === "IMAGE" ? (
-                  <Image
-                    src={story.media_url}
-                    alt={story.caption ?? "Story"}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <video
-                    src={story.media_url}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                <Image
+                  src={(story as any).thumbnail_url || story.media_url}
+                  alt={story.caption ?? "Story preview"}
+                  fill
+                  className="object-cover"
+                  unoptimized={(
+                    (story as any).thumbnail_url || story.media_url
+                  )?.includes("fbcdn.net")}
+                />
                 <div className="absolute bottom-1 right-1 bg-black/50 rounded p-0.5">
                   {story.media_type === "VIDEO" ? (
                     <Video className="w-3 h-3 text-white" />

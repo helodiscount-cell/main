@@ -137,30 +137,43 @@ export function BestPerformerWidget({
                     key={data.id}
                     className="flex flex-col items-center justify-end h-full relative group"
                   >
-                    {/* Value Badge on Hover */}
-                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none z-20">
+                    {/* Value Badge on Hover - Positioned relative to image top */}
+                    <div
+                      className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none z-30 whitespace-nowrap -translate-x-1/2 left-1/2 group-hover:-translate-y-2"
+                      style={{
+                        bottom: `calc(${heightPercent}% + 56px)`,
+                      }}
+                    >
                       {data.value} Triggers
                     </div>
 
                     {/* Image hovering over bar */}
                     <div
-                      className="absolute w-[40px] h-[40px] rounded-lg overflow-hidden shadow-md border-2 border-white transition-transform duration-300 group-hover:-translate-y-2 z-20"
+                      className="absolute w-[40px] h-[40px] rounded-lg overflow-hidden shadow-md border-2 border-white transition-transform duration-300 group-hover:-translate-y-2 z-20 bg-slate-100"
                       style={{
                         bottom: `calc(${heightPercent}% + 8px)`,
                       }}
                     >
-                      <Image
-                        src={data.imageUrl}
-                        alt="Post thumbnail"
-                        fill
-                        className="object-cover"
-                        unoptimized={data.imageUrl.includes("unsplash")}
-                      />
+                      {data.imageUrl ? (
+                        <Image
+                          src={data.imageUrl}
+                          alt="Post thumbnail"
+                          fill
+                          className="object-cover"
+                          unoptimized={data.imageUrl.includes("fbcdn.net")}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-[10px] text-slate-300 font-bold">
+                            N/A
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Bar with gradient */}
                     <div
-                      className="w-[44px] bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-xl transition-all duration-700 ease-out shadow-sm group-hover:from-purple-500 group-hover:to-purple-300"
+                      className="w-[44px] bg-linear-to-t from-purple-600 to-purple-400 rounded-t-xl transition-all duration-700 ease-out shadow-sm group-hover:from-purple-500 group-hover:to-purple-300"
                       style={{ height: `${heightPercent}%` }}
                     />
 
@@ -184,13 +197,23 @@ export function BestPerformerWidget({
             </h4>
 
             <div className="w-[130px] h-[130px] rounded-[20px] overflow-hidden shadow-lg border-4 border-white relative transition-transform duration-300">
-              <Image
-                src={config.bestTimeData.imageUrl}
-                alt="Best performing post"
-                fill
-                className="object-cover"
-                unoptimized={config.bestTimeData.imageUrl.includes("unsplash")}
-              />
+              {config.bestTimeData.imageUrl ? (
+                <Image
+                  src={config.bestTimeData.imageUrl}
+                  alt="Best performing post"
+                  fill
+                  className="object-cover"
+                  unoptimized={config.bestTimeData.imageUrl.includes(
+                    "fbcdn.net",
+                  )}
+                />
+              ) : (
+                <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                  <span className="text-slate-300 font-bold text-xs">
+                    No Image
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-center gap-1.5 bg-white/50 backdrop-blur-sm py-3 px-6 rounded-2xl border border-white">

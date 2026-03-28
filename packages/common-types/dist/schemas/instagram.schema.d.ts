@@ -17,7 +17,8 @@ export declare const InstagramPostSchema: z.ZodObject<
       REELS: "REELS";
       STORY: "STORY";
     }>;
-    media_url: z.ZodString;
+    media_url: z.ZodOptional<z.ZodString>;
+    thumbnail_url: z.ZodOptional<z.ZodString>;
     permalink: z.ZodString;
     timestamp: z.ZodString;
     like_count: z.ZodOptional<z.ZodNumber>;
@@ -34,7 +35,8 @@ export declare const InstagramStorySchema: z.ZodObject<
       VIDEO: "VIDEO";
     }>;
     media_product_type: z.ZodLiteral<"STORY">;
-    media_url: z.ZodString;
+    media_url: z.ZodOptional<z.ZodString>;
+    thumbnail_url: z.ZodOptional<z.ZodString>;
     permalink: z.ZodString;
     timestamp: z.ZodString;
   },
@@ -52,7 +54,8 @@ export declare const InstagramStoriesResponseSchema: z.ZodObject<
             VIDEO: "VIDEO";
           }>;
           media_product_type: z.ZodLiteral<"STORY">;
-          media_url: z.ZodString;
+          media_url: z.ZodOptional<z.ZodString>;
+          thumbnail_url: z.ZodOptional<z.ZodString>;
           permalink: z.ZodString;
           timestamp: z.ZodString;
         },
@@ -93,7 +96,8 @@ export declare const InstagramPostsResponseSchema: z.ZodObject<
             REELS: "REELS";
             STORY: "STORY";
           }>;
-          media_url: z.ZodString;
+          media_url: z.ZodOptional<z.ZodString>;
+          thumbnail_url: z.ZodOptional<z.ZodString>;
           permalink: z.ZodString;
           timestamp: z.ZodString;
           like_count: z.ZodOptional<z.ZodNumber>;

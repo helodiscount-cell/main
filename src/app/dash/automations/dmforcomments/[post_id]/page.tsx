@@ -78,6 +78,8 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         automationName: form.automationName,
         postCaption: selectedPost?.caption ?? form.keywords[0] ?? "",
         postMediaUrl: selectedPost?.media_url ?? null,
+        postMediaType: selectedPost?.media_type ?? null,
+        postThumbnailUrl: selectedPost?.thumbnail_url ?? null,
         postPermalink: selectedPost?.permalink ?? null,
         postTimestamp: selectedPost?.timestamp ?? null,
         triggers: form.keywords,
