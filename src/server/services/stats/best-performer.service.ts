@@ -47,6 +47,7 @@ export async function getBestPerformerStats(
       post: {
         isSet: true,
       },
+      status: { not: "DELETED" },
       executions: {
         some: {
           executedAt: { gte: startDate },
@@ -103,13 +104,11 @@ export async function getBestPerformerStats(
 
   const chartData: BestPerformerStats[] = top3.map((item, idx) => {
     const post = (item.automation as any).post;
-    const fallbackImage =
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100&h=100";
     return {
       id: item.automation.id,
       date: `${formattedDates[idx].day} ${formattedDates[idx].month}`,
       value: item.score,
-      imageUrl: post?.mediaUrl || fallbackImage,
+      imageUrl: post?.thumbnailUrl || post?.mediaUrl || "",
     };
   });
 

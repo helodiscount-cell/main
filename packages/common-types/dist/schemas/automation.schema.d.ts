@@ -30,6 +30,8 @@ export declare const CreateAutomationSchema: z.ZodObject<
       z.ZodTransform<string | null, string | undefined>
     >;
     postMediaUrl: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    postMediaType: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+    postThumbnailUrl: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     postPermalink: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     postTimestamp: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     story: z.ZodOptional<
@@ -41,6 +43,7 @@ export declare const CreateAutomationSchema: z.ZodObject<
             IMAGE: "IMAGE";
             VIDEO: "VIDEO";
           }>;
+          thumbnailUrl: z.ZodNullable<z.ZodOptional<z.ZodString>>;
           caption: z.ZodOptional<z.ZodNullable<z.ZodString>>;
           permalink: z.ZodString;
           timestamp: z.ZodString;
