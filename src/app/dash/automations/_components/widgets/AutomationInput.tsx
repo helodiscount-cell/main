@@ -58,7 +58,7 @@ export function AutomationInput({
           <textarea
             ref={ref}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => onChange(e.target.value.replace(/[<>]/g, ""))}
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}
@@ -71,7 +71,7 @@ export function AutomationInput({
             ref={ref}
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => onChange(e.target.value.replace(/[<>]/g, ""))}
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}
