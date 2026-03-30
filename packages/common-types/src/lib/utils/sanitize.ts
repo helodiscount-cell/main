@@ -45,8 +45,9 @@ export function sanitizeText(text: string, maxLength?: number): string {
     return "";
   }
 
-  // Trims whitespace
-  let sanitized = text.trim();
+  // Trims whitespace and strips angle brackets globally to prevent XSS/injection
+  // This handles both UI inputs and direct API requests (Postman/cURL)
+  let sanitized = text.replace(/[<>]/g, "").trim();
 
   // Removes null bytes and other control characters (except newlines and tabs)
   sanitized = sanitized.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, "");
@@ -128,11 +129,8 @@ export function sanitizeTrigger(trigger: string): string {
     return "";
   }
 
-  // Trims and sanitizes
-  let sanitized = trigger.trim();
-
-  // Removes HTML tags
-  sanitized = sanitized.replace(/<[^>]*>/g, "");
+  // Removes angle brackets globally to prevent XSS/injection
+  let sanitized = trigger.replace(/[<>]/g, "").trim();
 
   // Removes control characters
   sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, "");
@@ -167,7 +165,9 @@ export function sanitizeTriggers(triggers: string[]): string[] {
  * Sanitizes post caption
  * Handles optional post caption text
  */
-export function sanitizePostCaption(caption: string | undefined | null): string | null {
+export function sanitizePostCaption(
+  caption: string | undefined | null,
+): string | null {
   if (!caption || typeof caption !== "string") {
     return null;
   }
@@ -183,7 +183,7 @@ export function sanitizePostCaption(caption: string | undefined | null): string 
 export function validateLength(
   text: string,
   min: number,
-  max: number
+  max: number,
 ): { valid: boolean; error?: string } {
   if (typeof text !== "string") {
     return { valid: false, error: "Input must be a string" };
@@ -205,4 +205,3 @@ export function validateLength(
 
   return { valid: true };
 }
-

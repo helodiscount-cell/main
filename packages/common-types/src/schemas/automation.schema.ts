@@ -9,24 +9,10 @@ import {
   sanitizeTriggers,
   sanitizePostCaption,
   sanitizeTrigger,
+  sanitizeText,
   MAX_LENGTHS,
 } from "../lib/utils/sanitize";
 import { sanitizeQueryParam } from "../lib/utils/validation";
-
-const NO_ANGLE_BRACKETS_MSG = "Angle brackets (<, >) are not allowed";
-const noAngleBrackets = (val: string | null | undefined) => {
-  if (!val) return true;
-  return !/[<>]/g.test(val);
-};
-
-export const DmLinkSchema = z.object({
-  title: z
-    .string()
-    .min(1)
-    .max(100)
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
-  url: z.string().url("Invalid link URL").max(2048),
-});
 
 // Embedded story target for creation payload
 const StoryTargetInputSchema = z.object({
@@ -39,6 +25,19 @@ const StoryTargetInputSchema = z.object({
   timestamp: z.string().min(1).max(100),
 });
 
+export const DmLinkSchema = z.object({
+  title: z
+    .string()
+    .transform((val) => sanitizeText(val))
+    .refine((s) => s.length >= 1, {
+      message: "Title cannot be empty after sanitization",
+    })
+    .refine((s) => s.length <= 100, {
+      message: "Title must be no more than 100 characters",
+    }),
+  url: z.string().url("Invalid link URL").max(2048),
+});
+
 // Input schema for creating a new automation
 export const CreateAutomationSchema = z
   .object({
@@ -47,20 +46,25 @@ export const CreateAutomationSchema = z
       .default("COMMENT_ON_POST"),
     automationName: z
       .string()
-      .min(1, "Please define a name for this automation")
-      .max(100),
+      .transform((val) => sanitizeText(val))
+      .refine((s) => s.length >= 1, {
+        message: "Please define a name for this automation",
+      })
+      .refine((s) => s.length <= 100, {
+        message: "Automation name must be no more than 100 characters",
+      }),
     // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: z
       .array(
         z
           .string()
-          .min(1)
-          .max(
-            MAX_LENGTHS.REPLY_MESSAGE,
-            `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
-          )
-          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-          .transform((val) => sanitizeReplyMessage(val)),
+          .transform((val) => sanitizeReplyMessage(val))
+          .refine((s) => s.length >= 1, {
+            message: "Comment reply cannot be empty after sanitization",
+          })
+          .refine((s) => s.length <= MAX_LENGTHS.REPLY_MESSAGE, {
+            message: `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+          }),
       )
       .max(10, "Maximum 10 comment replies allowed")
       .optional(),
@@ -88,13 +92,13 @@ export const CreateAutomationSchema = z
       .array(
         z
           .string()
-          .min(1, "Trigger cannot be empty")
-          .max(
-            MAX_LENGTHS.TRIGGER,
-            `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`,
-          )
-          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-          .transform((val) => sanitizeTrigger(val)),
+          .transform((val) => sanitizeTrigger(val))
+          .refine((s) => s.length >= 1, {
+            message: "Trigger cannot be empty after sanitization",
+          })
+          .refine((s) => s.length <= MAX_LENGTHS.TRIGGER, {
+            message: `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`,
+          }),
       )
       .max(
         MAX_LENGTHS.TRIGGERS_ARRAY,
@@ -106,13 +110,13 @@ export const CreateAutomationSchema = z
     // Single fixed DM message
     replyMessage: z
       .string()
-      .min(1, "Reply message is required")
-      .max(
-        MAX_LENGTHS.REPLY_MESSAGE,
-        `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
-      )
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-      .transform((val) => sanitizeReplyMessage(val)),
+      .transform((val) => sanitizeReplyMessage(val))
+      .refine((s) => s.length >= 1, {
+        message: "Reply message is required and cannot be just angle brackets",
+      })
+      .refine((s) => s.length <= MAX_LENGTHS.REPLY_MESSAGE, {
+        message: `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+      }),
     replyImage: z
       .preprocess(
         (val) => (val === "" ? null : val),
@@ -127,13 +131,17 @@ export const CreateAutomationSchema = z
       .max(1000)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+      ),
     askToFollowLink: z
       .string()
       .max(2048)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+      ),
     // Opening Message
     openingMessageEnabled: z.boolean().default(true),
     openingMessage: z
@@ -141,13 +149,17 @@ export const CreateAutomationSchema = z
       .max(2000)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+      ),
     openingButtonText: z
       .string()
       .max(100)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+      ),
     dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
   })
   .refine(
@@ -165,18 +177,27 @@ export const CreateAutomationSchema = z
 
 // Input schema for updating an existing automation
 export const UpdateAutomationSchema = z.object({
-  automationName: z.string().min(1).max(100).optional(),
+  automationName: z
+    .string()
+    .transform((val) => sanitizeText(val))
+    .refine((s) => s.length >= 1, {
+      message: "Please define a name for this automation",
+    })
+    .refine((s) => s.length <= 100, {
+      message: "Automation name must be no more than 100 characters",
+    })
+    .optional(),
   triggers: z
     .array(
       z
         .string()
-        .min(1, "Trigger cannot be empty")
-        .max(
-          MAX_LENGTHS.TRIGGER,
-          `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`,
-        )
-        .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-        .transform((val) => sanitizeTrigger(val)),
+        .transform((val) => sanitizeTrigger(val))
+        .refine((s) => s.length >= 1, {
+          message: "Trigger cannot be empty after sanitization",
+        })
+        .refine((s) => s.length <= MAX_LENGTHS.TRIGGER, {
+          message: `Trigger must be no more than ${MAX_LENGTHS.TRIGGER} characters`,
+        }),
     )
     .max(
       MAX_LENGTHS.TRIGGERS_ARRAY,
@@ -189,25 +210,26 @@ export const UpdateAutomationSchema = z.object({
   // Single fixed DM message
   replyMessage: z
     .string()
-    .min(1, "Reply message cannot be empty")
-    .max(
-      MAX_LENGTHS.REPLY_MESSAGE,
-      `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
-    )
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
     .transform((val) => sanitizeReplyMessage(val))
+    .refine((s) => s.length >= 1, {
+      message: "Reply message is required and cannot be just angle brackets",
+    })
+    .refine((s) => s.length <= MAX_LENGTHS.REPLY_MESSAGE, {
+      message: `Reply message must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+    })
     .optional(),
   // Array of public comment replies (optional)
   commentReplyWhenDm: z
     .array(
       z
         .string()
-        .min(1)
-        .max(
-          MAX_LENGTHS.REPLY_MESSAGE,
-          `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
-        )
-        .transform((val) => sanitizeReplyMessage(val)),
+        .transform((val) => sanitizeReplyMessage(val))
+        .refine((s) => s.length >= 1, {
+          message: "Comment reply cannot be empty after sanitization",
+        })
+        .refine((s) => s.length <= MAX_LENGTHS.REPLY_MESSAGE, {
+          message: `Each comment reply must be no more than ${MAX_LENGTHS.REPLY_MESSAGE} characters`,
+        }),
     )
     .max(10, "Maximum 10 comment replies allowed")
     .optional(),
@@ -223,26 +245,32 @@ export const UpdateAutomationSchema = z.object({
     .max(1000)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+    ),
   askToFollowLink: z
     .string()
     .max(2048)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+    ),
   openingMessageEnabled: z.boolean().optional(),
   openingMessage: z
     .string()
     .max(2000)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined ? undefined : val ? sanitizeText(val) || null : null,
+    ),
   openingButtonText: z
     .string()
     .max(100)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) => (val ? sanitizeText(val) || null : null)),
   dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
   status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
 });
