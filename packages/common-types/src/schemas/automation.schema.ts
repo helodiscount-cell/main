@@ -306,7 +306,7 @@ export const AutomationListQuerySchema = z.object({
 // Single automation response schema
 export const AutomationResponseSchema = z.object({
   id: z.string(),
-  automationName: z.string().nullable(),
+  automationName: z.string(),
   postId: z.string(),
   postCaption: z.string().nullable(),
   triggers: z.array(z.string()),
@@ -369,7 +369,7 @@ export const CreateAutomationResponseSchema = z.object({
   success: z.literal(true),
   automation: z.object({
     id: z.string(),
-    automationName: z.string().nullable(),
+    automationName: z.string(),
     postId: z.string(),
     actionType: z.enum(["DM", "COMMENT_REPLY"]),
     triggers: z.array(z.string()),
@@ -383,7 +383,7 @@ export const UpdateAutomationResponseSchema = z.object({
   success: z.literal(true),
   automation: z.object({
     id: z.string(),
-    automationName: z.string().nullable(),
+    automationName: z.string(),
     postId: z.string(),
     triggers: z.array(z.string()),
     matchType: z.enum(["CONTAINS", "EXACT", "REGEX"]),

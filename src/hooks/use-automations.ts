@@ -18,16 +18,17 @@ export type PageState = "loading" | "fresh" | "live";
 export function derivePageState(
   isLoading: boolean,
   automation: AutomationListItem | undefined,
+  isEditMode: boolean,
 ): PageState {
   if (isLoading) return "loading";
-  if (automation) return "live";
+  if (isEditMode && automation) return "live";
   return "fresh";
 }
 
 interface UseAutomationManagerProps<TFormValues extends FieldValues> {
   schema: z.ZodType<any, any, any>;
   defaultValues: DefaultValues<TFormValues>;
-  findExistingAutomation: (automation: AutomationListItem) => boolean;
+  automationId?: string; // New prop for specific automation editing
   onBuildPayload: (data: TFormValues) => Record<string, unknown> | null;
   onPopulateForm?: (
     automation: AutomationListItem,
@@ -40,7 +41,7 @@ interface UseAutomationManagerProps<TFormValues extends FieldValues> {
 export function useAutomationManager<TFormValues extends FieldValues>({
   schema,
   defaultValues,
-  findExistingAutomation,
+  automationId,
   onBuildPayload,
   onPopulateForm,
   onPayloadInvalid,
@@ -49,25 +50,20 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 }: UseAutomationManagerProps<TFormValues>) {
   const queryClient = useQueryClient();
 
-  // Fetch automations
-  const { data, isLoading } = useQuery({
-    queryKey: automationKeys.list(),
-    queryFn: () => automationService.list(),
-  });
-
-  const existingAutomation = data?.automations.find(findExistingAutomation);
-
-  // Fetch automation details if existingAutomation is found
+  // Fetch automation details if automationId is provided
   const { data: detailsData, isLoading: isDetailsLoading } = useQuery({
-    queryKey: automationKeys.detail(existingAutomation?.id as string),
-    queryFn: () => automationService.getById(existingAutomation!.id),
-    enabled: !!existingAutomation?.id,
+    queryKey: automationKeys.detail(automationId as string),
+    queryFn: () => automationService.getById(automationId!),
+    enabled: !!automationId,
   });
 
   const automationDetails = detailsData?.automation;
+
+  // pageState is "live" only if we specifically requested an ID and it loaded
   const pageState = derivePageState(
-    isLoading || isDetailsLoading,
-    existingAutomation,
+    isDetailsLoading,
+    automationDetails,
+    !!automationId,
   );
 
   // Form setup
@@ -96,7 +92,13 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     mutationKey: automationKeys.create(),
     mutationFn: (payload: Record<string, unknown>) =>
       automationService.create(payload),
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Log any warnings from the backend (duplicate keyword warnings etc.)
+      if (result.warnings && result.warnings.length > 0) {
+        result.warnings.forEach((warning: string) => {
+          console.log("[Automation Warning]:", warning);
+        });
+      }
       toast.success(successMessage);
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
     },
@@ -111,10 +113,10 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   const { mutate: stopAutomationMutation, isPending: isStopping } = useMutation(
     {
       mutationFn: () => {
-        if (!existingAutomation?.id) {
+        if (!automationDetails?.id) {
           return Promise.reject(new Error("No automation to stop."));
         }
-        return automationService.update(existingAutomation.id, {
+        return automationService.update(automationDetails.id, {
           status: "PAUSED",
         });
       },
@@ -128,10 +130,10 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 
   const { mutate: updateAutomation, isPending: isUpdating } = useMutation({
     mutationFn: (payload: Record<string, unknown>) => {
-      if (!existingAutomation?.id) {
+      if (!automationDetails?.id) {
         return Promise.reject(new Error("No automation to update."));
       }
-      return automationService.update(existingAutomation.id, payload);
+      return automationService.update(automationDetails.id, payload);
     },
     onSuccess: (result) => {
       toast.success("Automation updated successfully!");
@@ -151,10 +153,10 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   const { mutate: startAutomationMutation, isPending: isStarting } =
     useMutation({
       mutationFn: () => {
-        if (!existingAutomation?.id) {
+        if (!automationDetails?.id) {
           return Promise.reject(new Error("No automation to start."));
         }
-        return automationService.update(existingAutomation.id, {
+        return automationService.update(automationDetails.id, {
           status: "ACTIVE",
         });
       },
@@ -181,7 +183,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
       return;
     }
 
-    if (pageState === "live" && existingAutomation) {
+    if (pageState === "live" && automationDetails) {
       updateAutomation(payload);
     } else {
       createAutomation(payload);
@@ -209,7 +211,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 
   return {
     form,
-    existingAutomation,
+    existingAutomation: automationDetails,
     pageState,
     isCreating,
     isUpdating,
@@ -222,7 +224,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     handleSubmit,
     handleNameChange: (name: string) => {
       form.setValue("automationName" as any, name as any);
-      if (pageState === "live" && existingAutomation?.id) {
+      if (pageState === "live" && automationDetails?.id) {
         updateAutomation({ automationName: name });
       }
     },
