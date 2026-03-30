@@ -56,14 +56,14 @@ export default function RespondToAllDMs({
               <div className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group">
                 {story.media_type === "IMAGE" ? (
                   <Image
-                    src={story.media_url}
+                    src={story.media_url ?? ""}
                     alt={story.caption ?? "Story"}
                     fill
                     className="object-cover"
                   />
                 ) : (
                   <video
-                    src={story.media_url}
+                    src={story.media_url ?? ""}
                     autoPlay
                     muted
                     loop
