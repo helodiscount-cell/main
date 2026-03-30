@@ -103,11 +103,17 @@ const useTableRowMapper = (
   if (isAutomation) {
     const automation = data as AutomationListItem;
     return {
-      title: automation.automationName as string,
+      title: automation.automationName || "Unnamed Automation",
+      subtitle:
+        automation.post?.caption ||
+        automation.story?.caption ||
+        (automation.triggers.length > 0
+          ? `Keywords: ${automation.triggers.join(", ")}`
+          : "No keyword triggers"),
       href:
         automation.triggerType === "STORY_REPLY"
-          ? `/dash/automations/dmforstories/${automation.story?.id}`
-          : `/dash/automations/dmforcomments/${automation.post?.id}`,
+          ? `/dash/automations/dmforstories/edit/${automation.id}`
+          : `/dash/automations/dmforcomments/edit/${automation.id}`,
       icon:
         automation.post?.thumbnailUrl ||
         automation.post?.mediaUrl ||

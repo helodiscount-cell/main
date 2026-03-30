@@ -1,13 +1,12 @@
 "use client";
+
 import { use } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
 import { useAutomationManager } from "@/hooks/use-automations";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
-import { instagramKeys } from "@/keys/react-query";
 import {
   AUTOMATION_CONFIGS,
   commentsAutomationSchema,
@@ -19,26 +18,33 @@ import {
   AskToFollow,
   OpeningMessage,
   SendDm,
-} from "../../_components/widgets";
-import { FreshHeader } from "@/components/dash/automations/headers";
-import { ExistingAutomationsBlock } from "@/components/dash/automations/create/ExistingAutomationsBlock";
+} from "../../../_components/widgets";
+import { LiveHeader } from "@/components/dash/automations/headers";
 
 type Reply = { id: string; text: string };
 
 const DEFAULT_REPLY_ID = "default-reply-1";
 const DEFAULT_REPLY_TEXT = "Open your DMs, it's there!";
 
-const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
-  const { post_id } = use(params);
-  const queryClient = useQueryClient();
+const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
+  const { automation_id } = use(params);
+
   const {
     form: { control, watch },
+    existingAutomation,
     pageState,
-    isCreating,
+    isUpdating,
+    isStopping,
+    isStarting,
+    stopAutomation,
+    startAutomation,
+    isReRunning,
+    handleReRun,
     handleSubmit,
     handleNameChange,
   } = useAutomationManager<CommentsFormValues>({
     schema: commentsAutomationSchema,
+    automationId: automation_id,
     defaultValues: {
       automationName: "",
       keywords: [],
@@ -54,31 +60,13 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       dmLinks: [],
     },
     onBuildPayload: (form) => {
-      // Find the specific post to include its metadata (mediaUrl, permalink, timestamp)
-      const postsResponse = queryClient.getQueryData<any>(
-        instagramKeys.posts(),
-      );
-      const posts = postsResponse?.result?.data?.data || [];
-      const selectedPost = posts.find((p: any) => p.id === post_id);
-
+      // For edit mode, we use the post data already stored in the automation
       return {
-        triggerType: AUTOMATION_CONFIGS.COMMENT_REPLY.triggerType,
-        postId: post_id,
         automationName: form.automationName,
-        postCaption: selectedPost?.caption ?? form.keywords[0] ?? "",
-        postMediaUrl: selectedPost?.media_url ?? null,
-        postMediaType: selectedPost?.media_type ?? null,
-        postThumbnailUrl: selectedPost?.thumbnail_url ?? null,
-        postPermalink: selectedPost?.permalink ?? null,
-        postTimestamp: selectedPost?.timestamp ?? null,
         triggers: form.keywords,
-        matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
-        actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
         replyMessage: form.dmMessage,
         replyImage: form.dmImage || null,
         dmLinks: form.dmLinks || [],
-        useVariables: true,
-        // Always pass commentReplyWhenDm to ensure it clears if toggled off
         commentReplyWhenDm:
           form.publicReplyEnabled && form.publicReplies.length > 0
             ? form.publicReplies.map((r: any) => r.text)
@@ -91,23 +79,56 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         openingButtonText: form.openingButtonText || null,
       };
     },
-    successMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.successMessage,
+    onPopulateForm: (automation) => ({
+      automationName: automation.automationName || "",
+      keywords: automation.triggers || [],
+      dmMessage: automation.replyMessage || "",
+      dmImage: automation.replyImage ?? undefined,
+      dmLinks: (automation as any).dmLinks || [],
+      publicReplyEnabled:
+        !!automation.commentReplyWhenDm &&
+        automation.commentReplyWhenDm.length > 0,
+      publicReplies:
+        automation.commentReplyWhenDm &&
+        automation.commentReplyWhenDm.length > 0
+          ? (automation.commentReplyWhenDm as string[]).map((text) => ({
+              id: crypto.randomUUID(),
+              text,
+            }))
+          : [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
+      askToFollowEnabled: automation.askToFollowEnabled || false,
+      askToFollowMessage:
+        automation.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
+      askToFollowLink: automation.askToFollowLink || "",
+      openingMessageEnabled: automation.openingMessageEnabled ?? true,
+      openingMessage:
+        automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+      openingButtonText:
+        automation.openingButtonText ||
+        OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
+    }),
+    successMessage: "Automation updated successfully!",
     stopMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.stopMessage,
   });
 
   const automationName = watch("automationName");
 
-  // Creation page always uses the FreshHeader
   const headerContent = {
     loading: <HeaderSkeleton />,
-    fresh: (
-      <FreshHeader
-        isPending={isCreating}
-        automationName={automationName}
+    fresh: null,
+    live: existingAutomation ? (
+      <LiveHeader
+        automation={existingAutomation}
+        onStop={stopAutomation}
+        isStopping={isStopping}
+        onStart={startAutomation}
+        isStarting={isStarting}
+        onReRun={handleReRun}
+        isReRunning={isReRunning}
+        isUpdating={isUpdating}
         onNameChange={handleNameChange}
       />
-    ),
-    live: null, // Creation pages don't have a live state anymore
+    ) : null,
   };
 
   return (
@@ -115,22 +136,16 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       <AutomationLayout
         header={headerContent[pageState]}
         leftCol={
-          // Keywords input section for what triggers the automation via comment
-          <div className="flex flex-col gap-6">
-            <Controller
-              control={control}
-              name="keywords"
-              render={({ field }) => (
-                <AddKeywords value={field.value} onChange={field.onChange} />
-              )}
-            />
-            {/* Passive awareness block for existing automations on this post */}
-            <ExistingAutomationsBlock targetId={post_id} type="post" />
-          </div>
+          <Controller
+            control={control}
+            name="keywords"
+            render={({ field }) => (
+              <AddKeywords value={field.value} onChange={field.onChange} />
+            )}
+          />
         }
         rightCol={
           <>
-            {/* Configuration for public replies and DM content */}
             <Controller
               control={control}
               name="publicReplyEnabled"

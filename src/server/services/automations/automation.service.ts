@@ -20,8 +20,7 @@ import {
   findUserAutomations,
   updateAutomation as updateAutomationRecord,
   softDeleteAutomation,
-  findActiveAutomationsByPost,
-  findActiveAutomationsByStory,
+  findAutomationsByTargetAndKeywords,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/redis";
 import { logger } from "@/server/utils/pino";
@@ -50,28 +49,30 @@ export async function createAutomation(
   }
 
   const triggerType = input.triggerType ?? "COMMENT_ON_POST";
+  const warnings: string[] = [];
 
-  // Dedup check — only ACTIVE ones block creation
-  if (triggerType === "COMMENT_ON_POST" && input.postId) {
-    const existing = await findActiveAutomationsByPost(user.id, input.postId);
-    if (existing && existing.length > 0) {
-      throw new ApiRouteError(
-        "An automation already exists for this post. Only one automation per post is allowed.",
-        "DUPLICATE_AUTOMATION",
-        409,
-      );
-    }
-  } else if (triggerType === "STORY_REPLY" && input.story) {
-    const existing = await findActiveAutomationsByStory(
+  // Soft-warning check for duplicate keywords on the same post/story
+  const targetId =
+    triggerType === "STORY_REPLY" ? input.story?.id : input.postId;
+  const targetType = triggerType === "STORY_REPLY" ? "story" : "post";
+
+  if (targetId && input.triggers.length > 0) {
+    const overlapping = await findAutomationsByTargetAndKeywords(
       user.id,
-      input.story.id,
+      targetId,
+      targetType,
+      input.triggers,
     );
-    if (existing && existing.length > 0) {
-      throw new ApiRouteError(
-        "An automation already exists for this story. Only one automation per story is allowed.",
-        "DUPLICATE_AUTOMATION",
-        409,
-      );
+
+    if (overlapping.length > 0) {
+      overlapping.forEach((auto) => {
+        const shared = auto.triggers.filter((t) => input.triggers.includes(t));
+        if (shared.length > 0) {
+          warnings.push(
+            `Automation "${auto.automationName}" already uses these keywords on this ${targetType}: ${shared.join(", ")}`,
+          );
+        }
+      });
     }
   }
 
@@ -85,20 +86,15 @@ export async function createAutomation(
     );
   }
 
-  // Cache invalidation — use the relevant target ID
-  const cacheTargetId =
-    triggerType === "STORY_REPLY" ? input.story?.id : input.postId;
-
-  if (cacheTargetId) {
-    await invalidateAutomationCache(user.clerkId, cacheTargetId).catch(
-      (error) => {
-        logger.error(
-          { clerkId: user.clerkId, targetId: cacheTargetId, triggerType },
-          "Failed to invalidate automation cache after creation",
-          error instanceof Error ? error : new Error(String(error)),
-        );
-      },
-    );
+  // Cache invalidation
+  if (targetId) {
+    await invalidateAutomationCache(user.clerkId, targetId).catch((error) => {
+      logger.error(
+        { clerkId: user.clerkId, targetId, triggerType },
+        "Failed to invalidate automation cache after creation",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    });
   }
 
   return {
@@ -106,6 +102,7 @@ export async function createAutomation(
     triggerType: automation.triggerType,
     automationName: automation.automationName,
     createdAt: automation.createdAt,
+    warnings: warnings.length > 0 ? warnings : undefined,
   };
 }
 

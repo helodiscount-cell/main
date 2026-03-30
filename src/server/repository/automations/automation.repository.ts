@@ -289,9 +289,6 @@ export async function countAutomations(
   );
 }
 
-/**
- * Finds active automations for a specific post
- */
 export async function findActiveAutomationsByPost(
   userId: string,
   postId: string,
@@ -303,6 +300,9 @@ export async function findActiveAutomationsByPost(
           userId,
           post: { is: { id: postId } },
           status: "ACTIVE",
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       }),
     {
@@ -329,9 +329,49 @@ export async function findActiveAutomationsByStory(
           story: { is: { id: storyId } },
           status: "ACTIVE",
         },
+        orderBy: {
+          createdAt: "desc",
+        },
       }),
     {
       operation: "findActiveAutomationsByStory",
+      model: "Automation",
+      fallback: [],
+      retries: 1,
+    },
+  );
+}
+
+/**
+ * Finds automations for a specific post/story that overlap with given keywords
+ */
+export async function findAutomationsByTargetAndKeywords(
+  userId: string,
+  targetId: string,
+  type: "post" | "story",
+  keywords: string[],
+) {
+  return executeWithErrorHandling(
+    () =>
+      prisma.automation.findMany({
+        where: {
+          userId,
+          status: "ACTIVE",
+          ...(type === "post"
+            ? { post: { is: { id: targetId } } }
+            : { story: { is: { id: targetId } } }),
+          triggers: {
+            hasSome: keywords,
+          },
+        },
+        select: {
+          id: true,
+          automationName: true,
+          triggers: true,
+        },
+      }),
+    {
+      operation: "findAutomationsByTargetAndKeywords",
       model: "Automation",
       fallback: [],
       retries: 1,
