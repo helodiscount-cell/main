@@ -13,15 +13,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AutomationListItem } from "@/types/automation";
 
-export type PageState = "loading" | "fresh" | "live";
+export type PageState = "loading" | "fresh" | "live" | "not-found";
 
+/**
+ * Derives the current page state based on loading status and automation data.
+ * Ensures edit modes correctly reflect missing data states to block invalid actions.
+ */
 export function derivePageState(
   isLoading: boolean,
   automation: AutomationListItem | undefined,
   isEditMode: boolean,
 ): PageState {
   if (isLoading) return "loading";
+
+  // If we are in edit mode but have no automation, it's a missing data state
+  if (isEditMode && !automation) return "not-found";
+
+  // If edit mode and automation exists, we are live
   if (isEditMode && automation) return "live";
+
+  // Otherwise, it's a fresh creation path
   return "fresh";
 }
 
@@ -183,10 +194,21 @@ export function useAutomationManager<TFormValues extends FieldValues>({
       return;
     }
 
-    if (pageState === "live" && automationDetails) {
+    // Only update if the page is in a "live" edit state with existing data
+    if (pageState === "live") {
       updateAutomation(payload);
-    } else {
+    }
+    // Only create if we are on a clean "fresh" creation path
+    else if (pageState === "fresh") {
       createAutomation(payload);
+    }
+    // Block any other state (loading or not-found) to avoid accidental creation
+    else {
+      toast.error(
+        `Saving restricted: automation state is ${
+          pageState === "loading" ? "still loading" : "currently missing"
+        }.`,
+      );
     }
   };
 
