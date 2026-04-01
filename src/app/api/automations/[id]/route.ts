@@ -17,7 +17,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
+  return runWithErrorHandling(async ({ clerkId, instaAccountId }) => {
     const user = await findUserByClerkId(clerkId);
     if (!user) {
       throw new ApiRouteError("User not found", "NOT_FOUND", 404);
@@ -46,7 +46,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
+  return runWithErrorHandling(async ({ clerkId, instaAccountId }) => {
     const user = await findUserByClerkId(clerkId);
     if (!user) {
       throw new ApiRouteError("User not found", "NOT_FOUND", 404);
@@ -75,7 +75,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
+  return runWithErrorHandling(async ({ clerkId, instaAccountId }) => {
     const user = await findUserByClerkId(clerkId);
     if (!user) {
       throw new ApiRouteError("User not found", "NOT_FOUND", 404);

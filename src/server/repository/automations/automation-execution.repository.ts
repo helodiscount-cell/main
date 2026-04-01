@@ -109,12 +109,9 @@ export async function findExecutionsByCommentId(commentId: string) {
     },
   );
 }
-/**
- * Counts unique automation executions for a user within a date range
- * This is the basis for the "Outreach Impact" / "Automation Reach" widget
- */
+// Counts automation executions for a workspace within a date range
 export async function countExecutionsByDateRange(
-  clerkId: string,
+  instaAccountId: string,
   startDate?: Date,
   endDate?: Date,
 ): Promise<number> {
@@ -122,11 +119,7 @@ export async function countExecutionsByDateRange(
     () =>
       prisma.automationExecution.count({
         where: {
-          automation: {
-            user: {
-              clerkId: clerkId,
-            },
-          },
+          automation: { instaAccountId },
           ...(startDate || endDate
             ? {
                 executedAt: {
@@ -146,12 +139,9 @@ export async function countExecutionsByDateRange(
   );
 }
 
-/**
- * Gets executedAt dates for automation executions within a date range
- * Used for building charts and time-series data
- */
+// Gets executedAt dates for a workspace's executions within a date range
 export async function getExecutionDatesByDateRange(
-  clerkId: string,
+  instaAccountId: string,
   startDate?: Date,
   endDate?: Date,
 ) {
@@ -159,11 +149,7 @@ export async function getExecutionDatesByDateRange(
     () =>
       prisma.automationExecution.findMany({
         where: {
-          automation: {
-            user: {
-              clerkId: clerkId,
-            },
-          },
+          automation: { instaAccountId },
           ...(startDate || endDate
             ? {
                 executedAt: {
@@ -173,12 +159,8 @@ export async function getExecutionDatesByDateRange(
               }
             : {}),
         },
-        select: {
-          executedAt: true,
-        },
-        orderBy: {
-          executedAt: "asc",
-        },
+        select: { executedAt: true },
+        orderBy: { executedAt: "asc" },
       }),
     {
       operation: "getExecutionDatesByDateRange",

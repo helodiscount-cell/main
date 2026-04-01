@@ -7,8 +7,11 @@ export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
-    const { id } = await params;
-    return getFormSubmissions(clerkId, id);
-  });
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      const { id } = await params;
+      return getFormSubmissions(clerkId, instaAccountId!, id);
+    },
+    { requireWorkspace: true },
+  );
 }

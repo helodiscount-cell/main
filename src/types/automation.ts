@@ -93,7 +93,7 @@ export interface UpdateAutomationData {
 }
 
 export interface AutomationFilters {
-  userId: string;
+  instaAccountId: string;
   status?: string | string[];
   skip?: number;
   take?: number;

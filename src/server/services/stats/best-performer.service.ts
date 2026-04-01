@@ -1,4 +1,3 @@
-import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { prisma } from "@/server/db";
 
@@ -9,16 +8,15 @@ import {
 } from "@/types/stats";
 
 export async function getBestPerformerStats(
-  clerkId: string,
+  instaAccountId: string,
   rangeLabel: string,
 ): Promise<BestPerformerWidgetConfig> {
-  const user = await findUserWithInstaAccount(clerkId);
-  if (!user || !user.instaAccount) {
-    throw new ApiRouteError(
-      "User or Instagram account not found",
-      "NOT_FOUND",
-      404,
-    );
+  const account = await prisma.instaAccount.findUnique({
+    where: { id: instaAccountId, isActive: true },
+    select: { id: true },
+  });
+  if (!account) {
+    throw new ApiRouteError("Instagram account not found", "NOT_FOUND", 404);
   }
 
   // Determine date range for the widget
@@ -39,25 +37,17 @@ export async function getBestPerformerStats(
     today.getTime() - (daysParam - 1) * 24 * 60 * 60 * 1000,
   );
 
-  // Find automations triggered within the time window
+  // Find automations triggered within the time window — scoped to this workspace
   const automations = await prisma.automation.findMany({
     where: {
-      userId: user.id,
+      instaAccountId,
       triggerType: "COMMENT_ON_POST",
-      post: {
-        isSet: true,
-      },
+      post: { isSet: true },
       status: { not: "DELETED" },
-      executions: {
-        some: {
-          executedAt: { gte: startDate },
-        },
-      },
+      executions: { some: { executedAt: { gte: startDate } } },
     },
     include: {
-      executions: {
-        where: { executedAt: { gte: startDate } },
-      },
+      executions: { where: { executedAt: { gte: startDate } } },
     },
   });
 

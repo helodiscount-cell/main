@@ -8,12 +8,15 @@ import { getBestPerformerStats } from "@/server/services/stats/best-performer.se
  * Fetches the user's top three performing posts based on internal automation execution stats
  */
 export async function GET(req: NextRequest) {
-  return runWithErrorHandling(async (clerkId) => {
-    const { searchParams } = new URL(req.url);
-    const rangeLabel = searchParams.get("range") || "Last 7 days";
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      const { searchParams } = new URL(req.url);
+      const rangeLabel = searchParams.get("range") || "Last 7 days";
 
-    const stats = await getBestPerformerStats(clerkId, rangeLabel);
+      const stats = await getBestPerformerStats(instaAccountId!, rangeLabel);
 
-    return stats;
-  });
+      return stats;
+    },
+    { requireWorkspace: true },
+  );
 }

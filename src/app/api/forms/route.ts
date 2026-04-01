@@ -3,7 +3,10 @@ import { getUserForms } from "@/server/services/forms";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 
 export async function GET() {
-  return runWithErrorHandling(async (clerkId) => {
-    return getUserForms(clerkId);
-  });
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      return getUserForms(instaAccountId!);
+    },
+    { requireWorkspace: true },
+  );
 }

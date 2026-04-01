@@ -1,15 +1,19 @@
 /**
  * Instagram OAuth Disconnect Endpoint
- * Removes Instagram connection for the current user
+ * Deactivates a specific Instagram workspace
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { disconnectAccount } from "@/server/services/instagram/oauth.service";
+import { z } from "zod";
 
-export async function POST() {
+const DisconnectSchema = z.object({
+  instaAccountId: z.string().min(1),
+});
+
+export async function POST(request: NextRequest) {
   try {
-    // Gets current authenticated user
     const { userId: clerkId } = await auth();
 
     if (!clerkId) {
@@ -22,16 +26,19 @@ export async function POST() {
       );
     }
 
-    // Calls service layer
-    const result = await disconnectAccount(clerkId);
+    const body = await request.json();
+    const validation = DisconnectSchema.safeParse(body);
 
-    return NextResponse.json(
-      {
-        success: true,
-        ...result,
-      },
-      { status: 200 },
-    );
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: "instaAccountId is required" },
+        { status: 400 },
+      );
+    }
+
+    const result = await disconnectAccount(validation.data.instaAccountId);
+
+    return NextResponse.json({ success: true, ...result }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       {

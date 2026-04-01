@@ -1,70 +1,51 @@
 /**
  * Instagram Service
- * Contains business logic for Instagram-related operations
- * Uses Instagram Graph API (graph.instagram.com)
+ * Workspace-scoped — all operations require an active instaAccountId
  */
 
 import { getValidAccessToken } from "@/server/instagram/token-manager";
-import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
 import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import {
   getUserPostsFromInstagram,
   getUserStoriesFromInstagram,
 } from "@/server/instagram/user";
-
 import { getCachedPosts, getCachedStories } from "@/server/redis";
+import { prisma } from "@/server/db";
 
-/**
- * Gets Instagram posts for a user
- * @param clerkId - The Clerk ID of the user
- */
-export async function getUserPosts(clerkId: string) {
-  // Gets the user record with possible Instagram account
-  const user = await findUserWithInstaAccount(clerkId);
-
-  if (!user || !user.instaAccount) {
+// Resolves the active InstaAccount by its ID or throws if unavailable
+async function resolveActiveAccount(instaAccountId: string) {
+  const account = await prisma.instaAccount.findUnique({
+    where: { id: instaAccountId, isActive: true },
+  });
+  if (!account) {
     throw new ApiRouteError(
       ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
       "NO_INSTAGRAM_ACCOUNT",
     );
   }
-
-  const { instagramUserId } = user.instaAccount;
-
-  // Gets valid access token (refreshes if needed)
-  const accessToken = await getValidAccessToken(user.instaAccount);
-
-  // Wrap the fetch in a cache check to avoid rate limiting and speed up response
-  const result = await getCachedPosts(instagramUserId, async () => {
-    return await getUserPostsFromInstagram(instagramUserId, accessToken);
-  });
-
-  return result;
+  return account;
 }
 
-/**
- * Gets stories for a user
- * @param clerkId - The Clerk ID of the user
- */
-export async function getUserStories(clerkId: string) {
-  const user = await findUserWithInstaAccount(clerkId);
+// Gets Instagram posts for the active workspace
+export async function getUserPosts(instaAccountId: string) {
+  const account = await resolveActiveAccount(instaAccountId);
+  const accessToken = await getValidAccessToken(account);
 
-  if (!user || !user.instaAccount) {
-    throw new ApiRouteError(
-      ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT,
-      "NO_INSTAGRAM_ACCOUNT",
-    );
-  }
+  // Cache by instagramUserId to align with worker cache keys
+  return getCachedPosts(account.instagramUserId, async () =>
+    getUserPostsFromInstagram(account.instagramUserId, accessToken),
+  );
+}
 
-  const { instagramUserId } = user.instaAccount;
+// Gets Instagram stories for the active workspace
+export async function getUserStories(instaAccountId: string) {
+  const account = await resolveActiveAccount(instaAccountId);
+  const accessToken = await getValidAccessToken(account);
 
-  const accessToken = await getValidAccessToken(user.instaAccount);
-
-  // Wrap the fetch in a cache check
-  const result = await getCachedStories(instagramUserId, async () => {
-    return await getUserStoriesFromInstagram(instagramUserId, accessToken);
-  });
+  const result = await getCachedStories(account.instagramUserId, async () =>
+    getUserStoriesFromInstagram(account.instagramUserId, accessToken),
+  );
 
   return {
     stories: result.data.data,

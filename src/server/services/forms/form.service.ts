@@ -2,7 +2,7 @@ import { z } from "zod";
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
 import {
   createForm as createFormRecord,
-  findFormsByUserId,
+  findFormsByInstaAccountId,
   findFormByIdAndUserId,
   findFormBySlug,
   createFormSubmission,
@@ -46,15 +46,18 @@ const FIELD_VALIDATORS: Partial<
   upload: (v) => typeof v === "string" && v.startsWith("https://"),
 };
 
-// Creates a form for the signed-in user, returns the public slug
-export async function createForm(clerkId: string, input: CreateFormInput) {
+// Creates a form scoped to a workspace
+export async function createForm(
+  clerkId: string,
+  instaAccountId: string,
+  input: CreateFormInput,
+) {
   const user = await findUserByClerkId(clerkId);
-
   if (!user) {
     throw new ApiRouteError("User not found", "NO_USER", 404);
   }
 
-  const form = await createFormRecord(user.id, input);
+  const form = await createFormRecord(user.id, instaAccountId, input);
 
   return {
     id: form.id,
@@ -64,15 +67,9 @@ export async function createForm(clerkId: string, input: CreateFormInput) {
   };
 }
 
-// Lightweight list for the dashboard — no fields array
-export async function getUserForms(clerkId: string) {
-  const user = await findUserByClerkId(clerkId);
-
-  if (!user) {
-    throw new ApiRouteError("User not found", "NO_USER", 404);
-  }
-
-  const forms = await findFormsByUserId(user.id);
+// Lightweight list for the dashboard — workspace scoped
+export async function getUserForms(instaAccountId: string) {
+  const forms = await findFormsByInstaAccountId(instaAccountId);
 
   return forms.map((f) => ({
     id: f.id,
@@ -87,17 +84,22 @@ export async function getUserForms(clerkId: string) {
   }));
 }
 
-// Full form for the editor — ownership checked
-export async function getFormById(clerkId: string, formId: string) {
+// Full form for the editor — ownership and workspace checked
+export async function getFormById(
+  clerkId: string,
+  instaAccountId: string,
+  formId: string,
+) {
   const user = await findUserByClerkId(clerkId);
 
   if (!user) {
     throw new ApiRouteError("User not found", "NO_USER", 404);
   }
 
+  // Cross-check both user and workspace for isolation
   const form = await findFormByIdAndUserId(formId, user.id);
 
-  if (!form) {
+  if (!form || form.instaAccountId !== instaAccountId) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 
@@ -172,36 +174,43 @@ export async function submitForm(
   };
 }
 
-// Returns all submissions for a form — owner checked
-export async function getFormSubmissions(clerkId: string, formId: string) {
+// Returns all submissions for a form — owner and workspace checked
+export async function getFormSubmissions(
+  clerkId: string,
+  instaAccountId: string,
+  formId: string,
+) {
   const user = await findUserByClerkId(clerkId);
 
   if (!user) {
     throw new ApiRouteError("User not found", "NO_USER", 404);
   }
 
-  // Ownership check — returns null if formId doesn't belong to this user
+  // Ownership + workspace check
   const form = await findFormByIdAndUserId(formId, user.id);
 
-  if (!form) {
+  if (!form || form.instaAccountId !== instaAccountId) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 
   return findSubmissionsByFormId(formId);
 }
 
-// Deletes a form — ownership verified before deletion
-export async function deleteForm(clerkId: string, formId: string) {
+// Deletes a form — ownership and workspace verified
+export async function deleteForm(
+  clerkId: string,
+  instaAccountId: string,
+  formId: string,
+) {
   const user = await findUserByClerkId(clerkId);
 
   if (!user) {
     throw new ApiRouteError("User not found", "NO_USER", 404);
   }
 
-  // Ownership check — returns null if formId doesn't belong to this user
   const form = await findFormByIdAndUserId(formId, user.id);
 
-  if (!form) {
+  if (!form || form.instaAccountId !== instaAccountId) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 
@@ -214,8 +223,10 @@ export async function deleteForm(clerkId: string, formId: string) {
  * Updates an existing form owned by the user.
  * Verified ownership before applying the prisma update.
  */
+// Updates an existing form owned by the workspace user
 export async function updateForm(
   clerkId: string,
+  instaAccountId: string,
   formId: string,
   input: Partial<CreateFormInput>,
 ) {
@@ -224,9 +235,9 @@ export async function updateForm(
     throw new ApiRouteError("User not found", "NO_USER", 404);
   }
 
-  // Ownership check
+  // Ownership + workspace check
   const existingForm = await findFormByIdAndUserId(formId, user.id);
-  if (!existingForm) {
+  if (!existingForm || existingForm.instaAccountId !== instaAccountId) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 

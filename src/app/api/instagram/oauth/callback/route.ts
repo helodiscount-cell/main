@@ -41,21 +41,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(returnUrl, request.url));
     }
 
+    // Helper to construct absolute URLs that preserve the current host (ngrok support)
+    const constructUrl = (path: string) => {
+      const host =
+        request.headers.get("x-forwarded-host") ||
+        request.headers.get("host") ||
+        "localhost:3000";
+      const protocol = request.headers.get("x-forwarded-proto") || "http";
+      return new URL(path, `${protocol}://${host}`);
+    };
+
     const result = await handleOAuthCallback(code, state);
 
     // Redirects back to the return URL with success
     const successUrl = `${result.returnUrl}?connected=true`;
-    const redirectUrl = new URL(successUrl, request.url);
-
-    // Fixes protocol for localhost (dev environment)
-    if (
-      redirectUrl.hostname === "localhost" ||
-      redirectUrl.hostname === "127.0.0.1"
-    ) {
-      redirectUrl.protocol = "http:";
-    }
-
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(constructUrl(successUrl));
   } catch (err) {
     const errorInstance = err instanceof Error ? err : new Error(String(err));
     clogger.error(
@@ -74,16 +74,13 @@ export async function GET(request: NextRequest) {
       ? RedirectUrls.ERROR_ACCOUNT_CLAIMED
       : RedirectUrls.ERROR_OAUTH_FAILED;
 
-    const redirectUrl = new URL(errorUrl, request.url);
+    const host =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      "localhost:3000";
+    const protocol = request.headers.get("x-forwarded-proto") || "http";
+    const errorRedirectUrl = new URL(errorUrl, `${protocol}://${host}`);
 
-    // Fixes protocol for localhost (dev environment)
-    if (
-      redirectUrl.hostname === "localhost" ||
-      redirectUrl.hostname === "127.0.0.1"
-    ) {
-      redirectUrl.protocol = "http:";
-    }
-
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(errorRedirectUrl);
   }
 }

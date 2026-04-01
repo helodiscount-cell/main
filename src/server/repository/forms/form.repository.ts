@@ -8,9 +8,10 @@ function generateSlug(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
 }
 
-// Creates a form. Retries up to 5 times on slug collision (P2002)
+// Creates a form scoped to a workspace. Retries up to 5 times on slug collision (P2002)
 export async function createForm(
   userId: string,
+  instaAccountId: string,
   data: CreateFormInput,
 ): Promise<Form> {
   let attempts = 0;
@@ -22,6 +23,7 @@ export async function createForm(
       return await prisma.form.create({
         data: {
           userId,
+          instaAccountId,
           title: data.title,
           description: data.description ?? "",
           coverImage: data.coverImage ?? null,
@@ -43,15 +45,17 @@ export async function createForm(
   throw new Error("Failed to generate a unique slug after 5 attempts");
 }
 
-// All forms for a user, ordered newest first
-export async function findFormsByUserId(userId: string): Promise<Form[]> {
+// All forms for a workspace, ordered newest first
+export async function findFormsByInstaAccountId(
+  instaAccountId: string,
+): Promise<Form[]> {
   return executeWithErrorHandling(
     () =>
       prisma.form.findMany({
-        where: { userId },
+        where: { instaAccountId },
         orderBy: { createdAt: "desc" },
       }),
-    { operation: "findFormsByUserId", model: "Form", fallback: [] },
+    { operation: "findFormsByInstaAccountId", model: "Form", fallback: [] },
   );
 }
 

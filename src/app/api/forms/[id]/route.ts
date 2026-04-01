@@ -10,40 +10,49 @@ export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
-    const { id } = await params;
-    return getFormById(clerkId, id);
-  });
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      const { id } = await params;
+      return getFormById(clerkId, instaAccountId!, id);
+    },
+    { requireWorkspace: true },
+  );
 }
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
-    const { id } = await params;
-    const body = await request.json();
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      const { id } = await params;
+      const body = await request.json();
 
-    const validation = CreateFormSchema.safeParse(body);
+      const validation = CreateFormSchema.safeParse(body);
 
-    if (!validation.success) {
-      throw new ApiRouteError(
-        validation.error.issues[0]?.message || "Invalid input",
-        "INVALID_INPUT",
-        400,
-      );
-    }
+      if (!validation.success) {
+        throw new ApiRouteError(
+          validation.error.issues[0]?.message || "Invalid input",
+          "INVALID_INPUT",
+          400,
+        );
+      }
 
-    return updateForm(clerkId, id, validation.data);
-  });
+      return updateForm(clerkId, instaAccountId!, id, validation.data);
+    },
+    { requireWorkspace: true },
+  );
 }
 
 export async function DELETE(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  return runWithErrorHandling(async (clerkId) => {
-    const { id } = await params;
-    return deleteForm(clerkId, id);
-  });
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      const { id } = await params;
+      return deleteForm(clerkId, instaAccountId!, id);
+    },
+    { requireWorkspace: true },
+  );
 }

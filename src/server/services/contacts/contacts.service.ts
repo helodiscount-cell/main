@@ -4,27 +4,22 @@
  */
 
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
-import { getUniqueContactsForUser } from "@/server/repository/contacts/contacts.repository";
+import { getUniqueContactsForWorkspace } from "@/server/repository/contacts/contacts.repository";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 
 /**
  * Gets unique contacts for a user identified by Clerk ID with pagination
  */
+// Gets unique contacts for a specific workspace with pagination
 export async function getUserContacts(
-  clerkId: string,
+  instaAccountId: string,
   limit: number = 20,
   cursor?: string,
 ) {
-  const user = await findUserByClerkId(clerkId);
-
-  if (!user) {
-    throw new ApiRouteError(ERROR_MESSAGES.AUTH.NO_USER, "NO_USER");
-  }
-
   // Fetch paginated contacts from repository
-  const { contacts, nextCursor } = await getUniqueContactsForUser(
-    user.id,
+  const { contacts, nextCursor } = await getUniqueContactsForWorkspace(
+    instaAccountId,
     limit,
     cursor,
   );

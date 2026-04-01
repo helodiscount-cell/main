@@ -6,12 +6,9 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 
-/**
- * Fetches unique contacts (people who interacted) for a specific user
- * A contact is uniquely identified by their commentUserId or commentUsername
- */
-export async function getUniqueContactsForUser(
-  userId: string,
+// Fetches unique contacts derived from executions in a specific workspace
+export async function getUniqueContactsForWorkspace(
+  instaAccountId: string,
   limit: number = 20,
   cursor?: string,
 ) {
@@ -20,9 +17,7 @@ export async function getUniqueContactsForUser(
       // Fetch unique contacts using Prisma's distinct feature for efficient pagination
       const executions = await prisma.automationExecution.findMany({
         where: {
-          automation: {
-            userId: userId,
-          },
+          automation: { instaAccountId },
         },
         // We use distinct on commentUserId to ensure each contact appears once
         distinct: ["commentUserId"],

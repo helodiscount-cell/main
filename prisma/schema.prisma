@@ -8,22 +8,22 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId      String        @unique
-  fullName     String
-  email        String        @unique
-  imageUrl     String?
-  createdAt    DateTime      @default(now())
-  instaAccount InstaAccount?
-  automations  Automation[]
-  forms        Form[]
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId       String         @unique
+  fullName      String
+  email         String         @unique
+  imageUrl      String?
+  createdAt     DateTime       @default(now())
+  instaAccounts InstaAccount[]
+  automations   Automation[]
+  forms         Form[]
 
   @@map("users")
 }
 
 model InstaAccount {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
-  userId String @unique @db.ObjectId
+  userId String @db.ObjectId
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Instagram account details
@@ -53,7 +53,10 @@ model InstaAccount {
   webhooksEnabled        Boolean                 @default(false)
   isActive               Boolean                 @default(true)
   instaFollowerSnapshots InstaFollowerSnapshot[]
+  automations            Automation[]
+  forms                  Form[]
 
+  @@index([userId])
   @@map("instagram_accounts")
 }
 
@@ -97,9 +100,11 @@ type StoryTarget {
 }
 
 model Automation {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  userId String @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instaAccountId String       @db.ObjectId
+  instaAccount   InstaAccount @relation(fields: [instaAccountId], references: [id], onDelete: Cascade)
 
   triggerType    String       @default("COMMENT_ON_POST") // COMMENT_ON_POST | STORY_REPLY
   automationName String?
@@ -108,7 +113,7 @@ model Automation {
 
   // Trigger configuration
   triggers           String[] // Keywords/phrases to match
-  matchType          String   @default("CONTAINS") // CONTAINS, EXACT, REGE
+  matchType          String   @default("CONTAINS") // CONTAINS, EXACT, REGEX
   // Action configuration
   actionType         String // DM | COMMENT_REPLY
   replyMessage       String // Fixed DM message
@@ -137,8 +142,8 @@ model Automation {
 
   executions AutomationExecution[]
 
-  @@index([userId, status])
-  @@index([userId, triggerType, status])
+  @@index([instaAccountId, status])
+  @@index([instaAccountId, triggerType, status])
   @@map("automations")
 }
 
@@ -199,9 +204,11 @@ type FormFieldEntry {
 }
 
 model Form {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  userId String @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instaAccountId String       @db.ObjectId
+  instaAccount   InstaAccount @relation(fields: [instaAccountId], references: [id], onDelete: Cascade)
 
   title       String
   description String           @default("")
@@ -216,7 +223,7 @@ model Form {
   updatedAt   DateTime         @updatedAt
   submissions FormSubmission[]
 
-  @@index([userId, status])
+  @@index([instaAccountId, status])
   @@map("forms")
 }
 

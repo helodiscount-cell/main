@@ -34,6 +34,7 @@ interface StoryMediaPayload {
  */
 export async function createAutomation(
   userId: string,
+  instaAccountId: string,
   data: CreateAutomationInput,
 ) {
   const triggerType = data.triggerType ?? "COMMENT_ON_POST";
@@ -42,7 +43,8 @@ export async function createAutomation(
     () =>
       prisma.automation.create({
         data: {
-          userId: userId,
+          userId,
+          instaAccountId,
           automationName: data.automationName,
           triggerType,
           // Embedded post target (only for COMMENT_ON_POST)
@@ -100,8 +102,8 @@ export async function createAutomation(
   );
 
   if (result) {
-    // Invalidate the post/story automations cache so the worker pulls fresh rules
-    await invalidateAutomations(userId).catch(() => {});
+    // Invalidate workspace automation cache so the worker pulls fresh rules
+    await invalidateAutomations(instaAccountId).catch(() => {});
   }
   return result;
 }
@@ -220,13 +222,16 @@ export async function findAutomationByIdAndUserIdForUpdate(
 }
 
 /**
- * Finds automations with filters
+ * Finds automations filtered by workspace
  */
 export async function findUserAutomations(filters: AutomationFilters) {
   return executeWithErrorHandling(
     () => {
-      const where: any = {
-        userId: filters.userId,
+      const where: {
+        instaAccountId: string;
+        status?: string | { in: string[] };
+      } = {
+        instaAccountId: filters.instaAccountId,
       };
 
       if (filters.status) {
@@ -256,25 +261,25 @@ export async function findUserAutomations(filters: AutomationFilters) {
     {
       operation: "findUserAutomations",
       model: "Automation",
-      fallback: [], // Returns empty array on error
+      fallback: [],
       retries: 1,
     },
   );
 }
 
 /**
- * Counts automations with filters (for pagination)
+ * Counts automations for a workspace (for pagination)
  */
 export async function countAutomations(
   filters: AutomationFilters,
 ): Promise<number> {
   return executeWithErrorHandling(
     () => {
-      const where: any = {
-        userId: filters.userId,
+      const where: { instaAccountId: string; status?: string } = {
+        instaAccountId: filters.instaAccountId,
       };
 
-      if (filters.status) {
+      if (filters.status && !Array.isArray(filters.status)) {
         where.status = filters.status;
       }
 
@@ -283,7 +288,7 @@ export async function countAutomations(
     {
       operation: "countAutomations",
       model: "Automation",
-      fallback: 0, // Returns 0 on error
+      fallback: 0,
       retries: 1,
     },
   );
@@ -449,8 +454,8 @@ export async function softDeleteAutomation(automationId: string) {
   );
 
   if (result) {
-    // Invalidate the post/story automations cache so the worker pulls fresh rules
-    await invalidateAutomations(result.userId).catch(() => {});
+    // Invalidate workspace automation cache so the worker pulls fresh rules
+    await invalidateAutomations(result.instaAccountId).catch(() => {});
   }
   return result;
 }

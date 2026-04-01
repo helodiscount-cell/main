@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
   const cursor = searchParams.get("cursor") || undefined;
 
-  return runWithErrorHandling(async (clerkId) => {
-    return await getUserContacts(clerkId, limit, cursor);
-  });
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      return await getUserContacts(instaAccountId!, limit, cursor);
+    },
+    { requireWorkspace: true },
+  );
 }

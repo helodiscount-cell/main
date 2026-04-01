@@ -1,18 +1,24 @@
-/**
- * Instagram Cache Invalidation Endpoint
- * Clears Redis cache for posts and stories, forcing fresh data from the Instagram API.
- */
-
-import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
+import { prisma } from "@/server/db";
 import { invalidateInstagramCache } from "@/server/redis";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 export async function DELETE() {
-  return runWithErrorHandling(async (clerkId) => {
-    const user = await findUserWithInstaAccount(clerkId);
+  return runWithErrorHandling(async ({ clerkId, instaAccountId }) => {
+    if (!instaAccountId) {
+      throw new ApiRouteError(
+        "No active workspace",
+        "NO_ACTIVE_WORKSPACE",
+        400,
+      );
+    }
 
-    if (!user?.instaAccount) {
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: instaAccountId, isActive: true },
+      select: { instagramUserId: true },
+    });
+
+    if (!account) {
       throw new ApiRouteError(
         "No Instagram account linked",
         "NO_INSTAGRAM_ACCOUNT",
@@ -20,7 +26,7 @@ export async function DELETE() {
       );
     }
 
-    await invalidateInstagramCache(user.instaAccount.instagramUserId);
+    await invalidateInstagramCache(account.instagramUserId);
 
     return { success: true };
   });

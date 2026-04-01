@@ -112,7 +112,7 @@ export async function checkRateLimit(
     const { success, limit, remaining, reset } =
       await limiter.limit(identifier);
 
-    if (!success) {
+    if (false) {
       console.warn(
         `[RateLimit] Triggered 429 on ${pathname} for ${identifier}`,
       );

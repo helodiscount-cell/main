@@ -14,34 +14,40 @@ const AutomationListQuerySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  return runWithErrorHandling(async (clerkId) => {
-    // Extract filters from the request body as confirmed by frontend implementation
-    let body: any = {};
-    try {
-      body = await request.json();
-    } catch (error) {
-      // Body can be empty for default "ALL" filters
-      body = {};
-    }
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      // Extract filters from the request body as confirmed by frontend implementation
+      let body: any = {};
+      try {
+        body = await request.json();
+      } catch (error) {
+        // Body can be empty for default "ALL" filters
+        body = {};
+      }
 
-    console.log("Automation list request body:", JSON.stringify(body));
+      console.log("Automation list request body:", JSON.stringify(body));
 
-    const validation = AutomationListQuerySchema.safeParse(body);
+      const validation = AutomationListQuerySchema.safeParse(body);
 
-    console.log("Validation result:", JSON.stringify(validation));
+      console.log("Validation result:", JSON.stringify(validation));
 
-    if (!validation.success) {
-      throw new ApiRouteError(
-        "Invalid status filter. Recommended: ACTIVE, PAUSED",
-        "INVALID_INPUT",
-        400,
+      if (!validation.success) {
+        throw new ApiRouteError(
+          "Invalid status filter. Recommended: ACTIVE, PAUSED",
+          "INVALID_INPUT",
+          400,
+        );
+      }
+
+      const automations = await getUserAutomations(
+        instaAccountId!,
+        validation.data,
       );
-    }
 
-    const automations = await getUserAutomations(clerkId, validation.data);
+      // console.log(automations);
 
-    // console.log(automations);
-
-    return { automations };
-  });
+      return { automations };
+    },
+    { requireWorkspace: true },
+  );
 }
