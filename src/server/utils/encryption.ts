@@ -9,19 +9,26 @@ const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 
+const SECRET = process.env.REDIS_ENCRYPTION_SECRET;
+if (!SECRET) {
+  throw new Error(
+    "CRITICAL SECURITY ERROR: 'REDIS_ENCRYPTION_SECRET' is not defined. Secure token storage is required.",
+  );
+}
+
 /**
- * Gets the encryption key from environment variable.
+ * Derived 32-byte key from the secret.
+ * Cached at module load to avoid expensive scryptSync calls on every invocation.
+ */
+const ENCRYPTION_KEY = scryptSync(SECRET, "dm-broo-salt", 32);
+
+/**
+ * Returns the cached module-level derived key (ENCRYPTION_KEY).
+ * Derived once at module initialization from the environment secret and salt.
  * IMPORTANT: This must match whatever the worker app uses.
  */
 function getEncryptionKey(): Buffer {
-  const secret = process.env.REDIS_ENCRYPTION_SECRET;
-  if (!secret) {
-    throw new Error(
-      "CRITICAL SECURITY ERROR: 'REDIS_ENCRYPTION_SECRET' is not defined. Secure token storage is required.",
-    );
-  }
-  // We use scrypt to derive a 32-byte key from whatever secret string is provided
-  return scryptSync(secret, "dm-broo-salt", 32);
+  return ENCRYPTION_KEY;
 }
 
 /**
@@ -48,6 +55,22 @@ export function decrypt(encryptedData: string): string {
   const [ivHex, tagHex, encryptedText] = encryptedData.split(":");
   if (!ivHex || !tagHex || !encryptedText) {
     throw new Error("Invalid encrypted data format");
+  }
+
+  const HEX_REGEX = /^[0-9a-f]+$/i;
+
+  if (!HEX_REGEX.test(ivHex) || ivHex.length !== IV_LENGTH * 2) {
+    throw new Error(`Invalid IV length: expected ${IV_LENGTH * 2} hex chars`);
+  }
+  if (!HEX_REGEX.test(tagHex) || tagHex.length !== TAG_LENGTH * 2) {
+    throw new Error(
+      `Invalid auth tag length: expected ${TAG_LENGTH * 2} hex chars`,
+    );
+  }
+  if (!HEX_REGEX.test(encryptedText) || encryptedText.length % 2 !== 0) {
+    throw new Error(
+      "Invalid encrypted text: must be a valid hex string of even length",
+    );
   }
 
   const key = getEncryptionKey();

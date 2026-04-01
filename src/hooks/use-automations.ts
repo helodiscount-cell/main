@@ -88,10 +88,12 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   useEffect(() => {
     // Only reset if we have details and a population function
     // AND we haven't already reset for this specific automation ID
+    // AND the form is not dirty (to avoid clobbering user input if they started editing while loading)
     if (
       automationDetails?.id &&
       onPopulateForm &&
-      lastResetId.current !== automationDetails.id
+      lastResetId.current !== automationDetails.id &&
+      !form.formState.isDirty
     ) {
       form.reset(onPopulateForm(automationDetails) as any);
       lastResetId.current = automationDetails.id;
