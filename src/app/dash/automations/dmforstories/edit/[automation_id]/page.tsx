@@ -110,10 +110,32 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     ) : null,
   };
 
+  if (pageState === "loading") {
+    return (
+      <div className="flex flex-col h-full bg-[#09090B]">
+        <HeaderSkeleton />
+        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div className="flex gap-6 h-full animate-pulse opacity-50">
+            <div className="flex-1 bg-white/5 rounded-2xl border border-white/10" />
+            <div className="flex-[0.6] bg-white/5 rounded-2xl border border-white/10" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (pageState === "not-found") {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+        <p className="text-lg">Automation not found</p>
+      </div>
+    );
+  }
+
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
-        header={headerContent[pageState]}
+        header={headerContent[pageState as keyof typeof headerContent]}
         leftCol={
           <Controller
             control={control}

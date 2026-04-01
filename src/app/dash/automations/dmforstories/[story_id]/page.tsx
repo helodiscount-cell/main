@@ -127,7 +127,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
-        header={headerContent[pageState]}
+        header={headerContent[pageState as keyof typeof headerContent]}
         leftCol={
           <div className="flex flex-col gap-6">
             <Controller

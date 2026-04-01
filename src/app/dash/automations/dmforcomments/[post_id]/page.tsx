@@ -113,7 +113,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
-        header={headerContent[pageState]}
+        header={headerContent[pageState as keyof typeof headerContent]}
         leftCol={
           // Keywords input section for what triggers the automation via comment
           <div className="flex flex-col gap-6">
