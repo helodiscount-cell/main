@@ -22,7 +22,8 @@ import {
   storyAutomationSchema,
   StoryFormValues,
 } from "@/configs/automations";
-import { FreshHeader, LiveHeader } from "@/components/dash/automations/headers";
+import { FreshHeader } from "@/components/dash/automations/headers";
+import { ExistingAutomationsBlock } from "@/components/dash/automations/create/ExistingAutomationsBlock";
 
 type StoryMeta = {
   id: string;
@@ -49,16 +50,8 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
 
   const {
     form: { control, watch },
-    existingAutomation,
     pageState,
     isCreating,
-    isUpdating,
-    isStopping,
-    isStarting,
-    stopAutomation,
-    startAutomation,
-    isReRunning,
-    handleReRun,
     handleSubmit,
     handleNameChange,
   } = useAutomationManager<StoryFormValues>({
@@ -75,10 +68,6 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
       dmLinks: [],
     },
-    findExistingAutomation: (a) =>
-      a.triggerType === AUTOMATION_CONFIGS.STORY_REPLY.triggerType &&
-      a.story?.id === story_id &&
-      a.status !== "DELETED",
     onBuildPayload: (form) => {
       if (!currentStory || !currentStory.media_url) return null;
 
@@ -113,23 +102,6 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         commentReplyWhenDm: [],
       };
     },
-    onPopulateForm: (automation) => ({
-      automationName: automation.automationName || "",
-      keywords: automation.triggers || [],
-      dmMessage: automation.replyMessage || "",
-      dmImage: automation.replyImage ?? undefined,
-      askToFollowEnabled: automation.askToFollowEnabled || false,
-      askToFollowMessage:
-        automation.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
-      askToFollowLink: automation.askToFollowLink || "",
-      openingMessageEnabled: automation.openingMessageEnabled ?? true,
-      openingMessage:
-        automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
-      openingButtonText:
-        automation.openingButtonText ||
-        OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
-      dmLinks: (automation as any).dmLinks || [],
-    }),
     onPayloadInvalid: () => {
       toast.error("Story data not available. Please try again.");
     },
@@ -149,20 +121,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         breadcrumb={AUTOMATION_CONFIGS.STORY_REPLY.breadcrumb}
       />
     ),
-    live: existingAutomation ? (
-      <LiveHeader
-        automation={existingAutomation}
-        onStop={stopAutomation}
-        isStopping={isStopping}
-        onStart={startAutomation}
-        isStarting={isStarting}
-        onReRun={handleReRun}
-        isReRunning={isReRunning}
-        isUpdating={isUpdating}
-        onNameChange={handleNameChange}
-        breadcrumb={AUTOMATION_CONFIGS.STORY_REPLY.breadcrumb}
-      />
-    ) : null,
+    live: null, // Creation pages don't have a live state anymore
   };
 
   return (
@@ -170,13 +129,17 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       <AutomationLayout
         header={headerContent[pageState]}
         leftCol={
-          <Controller
-            control={control}
-            name="keywords"
-            render={({ field }) => (
-              <AddKeywords value={field.value} onChange={field.onChange} />
-            )}
-          />
+          <div className="flex flex-col gap-6">
+            <Controller
+              control={control}
+              name="keywords"
+              render={({ field }) => (
+                <AddKeywords value={field.value} onChange={field.onChange} />
+              )}
+            />
+            {/* Passive awareness block for existing automations on this story */}
+            <ExistingAutomationsBlock targetId={story_id} type="story" />
+          </div>
         }
         rightCol={
           <div className="space-y-4">
@@ -184,6 +147,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
               control={control}
               name="openingMessageEnabled"
               render={({ field: enabledField }) => (
+                // ...
                 <Controller
                   control={control}
                   name="openingMessage"

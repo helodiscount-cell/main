@@ -22,12 +22,11 @@ export const automationService = {
 
   create: async (
     payload: Record<string, unknown>,
-  ): Promise<{ id: string; triggerType: string }> => {
+  ): Promise<{ id: string; triggerType: string; warnings?: string[] }> => {
     const envelope = await request(
-      api.post<ApiResponse<{ id: string; triggerType: string }>>(
-        "/automations/create",
-        payload,
-      ),
+      api.post<
+        ApiResponse<{ id: string; triggerType: string; warnings?: string[] }>
+      >("/automations/create", payload),
     );
     return envelope.result;
   },

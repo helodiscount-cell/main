@@ -1,6 +1,7 @@
 import { getRedisClient } from "../client";
 import { KEYS, TTL } from "../keys";
 import { logger } from "../../utils/pino";
+import { encrypt, decrypt } from "../../utils/encryption";
 
 /**
  * Domain: Tokens
@@ -27,22 +28,34 @@ export async function getAccessTokenR(
   }
 
   try {
-    const cachedToken = await redis.get(key);
+    const cachedEncrypted = await redis.get(key);
 
     // Cache Hit
-    if (cachedToken) {
-      logger.debug({ accountId, hit: true }, "[Redis:Token] Token retrieved");
-      return cachedToken;
+    if (cachedEncrypted) {
+      try {
+        const decrypted = decrypt(cachedEncrypted);
+        logger.debug(
+          { accountId, hit: true },
+          "[Redis:Token] Token retrieved and decrypted",
+        );
+        return decrypted;
+      } catch (err: any) {
+        logger.warn(
+          { accountId, error: err.message },
+          "[Redis:Token] Failed to decrypt cached token. Falling back to DB.",
+        );
+      }
     }
 
     // Cache Miss -> Fallback -> Repopulate
     logger.debug(
       { accountId, hit: false },
-      "[Redis:Token] Token missing, fetching via fallback",
+      "[Redis:Token] Token missing or invalid, fetching via fallback",
     );
     const validToken = await dbFallback();
 
-    redis.set(key, validToken, "EX", TTL.ACCESS_TOKEN).catch((e) => {
+    const encrypted = encrypt(validToken);
+    redis.set(key, encrypted, "EX", TTL.ACCESS_TOKEN).catch((e) => {
       logger.warn(
         { accountId, error: e.message },
         "[Redis:Token] Failed to cache token after fallback",
@@ -70,15 +83,16 @@ export async function cacheAccessTokenR(
   if (!redis) return;
 
   try {
+    const encrypted = encrypt(token);
     await redis.set(
       KEYS.ACCESS_TOKEN(accountId),
-      token,
+      encrypted,
       "EX",
       TTL.ACCESS_TOKEN,
     );
     logger.info(
       { accountId },
-      "[Redis:Token] Token forcibly refreshed in cache",
+      "[Redis:Token] Token forcibly refreshed in cache (encrypted)",
     );
   } catch (error: any) {
     // Fire and forget
