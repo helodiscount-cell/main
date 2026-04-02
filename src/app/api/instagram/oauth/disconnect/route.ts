@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { disconnectAccount } from "@/server/services/instagram/oauth.service";
+import { workspaceService } from "@/server/workspace";
 import { z } from "zod";
 
 const DisconnectSchema = z.object({
@@ -36,7 +37,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await disconnectAccount(validation.data.instaAccountId);
+    const { instaAccountId } = validation.data;
+
+    // Verify ownership before disconnecting
+    const account = await workspaceService.verifyOwnership(
+      instaAccountId,
+      clerkId,
+    );
+
+    if (!account) {
+      return NextResponse.json(
+        { success: false, error: "Access denied or account not found" },
+        { status: 403 },
+      );
+    }
+
+    const result = await disconnectAccount(instaAccountId);
 
     return NextResponse.json({ success: true, ...result }, { status: 200 });
   } catch (error) {

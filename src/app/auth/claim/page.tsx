@@ -4,7 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
 import { AlertCircle, Instagram, Mail, Info, ArrowRight } from "lucide-react";
 
 /**

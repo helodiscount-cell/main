@@ -8,7 +8,6 @@ import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
 /**
  * UserSection (Server Component)
  * Displays the currently active Instagram workspace profile in the sidebar.
- * No longer relies on Clerk publicMetadata.
  */
 const UserSection = async () => {
   const { userId } = await auth();
