@@ -22,6 +22,31 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
+  // Helper to construct absolute URLs from a trusted origin (prevents Host Header Injection)
+  const constructUrl = (path: string) => {
+    const origin = process.env.APP_ORIGIN;
+
+    // Fail-fast in non-dev environments if trust anchor is missing
+    if (!origin && process.env.NODE_ENV !== "development") {
+      throw new Error(
+        "CRITICAL_SECURITY: APP_ORIGIN environment variable is missing.",
+      );
+    }
+
+    const base = origin || "http://localhost:3000";
+
+    // Strictly enforce relative paths to avoid open redirects or host injection
+    if (path.includes("://") || path.startsWith("//")) {
+      console.error(
+        `[constructUrl] BLOCKING potentially malicious path: ${path}`,
+      );
+      return new URL("/dash", base);
+    }
+
+    const safePath = `/${path.replace(/^\//, "")}`;
+    return new URL(safePath, base);
+  };
+
   try {
     // Handles user declining authorization
     if (
@@ -29,27 +54,17 @@ export async function GET(request: NextRequest) {
       error?.toLowerCase() === "access_denied_by_user" ||
       error?.toLowerCase() === "oauth_declined"
     ) {
-      // Needs to be handled on the frontend as well
-      const returnUrl = RedirectUrls.ERROR_OAUTH_DECLINED;
-      return NextResponse.redirect(new URL(returnUrl, request.url));
+      return NextResponse.redirect(
+        constructUrl(RedirectUrls.ERROR_OAUTH_DECLINED),
+      );
     }
 
     // Validates required parameters
     if (!code || !state) {
-      // Needs to be handled on the frontend as well
-      const returnUrl = RedirectUrls.ERROR_OAUTH_INVALID;
-      return NextResponse.redirect(new URL(returnUrl, request.url));
+      return NextResponse.redirect(
+        constructUrl(RedirectUrls.ERROR_OAUTH_INVALID),
+      );
     }
-
-    // Helper to construct absolute URLs that preserve the current host (ngrok support)
-    const constructUrl = (path: string) => {
-      const host =
-        request.headers.get("x-forwarded-host") ||
-        request.headers.get("host") ||
-        "localhost:3000";
-      const protocol = request.headers.get("x-forwarded-proto") || "http";
-      return new URL(path, `${protocol}://${host}`);
-    };
 
     const result = await handleOAuthCallback(code, state);
 
@@ -74,13 +89,6 @@ export async function GET(request: NextRequest) {
       ? RedirectUrls.ERROR_ACCOUNT_CLAIMED
       : RedirectUrls.ERROR_OAUTH_FAILED;
 
-    const host =
-      request.headers.get("x-forwarded-host") ||
-      request.headers.get("host") ||
-      "localhost:3000";
-    const protocol = request.headers.get("x-forwarded-proto") || "http";
-    const errorRedirectUrl = new URL(errorUrl, `${protocol}://${host}`);
-
-    return NextResponse.redirect(errorRedirectUrl);
+    return NextResponse.redirect(constructUrl(errorUrl));
   }
 }

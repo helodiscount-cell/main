@@ -6,6 +6,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { refreshAccessToken } from "@/server/services/instagram/oauth.service";
+import { workspaceService } from "@/server/workspace";
+import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 
 export async function POST() {
   try {
@@ -19,8 +21,18 @@ export async function POST() {
       );
     }
 
-    // Calls service layer
-    const result = await refreshAccessToken(clerkId);
+    // Refresh only the currently active workspace
+    const activeId = await workspaceService.getActiveId();
+
+    if (!activeId) {
+      return NextResponse.json(
+        { success: false, error: "No active workspace found to refresh" },
+        { status: 400 },
+      );
+    }
+
+    // Calls service layer with ownership verification
+    const result = await refreshAccessToken(activeId, clerkId);
 
     return NextResponse.json(
       {
@@ -30,15 +42,22 @@ export async function POST() {
       { status: 200 },
     );
   } catch (error) {
+    const isAuthError =
+      error instanceof Error &&
+      (error.message.includes(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT) ||
+        error.message.includes("Access denied") ||
+        error.message.includes("not found"));
+
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
+        error: isAuthError
+          ? "The Instagram account could not be found or access was denied. Please reconnect your account."
+          : error instanceof Error
             ? error.message
-            : "Failed to refresh token. Please try reconnecting your account.",
+            : "Failed to refresh token. Please try again.",
       },
-      { status: 500 },
+      { status: isAuthError ? 403 : 500 },
     );
   }
 }

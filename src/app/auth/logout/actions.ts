@@ -1,13 +1,13 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { workspaceService } from "@/server/workspace";
 
-// Logout only clears the server-side Clerk session context.
-// Instagram workspace connections remain intact in the DB — logout ≠ disconnect.
+// Clean up any remaining session state on logout
 export async function cleanupOnLogout(): Promise<void> {
   const { userId: clerkId } = await auth();
   if (!clerkId) return;
 
-  // Nothing to do server-side — Clerk handles session revocation on signOut().
-  // Workspaces stay active so the user lands on /choose-account on next login.
+  // Explicitly clear the workspace cookie so a new user doesn't inherit it
+  await workspaceService.clearActiveWorkspaceCookie();
 }

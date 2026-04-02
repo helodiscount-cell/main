@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 import { getFollowersGrowthStats } from "@/server/services/stats/followers-growth.service";
 
@@ -9,7 +9,7 @@ import { getFollowersGrowthStats } from "@/server/services/stats/followers-growt
  */
 export async function GET(req: NextRequest) {
   return runWithErrorHandling(
-    async ({ clerkId, instaAccountId }) => {
+    async ({ instaAccountId }) => {
       const { searchParams } = new URL(req.url);
       const rangeLabel = searchParams.get("range") || "Last 7 days";
 

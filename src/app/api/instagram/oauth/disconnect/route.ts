@@ -7,13 +7,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { disconnectAccount } from "@/server/services/instagram/oauth.service";
 import { workspaceService } from "@/server/workspace";
+import {
+  getActiveWorkspaceId,
+  clearActiveWorkspaceCookie,
+} from "@/server/utils/workspace-cookie";
 import { z } from "zod";
 
 const DisconnectSchema = z.object({
   instaAccountId: z.string().min(1),
 });
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const { userId: clerkId } = await auth();
 
@@ -52,9 +56,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await disconnectAccount(instaAccountId);
+    const result = await disconnectAccount(instaAccountId, clerkId);
 
-    return NextResponse.json({ success: true, ...result }, { status: 200 });
+    const activeId = await getActiveWorkspaceId();
+    let response = NextResponse.json(
+      { success: true, ...result },
+      { status: 200 },
+    ) as NextResponse;
+
+    // If we disconnected the currently active workspace, clear the cookie
+    if (activeId === instaAccountId) {
+      response = clearActiveWorkspaceCookie(response);
+    }
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       {

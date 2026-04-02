@@ -1,24 +1,30 @@
 import React from "react";
+import { toast } from "sonner";
 import { disconnectActiveAccount, setWorkspaceCookie } from "../actions";
+import { ConnectedAccount } from "../types";
 
-export function AccountRow({
-  account,
-  isActive,
-}: {
-  account: any;
+export interface AccountRowProps {
+  account: ConnectedAccount;
   isActive: boolean;
-}) {
+}
+
+export function AccountRow({ account, isActive }: AccountRowProps) {
   const [isPending, startTransition] = React.useTransition();
 
   const handleSwitch = () => {
     if (isActive) return;
     startTransition(async () => {
-      // 1. Update the workspace cookie on the backend
-      await setWorkspaceCookie(account.id);
+      try {
+        // 1. Update the workspace cookie on the backend
+        await setWorkspaceCookie(account.id);
 
-      // 2. Perform a hard navigation to force-purge all client-side caches
-      // (Next.js Router Cache & React Query) and ensure the new workspace data loads everywhere.
-      window.location.href = "/dash/settings?tab=accounts";
+        // 2. Perform a hard navigation to force-purge all client-side caches
+        // (Next.js Router Cache & React Query) and ensure the new workspace data loads everywhere.
+        window.location.href = "/dash/settings?tab=accounts";
+      } catch (error) {
+        console.error("[AccountRow] Failed to switch workspace:", error);
+        toast.error("Failed to switch workspace. Please try again.");
+      }
     });
   };
 
@@ -43,6 +49,7 @@ export function AccountRow({
         </button>
 
         <form action={disconnectActiveAccount}>
+          <input type="hidden" name="instaAccountId" value={account.id} />
           {/* Hide the ID if we are using the generic active disconnect action,
               but since we have the ID here, it could be improved to disconnect specific ones */}
           <button

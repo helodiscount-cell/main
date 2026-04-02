@@ -18,7 +18,9 @@ export default async function ConnectPage() {
         {/* Left: auth card */}
         <div className="bg-white rounded-[20px] shadow-sm flex flex-col items-center justify-between p-10 lg:p-12 text-center h-full min-h-[560px]">
           <div className="w-full flex flex-col items-center grow">
-            <h2 className="text-[#6A06E4] font-bold text-[18px] mb-12">Logo</h2>
+            <h2 className="text-[#6A06E4] font-bold text-[18px] mb-12">
+              DmBroo
+            </h2>
 
             {hasAccounts ? (
               // Returning user — show account list
@@ -33,15 +35,16 @@ export default async function ConnectPage() {
                 {/* Account list */}
                 <div className="w-full flex flex-col gap-3 mb-6">
                   {accounts.map((account) => {
-                    const isExpired =
-                      !account.isActive ||
+                    const isTokenExpired =
                       new Date(account.tokenExpiresAt) < new Date();
+                    const isInactive = !account.isActive;
+                    const needsReauth = isTokenExpired || isInactive;
 
                     return (
                       <form
                         key={account.id}
                         action={
-                          isExpired
+                          needsReauth
                             ? instagramOAuthAction
                             : selectWorkspace.bind(null, account.id)
                         }
@@ -51,10 +54,13 @@ export default async function ConnectPage() {
                           className="w-full h-11 flex items-center gap-3 px-4 py-3 rounded-[12px] border border-gray-100 hover:border-[#6A06E4] hover:bg-purple-50 transition-all cursor-pointer group"
                         >
                           {account.profilePictureUrl ? (
-                            <img
+                            <Image
                               src={account.profilePictureUrl}
                               alt={account.username}
-                              className="w-9 h-9 rounded-full object-cover"
+                              width={36}
+                              height={36}
+                              className="rounded-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
@@ -64,9 +70,14 @@ export default async function ConnectPage() {
                           <span className="text-sm font-medium text-[#1A1A1A]">
                             @{account.username}
                           </span>
-                          {isExpired && (
-                            <span className="ml-auto text-[10px] text-red-500 font-medium">
-                              ⚠️ Reconnect
+                          {isTokenExpired && !isInactive && (
+                            <span className="ml-auto text-[10px] text-red-500 font-medium whitespace-nowrap">
+                              ⚠️ Disconnected
+                            </span>
+                          )}
+                          {isInactive && (
+                            <span className="ml-auto text-[10px] text-slate-400 font-medium border border-slate-100 bg-slate-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                              Deactivated
                             </span>
                           )}
                         </button>
@@ -112,20 +123,27 @@ export default async function ConnectPage() {
                   </div>
                   <div className="w-[46px] h-[46px] rounded-[14px] bg-[#6A06E4] flex items-center justify-center ring-[3px] ring-white">
                     <span className="text-white font-bold text-[10px]">
-                      Logo
+                      DmBroo
                     </span>
                   </div>
                 </div>
 
                 <div className="px-4 w-full mt-6">
-                  <form action={instagramOAuthAction}>
-                    <button
-                      type="submit"
-                      className="w-full bg-[#6A06E4] hover:bg-[#5a05c4] text-white py-4 rounded-[10px] font-medium text-[15px] transition-all"
-                    >
-                      Go to Instagram
-                    </button>
-                  </form>
+                  {!atLimit && (
+                    <form action={instagramOAuthAction}>
+                      <button
+                        type="submit"
+                        className="w-full bg-[#6A06E4] hover:bg-[#5a05c4] text-white py-3 rounded-[10px] font-medium text-[15px] transition-all"
+                      >
+                        Go to Instagram
+                      </button>
+                    </form>
+                  )}
+                  {atLimit && (
+                    <div className="text-sm text-red-500 font-medium bg-red-50 p-4 rounded-lg border border-red-100">
+                      You have reached the maximum number of connected accounts.
+                    </div>
+                  )}
                 </div>
 
                 <p className="mt-5 text-[10px] text-gray-400 leading-relaxed max-w-[240px] mx-auto">
@@ -149,7 +167,7 @@ export default async function ConnectPage() {
         </div>
 
         {/* Right: illustration */}
-        <div className="hidden md:block w-full h-full relative rounded-[20px] overflow-hidden shadow-sm">
+        <div className="hidden md:block w-full h-full relative rounded-[20px] overflow-hidden">
           <Image
             src={connectImage}
             alt="Grow your audience"

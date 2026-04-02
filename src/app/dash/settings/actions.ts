@@ -5,8 +5,12 @@ import { workspaceService } from "@/server/workspace";
 /**
  * Disconnects the currently active Instagram workspace
  */
-export async function disconnectActiveAccount(): Promise<void> {
-  await workspaceService.disconnectActive();
+export async function disconnectActiveAccount(
+  formData: FormData,
+): Promise<void> {
+  const accountId = formData.get("instaAccountId") as string;
+  if (!accountId) throw new Error("No account ID provided for disconnection");
+  await workspaceService.disconnect(accountId);
 }
 
 /**

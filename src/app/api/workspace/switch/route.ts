@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { prisma } from "@/server/db";
-import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
+import { setActiveWorkspaceCookie } from "@/server/utils/workspace-cookie";
 
 const SwitchSchema = z.object({
   instaAccountId: z.string().min(1),
@@ -23,7 +23,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.json();
+  let body: any;
+  try {
+    body = await request.json();
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Malformed JSON" },
+      { status: 400 },
+    );
+  }
+
   const validation = SwitchSchema.safeParse(body);
 
   if (!validation.success) {
@@ -52,13 +61,6 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.json({ success: true });
 
-  response.cookies.set(WORKSPACE_CONFIG.ACTIVE_WORKSPACE_COOKIE, account.id, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: WORKSPACE_CONFIG.COOKIE_MAX_AGE_SECONDS,
-    path: "/",
-  });
-
-  return response;
+  // Use the shared helper to ensure security attributes are consistent
+  return setActiveWorkspaceCookie(response, account.id);
 }

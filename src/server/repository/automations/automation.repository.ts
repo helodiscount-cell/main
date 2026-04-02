@@ -275,12 +275,19 @@ export async function countAutomations(
 ): Promise<number> {
   return executeWithErrorHandling(
     () => {
-      const where: { instaAccountId: string; status?: string } = {
+      const where: {
+        instaAccountId: string;
+        status?: string | { in: string[] };
+      } = {
         instaAccountId: filters.instaAccountId,
       };
 
-      if (filters.status && !Array.isArray(filters.status)) {
-        where.status = filters.status;
+      if (filters.status) {
+        if (Array.isArray(filters.status)) {
+          where.status = { in: filters.status };
+        } else {
+          where.status = filters.status;
+        }
       }
 
       return prisma.automation.count({ where });
@@ -406,7 +413,7 @@ export async function updateAutomation(
 
   if (result) {
     // Invalidate the post/story automations cache so the worker pulls fresh rules
-    await invalidateAutomations(result.userId).catch(() => {});
+    await invalidateAutomations(result.instaAccountId).catch(() => {});
   }
   return result;
 }

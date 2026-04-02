@@ -4,10 +4,11 @@ import { NextResponse } from "next/server";
 import { logger } from "../../utils/pino";
 import { ApiRouteError } from "./classes";
 import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
+import { workspaceService } from "@/server/workspace";
 import { ErrorResponse } from "@/types/error";
 
 type RouteContext = {
-  clerkId: string;
+  clerkId: string | null;
   instaAccountId: string | null;
 };
 
@@ -30,14 +31,37 @@ export async function runWithErrorHandling<T>(
   try {
     const { userId: clerkId } = await auth();
 
-    if (requireAuth && !clerkId) {
+    // Consistency: Enforce authentication if explicitly required OR if workspace validation is needed
+    if ((requireAuth || requireWorkspace) && !clerkId) {
       throw new ApiRouteError("You need to be signed in", "UNAUTHORIZED", 401);
     }
 
-    // Read active workspace cookie so every handler has workspace context
+    // Read active workspace cookie
     const cookieStore = await cookies();
-    const instaAccountId =
+    const cookieId =
       cookieStore.get(WORKSPACE_CONFIG.ACTIVE_WORKSPACE_COOKIE)?.value ?? null;
+
+    let instaAccountId: string | null = null;
+
+    // Validate ownership before trusting the cookie value
+    if (cookieId && clerkId) {
+      const workspace = await workspaceService.verifyOwnership(
+        cookieId,
+        clerkId,
+      );
+      if (workspace) {
+        instaAccountId = cookieId;
+      } else {
+        // If cookie is present but invalid/unauthorized
+        if (requireWorkspace) {
+          throw new ApiRouteError(
+            "Access denied to this workspace.",
+            "UNAUTHORIZED_WORKSPACE",
+            403,
+          );
+        }
+      }
+    }
 
     if (requireWorkspace && !instaAccountId) {
       throw new ApiRouteError(
@@ -47,7 +71,7 @@ export async function runWithErrorHandling<T>(
       );
     }
 
-    const result = await handler({ clerkId: clerkId!, instaAccountId });
+    const result = await handler({ clerkId, instaAccountId });
 
     return NextResponse.json(
       {

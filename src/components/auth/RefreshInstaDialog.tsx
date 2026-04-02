@@ -44,7 +44,7 @@ export function RefreshInstaDialog() {
           <RefreshCw className="w-8 h-8 text-[#94A3B8]" />
 
           <div className="w-[72px] h-[72px] rounded-2xl bg-[#6A06E4] flex items-center justify-center">
-            <span className="text-white font-semibold text-xs">Logo</span>
+            <span className="text-white font-semibold text-xs">DmBroo</span>
           </div>
         </div>
 

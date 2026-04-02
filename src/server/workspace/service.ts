@@ -1,10 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/server/db";
 import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
 import { CONNECT_ROUTE } from "@/configs/routes.config";
 import { disconnectAccount } from "@/server/services/instagram/oauth.service";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 /**
  * Workspace Service
@@ -40,8 +41,7 @@ export const workspaceService = {
   async getVerifiedActiveWorkspace() {
     const { userId } = await auth();
     if (!userId) {
-      // Middleware should handle this, but for extra safety in services:
-      return null;
+      redirect("/auth");
     }
 
     const activeId = await this.getActiveId();
@@ -51,6 +51,7 @@ export const workspaceService = {
       select: {
         instaAccounts: {
           where: { isActive: true },
+          orderBy: { connectedAt: "asc" },
           select: { id: true, username: true, profilePictureUrl: true },
         },
       },
@@ -76,7 +77,15 @@ export const workspaceService = {
 
     // 3. Stale or Missing Session: Auto-initialize to first valid account
     const defaultAccount = activeAccounts[0];
-    redirect(`/auth/callback/workspace?id=${defaultAccount.id}&next=/dash`);
+
+    // Preserve the deep link for redirection after workspace callback
+    const headerStore = await headers();
+    const currentUrl = headerStore.get("x-url") || "/dash";
+    const encodedNext = encodeURIComponent(currentUrl);
+
+    redirect(
+      `/auth/callback/workspace?id=${defaultAccount.id}&next=${encodedNext}`,
+    );
   },
 
   /**
@@ -105,28 +114,46 @@ export const workspaceService = {
   },
 
   /**
+   * Resets the active workspace by clearing its cookie
+   */
+  async clearActiveWorkspaceCookie() {
+    const cookieStore = await cookies();
+    cookieStore.delete(WORKSPACE_CONFIG.ACTIVE_WORKSPACE_COOKIE);
+  },
+
+  /**
    * Performs soft-disconnection of a workspace
    */
-  async disconnectActive() {
+  async disconnect(id: string) {
     const { userId } = await auth();
     if (!userId) redirect("/auth");
 
-    const activeId = await this.getActiveId();
-    if (!activeId) redirect(CONNECT_ROUTE);
-
-    const account = await this.verifyOwnership(activeId, userId);
+    const account = await this.verifyOwnership(id, userId);
     if (!account) {
-      const cookieStore = await cookies();
+      throw new ApiRouteError(
+        "Account not found or access denied.",
+        "NOT_FOUND",
+        404,
+      );
+    }
+
+    // Database update must succeed before we clear any local session state
+    await disconnectAccount(id, userId);
+
+    // Refresh the router cache and layouts before we potentially redirect
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/", "layout");
+
+    const cookieStore = await cookies();
+    const activeId = cookieStore.get(
+      WORKSPACE_CONFIG.ACTIVE_WORKSPACE_COOKIE,
+    )?.value;
+
+    // If we disconnected the currently active workspace, clear the cookie and redirect
+    if (activeId === id) {
       cookieStore.delete(WORKSPACE_CONFIG.ACTIVE_WORKSPACE_COOKIE);
       redirect(CONNECT_ROUTE);
     }
-
-    await disconnectAccount(activeId);
-
-    const cookieStore = await cookies();
-    cookieStore.delete(WORKSPACE_CONFIG.ACTIVE_WORKSPACE_COOKIE);
-
-    redirect(CONNECT_ROUTE);
   },
 
   /**

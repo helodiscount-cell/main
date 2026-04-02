@@ -31,17 +31,23 @@ const UserSection = async () => {
   }
 
   // 2. Fetch the specific account details for the sidebar
-  const account = await prisma.instaAccount.findFirst({
-    where: {
-      id: activeIgId,
-      user: { clerkId: userId },
-      isActive: true,
-    },
-    select: {
-      username: true,
-      profilePictureUrl: true,
-    },
-  });
+  let account;
+  try {
+    account = await prisma.instaAccount.findFirst({
+      where: {
+        id: activeIgId,
+        user: { clerkId: userId },
+        isActive: true,
+      },
+      select: {
+        username: true,
+        profilePictureUrl: true,
+      },
+    });
+  } catch (error) {
+    console.error("[UserSection] Database fetch failed:", error);
+    account = null;
+  }
 
   if (!account) {
     // If the account doesn't exist, show placeholders or "Select Account"

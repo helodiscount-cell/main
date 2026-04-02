@@ -13,6 +13,7 @@ import {
   ERROR_MESSAGES,
   validateOAuthConfig,
 } from "@/server/config/instagram.config";
+import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
 import {
   subscribeToWebhooks,
   markWebhooksEnabled,
@@ -151,6 +152,21 @@ export async function handleOAuthCallback(code: string, state: string) {
           );
         }
 
+        // Limit enforcement: Verify count before creating a new entry
+        if (!existingAccount) {
+          const accountCount = await tx.instaAccount.count({
+            where: { userId: user.id },
+          });
+
+          if (accountCount >= WORKSPACE_CONFIG.MAX_ACCOUNTS) {
+            throw new ApiRouteError(
+              `You have reached the maximum of ${WORKSPACE_CONFIG.MAX_ACCOUNTS} connected accounts.`,
+              "ACCOUNT_LIMIT_REACHED",
+              403,
+            );
+          }
+        }
+
         const accountPayload = {
           instagramUserId: instagramUserIdString,
           username: instagramUser.username,
@@ -244,10 +260,13 @@ export async function handleOAuthCallback(code: string, state: string) {
   }
 }
 
-// Refreshes the access token for a specific Instagram workspace
-export async function refreshAccessToken(instaAccountId: string) {
-  const account = await prisma.instaAccount.findUnique({
-    where: { id: instaAccountId, isActive: true },
+// Refreshes the access token for a specific Instagram workspace — now verified by clerkId
+export async function refreshAccessToken(
+  instaAccountId: string,
+  clerkId: string,
+) {
+  const account = await prisma.instaAccount.findFirst({
+    where: { id: instaAccountId, user: { clerkId }, isActive: true },
   });
 
   if (!account) {
@@ -265,19 +284,28 @@ export async function refreshAccessToken(instaAccountId: string) {
   };
 }
 
-// Deactivates a specific Instagram workspace — does not touch Clerk session
-export async function disconnectAccount(instaAccountId: string) {
-  const account = await prisma.instaAccount.findUnique({
-    where: { id: instaAccountId },
+// Deactivates a specific Instagram workspace — verified by clerkId
+export async function disconnectAccount(
+  instaAccountId: string,
+  clerkId: string,
+) {
+  const account = await prisma.instaAccount.findFirst({
+    where: { id: instaAccountId, user: { clerkId } },
     select: {
       id: true,
       userId: true,
       instagramUserId: true,
-      user: { select: { id: true } },
+      user: { select: { id: true, clerkId: true } },
     },
   });
 
-  if (!account) return { message: "Account not found" };
+  if (!account) {
+    throw new ApiRouteError(
+      "Instagram account not found or access denied",
+      "NOT_FOUND",
+      404,
+    );
+  }
 
   // Flush Redis cache for this workspace immediately
   await invalidateUser(account.instagramUserId, account.user.id, account.id);

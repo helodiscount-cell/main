@@ -11,8 +11,8 @@ export interface ConnectedAccount {
   profilePictureUrl?: string | null;
   followersCount: number;
   accountType?: string | null;
-  tokenExpiresAt: Date;
-  connectedAt: Date;
+  tokenExpiresAt: Date | string;
+  connectedAt: Date | string;
   isActive: boolean;
 }
 

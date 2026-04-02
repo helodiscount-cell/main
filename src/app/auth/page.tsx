@@ -10,10 +10,10 @@ const AuthPage = async () => {
         {/* Left Side - Auth Form */}
         <div className="bg-white rounded-3xl p-12 w-[50%] flex flex-col justify-center">
           <div className="max-w-md mx-auto w-full space-y-8">
-            {/* Logo */}
+            {/* DmBroo */}
             <div className="text-center animation-delay-100 animate-fade-in">
               <h1 className="text-4xl font-bold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Logo
+                DmBroo
               </h1>
             </div>
 

@@ -24,7 +24,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // 1. API routes: rate limit, CSRF, and size checks
   if (isApiRoute(pathname)) {
-    const rateLimitResponse = await checkRateLimit(request, userId, undefined);
+    const rateLimitResponse = await checkRateLimit(request, userId);
     if (rateLimitResponse) return rateLimitResponse;
 
     if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
@@ -57,7 +57,6 @@ export default clerkMiddleware(async (auth, request) => {
 
   // 3. Auth enforcement
   if (!userId) {
-    if (isPublicRoute(pathname)) return NextResponse.next();
     return NextResponse.redirect(new URL(AUTH_ROUTE, request.url));
   }
 
@@ -69,7 +68,16 @@ export default clerkMiddleware(async (auth, request) => {
   // Note: Workspace enforcement (no-account redirect) is handled in the
   // Root Dashboard Layout to avoid Edge Runtime Prisma issues.
 
-  return NextResponse.next();
+  // Construct headers for deep linking support in server components
+  const requestHeaders = new Headers(request.headers);
+  const currentUrl = `${pathname}${request.nextUrl.search}`;
+  requestHeaders.set("x-url", currentUrl);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 });
 
 export const config = {

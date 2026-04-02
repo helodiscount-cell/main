@@ -9,8 +9,11 @@ import { cn } from "@/server/utils";
 export function SettingsTabNav() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab =
-    (searchParams.get("tab") as SettingsTab) || SETTINGS_CONFIG.DEFAULT_TAB;
+  const rawTab = searchParams.get("tab");
+  const isValidTab = SETTINGS_CONFIG.TABS.some((t) => t.id === rawTab);
+  const activeTab = isValidTab
+    ? (rawTab as SettingsTab)
+    : SETTINGS_CONFIG.DEFAULT_TAB;
 
   const handleTabChange = (tab: SettingsTab) => {
     const params = new URLSearchParams(searchParams);
@@ -20,8 +23,8 @@ export function SettingsTabNav() {
 
   return (
     <div className="flex items-center gap-6">
-      <h1 className="text-2xl font-bold text-[#1A202C] mr-8">Setting</h1>
-      <div className="flex items-center gap-2">
+      <h1 className="text-2xl font-bold text-[#1A202C] mr-8">Settings</h1>
+      <div className="flex items-center gap-2" role="tablist">
         {SETTINGS_CONFIG.TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const { Icon } = tab;
@@ -29,6 +32,11 @@ export function SettingsTabNav() {
           return (
             <button
               key={tab.id}
+              id={`tab-${tab.id}`}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`panel-${tab.id}`}
+              tabIndex={isActive ? 0 : -1}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
                 "flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-200 font-medium",

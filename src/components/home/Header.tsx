@@ -57,39 +57,3 @@ export const LandingHeader = () => {
     </header>
   );
 };
-
-// const Logo = () => (
-//   <Link
-//     href="/"
-//     className="font-semibold text-lg text-white hover:opacity-80 transition-opacity"
-//   >
-//     Dmbroo
-//   </Link>
-// );
-
-// const AuthButtons = () => (
-//   <div className="flex items-center gap-3 border-gray-500 rounded-full p-1">
-//     <SignedOut>
-//       <Link
-//         href="/auth/signin"
-//         className="px-4 py-2 text-sm text-white/80 hover:text-white transition-colors"
-//       >
-//         Log in
-//       </Link>
-//       <Link
-//         href="/"
-//         className="px-5 py-2 text-sm font-medium text-white bg-[#6A06E4] hover:from-fuchsia-700 hover:to-purple-700 rounded-full transition-all shadow-lg shadow-fuchsia-500/25"
-//       >
-//         Start for free
-//       </Link>
-//     </SignedOut>
-//     <SignedIn>
-//       <Link
-//         href="/dash"
-//         className="px-5 py-2 text-sm font-medium text-white bg-[#6A06E4] rounded-full transition-all"
-//       >
-//         Dashboard
-//       </Link>
-//     </SignedIn>
-//   </div>
-// );

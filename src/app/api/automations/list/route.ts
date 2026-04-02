@@ -15,21 +15,24 @@ const AutomationListQuerySchema = z.object({
 
 export async function POST(request: NextRequest) {
   return runWithErrorHandling(
-    async ({ clerkId, instaAccountId }) => {
+    async ({ instaAccountId }) => {
       // Extract filters from the request body as confirmed by frontend implementation
       let body: any = {};
-      try {
-        body = await request.json();
-      } catch (error) {
-        // Body can be empty for default "ALL" filters
-        body = {};
+      const rawText = await request.text();
+
+      if (rawText.trim()) {
+        try {
+          body = JSON.parse(rawText);
+        } catch (error) {
+          throw new ApiRouteError(
+            "Malformed JSON in request body",
+            "MALFORMED_JSON",
+            400,
+          );
+        }
       }
 
-      console.log("Automation list request body:", JSON.stringify(body));
-
       const validation = AutomationListQuerySchema.safeParse(body);
-
-      console.log("Validation result:", JSON.stringify(validation));
 
       if (!validation.success) {
         throw new ApiRouteError(
@@ -39,12 +42,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (!instaAccountId) {
+        throw new ApiRouteError(
+          "No active workspace session found",
+          "NO_ACTIVE_WORKSPACE",
+          400,
+        );
+      }
+
       const automations = await getUserAutomations(
-        instaAccountId!,
+        instaAccountId,
         validation.data,
       );
-
-      // console.log(automations);
 
       return { automations };
     },
