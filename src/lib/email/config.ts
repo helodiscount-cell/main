@@ -2,6 +2,24 @@
  * Centralized email configuration for constants, visual identity, and environment vars.
  */
 
+const isProduction = process.env.NODE_ENV === "production";
+const appUrl = process.env.APP_URL;
+const fromEmail = process.env.RESEND_FROM_EMAIL;
+
+// Enforce required environment variables in production to prevent silent failures
+if (isProduction) {
+  if (!appUrl) {
+    throw new Error(
+      "PRODUCTION_CONFIG_ERROR: 'APP_URL' must be defined in production environment.",
+    );
+  }
+  if (!fromEmail) {
+    throw new Error(
+      "PRODUCTION_CONFIG_ERROR: 'RESEND_FROM_EMAIL' must be defined in production environment.",
+    );
+  }
+}
+
 // Define branding colors and URLs to keep templates clean and consistent
 export const EMAIL_CONFIG = {
   // Use professional colors for consistent branding across templates
@@ -20,8 +38,8 @@ export const EMAIL_CONFIG = {
   // Application metadata for email context
   APP: {
     NAME: "Dmbroo",
-    URL: process.env.APP_URL || "http://localhost:3000",
-    FROM: process.env.RESEND_FROM_EMAIL || "Dmbroo <onboarding@dmbroo.com>",
+    URL: appUrl || "http://localhost:3000",
+    FROM: fromEmail || "Dmbroo <onboarding@dmbroo.com>",
   },
 
   // Metadata for emails (timeouts, limits etc)

@@ -1,15 +1,25 @@
 /**
  * API route for triggering email notifications via POST requests.
  */
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
-import { EmailPayload } from "@/lib/email/types";
 
 // Handle POST requests to /api/email with structured JSON payloads
 export async function POST(req: Request) {
+  let body: any = "unparsed";
   try {
-    // Validate that the request body is valid JSON matching EmailPayload
-    const body: EmailPayload = await req.json();
+    // 1. Enforce Authentication
+    const { userId: clerkId } = await auth();
+    if (!clerkId) {
+      return NextResponse.json(
+        { error: "UNAUTHORIZED: Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    // 2. Parse and Validate Payload
+    body = await req.json();
 
     // Basic structural validation to catch common mistakes early
     if (!body?.to || !body?.type || !body?.name) {
@@ -19,20 +29,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // Call the isolated email service to render and send
+    // 3. Trigger Email Send
     await sendEmail(body);
 
-    // Return success response on successful delivery
     return NextResponse.json({
       success: true,
       message: "Email sent successfully",
     });
   } catch (err) {
-    // Standardized error reporting with context for the caller
     const message =
       err instanceof Error ? err.message : "Internal Server Error";
+
+    // Improved logging: Ensure actual payload is logged if parsing succeeded
     console.error(
-      `[API_EMAIL_ERROR] Payload: ${req.body?.toString()}, Error: ${message}`,
+      `[API_EMAIL_ERROR] Payload: ${JSON.stringify(body)}, Error: ${message}`,
     );
 
     return NextResponse.json(

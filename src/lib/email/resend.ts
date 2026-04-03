@@ -3,16 +3,24 @@
  */
 import { Resend } from "resend";
 
-// Ensure the API key exists before attempting to initialize the client
-const resendApiKey = process.env.RESEND_API_KEY;
+let cachedClient: Resend | null = null;
 
-if (!resendApiKey) {
-  // Use a typed error message for debugging issues with environment configuration
-  throw new Error(
-    "EMAIL_SERVICE_INIT_FAILURE: Environment variable 'RESEND_API_KEY' is missing. " +
-      "Please ensure it is set in your .env.local file.",
-  );
+/**
+ * Lazy-initializes and returns a cached Resend client.
+ * Validates the API key only at call-time to prevent module evaluation errors.
+ */
+export function getResendClient(): Resend {
+  if (cachedClient) return cachedClient;
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+
+  if (!resendApiKey) {
+    throw new Error(
+      "EMAIL_SERVICE_INIT_FAILURE: Environment variable 'RESEND_API_KEY' is missing. " +
+        "Please ensure it is set in your .env.local file.",
+    );
+  }
+
+  cachedClient = new Resend(resendApiKey);
+  return cachedClient;
 }
-
-// Export the singleton instance for use throughout the application
-export const resend = new Resend(resendApiKey);
