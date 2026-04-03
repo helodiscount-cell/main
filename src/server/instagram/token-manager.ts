@@ -35,16 +35,11 @@ export async function refreshAccessToken(
     access_token: account.accessToken,
   });
 
-  const url = buildGraphApiUrl(
-    GRAPH_API.ENDPOINTS.REFRESH_TOKEN(account.accessToken),
-  );
+  const url = new URL(INSTAGRAM_OAUTH.REFRESH_URL);
 
   params.forEach((value, key) => {
     url.searchParams.set(key, value);
   });
-
-  const { fetchWithTimeout } =
-    await import("@/server/utils/fetch-with-timeout");
 
   try {
     const result = await fetchWithTimeout<RefreshTokenResponse>(
@@ -175,7 +170,7 @@ export async function getLongLivedToken(
     access_token: shortLivedToken,
   });
 
-  const url = buildGraphApiUrl("access_token");
+  const url = new URL(INSTAGRAM_OAUTH.LONG_LIVED_TOKEN_URL);
 
   params.forEach((value, key) => {
     url.searchParams.set(key, value);
