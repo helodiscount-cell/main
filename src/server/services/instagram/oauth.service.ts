@@ -3,6 +3,7 @@
  * Business logic for Instagram OAuth flow — no Clerk metadata dependency
  */
 
+import { sendEmail } from "@/lib/email";
 import {
   generateAuthorizationUrl,
   fetchInstagramUserData,
@@ -19,6 +20,7 @@ import {
   markWebhooksEnabled,
 } from "@/server/instagram/webhook/registration";
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
+import { clogger } from "@/server/utils/consola";
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
 import { deactivateInstaAccount } from "@/server/repository/instagram/insta-account.repository";
 import { validateSecureState } from "@/server/instagram/oauth/oauth-state";
@@ -120,10 +122,11 @@ export async function handleOAuthCallback(code: string, state: string) {
     const { executeTransaction } =
       await import("@/server/repository/repository-utils");
 
-    const { instaAccount } = await executeTransaction(
+    const { user, instaAccount, isFirstAccount } = await executeTransaction(
       async (tx) => {
         // Finds or creates the platform user record
         let user = await tx.user.findUnique({ where: { clerkId } });
+        let isFirstAccount = false;
 
         if (!user) {
           user = await tx.user.create({
@@ -157,6 +160,10 @@ export async function handleOAuthCallback(code: string, state: string) {
           const accountCount = await tx.instaAccount.count({
             where: { userId: user.id },
           });
+
+          if (accountCount === 0) {
+            isFirstAccount = true;
+          }
 
           if (accountCount >= WORKSPACE_CONFIG.MAX_ACCOUNTS) {
             throw new ApiRouteError(
@@ -227,7 +234,7 @@ export async function handleOAuthCallback(code: string, state: string) {
           });
         }
 
-        return { user, instaAccount };
+        return { user, instaAccount, isFirstAccount };
       },
       { operation: "handleOAuthCallback", models: ["User", "InstaAccount"] },
     );
@@ -248,6 +255,20 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Populate Redis so the worker instantly knows this workspace is live
     await setUserConnected(String(instagramUser.id));
     await cacheAccessTokenR(instaAccount.id, longLivedToken.access_token);
+
+    // Trigger onboarding email only for the first connected account
+    if (isFirstAccount && user.email) {
+      // Use fire-and-forget approach or awaited call depending on preference.
+      // Given it's production-ready, we await but catch errors to prevent killing the callback redirect.
+      sendEmail({
+        type: "onboarding",
+        to: user.email,
+        name: currentClerkUser.firstName || user.fullName || "there",
+      }).catch((err) => {
+        // Log failure but don't disrupt the user's flow
+        clogger.error("Failed to send onboarding email:", err.message);
+      });
+    }
 
     return {
       returnUrl: returnUrl || "/dash",
