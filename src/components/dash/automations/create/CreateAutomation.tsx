@@ -8,12 +8,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon, RefreshCwIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { instagramKeys } from "@/keys/react-query";
-import { api, request } from "@/api/client";
-import { toast } from "sonner";
 import {
   DMForComments,
   DmForStories,
@@ -21,26 +17,7 @@ import {
 } from "@/components/dash/automations/create";
 
 export default function CreateAutomationDialog({ title }: { title: string }) {
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Clears Redis cache then invalidates React Query so the next render fetches fresh data
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await request(api.delete("/instagram/cache"));
-      await queryClient.invalidateQueries({ queryKey: instagramKeys.posts() });
-      await queryClient.invalidateQueries({
-        queryKey: instagramKeys.stories(),
-      });
-      toast.success("Feed refreshed!");
-    } catch {
-      toast.error("Failed to refresh. Try again.");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -48,7 +25,6 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
         return <DMForComments onBack={() => setActiveTab(null)} />;
       case "dm-from-stories":
         return <DmForStories onSetActiveTab={setActiveTab} />;
-      case "respond-to-all-dms":
       default:
         return <TabSelector setActiveTab={setActiveTab} />;
     }

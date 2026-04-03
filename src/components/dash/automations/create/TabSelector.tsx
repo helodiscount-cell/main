@@ -14,6 +14,12 @@ const tabs = [
     description: "Automate responses when people interact with your stories",
     icon: <Instagram className="w-5 h-5" />,
   },
+  {
+    id: "respond-to-all-dms",
+    title: "Respond to All DMs",
+    description: "Automate responses when people interact with your stories",
+    icon: <MessageSquare className="w-5 h-5" />,
+  },
 ];
 
 export default function TabSelector({

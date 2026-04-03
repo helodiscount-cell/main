@@ -1,4 +1,4 @@
-import { Link as LinkIcon, Edit2, SmilePlus } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 import { AutomationInput } from "./AutomationInput";
 
 interface AskToFollowProps {
@@ -15,8 +15,6 @@ const AskToFollow = ({
   onEnabledChange,
   message,
   onMessageChange,
-  link,
-  onLinkChange,
 }: AskToFollowProps) => {
   const maxChars = 1000;
 
