@@ -50,10 +50,18 @@ export async function createAutomation(
   const triggerType = input.triggerType ?? "COMMENT_ON_POST";
   const warnings: string[] = [];
 
-  // Soft-warning: flag duplicate keywords on the same post/story
   const targetId =
-    triggerType === "STORY_REPLY" ? input.story?.id : input.postId;
-  const targetType = triggerType === "STORY_REPLY" ? "story" : "post";
+    triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : triggerType === "STORY_REPLY"
+        ? input.story?.id
+        : input.postId;
+  const targetType =
+    triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : triggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
 
   if (targetId && input.triggers.length > 0) {
     const overlapping = await findAutomationsByTargetAndKeywords(
@@ -88,15 +96,26 @@ export async function createAutomation(
   }
 
   // Invalidate workspace automation cache
-  if (targetId) {
-    await invalidateAutomationCache(instaAccountId, targetId).catch((error) => {
-      logger.error(
-        { instaAccountId, targetId, triggerType },
-        "Failed to invalidate automation cache after creation",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    });
-  }
+  const invalidateType =
+    triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : triggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
+  const finalTargetId = targetId || "account";
+
+  await invalidateAutomationCache(
+    instaAccountId,
+    finalTargetId,
+    invalidateType,
+    automation.id,
+  ).catch((error) => {
+    logger.error(
+      { instaAccountId, targetId: finalTargetId, triggerType },
+      "Failed to invalidate automation cache after creation",
+      error instanceof Error ? error : new Error(String(error)),
+    );
+  });
 
   return {
     id: automation.id,
@@ -175,23 +194,31 @@ export async function updateAutomation(
   const updatedAutomation = await updateAutomationRecord(automationId, input);
 
   // Invalidate cache using the workspace ID
-  const targetId = existingAutomation.post?.id ?? existingAutomation.story?.id;
-  if (targetId) {
-    await invalidateAutomationCache(
-      existingAutomation.instaAccountId,
-      targetId,
-    ).catch((error) => {
-      logger.error(
-        {
-          instaAccountId: existingAutomation.instaAccountId,
-          targetId,
-          automationId,
-        },
-        "Failed to invalidate automation cache after update",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    });
-  }
+  const invalidateType =
+    existingAutomation.triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : existingAutomation.triggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
+  const targetId =
+    existingAutomation.post?.id ?? existingAutomation.story?.id ?? "account";
+
+  await invalidateAutomationCache(
+    existingAutomation.instaAccountId,
+    targetId,
+    invalidateType,
+    automationId,
+  ).catch((error) => {
+    logger.error(
+      {
+        instaAccountId: existingAutomation.instaAccountId,
+        targetId,
+        automationId,
+      },
+      "Failed to invalidate automation cache after update",
+      error instanceof Error ? error : new Error(String(error)),
+    );
+  });
 
   return {
     id: updatedAutomation.id,
@@ -230,23 +257,30 @@ export async function deleteAutomation(userId: string, automationId: string) {
 
   await softDeleteAutomation(automationId);
 
-  const targetId = existingAutomation.post?.id ?? existingAutomation.story?.id;
-  if (targetId) {
-    await invalidateAutomationCache(
-      existingAutomation.instaAccountId,
-      targetId,
-    ).catch((error) => {
-      logger.error(
-        {
-          instaAccountId: existingAutomation.instaAccountId,
-          targetId,
-          automationId,
-        },
-        "Failed to invalidate automation cache after deletion",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    });
-  }
+  const invalidateType =
+    existingAutomation.triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : existingAutomation.triggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
+  const targetId =
+    existingAutomation.post?.id ?? existingAutomation.story?.id ?? "account";
+  await invalidateAutomationCache(
+    existingAutomation.instaAccountId,
+    targetId,
+    invalidateType,
+    automationId,
+  ).catch((error) => {
+    logger.error(
+      {
+        instaAccountId: existingAutomation.instaAccountId,
+        targetId,
+        automationId,
+      },
+      "Failed to invalidate automation cache after deletion",
+      error instanceof Error ? error : new Error(String(error)),
+    );
+  });
 
   return { message: "Automation deleted successfully" };
 }

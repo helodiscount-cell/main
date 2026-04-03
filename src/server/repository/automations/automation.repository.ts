@@ -360,7 +360,7 @@ export async function findActiveAutomationsByStory(
 export async function findAutomationsByTargetAndKeywords(
   userId: string,
   targetId: string,
-  type: "post" | "story",
+  type: "post" | "story" | "account",
   keywords: string[],
 ) {
   return executeWithErrorHandling(
@@ -371,7 +371,9 @@ export async function findAutomationsByTargetAndKeywords(
           status: "ACTIVE",
           ...(type === "post"
             ? { post: { is: { id: targetId } } }
-            : { story: { is: { id: targetId } } }),
+            : type === "story"
+              ? { story: { is: { id: targetId } } }
+              : { triggerType: "RESPOND_TO_ALL_DMS" }),
           triggers: {
             hasSome: keywords,
           },

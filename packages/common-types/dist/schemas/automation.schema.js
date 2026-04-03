@@ -20,19 +20,6 @@ exports.ErrorResponseSchema =
 const zod_1 = require("zod");
 const sanitize_1 = require("../lib/utils/sanitize");
 const validation_1 = require("../lib/utils/validation");
-const NO_ANGLE_BRACKETS_MSG = "Angle brackets (<, >) are not allowed";
-const noAngleBrackets = (val) => {
-  if (!val) return true;
-  return !/[<>]/g.test(val);
-};
-exports.DmLinkSchema = zod_1.z.object({
-  title: zod_1.z
-    .string()
-    .min(1)
-    .max(100)
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
-  url: zod_1.z.string().url("Invalid link URL").max(2048),
-});
 // Embedded story target for creation payload
 const StoryTargetInputSchema = zod_1.z.object({
   id: zod_1.z.string().min(1).max(100),
@@ -47,28 +34,45 @@ const StoryTargetInputSchema = zod_1.z.object({
   permalink: zod_1.z.string().min(1).max(2048),
   timestamp: zod_1.z.string().min(1).max(100),
 });
+exports.DmLinkSchema = zod_1.z.object({
+  title: zod_1.z
+    .string()
+    .transform((val) => (0, sanitize_1.sanitizeText)(val))
+    .refine((s) => s.length >= 1, {
+      message: "Title cannot be empty after sanitization",
+    })
+    .refine((s) => s.length <= 100, {
+      message: "Title must be no more than 100 characters",
+    }),
+  url: zod_1.z.string().url("Invalid link URL").max(2048),
+});
 // Input schema for creating a new automation
 exports.CreateAutomationSchema = zod_1.z
   .object({
     triggerType: zod_1.z
-      .enum(["COMMENT_ON_POST", "STORY_REPLY"])
+      .enum(["COMMENT_ON_POST", "STORY_REPLY", "RESPOND_TO_ALL_DMS"])
       .default("COMMENT_ON_POST"),
     automationName: zod_1.z
       .string()
-      .min(1, "Please define a name for this automation")
-      .max(100),
+      .transform((val) => (0, sanitize_1.sanitizeText)(val))
+      .refine((s) => s.length >= 1, {
+        message: "Please define a name for this automation",
+      })
+      .refine((s) => s.length <= 100, {
+        message: "Automation name must be no more than 100 characters",
+      }),
     // Array of public comment replies (optional, only used in DM flows)
     commentReplyWhenDm: zod_1.z
       .array(
         zod_1.z
           .string()
-          .min(1)
-          .max(
-            sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
-            `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
-          )
-          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-          .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
+          .refine((s) => s.length <= sanitize_1.MAX_LENGTHS.REPLY_MESSAGE, {
+            message: `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+          })
+          .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val))
+          .refine((s) => s.length >= 1, {
+            message: "Comment reply cannot be empty after sanitization",
+          }),
       )
       .max(10, "Maximum 10 comment replies allowed")
       .optional(),
@@ -98,13 +102,13 @@ exports.CreateAutomationSchema = zod_1.z
       .array(
         zod_1.z
           .string()
-          .min(1, "Trigger cannot be empty")
-          .max(
-            sanitize_1.MAX_LENGTHS.TRIGGER,
-            `Trigger must be no more than ${sanitize_1.MAX_LENGTHS.TRIGGER} characters`,
-          )
-          .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-          .transform((val) => (0, sanitize_1.sanitizeTrigger)(val)),
+          .refine((s) => s.length <= sanitize_1.MAX_LENGTHS.TRIGGER, {
+            message: `Trigger must be no more than ${sanitize_1.MAX_LENGTHS.TRIGGER} characters`,
+          })
+          .transform((val) => (0, sanitize_1.sanitizeTrigger)(val))
+          .refine((s) => s.length >= 1, {
+            message: "Trigger cannot be empty after sanitization",
+          }),
       )
       .max(
         sanitize_1.MAX_LENGTHS.TRIGGERS_ARRAY,
@@ -116,13 +120,13 @@ exports.CreateAutomationSchema = zod_1.z
     // Single fixed DM message
     replyMessage: zod_1.z
       .string()
-      .min(1, "Reply message is required")
-      .max(
-        sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
-        `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
-      )
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-      .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
+      .refine((s) => s.length <= sanitize_1.MAX_LENGTHS.REPLY_MESSAGE, {
+        message: `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+      })
+      .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val))
+      .refine((s) => s.length >= 1, {
+        message: "Reply message is required and cannot be just angle brackets",
+      }),
     replyImage: zod_1.z
       .preprocess(
         (val) => (val === "" ? null : val),
@@ -137,13 +141,25 @@ exports.CreateAutomationSchema = zod_1.z
       .max(1000)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined
+          ? undefined
+          : val
+            ? (0, sanitize_1.sanitizeText)(val) || null
+            : null,
+      ),
     askToFollowLink: zod_1.z
       .string()
       .max(2048)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined
+          ? undefined
+          : val
+            ? (0, sanitize_1.sanitizeText)(val) || null
+            : null,
+      ),
     // Opening Message
     openingMessageEnabled: zod_1.z.boolean().default(true),
     openingMessage: zod_1.z
@@ -151,13 +167,25 @@ exports.CreateAutomationSchema = zod_1.z
       .max(2000)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined
+          ? undefined
+          : val
+            ? (0, sanitize_1.sanitizeText)(val) || null
+            : null,
+      ),
     openingButtonText: zod_1.z
       .string()
       .max(100)
       .optional()
       .nullable()
-      .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+      .transform((val) =>
+        val === undefined
+          ? undefined
+          : val
+            ? (0, sanitize_1.sanitizeText)(val) || null
+            : null,
+      ),
     dmLinks: zod_1.z
       .array(exports.DmLinkSchema)
       .max(3, "Maximum 3 links allowed")
@@ -167,6 +195,7 @@ exports.CreateAutomationSchema = zod_1.z
     (data) => {
       if (data.triggerType === "COMMENT_ON_POST") return !!data.postId;
       if (data.triggerType === "STORY_REPLY") return !!data.story;
+      if (data.triggerType === "RESPOND_TO_ALL_DMS") return true;
       return true;
     },
     {
@@ -177,18 +206,27 @@ exports.CreateAutomationSchema = zod_1.z
   );
 // Input schema for updating an existing automation
 exports.UpdateAutomationSchema = zod_1.z.object({
-  automationName: zod_1.z.string().min(1).max(100).optional(),
+  automationName: zod_1.z
+    .string()
+    .transform((val) => (0, sanitize_1.sanitizeText)(val))
+    .refine((s) => s.length >= 1, {
+      message: "Please define a name for this automation",
+    })
+    .refine((s) => s.length <= 100, {
+      message: "Automation name must be no more than 100 characters",
+    })
+    .optional(),
   triggers: zod_1.z
     .array(
       zod_1.z
         .string()
-        .min(1, "Trigger cannot be empty")
-        .max(
-          sanitize_1.MAX_LENGTHS.TRIGGER,
-          `Trigger must be no more than ${sanitize_1.MAX_LENGTHS.TRIGGER} characters`,
-        )
-        .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
-        .transform((val) => (0, sanitize_1.sanitizeTrigger)(val)),
+        .refine((s) => s.length <= sanitize_1.MAX_LENGTHS.TRIGGER, {
+          message: `Trigger must be no more than ${sanitize_1.MAX_LENGTHS.TRIGGER} characters`,
+        })
+        .transform((val) => (0, sanitize_1.sanitizeTrigger)(val))
+        .refine((s) => s.length >= 1, {
+          message: "Trigger cannot be empty after sanitization",
+        }),
     )
     .max(
       sanitize_1.MAX_LENGTHS.TRIGGERS_ARRAY,
@@ -201,25 +239,26 @@ exports.UpdateAutomationSchema = zod_1.z.object({
   // Single fixed DM message
   replyMessage: zod_1.z
     .string()
-    .min(1, "Reply message cannot be empty")
-    .max(
-      sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
-      `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
-    )
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG)
+    .refine((s) => s.length <= sanitize_1.MAX_LENGTHS.REPLY_MESSAGE, {
+      message: `Reply message must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+    })
     .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val))
+    .refine((s) => s.length >= 1, {
+      message: "Reply message is required and cannot be just angle brackets",
+    })
     .optional(),
   // Array of public comment replies (optional)
   commentReplyWhenDm: zod_1.z
     .array(
       zod_1.z
         .string()
-        .min(1)
-        .max(
-          sanitize_1.MAX_LENGTHS.REPLY_MESSAGE,
-          `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
-        )
-        .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val)),
+        .refine((s) => s.length <= sanitize_1.MAX_LENGTHS.REPLY_MESSAGE, {
+          message: `Each comment reply must be no more than ${sanitize_1.MAX_LENGTHS.REPLY_MESSAGE} characters`,
+        })
+        .transform((val) => (0, sanitize_1.sanitizeReplyMessage)(val))
+        .refine((s) => s.length >= 1, {
+          message: "Comment reply cannot be empty after sanitization",
+        }),
     )
     .max(10, "Maximum 10 comment replies allowed")
     .optional(),
@@ -235,26 +274,50 @@ exports.UpdateAutomationSchema = zod_1.z.object({
     .max(1000)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined
+        ? undefined
+        : val
+          ? (0, sanitize_1.sanitizeText)(val) || null
+          : null,
+    ),
   askToFollowLink: zod_1.z
     .string()
     .max(2048)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined
+        ? undefined
+        : val
+          ? (0, sanitize_1.sanitizeText)(val) || null
+          : null,
+    ),
   openingMessageEnabled: zod_1.z.boolean().optional(),
   openingMessage: zod_1.z
     .string()
     .max(2000)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined
+        ? undefined
+        : val
+          ? (0, sanitize_1.sanitizeText)(val) || null
+          : null,
+    ),
   openingButtonText: zod_1.z
     .string()
     .max(100)
     .optional()
     .nullable()
-    .refine(noAngleBrackets, NO_ANGLE_BRACKETS_MSG),
+    .transform((val) =>
+      val === undefined
+        ? undefined
+        : val
+          ? (0, sanitize_1.sanitizeText)(val) || null
+          : null,
+    ),
   dmLinks: zod_1.z
     .array(exports.DmLinkSchema)
     .max(3, "Maximum 3 links allowed")
@@ -354,7 +417,7 @@ exports.CreateAutomationResponseSchema = zod_1.z.object({
   success: zod_1.z.literal(true),
   automation: zod_1.z.object({
     id: zod_1.z.string(),
-    automationName: zod_1.z.string().nullable(),
+    automationName: zod_1.z.string(),
     postId: zod_1.z.string(),
     actionType: zod_1.z.enum(["DM", "COMMENT_REPLY"]),
     triggers: zod_1.z.array(zod_1.z.string()),

@@ -42,7 +42,7 @@ export const DmLinkSchema = z.object({
 export const CreateAutomationSchema = z
   .object({
     triggerType: z
-      .enum(["COMMENT_ON_POST", "STORY_REPLY"])
+      .enum(["COMMENT_ON_POST", "STORY_REPLY", "RESPOND_TO_ALL_DMS"])
       .default("COMMENT_ON_POST"),
     automationName: z
       .string()
@@ -166,6 +166,7 @@ export const CreateAutomationSchema = z
     (data) => {
       if (data.triggerType === "COMMENT_ON_POST") return !!data.postId;
       if (data.triggerType === "STORY_REPLY") return !!data.story;
+      if (data.triggerType === "RESPOND_TO_ALL_DMS") return true;
       return true;
     },
     {

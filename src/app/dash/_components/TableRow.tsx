@@ -111,9 +111,11 @@ const useTableRowMapper = (
           ? `Keywords: ${automation.triggers.join(", ")}`
           : "No keyword triggers"),
       href:
-        automation.triggerType === "STORY_REPLY"
-          ? `/dash/automations/dmforstories/edit/${automation.id}`
-          : `/dash/automations/dmforcomments/edit/${automation.id}`,
+        automation.triggerType === "RESPOND_TO_ALL_DMS"
+          ? `/dash/automations/respondtoalldms/edit/${automation.id}`
+          : automation.triggerType === "STORY_REPLY"
+            ? `/dash/automations/dmforstories/edit/${automation.id}`
+            : `/dash/automations/dmforcomments/edit/${automation.id}`,
       icon:
         automation.post?.thumbnailUrl ||
         automation.post?.mediaUrl ||
@@ -133,7 +135,11 @@ const useTableRowMapper = (
           />
         ) : (
           <span className="text-[10px] text-slate-400 font-bold uppercase">
-            {automation.triggerType === "STORY_REPLY" ? "Story" : "Post"}
+            {automation.triggerType === "RESPOND_TO_ALL_DMS"
+              ? "Inbox"
+              : automation.triggerType === "STORY_REPLY"
+                ? "Story"
+                : "Post"}
           </span>
         ),
       status: (

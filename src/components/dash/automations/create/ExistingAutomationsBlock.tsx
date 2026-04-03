@@ -9,7 +9,7 @@ import { useState } from "react";
 
 interface ExistingAutomationsBlockProps {
   targetId: string;
-  type: "post" | "story";
+  type: "post" | "story" | "account";
 }
 
 export function ExistingAutomationsBlock({
@@ -26,7 +26,13 @@ export function ExistingAutomationsBlock({
     data?.automations.filter((a) => {
       if (type === "post")
         return a.post?.id === targetId && a.status !== "DELETED";
-      return a.story?.id === targetId && a.status !== "DELETED";
+      if (type === "story")
+        return a.story?.id === targetId && a.status !== "DELETED";
+      return (
+        a.triggerType === "RESPOND_TO_ALL_DMS" &&
+        a.status !== "DELETED" &&
+        targetId === "account"
+      );
     }) || [];
 
   if (isLoading || existingOnThisTarget.length === 0) return null;
@@ -70,7 +76,11 @@ export function ExistingAutomationsBlock({
                   </span>
                 </div>
                 <Link
-                  href={`/dash/automations/dmfor${type === "post" ? "comments" : "stories"}/edit/${auto.id}`}
+                  href={
+                    auto.triggerType === "RESPOND_TO_ALL_DMS"
+                      ? `/dash/automations/respondtoalldms/edit/${auto.id}`
+                      : `/dash/automations/dmfor${type === "post" ? "comments" : "stories"}/edit/${auto.id}`
+                  }
                   className="text-xs text-[#6A06E4] hover:underline flex items-center gap-1 font-medium"
                 >
                   Edit <ExternalLink size={12} />

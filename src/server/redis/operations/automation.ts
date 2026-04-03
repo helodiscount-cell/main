@@ -57,17 +57,33 @@ export async function invalidateAutomations(
 export async function invalidateAutomationCache(
   instaAccountId: string,
   targetId: string,
-  type: "post" | "story" = "post",
+  type: "post" | "story" | "account" = "post",
+  automationId?: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
 
-  const cacheKey =
-    type === "post"
-      ? KEYS.AUTOMATIONS_BY_POST(instaAccountId, targetId)
-      : KEYS.AUTOMATIONS_BY_STORY(instaAccountId, targetId);
+  let cacheKey: string;
+  switch (type) {
+    case "post":
+      cacheKey = KEYS.AUTOMATIONS_BY_POST(instaAccountId, targetId);
+      break;
+    case "story":
+      cacheKey = KEYS.AUTOMATIONS_BY_STORY(instaAccountId, targetId);
+      break;
+    case "account":
+      cacheKey = KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId);
+      break;
+  }
 
-  await redis.del(cacheKey);
+  const pipeline = redis.pipeline();
+  pipeline.del(cacheKey);
+
+  if (automationId) {
+    pipeline.del(KEYS.AUTOMATION_BY_ID(automationId));
+  }
+
+  await pipeline.exec();
 }
 
 /**
