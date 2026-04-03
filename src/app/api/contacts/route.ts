@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const cursor = searchParams.get("cursor") || undefined;
 
   return runWithErrorHandling(
-    async ({ clerkId, instaAccountId }) => {
+    async ({ instaAccountId }) => {
       return await getUserContacts(instaAccountId!, limit, cursor);
     },
     { requireWorkspace: true },

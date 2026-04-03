@@ -13,7 +13,7 @@ export async function GET(
   return runWithErrorHandling(
     async ({ clerkId, instaAccountId }) => {
       const { id } = await params;
-      return getFormById(clerkId, instaAccountId!, id);
+      return getFormById(clerkId!, instaAccountId!, id);
     },
     { requireWorkspace: true },
   );
@@ -38,7 +38,7 @@ export async function PATCH(
         );
       }
 
-      return updateForm(clerkId, instaAccountId!, id, validation.data);
+      return updateForm(clerkId!, instaAccountId!, id, validation.data);
     },
     { requireWorkspace: true },
   );
@@ -51,7 +51,7 @@ export async function DELETE(
   return runWithErrorHandling(
     async ({ clerkId, instaAccountId }) => {
       const { id } = await params;
-      return deleteForm(clerkId, instaAccountId!, id);
+      return deleteForm(clerkId!, instaAccountId!, id);
     },
     { requireWorkspace: true },
   );

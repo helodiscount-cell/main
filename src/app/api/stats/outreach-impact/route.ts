@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
   return runWithErrorHandling(
-    async ({ clerkId, instaAccountId }) => {
+    async ({ instaAccountId }) => {
       // Get range from query params
       const { searchParams } = new URL(req.url);
       const range = searchParams.get("range") || "Last 7 days";
