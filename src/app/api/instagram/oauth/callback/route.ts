@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleOAuthCallback } from "@/server/services/instagram/oauth.service";
 import { clogger } from "@/server/utils/consola";
+import { APP_CONFIG } from "@/configs/app.config";
 
 enum RedirectUrls {
   SUCCESS = "/dash?connected=true",
@@ -24,16 +25,8 @@ export async function GET(request: NextRequest) {
 
   // Helper to construct absolute URLs from a trusted origin (prevents Host Header Injection)
   const constructUrl = (path: string) => {
-    const origin = process.env.APP_ORIGIN;
-
-    // Fail-fast in non-dev environments if trust anchor is missing
-    if (!origin && process.env.NODE_ENV !== "development") {
-      throw new Error(
-        "CRITICAL_SECURITY: APP_ORIGIN environment variable is missing.",
-      );
-    }
-
-    const base = origin || "http://localhost:3000";
+    // Uses the trust anchor from APP_CONFIG (fails fast in production if missing)
+    const base = APP_CONFIG.ORIGIN;
 
     // Strictly enforce relative paths to avoid open redirects or host injection
     if (path.includes("://") || path.startsWith("//")) {
@@ -68,9 +61,12 @@ export async function GET(request: NextRequest) {
 
     const result = await handleOAuthCallback(code, state);
 
-    // Redirects back to the return URL with success
-    const successUrl = `${result.returnUrl}?connected=true`;
-    return NextResponse.redirect(constructUrl(successUrl));
+    // Safely append the 'connected' parameter to the return URL
+    const url = new URL(result.returnUrl, APP_CONFIG.ORIGIN);
+    url.searchParams.set("connected", "true");
+
+    // Redirects back to the return URL with victory state
+    return NextResponse.redirect(constructUrl(url.pathname + url.search));
   } catch (err) {
     const errorInstance = err instanceof Error ? err : new Error(String(err));
     clogger.error(

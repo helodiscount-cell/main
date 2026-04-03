@@ -9,6 +9,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/server/db";
 import { setActiveWorkspaceCookie } from "@/server/utils/workspace-cookie";
 import { DASHBOARD_ROUTE } from "@/configs/routes.config";
+import { APP_CONFIG } from "@/configs/app.config";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   // Helper to construct absolute URLs from a trusted origin (prevents Host Header Injection)
   const constructUrl = (path: string) => {
-    const origin = process.env.APP_ORIGIN || "http://localhost:3000";
+    const origin = APP_CONFIG.ORIGIN;
     const safePath = `/${path.replace(/^\//, "")}`;
     return new URL(safePath, origin);
   };
