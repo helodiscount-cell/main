@@ -9,7 +9,7 @@ import { getBestPerformerStats } from "@/server/services/stats/best-performer.se
  */
 export async function GET(req: NextRequest) {
   return runWithErrorHandling(
-    async ({ clerkId, instaAccountId }) => {
+    async ({ instaAccountId }) => {
       const { searchParams } = new URL(req.url);
       const rangeLabel = searchParams.get("range") || "Last 7 days";
 

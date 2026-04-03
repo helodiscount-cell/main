@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
       // Calls service layer to create automation in the active workspace
       const automation = await createAutomation(
-        clerkId,
+        clerkId!,
         instaAccountId!,
         validation.data,
       );

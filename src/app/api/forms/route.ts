@@ -4,7 +4,7 @@ import { runWithErrorHandling } from "@/server/middleware/errors";
 
 export async function GET() {
   return runWithErrorHandling(
-    async ({ clerkId, instaAccountId }) => {
+    async ({ instaAccountId }) => {
       return getUserForms(instaAccountId!);
     },
     { requireWorkspace: true },

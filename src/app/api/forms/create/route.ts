@@ -26,6 +26,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return createForm(clerkId, instaAccountId!, validation.data);
+    return createForm(clerkId!, instaAccountId!, validation.data);
   });
 }

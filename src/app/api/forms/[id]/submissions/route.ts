@@ -10,7 +10,7 @@ export async function GET(
   return runWithErrorHandling(
     async ({ clerkId, instaAccountId }) => {
       const { id } = await params;
-      return getFormSubmissions(clerkId, instaAccountId!, id);
+      return getFormSubmissions(clerkId!, instaAccountId!, id);
     },
     { requireWorkspace: true },
   );
