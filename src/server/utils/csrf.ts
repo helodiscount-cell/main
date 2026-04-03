@@ -1,16 +1,10 @@
-/**
- * CSRF Protection Utilities
- * Provides functions to validate requests and prevent cross-site request forgery
- */
+import { APP_CONFIG } from "@/configs/app.config";
 
 /**
  * Gets the allowed origin for the application
  */
 function getAllowedOrigin(): string {
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_VERCEL_URL ||
-    "http://localhost:3000";
+  const origin = APP_CONFIG.ORIGIN;
 
   // Removes protocol if present and normalizes
   return origin.replace(/^https?:\/\//, "").split("/")[0];
