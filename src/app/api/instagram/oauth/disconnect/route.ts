@@ -1,15 +1,24 @@
 /**
  * Instagram OAuth Disconnect Endpoint
- * Removes Instagram connection for the current user
+ * Deactivates a specific Instagram workspace
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { disconnectAccount } from "@/server/services/instagram/oauth.service";
+import { workspaceService } from "@/server/workspace";
+import {
+  getActiveWorkspaceId,
+  clearActiveWorkspaceCookie,
+} from "@/server/utils/workspace-cookie";
+import { z } from "zod";
 
-export async function POST() {
+const DisconnectSchema = z.object({
+  instaAccountId: z.string().min(1),
+});
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Gets current authenticated user
     const { userId: clerkId } = await auth();
 
     if (!clerkId) {
@@ -22,16 +31,45 @@ export async function POST() {
       );
     }
 
-    // Calls service layer
-    const result = await disconnectAccount(clerkId);
+    const body = await request.json();
+    const validation = DisconnectSchema.safeParse(body);
 
-    return NextResponse.json(
-      {
-        success: true,
-        ...result,
-      },
-      { status: 200 },
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: "instaAccountId is required" },
+        { status: 400 },
+      );
+    }
+
+    const { instaAccountId } = validation.data;
+
+    // Verify ownership before disconnecting
+    const account = await workspaceService.verifyOwnership(
+      instaAccountId,
+      clerkId,
     );
+
+    if (!account) {
+      return NextResponse.json(
+        { success: false, error: "Access denied or account not found" },
+        { status: 403 },
+      );
+    }
+
+    const result = await disconnectAccount(instaAccountId, clerkId);
+
+    const activeId = await getActiveWorkspaceId();
+    let response = NextResponse.json(
+      { success: true, ...result },
+      { status: 200 },
+    ) as NextResponse;
+
+    // If we disconnected the currently active workspace, clear the cookie
+    if (activeId === instaAccountId) {
+      response = clearActiveWorkspaceCookie(response);
+    }
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       {

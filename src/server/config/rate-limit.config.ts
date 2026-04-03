@@ -1,43 +1,16 @@
-export const RATE_LIMIT_TIERS = {
-  FREE: "FREE",
-  PRO: "PRO",
-} as const;
-
 export const RATE_LIMIT_CONFIG = {
-  IGNORED_ROUTES: ["/api/webhooks/instagram"], // Explicitly ignored routes
+  IGNORED_ROUTES: ["/api/webhooks/instagram"], // Webhooks are skipped to prevent delivery failure
 
-  // Authentication routes: strict to prevent brute-force
+  // Strict for auth to prevent brute-force (10 attempts per 15 minutes)
   AUTH: {
     MATCHERS: ["/oauth", "/api/auth", "/sign-in", "/sign-up"],
-    LIMITS: {
-      [RATE_LIMIT_TIERS.FREE]: { limit: 10, windowMs: "15 m" },
-      [RATE_LIMIT_TIERS.PRO]: { limit: 10, windowMs: "15 m" },
-    },
+    LIMIT: 10,
+    WINDOW: "15 m",
   },
 
-  // State-changing routes
-  MUTATION: {
-    MATCHERS: ["/create", "/update", "/delete", "/api/automations/create"],
-    LIMITS: {
-      [RATE_LIMIT_TIERS.FREE]: { limit: 20, windowMs: "1 h" },
-      [RATE_LIMIT_TIERS.PRO]: { limit: 100, windowMs: "1 h" },
-    },
-  },
-
-  // Read-only / Query routes
-  QUERY: {
-    MATCHERS: ["/api/automations/list", "/api/user", "/api/instagram"],
-    LIMITS: {
-      [RATE_LIMIT_TIERS.FREE]: { limit: 100, windowMs: "1 m" },
-      [RATE_LIMIT_TIERS.PRO]: { limit: 500, windowMs: "1 m" },
-    },
-  },
-
-  // Fallback default policy for unclassified /api routes
-  DEFAULT: {
-    LIMITS: {
-      [RATE_LIMIT_TIERS.FREE]: { limit: 100, windowMs: "15 m" },
-      [RATE_LIMIT_TIERS.PRO]: { limit: 300, windowMs: "15 m" },
-    },
+  // General API protection (100 requests per minute)
+  API: {
+    LIMIT: 100,
+    WINDOW: "1 m",
   },
 } as const;

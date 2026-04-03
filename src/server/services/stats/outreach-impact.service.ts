@@ -18,7 +18,7 @@ interface DataPoint {
  * Gets the total number of automation executions and time-series data for a user
  */
 export async function getOutreachImpactStats(
-  clerkId: string,
+  instaAccountId: string,
   rangeLabel: string,
 ) {
   const nowUtc = new Date();
@@ -51,10 +51,14 @@ export async function getOutreachImpactStats(
   }
 
   // Count executions from start date to now
-  const count = await countExecutionsByDateRange(clerkId, totalCountStartDate);
-
-  // Fetch dates for charting
-  const executions = await getExecutionDatesByDateRange(clerkId, startDateUtc);
+  const count = await countExecutionsByDateRange(
+    instaAccountId,
+    totalCountStartDate,
+  );
+  const executions = await getExecutionDatesByDateRange(
+    instaAccountId,
+    startDateUtc,
+  );
 
   // Bucket into days
   const chartData: DataPoint[] = [];

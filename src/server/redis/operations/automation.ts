@@ -9,23 +9,25 @@ import { KEYS, TTL } from "../keys";
  */
 
 /**
- * Atomically clears all automation and account caches for a user.
- * Invoked by Next.js when automations or accounts are changed.
+ * Clears all automation caches for a specific Instagram workspace.
+ * Invoked by Next.js when automations are created, updated, or deleted.
  */
-export async function invalidateAutomations(userId: string): Promise<void> {
+export async function invalidateAutomations(
+  instaAccountId: string,
+): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
 
   try {
     const pipeline = redis.pipeline();
 
-    // Use SCAN to find all Post and Story automation caches
+    // SCAN for all post and story automation caches scoped to this workspace
     let cursor = "0";
     do {
       const [nextCursor, keys] = await redis.scan(
         cursor,
         "MATCH",
-        `ig:automation:*:${userId}:*`,
+        `ig:automation:*:${instaAccountId}:*`,
         "COUNT",
         100,
       );
@@ -37,22 +39,23 @@ export async function invalidateAutomations(userId: string): Promise<void> {
 
     await pipeline.exec();
     logger.info(
-      { userId },
-      "[Redis:Automation] Invalidation completed successfully",
+      { instaAccountId },
+      "[Redis:Automation] Workspace cache invalidated",
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     logger.error(
-      { userId, error: error.message },
+      { instaAccountId, error: message },
       "[Redis:Automation] Failed to invalidate cache",
     );
   }
 }
 
 /**
- * Invalidates the automation existence cache for a specific user and post/story
+ * Invalidates the automation cache for a specific workspace and post/story target
  */
 export async function invalidateAutomationCache(
-  userId: string,
+  instaAccountId: string,
   targetId: string,
   type: "post" | "story" = "post",
 ): Promise<void> {
@@ -61,8 +64,8 @@ export async function invalidateAutomationCache(
 
   const cacheKey =
     type === "post"
-      ? KEYS.AUTOMATIONS_BY_POST(userId, targetId)
-      : KEYS.AUTOMATIONS_BY_STORY(userId, targetId);
+      ? KEYS.AUTOMATIONS_BY_POST(instaAccountId, targetId)
+      : KEYS.AUTOMATIONS_BY_STORY(instaAccountId, targetId);
 
   await redis.del(cacheKey);
 }
@@ -110,28 +113,27 @@ export async function markCommentProcessed(
 }
 
 /**
- * Clears all cache related to an Instagram account and user
+ * Clears all cache associated with a specific Instagram workspace on disconnect
  */
 export async function clearAllUserCache(
   webhookUserId: string,
-  clerkId: string,
+  instaAccountId: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
 
   const pipeline = redis.pipeline();
 
-  // Webhook cache (Uses webhook ID)
-  // Note: we might want to add this to KEYS registry too
+  // Webhook connection marker for this IG account
   pipeline.del(`ig:webhook:${webhookUserId}`);
 
-  // Invalidate all post/story automations for this user
+  // All post/story automation caches scoped to this workspace
   let cursor = "0";
   do {
     const [nextCursor, keys] = await redis.scan(
       cursor,
       "MATCH",
-      `ig:automation:*:${clerkId}:*`,
+      `ig:automation:*:${instaAccountId}:*`,
       "COUNT",
       100,
     );
@@ -139,6 +141,5 @@ export async function clearAllUserCache(
     if (keys.length > 0) pipeline.del(...keys);
   } while (cursor !== "0");
 
-  pipeline.del(`ig:account:${clerkId}`);
   await pipeline.exec();
 }

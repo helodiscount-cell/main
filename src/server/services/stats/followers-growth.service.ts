@@ -3,7 +3,6 @@
  * Handles fetching stats and acting as a pseudo-cron for daily snapshots
  */
 
-import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
 import {
   createFollowerSnapshot,
   getFollowerSnapshots,
@@ -18,16 +17,15 @@ interface DataPoint {
 }
 
 export async function getFollowersGrowthStats(
-  clerkId: string,
+  instaAccountId: string,
   rangeLabel: string,
 ) {
-  const user = await findUserWithInstaAccount(clerkId);
-  if (!user || !user.instaAccount) {
-    throw new ApiRouteError(
-      "User or Instagram account not found",
-      "NOT_FOUND",
-      404,
-    );
+  const account = await prisma.instaAccount.findUnique({
+    where: { id: instaAccountId, isActive: true },
+    select: { id: true, accessToken: true },
+  });
+  if (!account) {
+    throw new ApiRouteError("Instagram account not found", "NOT_FOUND", 404);
   }
 
   const nowUtc = new Date();
@@ -41,22 +39,15 @@ export async function getFollowersGrowthStats(
 
   // 1. Pseudo-Cron: Check if we need to take a snapshot today
   const existingToday = await prisma.instaFollowerSnapshot.findFirst({
-    where: {
-      instaAccountId: user.instaAccount.id,
-      date: todayUtc,
-    },
+    where: { instaAccountId, date: todayUtc },
   });
 
   if (!existingToday) {
-    // Try to fetch current count from Instagram Graph API
-    // Fail silently so dashboard still loads if API fails
     try {
-      const igData = await fetchInstagramUserData(
-        user.instaAccount.accessToken,
-      );
+      const igData = await fetchInstagramUserData(account.accessToken);
       if (igData && typeof igData.followers_count === "number") {
         await createFollowerSnapshot(
-          user.instaAccount.id,
+          instaAccountId,
           igData.followers_count,
           todayUtc,
         );
@@ -66,7 +57,6 @@ export async function getFollowersGrowthStats(
         "Failed to fetch fresh follower count for snapshot:",
         error,
       );
-      // We do not throw here! Dashboard must not be blocked.
     }
   }
 
@@ -84,19 +74,12 @@ export async function getFollowersGrowthStats(
   );
 
   // 3. Fetch snapshots in range
-  const snapshots = await getFollowerSnapshots(
-    user.instaAccount.id,
-    startDateUtc,
-  );
+  const snapshots = await getFollowerSnapshots(instaAccountId, startDateUtc);
 
-  // 4. Fetch the baseline (last snapshot BEFORE the range, for Option A interpolation)
   let lastKnownCount = 0;
   if (snapshots.length === 0 || snapshots[0].date > startDateUtc) {
     const baselineSnapshot = await prisma.instaFollowerSnapshot.findFirst({
-      where: {
-        instaAccountId: user.instaAccount.id,
-        date: { lt: startDateUtc },
-      },
+      where: { instaAccountId, date: { lt: startDateUtc } },
       orderBy: { date: "desc" },
     });
 

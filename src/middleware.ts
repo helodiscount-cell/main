@@ -9,25 +9,24 @@ import { checkRateLimit } from "@/server/utils/redis-ratelimit";
 import {
   isPublicRoute,
   isApiRoute,
-  isConnectRoute,
   isAuthRoute,
   AUTH_ROUTE,
-  CONNECT_ROUTE,
   DASHBOARD_ROUTE,
 } from "@/configs/routes.config";
 
+/**
+ * clerkMiddleware: Runs in Edge Runtime
+ * No Prisma imports here to avoid WASM engine errors.
+ */
 export default clerkMiddleware(async (auth, request) => {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   const { pathname } = request.nextUrl;
 
-  // 1. API Route Logic (Rate Limiting, CSRF, Size Validation)
+  // 1. API routes: rate limit, CSRF, and size checks
   if (isApiRoute(pathname)) {
-    // Applies rate limiting to API routes
-    const tier = (sessionClaims?.metadata as any)?.tier;
-    const rateLimitResponse = await checkRateLimit(request, userId, tier);
+    const rateLimitResponse = await checkRateLimit(request, userId);
     if (rateLimitResponse) return rateLimitResponse;
 
-    // Validates CSRF protection for state-changing API requests
     if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
       const csrfValidation = validateCsrfProtection(request);
       if (!csrfValidation.valid) {
@@ -38,7 +37,6 @@ export default clerkMiddleware(async (auth, request) => {
       }
     }
 
-    // Validates request size for API routes with request bodies
     if (["POST", "PUT", "PATCH"].includes(request.method)) {
       const contentLength = request.headers.get("content-length");
       const maxSize = getSizeLimitForRoute(pathname);
@@ -51,93 +49,35 @@ export default clerkMiddleware(async (auth, request) => {
       }
     }
 
-    // Allow API routes to proceed (individual route handlers will handle auth if needed)
     return NextResponse.next();
   }
 
-  // 2. Authentication and Authorization Logic for Pages
+  // 2. Public route handling
+  if (isPublicRoute(pathname) && !userId) return NextResponse.next();
 
-  // Public routes are always accessible for unlogged users
-  if (isPublicRoute(pathname) && !userId) {
-    return NextResponse.next();
-  }
-
-  // If not logged in and trying to access a non-public route, redirect to auth
+  // 3. Auth enforcement
   if (!userId) {
-    if (!isPublicRoute(pathname)) {
-      return NextResponse.redirect(new URL(AUTH_ROUTE, request.url));
-    }
-    return NextResponse.next();
+    return NextResponse.redirect(new URL(AUTH_ROUTE, request.url));
   }
 
-  // User is logged in
-
-  // 1st Check: Fast path (JWT Claims)
-  const metadata = sessionClaims?.metadata as any;
-  let isConnected = metadata?.isConnected === true;
-  const instaUserId = metadata?.instaUserId as string | undefined;
-
-  // 2nd Check: If JWT says connected, verify against Redis (source of truth)
-  // Prevents stale Clerk metadata from bypassing /auth/connect after logout
-  if (isConnected && instaUserId) {
-    try {
-      const { getRedisClient } = await import("@/server/redis/client");
-      const { KEYS } = await import("@/server/redis/keys");
-      const redis = getRedisClient();
-      if (redis) {
-        const cached = await redis.get(KEYS.USER_CONNECTION(instaUserId));
-        if (cached !== null) {
-          // Cache hit: Redis is the source of truth
-          isConnected = cached === "1";
-        }
-        // Cache miss: fall through to Clerk live API fallback below
-      }
-    } catch (e) {
-      console.error("Middleware Redis verification failed:", e);
-      // fail-open: proceed to Clerk live API fallback
-    }
+  // 4. Authenticated user hitting auth pages (login/register)
+  if (isAuthRoute(pathname)) {
+    return NextResponse.redirect(new URL(DASHBOARD_ROUTE, request.url));
   }
 
-  // 3rd Check: Fallback path (Live Clerk metadata)
-  // Runs when JWT says not connected OR Redis had a cache miss
-  if (!isConnected && userId) {
-    try {
-      const { createClerkClient } = await import("@clerk/nextjs/server");
-      const clerkClient = createClerkClient({
-        secretKey: process.env.CLERK_SECRET_KEY,
-      });
-      const user = await clerkClient.users.getUser(userId);
-      isConnected = user.publicMetadata?.isConnected === true;
-    } catch (e) {
-      console.error("Middleware Clerk fallback check failed:", e);
-    }
-  }
+  // Note: Workspace enforcement (no-account redirect) is handled in the
+  // Root Dashboard Layout to avoid Edge Runtime Prisma issues.
 
-  // Handle Logic for Logged-in Users
-  if (userId) {
-    // If logged in and trying to go to /auth, redirect based on connection status
-    if (isAuthRoute(pathname)) {
-      return NextResponse.redirect(
-        new URL(isConnected ? DASHBOARD_ROUTE : CONNECT_ROUTE, request.url),
-      );
-    }
+  // Construct headers for deep linking support in server components
+  const requestHeaders = new Headers(request.headers);
+  const currentUrl = `${pathname}${request.nextUrl.search}`;
+  requestHeaders.set("x-url", currentUrl);
 
-    // if they are logged in then they should be allowed to only visit the /connect url and nothing else
-    if (!isConnected && !isConnectRoute(pathname) && !isPublicRoute(pathname)) {
-      return NextResponse.redirect(new URL(CONNECT_ROUTE, request.url));
-    }
-
-    // but if they are connected then they are free to go anywhere inside the app
-    if (isConnected) {
-      // If connected and on /connect, maybe redirect to dashboard
-      if (isConnectRoute(pathname)) {
-        return NextResponse.redirect(new URL(DASHBOARD_ROUTE, request.url));
-      }
-      return NextResponse.next();
-    }
-  }
-
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 });
 
 export const config = {

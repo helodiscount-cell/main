@@ -1,7 +1,6 @@
 /**
  * OAuth Service
- * Contains business logic for Instagram OAuth flow using Instagram Login
- * No Facebook Pages required - uses Instagram User access token directly
+ * Business logic for Instagram OAuth flow — no Clerk metadata dependency
  */
 
 import {
@@ -14,16 +13,14 @@ import {
   ERROR_MESSAGES,
   validateOAuthConfig,
 } from "@/server/config/instagram.config";
+import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
 import {
   subscribeToWebhooks,
   markWebhooksEnabled,
 } from "@/server/instagram/webhook/registration";
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
-import { findUserWithInstaAccount } from "@/server/repository/user/user.repository";
-import {
-  deleteInstaAccount,
-  deactivateInstaAccount,
-} from "@/server/repository/instagram/insta-account.repository";
+import { findUserByClerkId } from "@/server/repository/user/user.repository";
+import { deactivateInstaAccount } from "@/server/repository/instagram/insta-account.repository";
 import { validateSecureState } from "@/server/instagram/oauth/oauth-state";
 import {
   exchangeCodeForToken,
@@ -32,14 +29,13 @@ import {
 } from "@/server/instagram/token-manager";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { OAuthState } from "@dm-broo/common-types";
-import { getRedisClient } from "@/server/redis";
-import { KEYS } from "@/server/redis/keys";
 import {
   setUserConnected,
   invalidateUser,
 } from "@/server/redis/operations/user";
 import { cacheAccessTokenR } from "@/server/redis/operations/token";
 import { createClerkClient } from "@clerk/nextjs/server";
+import { prisma } from "@/server/db";
 
 /**
  * Initiates the OAuth flow by generating authorization URL
@@ -126,14 +122,10 @@ export async function handleOAuthCallback(code: string, state: string) {
 
     const { instaAccount } = await executeTransaction(
       async (tx) => {
-        // Finds or creates user
-        console.log("TX: Finding user with clerkId:", clerkId);
-        let user = await tx.user.findUnique({
-          where: { clerkId },
-        });
+        // Finds or creates the platform user record
+        let user = await tx.user.findUnique({ where: { clerkId } });
 
         if (!user) {
-          console.log("TX: Creating new user for clerkId:", clerkId);
           user = await tx.user.create({
             data: {
               clerkId,
@@ -143,81 +135,70 @@ export async function handleOAuthCallback(code: string, state: string) {
             },
           });
         }
-        console.log("TX: User ID is:", user.id);
 
-        // PRE-FLIGHT CHECK: Ensure this Instagram account isn't already claimed by someone else
         const instagramUserIdString = String(instagramUser.id);
-        console.log(
-          "TX: Performing pre-flight check for IG ID:",
-          instagramUserIdString,
-        );
+
+        // Pre-flight: ensure this IG account isn't already claimed by another user
         const existingAccount = await tx.instaAccount.findUnique({
           where: { instagramUserId: instagramUserIdString },
-          select: { userId: true, username: true },
+          select: { id: true, userId: true, isActive: true },
         });
 
-        if (existingAccount) {
-          console.log(
-            "TX: Found existing account owned by userId:",
-            existingAccount.userId,
-            "Username:",
-            existingAccount.username,
+        if (existingAccount && existingAccount.userId !== user.id) {
+          throw new ApiRouteError(
+            "This Instagram account is already connected to another Dmbroo account.",
+            "IG_ACCOUNT_ALREADY_CLAIMED",
+            409,
           );
-          if (existingAccount.userId !== user.id) {
-            console.log("TX: Ownership conflict detected! Throwing 409...");
-            throw new ApiRouteError(
-              "This Instagram account is already connected to another Dmbroo account.",
-              "IG_ACCOUNT_ALREADY_CLAIMED",
-              409,
-            );
-          }
-        } else {
-          console.log("TX: No existing account found for this IG ID.");
         }
 
-        // Upserts Instagram account
-        console.log("TX: Starting upsert for userId:", user.id);
-        const instaAccount = await tx.instaAccount.upsert({
-          where: { userId: user.id },
-          update: {
-            instagramUserId: instagramUserIdString,
-            username: instagramUser.username,
-            accountType: instagramUser.account_type,
-            webhookUserId: instagramUser.user_id,
-            profilePictureUrl: instagramUser.profile_picture_url,
-            biography: instagramUser.biography,
-            followersCount: instagramUser.followers_count,
-            followsCount: instagramUser.follows_count,
-            mediaCount: instagramUser.media_count,
-            accessToken: longLivedToken.access_token,
-            refreshToken: null,
-            tokenExpiresAt,
-            grantedScopes,
-            webhooksEnabled: false,
-            isActive: true,
-          },
-          create: {
-            userId: user.id,
-            instagramUserId: instagramUserIdString,
-            username: instagramUser.username,
-            accountType: instagramUser.account_type,
-            webhookUserId: instagramUser.user_id,
-            profilePictureUrl: instagramUser.profile_picture_url,
-            biography: instagramUser.biography,
-            followersCount: instagramUser.followers_count,
-            followsCount: instagramUser.follows_count,
-            mediaCount: instagramUser.media_count,
-            accessToken: longLivedToken.access_token,
-            refreshToken: null,
-            isActive: true,
-            tokenExpiresAt,
-            webhooksEnabled: false,
-            grantedScopes,
-          },
-        });
-        console.log("TX: Upsert completed. Account ID:", instaAccount.id);
+        // Limit enforcement: Verify count before creating a new entry
+        if (!existingAccount) {
+          const accountCount = await tx.instaAccount.count({
+            where: { userId: user.id },
+          });
 
-        // Atomic baseline snapshot for follower tracking
+          if (accountCount >= WORKSPACE_CONFIG.MAX_ACCOUNTS) {
+            throw new ApiRouteError(
+              `You have reached the maximum of ${WORKSPACE_CONFIG.MAX_ACCOUNTS} connected accounts.`,
+              "ACCOUNT_LIMIT_REACHED",
+              403,
+            );
+          }
+        }
+
+        const accountPayload = {
+          instagramUserId: instagramUserIdString,
+          username: instagramUser.username,
+          accountType: instagramUser.account_type,
+          webhookUserId: instagramUser.user_id,
+          profilePictureUrl: instagramUser.profile_picture_url,
+          biography: instagramUser.biography,
+          followersCount: instagramUser.followers_count,
+          followsCount: instagramUser.follows_count,
+          mediaCount: instagramUser.media_count,
+          accessToken: longLivedToken.access_token,
+          refreshToken: null as null,
+          tokenExpiresAt,
+          grantedScopes,
+          webhooksEnabled: false,
+          isActive: true,
+        };
+
+        // If it's a reconnect of an existing account, update in place; otherwise create a new workspace
+        let instaAccount;
+        if (existingAccount) {
+          instaAccount = await tx.instaAccount.update({
+            where: { id: existingAccount.id },
+            data: accountPayload,
+          });
+        } else {
+          instaAccount = await tx.instaAccount.create({
+            data: { userId: user.id, ...accountPayload },
+          });
+        }
+
+        // Baseline follower snapshot for the day
         const nowUtc = new Date();
         const todayUtc = new Date(
           Date.UTC(
@@ -227,10 +208,6 @@ export async function handleOAuthCallback(code: string, state: string) {
           ),
         );
 
-        console.log(
-          "TX: Checking for existing follower snapshot for today:",
-          todayUtc,
-        );
         const existingSnapshot = await tx.instaFollowerSnapshot.findUnique({
           where: {
             instaAccountId_date: {
@@ -241,7 +218,6 @@ export async function handleOAuthCallback(code: string, state: string) {
         });
 
         if (!existingSnapshot) {
-          console.log("TX: No snapshot found, creating one...");
           await tx.instaFollowerSnapshot.create({
             data: {
               instaAccountId: instaAccount.id,
@@ -249,58 +225,33 @@ export async function handleOAuthCallback(code: string, state: string) {
               date: todayUtc,
             },
           });
-          console.log("TX: Snapshot created successfully.");
-        } else {
-          console.log("TX: Snapshot already exists for today, skipping.");
         }
 
         return { user, instaAccount };
       },
-      {
-        operation: "handleOAuthCallback",
-        models: ["User", "InstaAccount"],
-      },
+      { operation: "handleOAuthCallback", models: ["User", "InstaAccount"] },
     );
 
-    // Updates Clerk metadata to reflect connection status
-    // This allows the middleware to check connection status without a DB query
-    try {
-      await clerkClient.users.updateUserMetadata(clerkId, {
-        publicMetadata: {
-          isConnected: true,
-          instaUsername: instagramUser.username,
-          instaProfilePictureUrl: instagramUser.profile_picture_url,
-          instaUserId: instagramUser.id,
-          instaAccountType: instagramUser.account_type,
-          lastSync: new Date().toISOString(),
-        },
-      });
-    } catch (metadataError) {
-      console.error("Failed to update Clerk metadata:", metadataError);
-      // Non-fatal: the DB is updated, but middleware might be slightly out of sync
-      // until the next session refresh or manual fix
-    }
-
-    // Registers webhooks using Instagram user ID
+    // Register webhooks (non-fatal)
     try {
       const webhookRegistered = await subscribeToWebhooks(
         longLivedToken.access_token,
         instagramUser.id,
       );
-
       if (webhookRegistered) {
         await markWebhooksEnabled(instaAccount.id, true);
       }
-    } catch (webhookError) {
+    } catch {
       // Non-fatal: user can still use the app without webhooks
     }
 
-    // Actively populate Redis cache so the worker is instantly aware of the connection
+    // Populate Redis so the worker instantly knows this workspace is live
     await setUserConnected(String(instagramUser.id));
     await cacheAccessTokenR(instaAccount.id, longLivedToken.access_token);
 
     return {
       returnUrl: returnUrl || "/dash",
+      instaAccountId: instaAccount.id,
       username: instagramUser.username,
       accountType: instagramUser.account_type,
     };
@@ -309,24 +260,23 @@ export async function handleOAuthCallback(code: string, state: string) {
   }
 }
 
-/**
- * Refreshes the access token for an Instagram account
- * @param clerkId - The Clerk ID of the user
- * @returns The refresh access token result with the message and expires at
- */
-export async function refreshAccessToken(clerkId: string) {
-  // Finds user with Instagram account
-  const user = await findUserWithInstaAccount(clerkId);
+// Refreshes the access token for a specific Instagram workspace — now verified by clerkId
+export async function refreshAccessToken(
+  instaAccountId: string,
+  clerkId: string,
+) {
+  const account = await prisma.instaAccount.findFirst({
+    where: { id: instaAccountId, user: { clerkId }, isActive: true },
+  });
 
-  if (!user || !user.instaAccount) {
+  if (!account) {
     throw new Error(ERROR_MESSAGES.AUTH.NO_INSTAGRAM_ACCOUNT);
   }
 
-  // Refreshes the token
-  const { accessToken, expiresAt } = await refreshToken(user.instaAccount);
+  const { accessToken, expiresAt } = await refreshToken(account);
 
-  // Actively push new token to cache so the worker doesn't miss
-  await cacheAccessTokenR(user.instaAccount.id, accessToken);
+  // Push new token to cache so worker picks it up immediately
+  await cacheAccessTokenR(account.id, accessToken);
 
   return {
     message: "Token refreshed successfully",
@@ -334,42 +284,34 @@ export async function refreshAccessToken(clerkId: string) {
   };
 }
 
-export async function disconnectAccount(clerkId: string) {
-  // Always update Clerk metadata to reflect disconnection first to prevent zombie states
-  try {
-    const { createClerkClient } = await import("@clerk/nextjs/server");
-    const clerkClient = createClerkClient({
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
-    await clerkClient.users.updateUserMetadata(clerkId, {
-      publicMetadata: {
-        isConnected: false,
-      },
-    });
-  } catch (metadataError) {
-    console.error(
-      "Failed to update Clerk metadata on disconnect:",
-      metadataError,
+// Deactivates a specific Instagram workspace — verified by clerkId
+export async function disconnectAccount(
+  instaAccountId: string,
+  clerkId: string,
+) {
+  const account = await prisma.instaAccount.findFirst({
+    where: { id: instaAccountId, user: { clerkId } },
+    select: {
+      id: true,
+      userId: true,
+      instagramUserId: true,
+      user: { select: { id: true, clerkId: true } },
+    },
+  });
+
+  if (!account) {
+    throw new ApiRouteError(
+      "Instagram account not found or access denied",
+      "NOT_FOUND",
+      404,
     );
   }
 
-  // Finds user with Instagram account
-  const user = await findUserWithInstaAccount(clerkId);
+  // Flush Redis cache for this workspace immediately
+  await invalidateUser(account.instagramUserId, account.user.id, account.id);
 
-  // If user doesn't exist in Prisma, that's fine, we already fixed their Clerk state!
-  if (user && user.instaAccount) {
-    // Actively invalidate Redis Cache using all Identifiers
-    await invalidateUser(
-      user.instaAccount.instagramUserId,
-      user.id,
-      user.instaAccount.id,
-    );
+  // Soft-deactivate; keeps historical data intact
+  await deactivateInstaAccount(account.id, account.user.id);
 
-    // Deactivates the Instagram account (leaves it intact for history but inactive)
-    await deactivateInstaAccount(user.instaAccount.id, clerkId);
-  }
-
-  return {
-    message: "Instagram account disconnected successfully",
-  };
+  return { message: "Instagram account disconnected successfully" };
 }

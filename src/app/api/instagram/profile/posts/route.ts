@@ -12,7 +12,10 @@ import { runWithErrorHandling } from "@/server/middleware/errors";
  */
 
 export async function GET() {
-  return runWithErrorHandling(async (clerkId) => {
-    return await getUserPosts(clerkId);
-  });
+  return runWithErrorHandling(
+    async ({ instaAccountId }) => {
+      return await getUserPosts(instaAccountId!);
+    },
+    { requireWorkspace: true },
+  );
 }

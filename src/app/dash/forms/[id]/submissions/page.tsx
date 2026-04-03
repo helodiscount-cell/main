@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getFormById, getFormSubmissions } from "@/server/services/forms";
 import { SubmissionsList } from "../../_components/SubmissionsList";
+import { workspaceService } from "@/server/workspace/service";
 import type { FormField } from "@dm-broo/common-types";
 import type { FormSubmission } from "@/types/form";
 
@@ -22,9 +23,28 @@ export default async function SubmissionsPage({
 
   const { id } = await params;
 
+  let workspace;
+  try {
+    workspace = await workspaceService.getVerifiedActiveWorkspace();
+  } catch (error: any) {
+    const { isRedirectError } =
+      await import("next/dist/client/components/redirect-error");
+    // Explicitly re-throw Next.js redirect errors so they aren't swallowed by catch
+    if (isRedirectError(error)) throw error;
+
+    console.error("[SubmissionsPage] Failed to resolve workspace:", error);
+    redirect("/auth/connect");
+  }
+
+  if (!workspace?.id) {
+    redirect("/auth/connect");
+  }
+
+  const instaAccountId = workspace.id;
+
   const [form, submissions] = await Promise.all([
-    getFormById(clerkId, id).catch(() => null),
-    getFormSubmissions(clerkId, id).catch(() => []),
+    getFormById(clerkId, instaAccountId, id).catch(() => null),
+    getFormSubmissions(clerkId, instaAccountId, id).catch(() => []),
   ]);
 
   if (!form) {

@@ -10,7 +10,7 @@ import {
 } from "@/server/utils/request-limits";
 
 export async function POST(request: NextRequest) {
-  return runWithErrorHandling(async (clerkId) => {
+  return runWithErrorHandling(async ({ clerkId, instaAccountId }) => {
     const body = await parseRequestBodySafely(
       request,
       REQUEST_SIZE_LIMITS.API_DEFAULT,
@@ -26,6 +26,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return createForm(clerkId, validation.data);
+    return createForm(clerkId, instaAccountId!, validation.data);
   });
 }

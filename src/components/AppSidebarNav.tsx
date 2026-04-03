@@ -46,7 +46,7 @@ export function AppSidebarNav() {
                 className="px-4 py-6 flex items-center gap-3"
               >
                 <item.Icon
-                  className={isActive ? "text-purple-600" : "text-slate-500"}
+                  className={isActive ? "text-white" : "text-slate-500"}
                   size={18}
                 />
                 {item.title}

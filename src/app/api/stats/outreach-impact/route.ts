@@ -8,17 +8,20 @@ import { getOutreachImpactStats } from "@/server/services/stats/outreach-impact.
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  return runWithErrorHandling(async (clerkId) => {
-    // Get range from query params
-    const { searchParams } = new URL(req.url);
-    const range = searchParams.get("range") || "Last 7 days";
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      // Get range from query params
+      const { searchParams } = new URL(req.url);
+      const range = searchParams.get("range") || "Last 7 days";
 
-    // Get statistics
-    const stats = await getOutreachImpactStats(clerkId, range);
+      // Get statistics
+      const stats = await getOutreachImpactStats(instaAccountId!, range);
 
-    return {
-      count: stats.count,
-      data: stats.data,
-    };
-  });
+      return {
+        count: stats.count,
+        data: stats.data,
+      };
+    },
+    { requireWorkspace: true },
+  );
 }

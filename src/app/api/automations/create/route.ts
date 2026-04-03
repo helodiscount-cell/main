@@ -14,25 +14,32 @@ import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 export async function POST(request: NextRequest) {
-  return runWithErrorHandling(async (clerkId) => {
-    const body = await parseRequestBodySafely(
-      request,
-      REQUEST_SIZE_LIMITS.API_DEFAULT,
-    );
-
-    const validation = CreateAutomationSchema.safeParse(body);
-
-    if (!validation.success) {
-      throw new ApiRouteError(
-        validation.error.issues[0]?.message || "Invalid input",
-        "INVALID_INPUT",
-        400,
+  return runWithErrorHandling(
+    async ({ clerkId, instaAccountId }) => {
+      const body = await parseRequestBodySafely(
+        request,
+        REQUEST_SIZE_LIMITS.API_DEFAULT,
       );
-    }
 
-    // Calls service layer to create automation
-    const automation = await createAutomation(clerkId, validation.data);
+      const validation = CreateAutomationSchema.safeParse(body);
 
-    return automation;
-  });
+      if (!validation.success) {
+        throw new ApiRouteError(
+          validation.error.issues[0]?.message || "Invalid input",
+          "INVALID_INPUT",
+          400,
+        );
+      }
+
+      // Calls service layer to create automation in the active workspace
+      const automation = await createAutomation(
+        clerkId,
+        instaAccountId!,
+        validation.data,
+      );
+
+      return automation;
+    },
+    { requireWorkspace: true },
+  );
 }

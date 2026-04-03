@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import {
-  RATE_LIMIT_CONFIG,
-  RATE_LIMIT_TIERS,
-} from "@/server/config/rate-limit.config";
-import { UserTier } from "@/types/config";
+import { RATE_LIMIT_CONFIG } from "@/server/config/rate-limit.config";
 
 // Lazy-initialize Redis only if needed to avoid startup crashes if env is missing
 let redisClient: Redis | null = null;
@@ -29,25 +25,20 @@ function getUpstashRedis() {
 const ratelimiters = new Map<string, Ratelimit>();
 
 function getOrCreateLimiter(
-  category: keyof typeof RATE_LIMIT_CONFIG,
-  tier: UserTier | undefined,
+  key: string,
   limit: number,
   windowStr: string,
 ): Ratelimit | null {
   const redis = getUpstashRedis();
-  const t = tier || RATE_LIMIT_TIERS.FREE;
   if (!redis) return null;
 
-  const key = `${category}:${t}`;
   if (!ratelimiters.has(key)) {
-    // Note: The "windowStr" must be a valid upstash Duration format, e.g., "15 m", "1 h"
-    // @ts-ignore - Upstash types are sometimes tricky with strings vs Duration
     ratelimiters.set(
       key,
       new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(limit, windowStr as any),
-        analytics: false, // We don't need analytics overhead for now
+        analytics: true,
         prefix: `@upstash/ratelimit:${key}`,
       }),
     );
@@ -63,59 +54,41 @@ function getOrCreateLimiter(
 export async function checkRateLimit(
   request: NextRequest,
   userId: string | null,
-  tier?: UserTier,
 ): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
-  // 1. Ignored Routes Bypass
+  // 1. Root and Ignored Routes Bypass
   if (
+    pathname === "/" ||
     RATE_LIMIT_CONFIG.IGNORED_ROUTES.some((route) => pathname.startsWith(route))
   ) {
-    return null; // Let it pass immediately
+    return null;
   }
 
-  // Determine policy category based on pathname
-  let category: keyof typeof RATE_LIMIT_CONFIG = "DEFAULT";
-  if (RATE_LIMIT_CONFIG.AUTH.MATCHERS.some((m) => pathname.includes(m))) {
-    category = "AUTH";
-  } else if (
-    RATE_LIMIT_CONFIG.MUTATION.MATCHERS.some((m) => pathname.includes(m))
-  ) {
-    category = "MUTATION";
-  } else if (
-    RATE_LIMIT_CONFIG.QUERY.MATCHERS.some((m) => pathname.includes(m))
-  ) {
-    category = "QUERY";
-  }
-
-  const currentTier = tier || RATE_LIMIT_TIERS.FREE;
-  const policy = (RATE_LIMIT_CONFIG[category] as any).LIMITS[currentTier];
-
-  // Initialize standard error response just in case
-  const fallback = null; // Fail-open: allow request if Redis fails.
-
-  const limiter = getOrCreateLimiter(
-    category,
-    currentTier,
-    policy.limit,
-    policy.windowMs,
-  );
-  if (!limiter) {
-    return fallback;
-  }
-
-  // Identification (Pin by UserID or IP)
-  const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+  // 2. Identification (Pin by UserID or IP)
+  const forwarded = request.headers.get("x-forwarded-for");
+  const ip = forwarded
+    ? (forwarded as string).split(",")[0].trim()
+    : "127.0.0.1";
   const identifier = userId ? `user:${userId}` : `ip:${ip}`;
+
+  // 3. Selection of Policy
+  const isAuth = RATE_LIMIT_CONFIG.AUTH.MATCHERS.some((m) =>
+    pathname.startsWith(m),
+  );
+  const config = isAuth ? RATE_LIMIT_CONFIG.AUTH : RATE_LIMIT_CONFIG.API;
+  const key = isAuth ? "auth" : "api";
+
+  const limiter = getOrCreateLimiter(key, config.LIMIT, config.WINDOW);
+
+  if (!limiter) return null; // Fail-open
 
   try {
     const { success, limit, remaining, reset } =
       await limiter.limit(identifier);
 
     if (!success) {
-      console.warn(
-        `[RateLimit] Triggered 429 on ${pathname} for ${identifier}`,
-      );
+      console.warn(`[RateLimit] Blocked 429 on ${pathname} for ${identifier}`);
 
       const retryAfter = Math.ceil((reset - Date.now()) / 1000);
 
@@ -133,12 +106,9 @@ export async function checkRateLimit(
       );
     }
 
-    // In many scenarios you'd append success headers to the response,
-    // but in Next.js middleware, setting headers on a passthrough request
-    // is slightly more verbose. For now, returning null indicates "allowed".
     return null;
   } catch (error) {
-    console.error("[RateLimit] Redis or Ratelimit error, falling open:", error);
-    return fallback;
+    console.error("[RateLimit] Redis error, falling open:", error);
+    return null;
   }
 }

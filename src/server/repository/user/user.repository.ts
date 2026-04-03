@@ -43,17 +43,17 @@ export async function findUserById(userId: string) {
 }
 
 /**
- * Finds a user with Instagram account
+ * Finds a user with all connected Instagram workspaces
  */
-export async function findUserWithInstaAccount(clerkId: string) {
+export async function findUserWithInstaAccounts(clerkId: string) {
   return executeWithErrorHandling(
     () =>
       prisma.user.findUnique({
         where: { clerkId },
-        include: { instaAccount: true },
+        include: { instaAccounts: { orderBy: { connectedAt: "asc" } } },
       }),
     {
-      operation: "findUserWithInstaAccount",
+      operation: "findUserWithInstaAccounts",
       model: "User",
       fallback: null,
     },
