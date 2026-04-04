@@ -7,20 +7,14 @@ import { Button } from "@/components/ui/button";
 import { EDITOR_HEADER_CONFIG, HEADER_ACTIONS } from "./config";
 
 type EditorHeaderProps = {
-  onSaveDraft: () => void;
   onPublish: () => void;
   isLoading?: boolean;
 };
 
 // Breadcrumb + action buttons — Refresh saves as draft, Publish publishes
-export const EditorHeader = ({
-  onSaveDraft,
-  onPublish,
-  isLoading,
-}: EditorHeaderProps) => {
+export const EditorHeader = ({ onPublish, isLoading }: EditorHeaderProps) => {
   // Maps action id to its click handler
   const ACTION_HANDLERS: Record<string, () => void> = {
-    refresh: onSaveDraft,
     publish: onPublish,
   };
 

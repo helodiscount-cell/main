@@ -368,15 +368,18 @@ export async function findAutomationsByTargetAndKeywords(
       prisma.automation.findMany({
         where: {
           instaAccountId,
-          status: "ACTIVE",
+          status: { in: ["ACTIVE", "PAUSED"] },
           ...(type === "post"
             ? { post: { is: { id: targetId } } }
             : type === "story"
               ? { story: { is: { id: targetId } } }
               : { triggerType: "RESPOND_TO_ALL_DMS" }),
-          triggers: {
-            hasSome: keywords,
-          },
+          // Conflict logic:
+          // 1. Catch-all (empty triggers) only conflicts with another catch-all
+          // 2. Keyword automation only conflicts with another automation using the same keywords
+          ...(keywords.length === 0
+            ? { triggers: { equals: [] } }
+            : { triggers: { hasSome: keywords } }),
         },
         select: {
           id: true,

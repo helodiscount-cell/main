@@ -42,6 +42,71 @@ function getInvalidateType(
   }
 }
 
+/**
+ * Helper to check for automation conflicts on a target (account, post, story)
+ */
+async function validateAutomationConflict(
+  instaAccountId: string,
+  triggerType: string,
+  triggers: string[],
+  targetId: string,
+  targetType: "post" | "story" | "account",
+  automationId?: string,
+) {
+  const overlapping = await findAutomationsByTargetAndKeywords(
+    instaAccountId,
+    targetId,
+    targetType,
+    triggers,
+  );
+
+  const others = automationId
+    ? overlapping.filter((a) => a.id !== automationId)
+    : overlapping;
+
+  if (others.length > 0) {
+    const conflict = others[0];
+    const isCatchAll = triggers.length === 0;
+
+    const message = isCatchAll
+      ? `An automation "${conflict.automationName}" is already a catch-all for this ${targetType}. Only one is allowed.`
+      : `Automation "${conflict.automationName}" already uses these keywords on this ${targetType}.`;
+
+    throw new ApiRouteError(message, "CONFLICTING_AUTOMATION", 400);
+  }
+
+  return others;
+}
+
+/**
+ * Helper to ensure automation name is unique for the account
+ */
+async function validateAutomationName(
+  instaAccountId: string,
+  name: string,
+  automationId?: string,
+) {
+  if (!name) return;
+
+  const result = await prisma.automation.findFirst({
+    where: {
+      instaAccountId,
+      automationName: name,
+      status: { in: ["ACTIVE", "PAUSED"] },
+      ...(automationId ? { id: { not: automationId } } : {}),
+    },
+    select: { id: true },
+  });
+
+  if (result) {
+    throw new ApiRouteError(
+      `An automation with the name "${name}" already exists on this account.`,
+      "DUPLICATE_NAME",
+      400,
+    );
+  }
+}
+
 // Creates a new automation scoped to a specific workspace
 export async function createAutomation(
   clerkId: string,
@@ -68,6 +133,9 @@ export async function createAutomation(
   const triggerType = input.triggerType ?? "COMMENT_ON_POST";
   const warnings: string[] = [];
 
+  // Name uniqueness check
+  await validateAutomationName(instaAccountId, input.automationName);
+
   const targetId =
     triggerType === "RESPOND_TO_ALL_DMS"
       ? "account"
@@ -81,22 +149,14 @@ export async function createAutomation(
         ? "story"
         : "post";
 
-  if (targetId && input.triggers.length > 0) {
-    const overlapping = await findAutomationsByTargetAndKeywords(
+  if (targetId) {
+    await validateAutomationConflict(
       instaAccountId,
+      triggerType as string,
+      input.triggers,
       targetId,
       targetType,
-      input.triggers,
     );
-
-    overlapping.forEach((auto) => {
-      const shared = auto.triggers.filter((t) => input.triggers.includes(t));
-      if (shared.length > 0) {
-        warnings.push(
-          `Automation "${auto.automationName}" already uses these keywords on this ${targetType}: ${shared.join(", ")}`,
-        );
-      }
-    });
   }
 
   const automation = await createAutomationRecord(
@@ -202,6 +262,48 @@ export async function updateAutomation(
 
   if (!existingAutomation) {
     throw new Error("Automation not found or access denied");
+  }
+
+  const instaAccountId = (existingAutomation as any).instaAccountId;
+
+  // Name uniqueness check (if name is changing)
+  if (input.automationName) {
+    await validateAutomationName(
+      instaAccountId,
+      input.automationName,
+      automationId,
+    );
+  }
+
+  // Conflict validation before update
+  const newTriggerType =
+    ((input as any).triggerType as string) ??
+    (existingAutomation as any).triggerType;
+  const newTriggers = input.triggers ?? (existingAutomation as any).triggers;
+
+  const targetId =
+    newTriggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : newTriggerType === "STORY_REPLY"
+        ? ((input as any).story?.id ?? (existingAutomation as any).story?.id)
+        : ((input as any).postId ?? (existingAutomation as any).post?.id);
+
+  const targetType =
+    newTriggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : newTriggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
+
+  if (targetId) {
+    await validateAutomationConflict(
+      (existingAutomation as any).instaAccountId,
+      newTriggerType,
+      newTriggers,
+      targetId,
+      targetType,
+      automationId,
+    );
   }
 
   const updatedAutomation = await updateAutomationRecord(automationId, input);
