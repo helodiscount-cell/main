@@ -37,7 +37,7 @@ export function generateAuthorizationUrl(state: OAuthState): string {
     scope: INSTAGRAM_OAUTH.SCOPES,
     response_type: "code",
     state: encodedState,
-    force_authentication: "1",
+    force_reauth: "true",
   });
 
   return `${INSTAGRAM_OAUTH.AUTHORIZE_URL}?${params.toString()}`;
