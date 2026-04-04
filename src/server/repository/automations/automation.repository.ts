@@ -302,14 +302,14 @@ export async function countAutomations(
 }
 
 export async function findActiveAutomationsByPost(
-  userId: string,
+  instaAccountId: string,
   postId: string,
 ) {
   return executeWithErrorHandling(
     () =>
       prisma.automation.findMany({
         where: {
-          userId,
+          instaAccountId,
           post: { is: { id: postId } },
           status: "ACTIVE",
         },
@@ -320,7 +320,7 @@ export async function findActiveAutomationsByPost(
     {
       operation: "findActiveAutomationsByPost",
       model: "Automation",
-      fallback: [], // Returns empty array on error (allows webhook to continue)
+      fallback: [],
       retries: 1,
     },
   );
@@ -330,14 +330,14 @@ export async function findActiveAutomationsByPost(
  * Finds active automations for a specific story
  */
 export async function findActiveAutomationsByStory(
-  userId: string,
+  instaAccountId: string,
   storyId: string,
 ) {
   return executeWithErrorHandling(
     () =>
       prisma.automation.findMany({
         where: {
-          userId,
+          instaAccountId,
           story: { is: { id: storyId } },
           status: "ACTIVE",
         },
@@ -358,7 +358,7 @@ export async function findActiveAutomationsByStory(
  * Finds automations for a specific post/story that overlap with given keywords
  */
 export async function findAutomationsByTargetAndKeywords(
-  userId: string,
+  instaAccountId: string,
   targetId: string,
   type: "post" | "story" | "account",
   keywords: string[],
@@ -367,7 +367,7 @@ export async function findAutomationsByTargetAndKeywords(
     () =>
       prisma.automation.findMany({
         where: {
-          userId,
+          instaAccountId,
           status: "ACTIVE",
           ...(type === "post"
             ? { post: { is: { id: targetId } } }

@@ -23,6 +23,24 @@ import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { AutomationFilters } from "@/types/automation";
 import { prisma } from "@/server/db";
+import { TriggerType } from "@/types/automation";
+
+/**
+ * Helper to compute the cache invalidation type from a trigger type
+ */
+function getInvalidateType(
+  triggerType: TriggerType,
+): "post" | "story" | "account" {
+  switch (triggerType) {
+    case "RESPOND_TO_ALL_DMS":
+      return "account";
+    case "STORY_REPLY":
+      return "story";
+    case "COMMENT_ON_POST":
+    default:
+      return "post";
+  }
+}
 
 // Creates a new automation scoped to a specific workspace
 export async function createAutomation(
@@ -65,7 +83,7 @@ export async function createAutomation(
 
   if (targetId && input.triggers.length > 0) {
     const overlapping = await findAutomationsByTargetAndKeywords(
-      user.id,
+      instaAccountId,
       targetId,
       targetType,
       input.triggers,
@@ -95,13 +113,8 @@ export async function createAutomation(
     );
   }
 
-  // Invalidate workspace automation cache
-  const invalidateType =
-    triggerType === "RESPOND_TO_ALL_DMS"
-      ? "account"
-      : triggerType === "STORY_REPLY"
-        ? "story"
-        : "post";
+  // Invalidate workspace automation cache using shared helper
+  const invalidateType = getInvalidateType(triggerType as TriggerType);
   const finalTargetId = targetId || "account";
 
   await invalidateAutomationCache(
@@ -193,32 +206,56 @@ export async function updateAutomation(
 
   const updatedAutomation = await updateAutomationRecord(automationId, input);
 
-  // Invalidate cache using the workspace ID
-  const invalidateType =
-    existingAutomation.triggerType === "RESPOND_TO_ALL_DMS"
-      ? "account"
-      : existingAutomation.triggerType === "STORY_REPLY"
-        ? "story"
-        : "post";
-  const targetId =
+  // Invalidate cache for BOTH old and new scopes if they differ
+  const oldInvalidateType = getInvalidateType(
+    existingAutomation.triggerType as TriggerType,
+  );
+  const oldTargetId =
     existingAutomation.post?.id ?? existingAutomation.story?.id ?? "account";
 
+  const newInvalidateType = getInvalidateType(
+    updatedAutomation.triggerType as TriggerType,
+  );
+  const newTargetId =
+    updatedAutomation.post?.id ?? updatedAutomation.story?.id ?? "account";
+
+  // 1. Invalidate old scope
   await invalidateAutomationCache(
     existingAutomation.instaAccountId,
-    targetId,
-    invalidateType,
+    oldTargetId,
+    oldInvalidateType,
     automationId,
   ).catch((error) => {
     logger.error(
       {
         instaAccountId: existingAutomation.instaAccountId,
-        targetId,
+        targetId: oldTargetId,
         automationId,
       },
-      "Failed to invalidate automation cache after update",
+      "Failed to invalidate OLD automation cache after update",
       error instanceof Error ? error : new Error(String(error)),
     );
   });
+
+  // 2. Invalidate new scope ONLY if it's different from the old one
+  if (oldTargetId !== newTargetId || oldInvalidateType !== newInvalidateType) {
+    await invalidateAutomationCache(
+      existingAutomation.instaAccountId,
+      newTargetId,
+      newInvalidateType,
+      automationId,
+    ).catch((error) => {
+      logger.error(
+        {
+          instaAccountId: existingAutomation.instaAccountId,
+          targetId: newTargetId,
+          automationId,
+        },
+        "Failed to invalidate NEW automation cache after update",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    });
+  }
 
   return {
     id: updatedAutomation.id,
@@ -257,12 +294,9 @@ export async function deleteAutomation(userId: string, automationId: string) {
 
   await softDeleteAutomation(automationId);
 
-  const invalidateType =
-    existingAutomation.triggerType === "RESPOND_TO_ALL_DMS"
-      ? "account"
-      : existingAutomation.triggerType === "STORY_REPLY"
-        ? "story"
-        : "post";
+  const invalidateType = getInvalidateType(
+    existingAutomation.triggerType as TriggerType,
+  );
   const targetId =
     existingAutomation.post?.id ?? existingAutomation.story?.id ?? "account";
   await invalidateAutomationCache(

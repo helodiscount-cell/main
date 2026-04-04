@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Copy, Pencil, Trash2 } from "lucide-react";
+import { getAutomationRoute } from "@/utils/automation";
 
 // Shared row actions menu — consumed by automations, forms, etc.
 const MENU_ITEMS = [
@@ -60,11 +61,19 @@ export function AutomationActionsMenu({
 
   // Navigate to the correct editor route based on trigger type
   const handleEdit = () => {
-    navigate.push(
-      fullAutomation.triggerType === "STORY_REPLY"
-        ? `/dash/automations/dmforstories/${fullAutomation.story?.id}`
-        : `/dash/automations/dmforcomments/${fullAutomation.post?.id}`,
+    const route = getAutomationRoute(
+      fullAutomation.triggerType,
+      fullAutomation.id,
     );
+
+    if (route) {
+      navigate.push(route);
+    } else {
+      console.error(
+        `[AutomationActionsMenu] Cannot edit: Unknown triggerType ${fullAutomation.triggerType}`,
+      );
+      toast.error("Cannot edit: Unknown automation type.");
+    }
   };
 
   return (

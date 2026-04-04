@@ -1,5 +1,4 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
@@ -21,7 +20,6 @@ import { FreshHeader } from "@/components/dash/automations/headers";
 import { ExistingAutomationsBlock } from "@/components/dash/automations/create/ExistingAutomationsBlock";
 
 const Page = () => {
-  const queryClient = useQueryClient();
   const {
     form: { control, watch },
     pageState,

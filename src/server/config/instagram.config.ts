@@ -196,13 +196,14 @@ export function getOAuthCredentials(): {
   redirectUri: string | null;
 } {
   return {
-    // Instagram App ID (from Instagram > API setup with Instagram login)
+    // Instagram App ID (prefers Instagram-specific, falls back to legacy APP_ID)
     appId: process.env.INSTAGRAM_APP_ID || process.env.APP_ID || null,
-    // Instagram App Secret (from Instagram > API setup with Instagram login)
+    // Instagram App Secret (prefers Instagram-specific, falls back to legacy FACEBOOK_APP_SECRET)
     appSecret:
       process.env.INSTAGRAM_APP_SECRET ||
       process.env.FACEBOOK_APP_SECRET ||
       null,
+    // Instagram Redirect URI (prefers Instagram-specific, falls back to legacy NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI)
     redirectUri:
       process.env.INSTAGRAM_REDIRECT_URI ||
       process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ||

@@ -10,6 +10,7 @@ import {
   deleteFormById,
   updateForm as updateFormRecord,
 } from "@/server/repository/forms";
+import { prisma } from "@/server/db";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import type {
   CreateFormInput,
@@ -55,6 +56,20 @@ export async function createForm(
   const user = await findUserByClerkId(clerkId);
   if (!user) {
     throw new ApiRouteError("User not found", "NO_USER", 404);
+  }
+
+  // Ownership + workspace check before creation
+  const account = await prisma.instaAccount.findFirst({
+    where: { id: instaAccountId, userId: user.id, isActive: true },
+    select: { id: true },
+  });
+
+  if (!account) {
+    throw new ApiRouteError(
+      "Instagram account not found or access denied",
+      "AUTH_ERROR",
+      403,
+    );
   }
 
   const form = await createFormRecord(user.id, instaAccountId, input);

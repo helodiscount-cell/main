@@ -21,7 +21,10 @@ export async function invalidateAutomations(
   try {
     const pipeline = redis.pipeline();
 
-    // SCAN for all post and story automation caches scoped to this workspace
+    // 1. Delete the specific account-level DM cache key (not matched by the broad scan pattern)
+    pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId));
+
+    // 2. SCAN for all post and story automation caches scoped to this workspace
     let cursor = "0";
     do {
       const [nextCursor, keys] = await redis.scan(
@@ -140,10 +143,15 @@ export async function clearAllUserCache(
 
   const pipeline = redis.pipeline();
 
-  // Webhook connection marker for this IG account
-  pipeline.del(`ig:webhook:${webhookUserId}`);
+  // 1. Webhook connection marker for this IG account
+  if (webhookUserId) {
+    pipeline.del(`ig:webhook:${webhookUserId}`);
+  }
 
-  // All post/story automation caches scoped to this workspace
+  // 2. Global account-level DM automation cache
+  pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId));
+
+  // 3. All post/story automation caches scoped to this workspace
   let cursor = "0";
   do {
     const [nextCursor, keys] = await redis.scan(

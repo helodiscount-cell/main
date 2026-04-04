@@ -328,8 +328,8 @@ export async function disconnectAccount(
     );
   }
 
-  // Flush Redis cache for this workspace immediately
-  await invalidateUser(account.instagramUserId, account.user.id, account.id);
+  // Flush Redis cache for this workspace immediately (instaAccountId scoped)
+  await invalidateUser(account.instagramUserId, account.id, account.id);
 
   // Soft-deactivate; keeps historical data intact
   await deactivateInstaAccount(account.id, account.user.id);

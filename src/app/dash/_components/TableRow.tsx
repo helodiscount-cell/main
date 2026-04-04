@@ -10,6 +10,7 @@ import type { FormListItem } from "@/types/form";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
+import { getAutomationRoute, getAutomationLabel } from "@/utils/automation";
 
 // Styles
 const FORM_STATUS_STYLES: Record<string, string> = {
@@ -24,7 +25,7 @@ export interface TableRowUIProps {
   icon: React.ReactNode;
   title: string;
   subtitle?: string | React.ReactNode;
-  href: string;
+  href: string | null;
   status: React.ReactNode;
   stats: React.ReactNode;
   date: React.ReactNode;
@@ -55,16 +56,29 @@ const TableRowUI = ({
         <div className="w-8 h-8 rounded-md bg-slate-50 shrink-0 flex items-center justify-center overflow-hidden border border-slate-100">
           {icon}
         </div>
-        <Link href={href} className="flex flex-col gap-0.5 group min-w-0">
-          <span className="text-sm font-medium text-slate-800 group-hover:text-[#6A06E4] transition-colors truncate">
-            {title}
-          </span>
-          {subtitle && (
-            <span className="text-xs text-slate-400 truncate max-w-[260px]">
-              {subtitle}
+        {href ? (
+          <Link href={href} className="flex flex-col gap-0.5 group min-w-0">
+            <span className="text-sm font-medium text-slate-800 group-hover:text-[#6A06E4] transition-colors truncate">
+              {title}
             </span>
-          )}
-        </Link>
+            {subtitle && (
+              <span className="text-xs text-slate-400 truncate max-w-[260px]">
+                {subtitle}
+              </span>
+            )}
+          </Link>
+        ) : (
+          <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
+            <span className="text-sm font-medium text-slate-800 truncate">
+              {title}
+            </span>
+            {subtitle && (
+              <span className="text-xs text-slate-400 truncate max-w-[260px]">
+                {subtitle}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2. Status Section */}
@@ -110,12 +124,7 @@ const useTableRowMapper = (
         (automation.triggers.length > 0
           ? `Keywords: ${automation.triggers.join(", ")}`
           : "No keyword triggers"),
-      href:
-        automation.triggerType === "RESPOND_TO_ALL_DMS"
-          ? `/dash/automations/respondtoalldms/edit/${automation.id}`
-          : automation.triggerType === "STORY_REPLY"
-            ? `/dash/automations/dmforstories/edit/${automation.id}`
-            : `/dash/automations/dmforcomments/edit/${automation.id}`,
+      href: getAutomationRoute(automation.triggerType, automation.id),
       icon:
         automation.post?.thumbnailUrl ||
         automation.post?.mediaUrl ||
@@ -135,11 +144,7 @@ const useTableRowMapper = (
           />
         ) : (
           <span className="text-[10px] text-slate-400 font-bold uppercase">
-            {automation.triggerType === "RESPOND_TO_ALL_DMS"
-              ? "Inbox"
-              : automation.triggerType === "STORY_REPLY"
-                ? "Story"
-                : "Post"}
+            {getAutomationLabel(automation.triggerType) || "Unknown Trigger"}
           </span>
         ),
       status: (

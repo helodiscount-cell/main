@@ -60,9 +60,7 @@ export const baseAutomationSchema = z.object({
     .optional(),
 });
 
-export const commentsAutomationSchema = baseAutomationSchema.extend({
-  publicReplyEnabled: z.boolean(),
-  publicReplies: z.array(z.object({ id: z.string(), text: z.string() })),
+export const askToFollowSchema = z.object({
   askToFollowEnabled: z.boolean(),
   askToFollowMessage: z.string().max(1000).optional(),
   askToFollowLink: z
@@ -73,27 +71,20 @@ export const commentsAutomationSchema = baseAutomationSchema.extend({
     .optional(),
 });
 
-export const storyAutomationSchema = baseAutomationSchema.extend({
-  askToFollowEnabled: z.boolean(),
-  askToFollowMessage: z.string().max(1000).optional(),
-  askToFollowLink: z
-    .string()
-    .url("Invalid link URL")
-    .startsWith("https://", "Only HTTPS links are allowed")
-    .or(z.literal(""))
-    .optional(),
-});
+export const commentsAutomationSchema = baseAutomationSchema
+  .extend({
+    publicReplyEnabled: z.boolean(),
+    publicReplies: z.array(z.object({ id: z.string(), text: z.string() })),
+  })
+  .extend(askToFollowSchema.shape);
 
-export const respondToAllDmsSchema = baseAutomationSchema.extend({
-  askToFollowEnabled: z.boolean(),
-  askToFollowMessage: z.string().max(1000).optional(),
-  askToFollowLink: z
-    .string()
-    .url("Invalid link URL")
-    .startsWith("https://", "Only HTTPS links are allowed")
-    .or(z.literal(""))
-    .optional(),
-});
+export const storyAutomationSchema = baseAutomationSchema.extend(
+  askToFollowSchema.shape,
+);
+
+export const respondToAllDmsSchema = baseAutomationSchema.extend(
+  askToFollowSchema.shape,
+);
 
 export type CommentsFormValues = z.infer<typeof commentsAutomationSchema>;
 export type StoryFormValues = z.infer<typeof storyAutomationSchema>;

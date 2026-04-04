@@ -40,10 +40,11 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       automationName: "",
       keywords: [],
       dmMessage: "",
+      dmImage: "",
       askToFollowEnabled: false,
       askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
       askToFollowLink: "",
-      openingMessageEnabled: true,
+      openingMessageEnabled: false,
       openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
       openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
       dmLinks: [],
@@ -52,11 +53,12 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       automationName: auto.automationName || "",
       keywords: auto.triggers || [],
       dmMessage: auto.replyMessage || "",
-      askToFollowEnabled: auto.askToFollowEnabled,
+      dmImage: auto.replyImage || "",
+      askToFollowEnabled: auto.askToFollowEnabled ?? false,
       askToFollowMessage:
         auto.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
       askToFollowLink: auto.askToFollowLink || "",
-      openingMessageEnabled: auto.openingMessageEnabled,
+      openingMessageEnabled: auto.openingMessageEnabled ?? false,
       openingMessage:
         auto.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
       openingButtonText:
@@ -105,7 +107,6 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     }),
     [
       existingAutomation,
-      automationName,
       handleNameChange,
       isStarting,
       isStopping,
@@ -113,6 +114,16 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       stopAutomation,
     ],
   );
+
+  if (pageState === "not-found") {
+    return (
+      <AutomationLayout
+        header={headerContent["not-found"]}
+        leftCol={null}
+        rightCol={null}
+      />
+    );
+  }
 
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
