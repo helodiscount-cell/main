@@ -107,9 +107,11 @@ model Automation {
   instaAccount   InstaAccount @relation(fields: [instaAccountId], references: [id], onDelete: Cascade)
 
   triggerType    String       @default("COMMENT_ON_POST") // COMMENT_ON_POST | STORY_REPLY
-  automationName String?
+  automationName String
   post           PostTarget?
   story          StoryTarget?
+  targetId       String? // Computed field for indexing: postId, storyId, or 'account'
+  targetType     String? // Computed field for indexing: post, story, or 'account'
 
   // Trigger configuration
   triggers           String[] // Keywords/phrases to match
@@ -142,6 +144,8 @@ model Automation {
 
   executions AutomationExecution[]
 
+  @@unique([instaAccountId, automationName])
+  @@unique([instaAccountId, targetId, targetType, triggers])
   @@index([instaAccountId, status])
   @@index([instaAccountId, triggerType, status])
   @@map("automations")
