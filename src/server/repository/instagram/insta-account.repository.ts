@@ -7,77 +7,41 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 import { logger } from "@/server/utils/pino";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 /**
- * Finds an Instagram account by Instagram user ID
+ * Finds an Instagram account by its Webhook Business ID (for webhooks)
  */
-export async function findInstaAccountByInstagramUserId(
-  instagramUserId: string,
-) {
-  // Ensures Instagram user ID is a string for consistent querying
-  const userIdString = String(instagramUserId);
+export async function findInstaAccountByWebhookUserId(webhookUserId: string) {
+  // Ensures Webhook user ID is a string for consistent querying
+  const userIdString = String(webhookUserId);
 
-  // Tries exact match first
-  let instaAccount = await prisma.instaAccount.findUnique({
-    where: { webhookUserId: userIdString },
-    select: {
-      id: true,
-      userId: true,
-      accessToken: true,
-      instagramUserId: true,
-      webhookUserId: true,
-      isActive: true,
-      user: {
+  return executeWithErrorHandling(
+    () =>
+      prisma.instaAccount.findUnique({
+        where: { webhookUserId: userIdString },
         select: {
-          clerkId: true,
+          id: true,
+          userId: true,
+          accessToken: true,
+          instagramUserId: true,
+          webhookUserId: true,
+          isActive: true,
+          username: true,
+          user: {
+            select: {
+              clerkId: true,
+            },
+          },
         },
-      },
+      }),
+    {
+      operation: "findInstaAccountByWebhookUserId",
+      model: "InstaAccount",
+      fallback: null,
+      retries: 1,
     },
-  });
-
-  // If not found, tries to find all accounts and log them for debugging
-  if (!instaAccount) {
-    console.log("Account not found with exact match, checking all accounts...");
-    const allAccounts = await prisma.instaAccount.findMany({
-      select: {
-        id: true,
-        instagramUserId: true,
-        webhookUserId: true,
-        username: true,
-        isActive: true,
-      },
-    });
-    console.log("All stored Instagram accounts:", allAccounts);
-    console.log("Looking for:", userIdString);
-    console.log(
-      "Type comparison:",
-      allAccounts.map((acc) => ({
-        stored: acc.webhookUserId,
-        storedType: typeof acc.instagramUserId,
-        matches: acc.instagramUserId === userIdString,
-      })),
-    );
-  }
-
-  console.log("instaAccount in repository", instaAccount);
-  return instaAccount;
-  // return executeWithErrorHandling(
-  //   () =>
-  //     prisma.instaAccount.findUnique({
-  //       where: { instagramUserId },
-  //       select: {
-  //         id: true,
-  //         userId: true,
-  //         accessToken: true,
-  //       },
-  //     }),
-  //   {
-  //     operation: "findInstaAccountByInstagramUserId",
-  //     model: "InstaAccount",
-  //     fallback: null,
-  //     retries: 1,
-  //   }
-  // );
+  );
 }
 
 /**
@@ -106,11 +70,9 @@ export async function findInstaAccountByAutomationId(automationId: string) {
     () =>
       prisma.instaAccount.findFirst({
         where: {
-          user: {
-            automations: {
-              some: {
-                id: automationId,
-              },
+          automations: {
+            some: {
+              id: automationId,
             },
           },
         },
@@ -126,41 +88,63 @@ export async function findInstaAccountByAutomationId(automationId: string) {
 
 /**
  * Deletes an Instagram account
- * @param id - The insta account ID of the Instagram account
- * @param clerkId - The Clerk ID of the user
- * @returns The deleted Instagram account
+ * @param instaAccountId - The DB id of the Instagram account
+ * @param clerkId - The Clerk ID of the user (enforces ownership)
  */
 export async function deleteInstaAccount(
   instaAccountId: string,
   clerkId: string,
 ) {
-  // Gets account info before deletion to clear cache
-  const account = await findInstaAccountById(instaAccountId);
-
-  // Clears all cache related to this account
-  if (account) {
-    const { clearAllUserCache } =
-      await import("@/server/redis/operations/automation");
-    // Uses webhookUserId for cache key (matches webhook handler)
-    const webhookUserId =
-      account.webhookUserId || account.instagramUserId || "";
-    if (webhookUserId) {
-      await clearAllUserCache(webhookUserId, clerkId).catch((error) => {
-        // Logs error but doesn't fail the operation
-        logger.error(
-          { accountId: instaAccountId, clerkId, webhookUserId },
-          "Failed to clear user cache on disconnect",
-          error instanceof Error ? error : new Error(String(error)),
-        );
-      });
-    }
-  }
-
   return executeWithErrorHandling(
-    () =>
-      prisma.instaAccount.delete({
-        where: { id: instaAccountId }, // Deletes the Instagram account record
-      }),
+    async () => {
+      // Execute lookup and deletion in a single atomic transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Verify ownership
+        const account = await tx.instaAccount.findFirst({
+          where: { id: instaAccountId, user: { clerkId } },
+          select: { id: true, webhookUserId: true },
+        });
+
+        if (!account) {
+          // Diagnostics for account lookup failure
+          logger.info(
+            { instaAccountId, clerkId },
+            "Instagram account not found or access denied for deletion",
+          );
+          throw new ApiRouteError(
+            "Instagram account not found or access denied",
+            "INSTA_NOT_FOUND",
+            404,
+          );
+        }
+
+        // 2. Atomic delete
+        const deleteResult = await tx.instaAccount.deleteMany({
+          where: { id: instaAccountId, user: { clerkId } },
+        });
+
+        return { account, count: deleteResult.count };
+      });
+
+      // 3. Clear all cache for this workspace ONLY if deletion succeeded
+      if (result.count > 0) {
+        const { clearAllUserCache } =
+          await import("@/server/redis/operations/automation");
+        const webhookUserId = result.account.webhookUserId || "";
+
+        await clearAllUserCache(webhookUserId, instaAccountId).catch(
+          (error) => {
+            logger.error(
+              { instaAccountId, clerkId, webhookUserId },
+              "Failed to clear account cache after disconnect",
+              error instanceof Error ? error : new Error(String(error)),
+            );
+          },
+        );
+      }
+
+      return { count: result.count };
+    },
     {
       operation: "deleteInstaAccount",
       model: "InstaAccount",
@@ -172,7 +156,7 @@ export async function deleteInstaAccount(
 /**
  * Softly deactivates an Instagram account by setting isActive to false
  * @param instaAccountId - The ID of the Instagram account
- * @param clerkId - The Clerk ID of the user
+ * @param clerkId - The Clerk ID of the user (enforces ownership)
  * @returns The updated Instagram account
  */
 export async function deactivateInstaAccount(
@@ -182,7 +166,7 @@ export async function deactivateInstaAccount(
   return executeWithErrorHandling(
     () =>
       prisma.instaAccount.update({
-        where: { id: instaAccountId },
+        where: { id: instaAccountId, user: { clerkId } },
         data: { isActive: false },
       }),
     {

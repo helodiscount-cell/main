@@ -1,8 +1,12 @@
 export type AutomationStatus = "ACTIVE" | "PAUSED";
+export type TriggerType =
+  | "COMMENT_ON_POST"
+  | "STORY_REPLY"
+  | "RESPOND_TO_ALL_DMS";
 
 export interface AutomationListItem {
   id: string;
-  triggerType: "COMMENT_ON_POST" | "STORY_REPLY";
+  triggerType: TriggerType;
   post: {
     id: string;
     caption: string | null;

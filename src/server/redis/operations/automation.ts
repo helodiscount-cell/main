@@ -21,7 +21,10 @@ export async function invalidateAutomations(
   try {
     const pipeline = redis.pipeline();
 
-    // SCAN for all post and story automation caches scoped to this workspace
+    // 1. Delete the specific account-level DM cache key (not matched by the broad scan pattern)
+    pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId));
+
+    // 2. SCAN for all post and story automation caches scoped to this workspace
     let cursor = "0";
     do {
       const [nextCursor, keys] = await redis.scan(
@@ -57,17 +60,33 @@ export async function invalidateAutomations(
 export async function invalidateAutomationCache(
   instaAccountId: string,
   targetId: string,
-  type: "post" | "story" = "post",
+  type: "post" | "story" | "account" = "post",
+  automationId?: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
 
-  const cacheKey =
-    type === "post"
-      ? KEYS.AUTOMATIONS_BY_POST(instaAccountId, targetId)
-      : KEYS.AUTOMATIONS_BY_STORY(instaAccountId, targetId);
+  let cacheKey: string;
+  switch (type) {
+    case "post":
+      cacheKey = KEYS.AUTOMATIONS_BY_POST(instaAccountId, targetId);
+      break;
+    case "story":
+      cacheKey = KEYS.AUTOMATIONS_BY_STORY(instaAccountId, targetId);
+      break;
+    case "account":
+      cacheKey = KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId);
+      break;
+  }
 
-  await redis.del(cacheKey);
+  const pipeline = redis.pipeline();
+  pipeline.del(cacheKey);
+
+  if (automationId) {
+    pipeline.del(KEYS.AUTOMATION_BY_ID(automationId));
+  }
+
+  await pipeline.exec();
 }
 
 /**
@@ -124,10 +143,15 @@ export async function clearAllUserCache(
 
   const pipeline = redis.pipeline();
 
-  // Webhook connection marker for this IG account
-  pipeline.del(`ig:webhook:${webhookUserId}`);
+  // 1. Webhook connection marker for this IG account
+  if (webhookUserId) {
+    pipeline.del(`ig:webhook:${webhookUserId}`);
+  }
 
-  // All post/story automation caches scoped to this workspace
+  // 2. Global account-level DM automation cache
+  pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId));
+
+  // 3. All post/story automation caches scoped to this workspace
   let cursor = "0";
   do {
     const [nextCursor, keys] = await redis.scan(

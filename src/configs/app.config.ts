@@ -4,23 +4,37 @@
  */
 
 const getAppOrigin = (): string => {
-  // Priority: 1. Native APP_ORIGIN, 2. Public APP_URL, 3. Vercel URL
-  const origin =
-    process.env.APP_ORIGIN ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.NEXT_PUBLIC_VERCEL_URL
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-      : null) ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+  // strictly .env driven configuration
+  const rawOrigin =
+    process.env.APP_ORIGIN || process.env.NEXT_PUBLIC_APP_URL || "";
+  const origin = rawOrigin.trim();
 
-  // Fail-fast in non-dev environments if trust anchor is missing (prevents Host Header Injection)
-  if (!origin && process.env.NODE_ENV !== "development") {
+  if (!origin) {
     throw new Error(
-      "CRITICAL_SECURITY: Application origin (APP_ORIGIN or NEXT_PUBLIC_APP_URL) is missing in production/preview environment.",
+      "CRITICAL_SECURITY: Application origin (APP_ORIGIN or NEXT_PUBLIC_APP_URL) is missing in environment.",
     );
   }
 
-  return origin || "http://localhost:3000";
+  try {
+    const url = new URL(origin);
+
+    // Security check: Only allow web schemes for origin
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(
+        `CRITICAL_SECURITY: Invalid protocol "${url.protocol}". Application origin must use http: or https:.`,
+      );
+    }
+
+    // Canonicalize: lowercase scheme/host, handles default ports, removes trailing slash
+    return url.origin;
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("CRITICAL_SECURITY")) {
+      throw err;
+    }
+    throw new Error(
+      `CRITICAL_SECURITY: Invalid Application origin configured: "${origin}". Must be a valid absolute URL (e.g., https://example.com)`,
+    );
+  }
 };
 
 export const APP_CONFIG = {

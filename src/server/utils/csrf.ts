@@ -1,16 +1,6 @@
 import { APP_CONFIG } from "@/configs/app.config";
 
 /**
- * Gets the allowed origin for the application
- */
-function getAllowedOrigin(): string {
-  const origin = APP_CONFIG.ORIGIN;
-
-  // Removes protocol if present and normalizes
-  return origin.replace(/^https?:\/\//, "").split("/")[0];
-}
-
-/**
  * Validates the Origin header against allowed origins
  * Returns true if origin is valid or missing (for same-origin requests)
  */
@@ -23,22 +13,29 @@ export function validateOrigin(origin: string | null): {
     return { valid: true };
   }
 
-  const allowedOrigin = getAllowedOrigin();
-  const originHost = origin.replace(/^https?:\/\//, "").split("/")[0];
+  const allowedOrigin = APP_CONFIG.ORIGIN;
 
-  // Validates exact match or localhost variations
-  if (
-    originHost === allowedOrigin ||
-    originHost === `localhost:3000` ||
-    originHost === `127.0.0.1:3000` ||
-    (allowedOrigin.includes("localhost") && originHost.includes("localhost"))
-  ) {
-    return { valid: true };
+  try {
+    const originUrl = new URL(origin);
+    const originHost = originUrl.origin;
+
+    // Validates exact match against allowed origin (canonicalized scheme/host/port)
+    if (originHost === allowedOrigin) {
+      return { valid: true };
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: "Invalid origin header format",
+    };
   }
 
-  // Allows ngrok and similar development tunnels
-  if (process.env.NODE_ENV === "development" && originHost.includes("ngrok")) {
-    return { valid: true };
+  // Allows ngrok and similar development tunnels in dev mode
+  if (process.env.NODE_ENV === "development") {
+    const originHost = origin.replace(/^https?:\/\//, "").split("/")[0];
+    if (originHost.includes("ngrok")) {
+      return { valid: true };
+    }
   }
 
   return {
@@ -49,7 +46,6 @@ export function validateOrigin(origin: string | null): {
 
 /**
  * Validates the Referer header against allowed origins
- * Used as a fallback when Origin header is not present
  */
 export function validateReferer(referer: string | null): {
   valid: boolean;
@@ -62,16 +58,11 @@ export function validateReferer(referer: string | null): {
 
   try {
     const refererUrl = new URL(referer);
-    const allowedOrigin = getAllowedOrigin();
-    const refererHost = refererUrl.host;
+    const allowedOrigin = APP_CONFIG.ORIGIN;
+    const refererHost = refererUrl.origin;
 
     // Validates host matches allowed origin
-    if (
-      refererHost === allowedOrigin ||
-      refererHost === `localhost:3000` ||
-      refererHost === `127.0.0.1:3000` ||
-      (allowedOrigin.includes("localhost") && refererHost.includes("localhost"))
-    ) {
+    if (refererHost === allowedOrigin) {
       return { valid: true };
     }
 

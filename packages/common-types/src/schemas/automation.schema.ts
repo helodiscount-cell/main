@@ -42,7 +42,7 @@ export const DmLinkSchema = z.object({
 export const CreateAutomationSchema = z
   .object({
     triggerType: z
-      .enum(["COMMENT_ON_POST", "STORY_REPLY"])
+      .enum(["COMMENT_ON_POST", "STORY_REPLY", "RESPOND_TO_ALL_DMS"])
       .default("COMMENT_ON_POST"),
     automationName: z
       .string()
@@ -166,6 +166,7 @@ export const CreateAutomationSchema = z
     (data) => {
       if (data.triggerType === "COMMENT_ON_POST") return !!data.postId;
       if (data.triggerType === "STORY_REPLY") return !!data.story;
+      if (data.triggerType === "RESPOND_TO_ALL_DMS") return true;
       return true;
     },
     {
@@ -319,7 +320,7 @@ export const AutomationResponseSchema = z.object({
   commentReplyWhenDm: z.array(z.string()).optional(),
   askToFollowEnabled: z.boolean().optional(),
   askToFollowMessage: z.string().max(1000).optional().nullable(),
-  askToFollowLink: z.string().max(2048).optional().nullable(),
+  askToFollowLink: z.string().optional().nullable(),
   openingMessageEnabled: z.boolean().optional(),
   openingMessage: z.string().nullable().optional(),
   openingButtonText: z.string().nullable().optional(),
@@ -394,7 +395,7 @@ export const UpdateAutomationResponseSchema = z.object({
     commentReplyWhenDm: z.array(z.string()).optional(),
     askToFollowEnabled: z.boolean().optional(),
     askToFollowMessage: z.string().max(1000).optional().nullable(),
-    askToFollowLink: z.string().max(2048).optional().nullable(),
+    askToFollowLink: z.string().optional().nullable(),
     openingMessageEnabled: z.boolean().optional(),
     openingMessage: z.string().nullable().optional(),
     openingButtonText: z.string().nullable().optional(),

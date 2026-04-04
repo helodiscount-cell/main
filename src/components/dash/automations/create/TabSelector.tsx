@@ -1,4 +1,6 @@
+"use client";
 import { Instagram, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const tabs = [
   {
@@ -27,13 +29,21 @@ export default function TabSelector({
 }: {
   setActiveTab: (value: string | null) => void;
 }) {
+  const router = useRouter();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
       {tabs.map((tab) => (
         <div
           key={tab.id}
           className="group relative rounded-xl border border-gray-100 bg-gray-50/50 p-6 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all cursor-pointer flex flex-col"
-          onClick={() => setActiveTab(tab.id)}
+          onClick={() => {
+            if (tab.id === "respond-to-all-dms") {
+              router.push("/dash/automations/respondtoalldms");
+            } else {
+              setActiveTab(tab.id);
+            }
+          }}
         >
           <div className="mb-4 inline-flex items-center justify-center rounded-lg bg-white p-2 text-purple-600 shadow-sm ring-1 ring-gray-200 group-hover:ring-purple-200 transition-all">
             {tab.icon}
