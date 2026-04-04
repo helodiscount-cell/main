@@ -42,6 +42,77 @@ function getInvalidateType(
   }
 }
 
+/**
+ * Helper to check for automation conflicts on a target (account, post, story)
+ */
+async function validateAutomationConflict(
+  instaAccountId: string,
+  triggers: string[],
+  targetId: string,
+  targetType: "post" | "story" | "account",
+  automationId?: string,
+) {
+  const overlapping = await findAutomationsByTargetAndKeywords(
+    instaAccountId,
+    targetId,
+    targetType,
+    triggers,
+  );
+
+  const others = automationId
+    ? overlapping.filter((a) => a.id !== automationId)
+    : overlapping;
+
+  if (others.length > 0) {
+    const conflict = others[0];
+    const isCatchAll = triggers.length === 0;
+
+    const automationName = conflict.automationName || "unnamed automation";
+    const message = isCatchAll
+      ? `Automation "${automationName}" is already a catch-all for this ${targetType}. Only one is allowed.`
+      : `Automation "${automationName}" shares keywords on this ${targetType} that match your new configuration.`;
+
+    throw new ApiRouteError(message, "CONFLICTING_AUTOMATION", 400);
+  }
+
+  return others;
+}
+
+/**
+ * Helper to ensure automation name is unique for the account
+ */
+async function validateAutomationName(
+  instaAccountId: string,
+  name: string,
+  automationId?: string,
+) {
+  if (!name || name.trim() === "") {
+    throw new ApiRouteError(
+      "An automation name is required.",
+      "MISSING_NAME",
+      400,
+    );
+  }
+
+  const result = await prisma.automation.findFirst({
+    where: {
+      instaAccountId,
+      automationName: name,
+      status: { in: ["ACTIVE", "PAUSED"] },
+      ...(automationId ? { id: { not: automationId } } : {}),
+    },
+    select: { id: true },
+  });
+
+  if (result) {
+    throw new ApiRouteError(
+      `An automation with the name "${name}" already exists on this account.`,
+      "DUPLICATE_NAME",
+      400,
+    );
+  }
+}
+
 // Creates a new automation scoped to a specific workspace
 export async function createAutomation(
   clerkId: string,
@@ -68,6 +139,9 @@ export async function createAutomation(
   const triggerType = input.triggerType ?? "COMMENT_ON_POST";
   const warnings: string[] = [];
 
+  // Name uniqueness check
+  await validateAutomationName(instaAccountId, input.automationName);
+
   const targetId =
     triggerType === "RESPOND_TO_ALL_DMS"
       ? "account"
@@ -81,29 +155,43 @@ export async function createAutomation(
         ? "story"
         : "post";
 
-  if (targetId && input.triggers.length > 0) {
-    const overlapping = await findAutomationsByTargetAndKeywords(
-      instaAccountId,
-      targetId,
-      targetType,
-      input.triggers,
+  if (!targetId) {
+    throw new ApiRouteError(
+      `A target ID (e.g. postId or storyId) is required for ${triggerType} triggers.`,
+      "MISSING_TARGET",
+      400,
     );
-
-    overlapping.forEach((auto) => {
-      const shared = auto.triggers.filter((t) => input.triggers.includes(t));
-      if (shared.length > 0) {
-        warnings.push(
-          `Automation "${auto.automationName}" already uses these keywords on this ${targetType}: ${shared.join(", ")}`,
-        );
-      }
-    });
   }
 
-  const automation = await createAutomationRecord(
-    user.id,
+  await validateAutomationConflict(
     instaAccountId,
-    input,
+    input.triggers,
+    targetId,
+    targetType,
   );
+
+  let automation;
+  try {
+    automation = await createAutomationRecord(user.id, instaAccountId, input);
+  } catch (err: any) {
+    // Handle uniqueness constraints (e.g., duplicate name or overlapping triggers)
+    if (err.code === "P2002") {
+      const target = (err.meta?.target as string[]) || [];
+      if (target.includes("automationName")) {
+        throw new ApiRouteError(
+          `An automation with the name "${input.automationName}" already exists on this account.`,
+          "DUPLICATE_NAME",
+          400,
+        );
+      }
+      throw new ApiRouteError(
+        "An automation with this configuration already exists. Please check for keyword overlaps.",
+        "CONFLICTING_AUTOMATION",
+        400,
+      );
+    }
+    throw err;
+  }
 
   if (!automation) {
     throw new ApiRouteError(
@@ -204,7 +292,82 @@ export async function updateAutomation(
     throw new Error("Automation not found or access denied");
   }
 
-  const updatedAutomation = await updateAutomationRecord(automationId, input);
+  const instaAccountId = (existingAutomation as any).instaAccountId;
+
+  // Conflict validation before update
+  const newTriggerType =
+    ((input as any).triggerType as string) ??
+    (existingAutomation as any).triggerType;
+  const newTriggers = input.triggers ?? (existingAutomation as any).triggers;
+
+  const targetId =
+    newTriggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : newTriggerType === "STORY_REPLY"
+        ? ((input as any).story?.id ?? (existingAutomation as any).story?.id)
+        : ((input as any).postId ?? (existingAutomation as any).post?.id);
+
+  const targetType =
+    newTriggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : newTriggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
+
+  // Name uniqueness and presence check (if name is provided)
+  if (input.automationName !== undefined) {
+    await validateAutomationName(
+      instaAccountId,
+      input.automationName,
+      automationId,
+    );
+  }
+
+  // Conflict validation before update
+  if (!targetId) {
+    throw new ApiRouteError(
+      `A target ID (e.g. postId or storyId) is required for ${newTriggerType} triggers.`,
+      "MISSING_TARGET",
+      400,
+    );
+  }
+
+  await validateAutomationConflict(
+    (existingAutomation as any).instaAccountId,
+    newTriggers,
+    targetId,
+    targetType,
+    automationId,
+  );
+
+  let updatedAutomation;
+  try {
+    updatedAutomation = await updateAutomationRecord(automationId, {
+      ...input,
+      targetId,
+      targetType,
+      // Explicitly clear the non-applicable target to prevent stale metadata
+      post: targetType === "post" ? (input as any).post : { unset: true },
+      story: targetType === "story" ? (input as any).story : { unset: true },
+    } as any);
+  } catch (err: any) {
+    if (err.code === "P2002") {
+      const target = (err.meta?.target as string[]) || [];
+      if (target.includes("automationName")) {
+        throw new ApiRouteError(
+          `An automation with the name "${input.automationName}" already exists on this account.`,
+          "DUPLICATE_NAME",
+          400,
+        );
+      }
+      throw new ApiRouteError(
+        "An automation with this configuration already exists. Please check for keyword overlaps.",
+        "CONFLICTING_AUTOMATION",
+        400,
+      );
+    }
+    throw err;
+  }
 
   // Invalidate cache for BOTH old and new scopes if they differ
   const oldInvalidateType = getInvalidateType(

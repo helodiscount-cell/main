@@ -38,6 +38,18 @@ export async function createAutomation(
   data: CreateAutomationInput,
 ) {
   const triggerType = data.triggerType ?? "COMMENT_ON_POST";
+  const targetId =
+    triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : triggerType === "STORY_REPLY"
+        ? data.story?.id
+        : data.postId;
+  const targetType =
+    triggerType === "RESPOND_TO_ALL_DMS"
+      ? "account"
+      : triggerType === "STORY_REPLY"
+        ? "story"
+        : "post";
 
   const result = await executeWithErrorHandling(
     () =>
@@ -47,6 +59,8 @@ export async function createAutomation(
           instaAccountId,
           automationName: data.automationName,
           triggerType,
+          targetId,
+          targetType,
           // Embedded post target (only for COMMENT_ON_POST)
           ...(triggerType === "COMMENT_ON_POST" && data.postId
             ? {
@@ -368,15 +382,15 @@ export async function findAutomationsByTargetAndKeywords(
       prisma.automation.findMany({
         where: {
           instaAccountId,
-          status: "ACTIVE",
-          ...(type === "post"
-            ? { post: { is: { id: targetId } } }
-            : type === "story"
-              ? { story: { is: { id: targetId } } }
-              : { triggerType: "RESPOND_TO_ALL_DMS" }),
-          triggers: {
-            hasSome: keywords,
-          },
+          status: { in: ["ACTIVE", "PAUSED"] },
+          targetId,
+          targetType: type,
+          // Conflict logic:
+          // 1. Catch-all (empty triggers) only conflicts with another catch-all
+          // 2. Keyword automation only conflicts with another automation using the same keywords
+          ...(keywords.length === 0
+            ? { triggers: { equals: [] } }
+            : { triggers: { hasSome: keywords } }),
         },
         select: {
           id: true,
@@ -447,14 +461,39 @@ export async function updateAutomationStats(automationId: string) {
 
 /**
  * Soft deletes an automation (marks as DELETED)
+ * Releases name and trigger keywords for future use
  */
 export async function softDeleteAutomation(automationId: string) {
   const result = await executeWithErrorHandling(
-    () =>
-      prisma.automation.update({
+    async () => {
+      // Find current name to prefix it
+      const existing = await prisma.automation.findUnique({
         where: { id: automationId },
-        data: { status: "DELETED" },
-      }),
+        select: { automationName: true, instaAccountId: true },
+      });
+
+      return prisma.automation.update({
+        where: { id: automationId },
+        data: {
+          status: "DELETED",
+          // Unique prefix to release the name so another can use it
+          automationName: `deleted_${Date.now()}_${
+            existing?.automationName || "unnamed"
+          }`,
+          // Clear triggers by setting a unique tombstone array so they don't block future keyword automations
+          // while avoiding duplicate unique constraints on multiple deleted records
+          triggers: {
+            set: [`deleted_${automationId}_${Date.now()}`],
+          },
+          // Release indexing target so others can use it
+          targetId: null,
+          targetType: null,
+          // Explicitly clear embedded target metadata (Trigger Boxes)
+          post: { unset: true },
+          story: { unset: true },
+        },
+      });
+    },
     {
       operation: "softDeleteAutomation",
       model: "Automation",

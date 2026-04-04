@@ -19,16 +19,11 @@ const FormLayoutHeader = ({ formId }: { formId: string }) => {
     ? "submissions"
     : "editor";
 
-  const handleSaveDraft = useCallback(() => save("DRAFT"), [save]);
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
 
   return (
     <>
-      <EditorHeader
-        onSaveDraft={handleSaveDraft}
-        onPublish={handlePublish}
-        isLoading={isLoading}
-      />
+      <EditorHeader onPublish={handlePublish} isLoading={isLoading} />
       <FormTabs formId={formId} activeTab={activeTab} />
     </>
   );

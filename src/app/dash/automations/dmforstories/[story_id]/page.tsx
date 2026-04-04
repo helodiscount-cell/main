@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import { useRouter } from "next/navigation";
 import { Controller } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -23,7 +24,6 @@ import {
   StoryFormValues,
 } from "@/configs/automations";
 import { FreshHeader } from "@/components/dash/automations/headers";
-import { ExistingAutomationsBlock } from "@/components/dash/automations/create/ExistingAutomationsBlock";
 
 type StoryMeta = {
   id: string;
@@ -37,6 +37,7 @@ type StoryMeta = {
 
 const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
   const { story_id } = use(params);
+  const router = useRouter();
 
   // Fetch stories to get metadata for the selected story
   const { data: storiesData } = useQuery({
@@ -107,6 +108,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     },
     successMessage: AUTOMATION_CONFIGS.STORY_REPLY.successMessage,
     stopMessage: AUTOMATION_CONFIGS.STORY_REPLY.stopMessage,
+    onCreateSuccess: (result) => {
+      router.push(`/dash/automations/dmforstories/edit/${result.id}`);
+    },
   });
 
   const automationName = watch("automationName");
@@ -137,8 +141,6 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
                 <AddKeywords value={field.value} onChange={field.onChange} />
               )}
             />
-            {/* Passive awareness block for existing automations on this story */}
-            <ExistingAutomationsBlock targetId={story_id} type="story" />
           </div>
         }
         rightCol={

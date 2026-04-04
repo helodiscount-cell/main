@@ -47,6 +47,7 @@ interface UseAutomationManagerProps<TFormValues extends FieldValues> {
   onPayloadInvalid?: () => void;
   successMessage: string;
   stopMessage: string;
+  onCreateSuccess?: (result: any) => void;
 }
 
 export function useAutomationManager<TFormValues extends FieldValues>({
@@ -58,6 +59,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   onPayloadInvalid,
   successMessage,
   stopMessage,
+  onCreateSuccess,
 }: UseAutomationManagerProps<TFormValues>) {
   const queryClient = useQueryClient();
 
@@ -114,6 +116,9 @@ export function useAutomationManager<TFormValues extends FieldValues>({
       }
       toast.success(successMessage);
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
+      if (onCreateSuccess) {
+        onCreateSuccess(result);
+      }
     },
     onError: (err: unknown) => {
       const msg =

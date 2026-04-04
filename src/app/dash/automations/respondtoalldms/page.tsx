@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
@@ -17,9 +18,9 @@ import {
   SendDm,
 } from "../_components/widgets";
 import { FreshHeader } from "@/components/dash/automations/headers";
-import { ExistingAutomationsBlock } from "@/components/dash/automations/create/ExistingAutomationsBlock";
 
 const Page = () => {
+  const router = useRouter();
   const {
     form: { control, watch },
     pageState,
@@ -61,6 +62,9 @@ const Page = () => {
     },
     successMessage: AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.successMessage,
     stopMessage: AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.stopMessage,
+    onCreateSuccess: (result) => {
+      router.push(`/dash/automations/respondtoalldms/edit/${result.id}`);
+    },
   });
 
   const automationName = watch("automationName");
@@ -91,8 +95,6 @@ const Page = () => {
                 <AddKeywords value={field.value} onChange={field.onChange} />
               )}
             />
-            {/* Passive awareness block for account-level automations */}
-            <ExistingAutomationsBlock targetId="account" type="account" />
           </div>
         }
         rightCol={

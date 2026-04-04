@@ -37,17 +37,12 @@ export default function FormEditorLayout({
 const EditorLayoutHeader = () => {
   const { save, isLoading } = useFormEditor();
 
-  const handleSaveDraft = useCallback(() => save("DRAFT"), [save]);
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
 
   return (
     <>
       {/* Top Header with Save/Publish buttons */}
-      <EditorHeader
-        onSaveDraft={handleSaveDraft}
-        onPublish={handlePublish}
-        isLoading={isLoading}
-      />
+      <EditorHeader onPublish={handlePublish} isLoading={isLoading} />
 
       {/* Shared Persistent Tabs Bar — Editor | Submissions */}
       <FormTabs activeTab="editor" />
