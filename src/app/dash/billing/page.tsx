@@ -29,7 +29,7 @@ export default async function BillingPage() {
     }));
 
   return (
-    <div className="max-w-6xl mx-auto p-8 space-y-12">
+    <div className="max-w-6xl mx-auto p-8 space-y-12 flex justify-center h-screen flex-col">
       <header className="space-y-4">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
           Billing & Usage
@@ -77,7 +77,7 @@ export default async function BillingPage() {
           <BillingCard
             key={plan.id}
             plan={plan}
-            isCurrent={plan.id === currentPlan}
+            isCurrent={plan.id === currentPlan && subStatus === "ACTIVE"}
           />
         ))}
       </section>

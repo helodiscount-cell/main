@@ -8,17 +8,24 @@ import { EMAIL_CONFIG } from "@/lib/email/config";
 
 const redisConnection = getQueueRedisClientR();
 
+let worker: Worker | null = null;
+
 /**
  * Initializes and starts the BullMQ worker for notifications.
  * Processes alerts like quota-full, subscription events, etc.
  */
 export function initNotificationsWorker() {
-  if (!redisConnection) {
-    logger.warn("Notification worker skipped: No Queue Redis connection");
-    return;
+  if (worker) {
+    logger.info("Notification worker already initialized, skipping.");
+    return worker;
   }
 
-  const worker = new Worker(
+  if (!redisConnection) {
+    logger.warn("Notification worker skipped: No Queue Redis connection");
+    return null;
+  }
+
+  worker = new Worker(
     KEYS.NOTIFICATIONS_QUEUE,
     async (job: Job) => {
       const { type, userId, usedAt } = job.data;
@@ -26,6 +33,10 @@ export function initNotificationsWorker() {
       try {
         if (type === "QUOTA_FULL") {
           await handleQuotaFullAlert(userId, usedAt);
+        } else {
+          throw new Error(
+            `Unsupported notification job type: ${type} (Job ID: ${job.id})`,
+          );
         }
       } catch (err: any) {
         logger.error(
@@ -67,31 +78,88 @@ async function handleQuotaFullAlert(userId: string, usedAt: number) {
     return;
   }
 
-  const { quotaEmailSentAt, periodStart } = user.creditLedger;
+  const { quotaEmailSentAt, periodStart, quotaEmailSendingAt } =
+    user.creditLedger;
+  const usedAtDate = new Date(usedAt);
 
-  // PERIOD CHECK: Ensure we only send ONE alert per billing period
-  if (!quotaEmailSentAt || quotaEmailSentAt < periodStart) {
-    const usedAtDate = new Date(usedAt).toLocaleString();
+  // 1. Period Validation: Ensure job is from the current billing period
+  if (usedAtDate < periodStart) {
+    logger.info(
+      { userId, usedAtDate, periodStart },
+      "Quota alert skipped: Event is from a previous billing period",
+    );
+    return;
+  }
 
+  const now = new Date();
+  const FIVE_MINUTES_AGO = new Date(now.getTime() - 5 * 60 * 1000);
+
+  // 2. PROVISIONAL CLAIM: Attempt to claim the email send
+  // We only claim if:
+  // - No email sent this period (null or before periodStart)
+  // - AND no claim in progress (null or older than 5 mins for recovery)
+  const result = await prisma.creditLedger.updateMany({
+    where: {
+      userId: user.id,
+      periodStart: periodStart, // HARD period match to avoid rollover races
+      AND: [
+        {
+          OR: [
+            { quotaEmailSentAt: null },
+            { quotaEmailSentAt: { lt: periodStart } },
+          ],
+        },
+        {
+          OR: [
+            { quotaEmailSendingAt: null },
+            { quotaEmailSendingAt: { lt: FIVE_MINUTES_AGO } },
+          ],
+        },
+      ],
+    },
+    data: { quotaEmailSendingAt: now },
+  });
+
+  if (result.count === 0) {
+    logger.info(
+      { userId, lastSent: quotaEmailSentAt, sendingAt: quotaEmailSendingAt },
+      "Quota alert suppressed: Already sent or send in progress",
+    );
+    return;
+  }
+
+  // 3. ATTEMPT SEND
+  try {
+    const usedAtStr = usedAtDate.toISOString();
     await sendEmail({
       type: "quota-full",
       to: user.email,
-      name: user.fullName,
-      usedAt: usedAtDate,
-      upgradeUrl: `${EMAIL_CONFIG.APP.URL}/billing`, // Redirect to billing page
+      name: user.fullName || "there",
+      usedAt: usedAtStr,
+      upgradeUrl: `${EMAIL_CONFIG.APP.URL}/billing`,
     });
 
-    // Mark as sent to prevent re-alerts in the same window
-    await prisma.creditLedger.update({
-      where: { userId: user.id },
-      data: { quotaEmailSentAt: new Date() },
+    // 4. CONFIRM CLAIM: Set permanent record and clear sending flag
+    await prisma.creditLedger.updateMany({
+      where: { userId: user.id, periodStart: periodStart },
+      data: {
+        quotaEmailSentAt: now,
+        quotaEmailSendingAt: null,
+      },
     });
 
     logger.info({ userId }, "Quota full alert email sent and recorded");
-  } else {
-    logger.info(
-      { userId, lastSent: quotaEmailSentAt },
-      "Quota alert suppressed: Already sent for this period",
+  } catch (err: any) {
+    // 5. ROLLBACK CLAIM: Clear sending flag on failure to allow retry
+    await prisma.creditLedger.updateMany({
+      where: { userId: user.id, periodStart: periodStart },
+      data: { quotaEmailSendingAt: null },
+    });
+
+    logger.error(
+      { userId, err: err.message },
+      "Quota alert send failure: Claim released for retry",
     );
+    throw err; // Trigger job retry
   }
 }

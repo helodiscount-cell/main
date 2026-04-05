@@ -21,10 +21,12 @@ interface BillingCardProps {
 
 export function BillingCard({ plan, isCurrent }: BillingCardProps) {
   const [loading, setLoading] = useState(false);
+  const isCreatingCheckoutRef = useState(() => ({ value: false }))[0];
 
   const handleCheckout = async () => {
-    if (isCurrent) return;
+    if (isCurrent || isCreatingCheckoutRef.value) return;
 
+    isCreatingCheckoutRef.value = true;
     setLoading(true);
     try {
       const response = await fetch("/api/billing/checkout", {
@@ -39,11 +41,17 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
 
       if (data.checkoutUrl) {
         window.location.assign(data.checkoutUrl);
+      } else {
+        console.error("[Checkout] Response missing checkoutUrl:", data);
+        throw new Error("Unable to start checkout. Please try again.");
       }
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      toast.error(message);
     } finally {
       setLoading(false);
+      isCreatingCheckoutRef.value = false;
     }
   };
 
@@ -106,7 +114,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
 
         <button
           onClick={handleCheckout}
-          disabled={loading || isCurrent}
+          disabled={loading || isCurrent || isCreatingCheckoutRef.value}
           className={`w-full py-4 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 ${
             isCurrent
               ? "bg-emerald-500/10 text-emerald-600 cursor-default"

@@ -1,6 +1,7 @@
 import { prisma } from "@/server/db";
 import { PLANS, type PlanId } from "@/configs/plans.config";
 import { syncCreditStateToRedis } from "@/server/redis/operations/billing";
+
 import { logger } from "@/server/utils/pino";
 import { getRazorpayClient } from "../razorpay/client";
 import { sendEmail } from "@/lib/email";
@@ -95,7 +96,12 @@ export async function activateSubscription(
     where: { clerkId: clerkUserId },
   });
 
-  if (user && user.email && razorpaySubscriptionId) {
+  if (
+    user &&
+    user.email &&
+    razorpaySubscriptionId &&
+    process.env.NODE_ENV === "production"
+  ) {
     sendEmail({
       type: "invoice",
       to: user.email,
@@ -104,7 +110,7 @@ export async function activateSubscription(
       amount: plan.priceInRupees,
       currency: "INR",
       dueDate: new Date().toLocaleDateString(),
-      paymentUrl: "#",
+      paymentUrl: `${process.env.APP_URL}/dash/billing`,
     }).catch((err) => {
       logger.error({ clerkUserId, err: err.message }, "Activation mail failed");
     });
@@ -131,6 +137,7 @@ export async function renewSubscription(
     prisma.subscription.update({
       where: { userId },
       data: {
+        plan: planId,
         status: "ACTIVE",
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
@@ -150,7 +157,7 @@ export async function renewSubscription(
 
   await syncCreditStateToRedis(clerkUserId, 0, plan.creditLimit, "ACTIVE");
 
-  if (paymentData) {
+  if (paymentData && process.env.NODE_ENV === "production") {
     const user = await prisma.user.findUnique({
       where: { clerkId: clerkUserId },
     });
@@ -164,7 +171,7 @@ export async function renewSubscription(
         amount: paymentData.amount / 100, // Paise to Rupees
         currency: "INR",
         dueDate: new Date().toLocaleDateString(),
-        paymentUrl: "#", // Placeholder
+        paymentUrl: `${process.env.APP_URL}/dash/billing`,
       }).catch((err) => {
         logger.error({ clerkUserId, err: err.message }, "Invoice mail failed");
       });
@@ -182,7 +189,7 @@ export async function expireSubscription(clerkUserId: string): Promise<void> {
   const userId = await resolveInternalUserId(clerkUserId);
   const freePlan = PLANS.FREE;
 
-  await prisma.$transaction([
+  const [_, ledger] = await prisma.$transaction([
     prisma.subscription.update({
       where: { userId },
       data: { status: "EXPIRED" },
@@ -197,8 +204,7 @@ export async function expireSubscription(clerkUserId: string): Promise<void> {
 
   await syncCreditStateToRedis(
     clerkUserId,
-    // Preserve current usage — do not reset on expiry
-    0,
+    ledger.creditsUsed,
     freePlan.creditLimit,
     "EXPIRED",
   );
@@ -231,6 +237,7 @@ export async function changePlan(
       where: { userId },
       data: {
         plan: newPlanId,
+        status: "ACTIVE",
         razorpaySubscriptionId,
         razorpayPlanId,
       },
@@ -266,7 +273,7 @@ export async function createCheckoutSession(
       plan_id: plan.razorpayPlanId,
       total_count: 12, // 1 year of weekly-style blocks (4 weeks each)
       quantity: 1,
-      customer_notify: 1,
+      customer_notify: process.env.NODE_ENV === "production" ? 1 : 0,
       notes: {
         clerkUserId: userId,
       },

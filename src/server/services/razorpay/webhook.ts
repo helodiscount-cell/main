@@ -1,4 +1,6 @@
+import { Prisma } from "@prisma/client";
 import { WebhookPayloadSchema } from "./schemas";
+
 import type {
   WebhookPayload,
   PaymentCapturedEvent,
@@ -45,17 +47,14 @@ async function onSubscriptionActivated(
   const { entity: sub } = event.payload.subscription;
   const userId = sub.notes?.clerkUserId;
   if (!userId) {
-    console.error(
-      "[Razorpay] No userId in activated subscription notes",
-      sub.id,
+    throw new Error(
+      `[Razorpay] No userId in activated subscription notes for ${sub.id}`,
     );
-    return;
   }
 
   const planId = getInternalPlanIdByRazorpayId(sub.plan_id);
   if (!planId) {
-    console.error("[Razorpay] Unknown Razorpay plan_id", sub.plan_id);
-    return;
+    throw new Error(`[Razorpay] Unknown Razorpay plan_id: ${sub.plan_id}`);
   }
 
   await activateSubscription(userId, planId, sub.id, sub.plan_id);
@@ -68,17 +67,16 @@ async function onSubscriptionCharged(
   const { entity: payment } = event.payload.payment;
   const userId = sub.notes?.clerkUserId;
   if (!userId) {
-    console.error("[Razorpay] No userId in charged subscription notes", sub.id);
-    return;
+    throw new Error(
+      `[Razorpay] No userId in charged subscription notes for ${sub.id}`,
+    );
   }
 
   const planId = getInternalPlanIdByRazorpayId(sub.plan_id);
   if (!planId) {
-    console.error(
-      "[Razorpay] Unknown Razorpay plan_id in charged",
-      sub.plan_id,
+    throw new Error(
+      `[Razorpay] Unknown Razorpay plan_id in charged: ${sub.plan_id}`,
     );
-    return;
   }
 
   await renewSubscription(userId, planId, {
@@ -96,11 +94,9 @@ async function onSubscriptionHalted(
   const { entity: sub } = event.payload.subscription;
   const userId = sub.notes?.clerkUserId;
   if (!userId) {
-    console.error(
-      `[Razorpay] No userId in ${event.event} subscription notes`,
-      sub.id,
+    throw new Error(
+      `[Razorpay] No userId in ${event.event} subscription notes for ${sub.id}`,
     );
-    return;
   }
 
   await expireSubscription(userId);
@@ -126,17 +122,26 @@ export async function handleWebhookEvent(
     return;
   }
 
-  // Idempotency check — ignore if already processed
+  // Idempotency: Attempt to claim the event atomically
   const razorpayEventId = rawJson.id;
-  if (razorpayEventId) {
-    const processed = await prisma.processedWebhookEvent.findUnique({
-      where: { razorpayEventId },
-    });
-    if (processed) {
-      console.info(
-        `[Razorpay] Event ${razorpayEventId} already processed, skipping.`,
-      );
-      return;
+  if (!razorpayEventId) {
+    console.warn(
+      "[Razorpay Webhook] Payload missing 'id' for deduplication. Processing as non-idempotent.",
+    );
+  } else {
+    try {
+      await prisma.processedWebhookEvent.create({
+        data: { razorpayEventId },
+      });
+      console.info(`[Razorpay] Atomically claimed event ${razorpayEventId}`);
+    } catch (err: any) {
+      if (err.code === "P2002") {
+        console.info(
+          `[Razorpay] Event ${razorpayEventId} already processed, skipping.`,
+        );
+        return;
+      }
+      throw err; // Re-throw other errors to trigger webhook retry
     }
   }
 
@@ -148,28 +153,46 @@ export async function handleWebhookEvent(
     return;
   }
 
-  // Mark as processed in DB for idempotency
-  if (razorpayEventId) {
-    await prisma.processedWebhookEvent.create({ data: { razorpayEventId } });
-  }
-
   // 3. Dispatch
+
   const event = parsed.data;
 
   switch (event.event) {
     case "payment.captured":
-      return onPaymentCaptured(event);
+      await onPaymentCaptured(event);
+      break;
     case "payment.failed":
-      return onPaymentFailed(event);
+      await onPaymentFailed(event);
+      break;
     case "order.paid":
-      return onOrderPaid(event);
+      await onOrderPaid(event);
+      break;
     case "subscription.activated":
-      return onSubscriptionActivated(event);
+      await onSubscriptionActivated(event);
+      break;
     case "subscription.charged":
-      return onSubscriptionCharged(event);
+      await onSubscriptionCharged(event);
+      break;
     case "subscription.halted":
     case "subscription.cancelled":
     case "subscription.completed":
-      return onSubscriptionHalted(event);
+      await onSubscriptionHalted(event);
+      break;
+  }
+
+  // Idempotency check 2 — Successful processing, record event
+  if (razorpayEventId) {
+    try {
+      await prisma.processedWebhookEvent.create({ data: { razorpayEventId } });
+    } catch (err) {
+      // If someone processed it during our run, just log and finish
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+      ) {
+        return;
+      }
+      throw err;
+    }
   }
 }

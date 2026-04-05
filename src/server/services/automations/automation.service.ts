@@ -23,6 +23,7 @@ import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 import { AutomationFilters } from "@/types/automation";
 import { prisma } from "@/server/db";
+import crypto from "crypto";
 import { TriggerType } from "@/types/automation";
 
 /**
@@ -40,6 +41,13 @@ function getInvalidateType(
     default:
       return "post";
   }
+}
+
+export function computeTriggersSignature(triggers: string[]): string {
+  // Sort, JSON stringify, and SHA256 hash to create a deterministic key
+  const sorted = [...triggers].sort();
+  const serialized = JSON.stringify(sorted);
+  return crypto.createHash("sha256").update(serialized).digest("hex");
 }
 
 /**
@@ -170,9 +178,16 @@ export async function createAutomation(
     targetType,
   );
 
+  const triggersSignature = computeTriggersSignature(input.triggers);
+
   let automation;
   try {
-    automation = await createAutomationRecord(user.id, instaAccountId, input);
+    automation = await createAutomationRecord(
+      user.id,
+      instaAccountId,
+      input,
+      triggersSignature,
+    );
   } catch (err: any) {
     // Handle uniqueness constraints (e.g., duplicate name or overlapping triggers)
     if (err.code === "P2002") {
@@ -342,10 +357,16 @@ export async function updateAutomation(
 
   let updatedAutomation;
   try {
+    const triggersSignature =
+      input.triggers !== undefined
+        ? computeTriggersSignature(input.triggers)
+        : computeTriggersSignature((existingAutomation as any).triggers);
+
     updatedAutomation = await updateAutomationRecord(automationId, {
       ...input,
       targetId,
       targetType,
+      triggersSignature,
       // Explicitly clear the non-applicable target to prevent stale metadata
       post: targetType === "post" ? (input as any).post : { unset: true },
       story: targetType === "story" ? (input as any).story : { unset: true },

@@ -23,11 +23,22 @@ export async function syncCreditStateToRedis(
   }
 
   try {
-    const pipeline = redis.pipeline();
-    pipeline.set(KEYS.CREDIT_USED(userId), creditsUsed.toString());
-    pipeline.set(KEYS.CREDIT_LIMIT(userId), creditLimit.toString());
-    pipeline.set(KEYS.SUB_STATUS(userId), status);
-    await pipeline.exec();
+    const multi = redis.multi();
+    const SIX_MONTHS = 180 * 24 * 60 * 60; // 6-month TTL for billing cache
+    multi.set(
+      KEYS.CREDIT_USED(userId),
+      creditsUsed.toString(),
+      "EX",
+      SIX_MONTHS,
+    );
+    multi.set(
+      KEYS.CREDIT_LIMIT(userId),
+      creditLimit.toString(),
+      "EX",
+      SIX_MONTHS,
+    );
+    multi.set(KEYS.SUB_STATUS(userId), status, "EX", SIX_MONTHS);
+    await multi.exec();
 
     logger.info(
       { userId, creditsUsed, creditLimit, status },
@@ -45,6 +56,7 @@ export async function syncCreditStateToRedis(
 /**
  * Increments the creditsUsed counter in Redis by 1.
  * Returns the new total (used by the persist layer after a successful DM).
+ * Ensures an expiry is set if a new key is created.
  */
 export async function incrementCreditUsedR(
   userId: string,
@@ -53,7 +65,26 @@ export async function incrementCreditUsedR(
   if (!redis) return null;
 
   try {
-    return await redis.incr(KEYS.CREDIT_USED(userId));
+    const SIX_MONTHS = 180 * 24 * 60 * 60;
+    const key = KEYS.CREDIT_USED(userId);
+
+    const multi = redis.multi();
+    multi.incr(key);
+    multi.ttl(key);
+
+    const results = await multi.exec();
+    if (!results) return null;
+
+    // results is [[error, result], [error, result]]
+    const count = results[0][1] as number;
+    const ttl = results[1][1] as number;
+
+    // If key is new (TTL -1), set expiry
+    if (ttl === -1) {
+      await redis.expire(key, SIX_MONTHS);
+    }
+
+    return count;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error(

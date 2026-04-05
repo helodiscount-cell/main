@@ -26,6 +26,54 @@ export const PlanIdSchema = z.enum(PLAN_IDS);
  * creditLimit: -1 = unlimited (Black plan)
  * razorpayPlanId: null = no Razorpay plan (Free)
  */
+// Centralised billing policy configuration
+export const BILLING_CONFIG = {
+  // Users created on or before this day on FREE tier are entitled to 2 accounts
+  GRANDFATHER_CUTOFF: "2026-04-05",
+} as const;
+
+/**
+ * Calculates the effective account limit for a user/workspace,
+ * applying legacy grandfathering policies where applicable.
+ */
+export function getEffectiveMaxAccounts(
+  createdAt: Date | string,
+  planId: PlanId,
+): number {
+  const baseLimit = PLANS[planId].maxAccounts;
+
+  // Grandfathering: Pre-cutoff FREE users get 2 accounts
+  if (planId === "FREE") {
+    const createdDate = new Date(createdAt);
+    const cutoffDate = new Date(BILLING_CONFIG.GRANDFATHER_CUTOFF);
+
+    // Normalize both to date-only for robust comparison
+    createdDate.setUTCHours(0, 0, 0, 0);
+    cutoffDate.setUTCHours(0, 0, 0, 0);
+
+    if (createdDate <= cutoffDate) {
+      return 2;
+    }
+  }
+
+  return baseLimit;
+}
+
+if (typeof process !== "undefined" && process.env.NODE_ENV === "production") {
+  const required = [
+    "RAZORPAY_PLAN_ID_BASIC",
+    "RAZORPAY_PLAN_ID_PREMIUM",
+    "RAZORPAY_PLAN_ID_BLACK",
+  ];
+  for (const key of required) {
+    if (!process.env[key]) {
+      throw new Error(
+        `CRITICAL_BILLING: Environment variable ${key} is missing.`,
+      );
+    }
+  }
+}
+
 export const PLANS: Record<
   PlanId,
   {

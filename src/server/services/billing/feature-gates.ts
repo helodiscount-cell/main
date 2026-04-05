@@ -1,5 +1,9 @@
 import { prisma } from "@/server/db";
-import { PLANS, type PlanId } from "@/configs/plans.config";
+import {
+  PLANS,
+  type PlanId,
+  getEffectiveMaxAccounts,
+} from "@/configs/plans.config";
 import {
   getCreditStateR,
   syncCreditStateToRedis,
@@ -30,7 +34,7 @@ export async function getFeatureGates(
 ): Promise<FeatureGates> {
   const user = await prisma.user.findUnique({
     where: { clerkId: clerkUserId },
-    select: { id: true },
+    select: { id: true, createdAt: true },
   });
 
   if (!user) {
@@ -46,9 +50,13 @@ export async function getFeatureGates(
   const subscription = await prisma.subscription.findUnique({
     where: { userId },
   });
+
+  // Default to ACTIVE FREE if no subscription record exists
   const planId: PlanId = (subscription?.plan as PlanId) ?? "FREE";
-  const isActive = subscription?.status === "ACTIVE";
+  const subStatus = subscription?.status ?? "ACTIVE";
   const plan = PLANS[planId];
+
+  const maxAccounts = getEffectiveMaxAccounts(user.createdAt, planId);
 
   let creditsUsed: number;
   let creditLimit: number;
@@ -62,7 +70,7 @@ export async function getFeatureGates(
     const ledger = await prisma.creditLedger.findUnique({ where: { userId } });
     creditsUsed = ledger?.creditsUsed ?? 0;
     creditLimit = ledger?.creditLimit ?? plan.creditLimit;
-    const subStatus = subscription?.status ?? "EXPIRED";
+
     await syncCreditStateToRedis(
       clerkUserId,
       creditsUsed,
@@ -76,8 +84,6 @@ export async function getFeatureGates(
     where: { userId, isActive: true },
   });
 
-  const subStatus = subscription?.status ?? "EXPIRED";
-
   return {
     state: {
       currentPlan: planId,
@@ -86,8 +92,7 @@ export async function getFeatureGates(
       subStatus,
     },
     access: {
-      canAddAccount:
-        activeAccountCount < plan.maxAccounts && subStatus === "ACTIVE",
+      canAddAccount: activeAccountCount < maxAccounts && subStatus === "ACTIVE",
       hasLeadGen: plan.hasLeadGen && subStatus === "ACTIVE",
       canCreateForms: plan.hasLeadGen && subStatus === "ACTIVE",
     },

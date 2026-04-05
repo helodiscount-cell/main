@@ -2,6 +2,7 @@ import { createCheckoutSession } from "@/server/services/billing";
 import { PlanIdSchema } from "@/configs/plans.config";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
+import { logger } from "@/server/utils/pino";
 
 const CheckoutSchema = z.object({
   planId: PlanIdSchema,
@@ -42,10 +43,10 @@ export async function POST(req: Request): Promise<Response> {
 
     const session = await createCheckoutSession(clerkUserId, planId);
     return Response.json(session, { status: 201 });
-  } catch (err: unknown) {
-    console.error("[Checkout Route Error]:", err);
-    const message =
-      err instanceof Error ? err.message : "Internal Server Error";
+  } catch (err: any) {
+    logger.error({ err }, "Checkout Route Error");
+
+    const message = err?.safe ? err.message : "Internal Server Error";
     return Response.json({ error: message }, { status: 500 });
   }
 }
