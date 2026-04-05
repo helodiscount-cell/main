@@ -35,3 +35,24 @@ export type PaymentFailedEvent = Extract<
   { event: "payment.failed" }
 >;
 export type OrderPaidEvent = Extract<WebhookPayload, { event: "order.paid" }>;
+
+export type SubscriptionActivatedEvent = Extract<
+  WebhookPayload,
+  { event: "subscription.activated" }
+>;
+export type SubscriptionChargedEvent = Extract<
+  WebhookPayload,
+  { event: "subscription.charged" }
+>;
+export type SubscriptionHaltedEvent = Extract<
+  WebhookPayload,
+  { event: "subscription.halted" }
+>;
+export type SubscriptionCancelledEvent = Extract<
+  WebhookPayload,
+  { event: "subscription.cancelled" }
+>;
+export type SubscriptionCompletedEvent = Extract<
+  WebhookPayload,
+  { event: "subscription.completed" }
+>;

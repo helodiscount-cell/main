@@ -7,11 +7,12 @@ import { Queue } from "bullmq";
 import { getQueueRedisClientR } from "@/server/redis";
 import type { WebhookPayload } from "@dm-broo/common-types";
 
+import { KEYS } from "./keys";
 const redisConnection = getQueueRedisClientR();
 
 if (!redisConnection) {
   throw new Error(
-    "QUEUE_REDIS_HOST or QUEUE_REDIS_PASSWORD is missing. Webhook queue cannot be initialized.",
+    "QUEUE_REDIS_HOST or QUEUE_REDIS_PASSWORD is missing. Webhook/Notification queue cannot be initialized.",
   );
 }
 
@@ -34,5 +35,21 @@ export const webhookQueue = new Queue<WebhookPayload>("webhook-processing", {
     removeOnFail: {
       age: 24 * 3600, // Keeps failed jobs for 24 hours
     },
+  },
+});
+
+/**
+ * Notifications queue
+ * Handles user-facing alerts (quota full, etc.)
+ */
+export const notificationsQueue = new Queue(KEYS.NOTIFICATIONS_QUEUE, {
+  connection: redisConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 1000,
+    },
+    removeOnComplete: true,
   },
 });

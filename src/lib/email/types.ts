@@ -31,8 +31,16 @@ export interface InvoicePayload extends BaseEmailPayload {
   paymentUrl: string; // Direct link to pay
 }
 
+// Alert when the credit quota is exhausted
+export interface QuotaFullPayload extends BaseEmailPayload {
+  type: "quota-full";
+  usedAt: string; // Formatted time for tracking
+  upgradeUrl: string; // URL to the pricing page
+}
+
 // Discriminated union for type safety across the email service
 export type EmailPayload =
   | OnboardingPayload
   | AccountExpiredPayload
-  | InvoicePayload;
+  | InvoicePayload
+  | QuotaFullPayload;

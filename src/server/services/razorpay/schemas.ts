@@ -65,4 +65,71 @@ export const WebhookPayloadSchema = z.discriminatedUnion("event", [
     payload: PaymentFailedSchema,
   }),
   z.object({ event: z.literal("order.paid"), payload: OrderPaidSchema }),
+  // --- Subscription events ---
+  z.object({
+    event: z.literal("subscription.activated"),
+    payload: z.object({
+      subscription: z.object({
+        entity: z.object({
+          id: z.string(),
+          plan_id: z.string(),
+          status: z.string(),
+          notes: z.record(z.string(), z.string()).optional(),
+        }),
+      }),
+    }),
+  }),
+  z.object({
+    event: z.literal("subscription.charged"),
+    payload: z.object({
+      subscription: z.object({
+        entity: z.object({
+          id: z.string(),
+          plan_id: z.string(),
+          notes: z.record(z.string(), z.string()).optional(),
+        }),
+      }),
+      payment: z.object({
+        entity: z.object({
+          id: z.string(),
+          amount: z.number(),
+          currency: z.string(),
+        }),
+      }),
+    }),
+  }),
+
+  z.object({
+    event: z.literal("subscription.halted"),
+    payload: z.object({
+      subscription: z.object({
+        entity: z.object({
+          id: z.string(),
+          notes: z.record(z.string(), z.string()).optional(),
+        }),
+      }),
+    }),
+  }),
+  z.object({
+    event: z.literal("subscription.cancelled"),
+    payload: z.object({
+      subscription: z.object({
+        entity: z.object({
+          id: z.string(),
+          notes: z.record(z.string(), z.string()).optional(),
+        }),
+      }),
+    }),
+  }),
+  z.object({
+    event: z.literal("subscription.completed"),
+    payload: z.object({
+      subscription: z.object({
+        entity: z.object({
+          id: z.string(),
+          notes: z.record(z.string(), z.string()).optional(),
+        }),
+      }),
+    }),
+  }),
 ]);

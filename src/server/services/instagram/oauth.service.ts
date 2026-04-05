@@ -19,6 +19,10 @@ import {
   subscribeToWebhooks,
   markWebhooksEnabled,
 } from "@/server/instagram/webhook/registration";
+import { PLANS, type PlanId } from "@/configs/plans.config";
+import { getPeriodEnd } from "../billing/subscription.service";
+import { syncCreditStateToRedis } from "@/server/redis/operations/billing";
+
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
 import { clogger } from "@/server/utils/consola";
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
@@ -129,13 +133,46 @@ export async function handleOAuthCallback(code: string, state: string) {
         let isFirstAccount = false;
 
         if (!user) {
+          const plan = PLANS.FREE;
+          const periodStart = new Date();
+          const periodEnd = getPeriodEnd(periodStart);
+
           user = await tx.user.create({
             data: {
               clerkId,
               fullName: instagramUser.username,
               email: currentClerkUser?.primaryEmailAddress?.emailAddress,
               imageUrl: instagramUser.profile_picture_url,
+              // Initialize FREE subscription and ledger
+              subscription: {
+                create: {
+                  plan: "FREE",
+                  status: "ACTIVE",
+                  currentPeriodStart: periodStart,
+                  currentPeriodEnd: periodEnd,
+                },
+              },
+              creditLedger: {
+                create: {
+                  creditsUsed: 0,
+                  creditLimit: plan.creditLimit,
+                  periodStart,
+                  periodEnd,
+                },
+              },
             },
+            include: { subscription: true },
+          });
+
+          // Background sync to Redis (non-blocking in tx)
+          syncCreditStateToRedis(clerkId, 0, plan.creditLimit, "ACTIVE").catch(
+            () => {},
+          );
+        } else {
+          // Refresh user with subscription for limit check
+          user = await tx.user.findUniqueOrThrow({
+            where: { id: user.id },
+            include: { subscription: true },
           });
         }
 
@@ -165,9 +202,12 @@ export async function handleOAuthCallback(code: string, state: string) {
             isFirstAccount = true;
           }
 
-          if (accountCount >= WORKSPACE_CONFIG.MAX_ACCOUNTS) {
+          const currentPlan = (user.subscription?.plan as PlanId) || "FREE";
+          const maxAllowed = PLANS[currentPlan].maxAccounts;
+
+          if (accountCount >= maxAllowed) {
             throw new ApiRouteError(
-              `You have reached the maximum of ${WORKSPACE_CONFIG.MAX_ACCOUNTS} connected accounts.`,
+              `Your ${currentPlan} plan allows a maximum of ${maxAllowed} connected accounts. Please upgrade to add more.`,
               "ACCOUNT_LIMIT_REACHED",
               403,
             );
