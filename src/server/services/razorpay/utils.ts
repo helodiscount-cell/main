@@ -49,5 +49,14 @@ function timingSafeEqual(a: string, b: string): boolean {
  * Razorpay enforces a 40-character max.
  */
 export function generateReceipt(prefix = "rcpt"): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const timestamp = Date.now().toString();
+  const random = Math.random().toString(36).slice(2, 7);
+
+  // Razorpay has a 40-character limit for receipts.
+  // Calculate allowed prefix length by subtracting fixed parts and underscores.
+  const fixedPartsLength = timestamp.length + random.length + 2;
+  const allowedPrefixLen = Math.max(0, 40 - fixedPartsLength);
+  const safePrefix = prefix.slice(0, allowedPrefixLen);
+
+  return `${safePrefix}_${timestamp}_${random}`;
 }

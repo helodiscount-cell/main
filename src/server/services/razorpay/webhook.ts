@@ -39,7 +39,15 @@ export async function handleWebhookEvent(
   verifyHmacSignature(rawBody, signature, razorpayConfig.webhookSecret);
 
   // 2. Parse payload
-  const parsed = WebhookPayloadSchema.safeParse(JSON.parse(rawBody));
+  let rawJson;
+  try {
+    rawJson = JSON.parse(rawBody);
+  } catch (err) {
+    console.warn("[Razorpay] Invalid JSON payload.");
+    return;
+  }
+
+  const parsed = WebhookPayloadSchema.safeParse(rawJson);
   if (!parsed.success) {
     console.warn(
       "[Razorpay] Unrecognised webhook event branch or invalid payload.",

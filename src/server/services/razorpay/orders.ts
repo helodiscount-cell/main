@@ -9,17 +9,21 @@ import { toRazorpayAmount, generateReceipt } from "./utils";
  */
 export async function createOrder(
   input: CreateOrderInput,
+  userId: string,
 ): Promise<RazorpayOrderResult> {
   const parsed = CreateOrderSchema.parse(input);
 
-  const client = getRazorpayClient();
-
   try {
+    const client = getRazorpayClient();
+
     const order = await client.orders.create({
       amount: toRazorpayAmount(parsed.amountInRupees),
       currency: parsed.currency,
       receipt: parsed.receipt ?? generateReceipt(),
-      notes: parsed.notes ?? {},
+      notes: {
+        ...parsed.notes,
+        clerkUserId: userId,
+      },
     });
 
     return {

@@ -1,13 +1,26 @@
 import { verifyPayment } from "@/server/services/razorpay";
 import { VerifyPaymentSchema } from "@/server/services/razorpay/schemas";
 import { PaymentVerificationError } from "@/server/services/razorpay";
+import { auth } from "@clerk/nextjs/server";
 
 /**
  * Route Handler for verifying a Razorpay payment.
  */
 export async function POST(req: Request): Promise<Response> {
   try {
-    const rawBody = await req.json();
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let rawBody;
+    try {
+      rawBody = await req.json();
+    } catch (e) {
+      return Response.json({ error: "Malformed JSON" }, { status: 400 });
+    }
+
     const body = VerifyPaymentSchema.safeParse(rawBody);
 
     if (!body.success) {

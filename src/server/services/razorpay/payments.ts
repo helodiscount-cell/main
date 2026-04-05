@@ -15,11 +15,15 @@ export async function verifyPayment(
 
   const signaturePayload = `${parsed.razorpay_order_id}|${parsed.razorpay_payment_id}`;
 
-  verifyHmacSignature(
-    signaturePayload,
-    parsed.razorpay_signature,
-    razorpayConfig.keySecret,
-  );
+  try {
+    verifyHmacSignature(
+      signaturePayload,
+      parsed.razorpay_signature,
+      razorpayConfig.keySecret,
+    );
+  } catch (err) {
+    throw new PaymentVerificationError(err);
+  }
 
   return {
     verified: true,

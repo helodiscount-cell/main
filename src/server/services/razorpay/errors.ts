@@ -26,17 +26,13 @@ export class SignatureVerificationError extends AppError {
 }
 
 export class OrderCreationError extends AppError {
-  constructor(cause: unknown) {
-    super(
-      `Failed to create order: ${cause instanceof Error ? cause.message : String(cause)}`,
-      "ORDER_CREATION_FAILED",
-      502,
-    );
+  constructor(public readonly cause: unknown) {
+    super("Failed to create order", "ORDER_CREATION_FAILED", 502);
   }
 }
 
 export class PaymentVerificationError extends AppError {
-  constructor() {
+  constructor(public readonly cause?: unknown) {
     super("Payment signature is invalid", "PAYMENT_VERIFICATION_FAILED", 400);
   }
 }
