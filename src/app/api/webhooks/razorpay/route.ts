@@ -10,7 +10,7 @@ export async function POST(req: Request): Promise<Response> {
   const signature = req.headers.get("x-razorpay-signature") || "";
 
   try {
-    await handleWebhookEvent(rawBody, signature);
+    await handleWebhookEvent(rawBody, signature, req.headers);
     return new Response(null, { status: 200 });
   } catch (err) {
     if (err instanceof SignatureVerificationError) {

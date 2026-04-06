@@ -109,6 +109,7 @@ async function onSubscriptionHalted(
 export async function handleWebhookEvent(
   rawBody: string,
   signature: string,
+  headers?: { get: (key: string) => string | null },
 ): Promise<void> {
   // 1. Verify signature
   verifyHmacSignature(rawBody, signature, razorpayConfig.webhookSecret);
@@ -123,7 +124,8 @@ export async function handleWebhookEvent(
   }
 
   // Idempotency: Attempt to claim the event atomically
-  const razorpayEventId = rawJson.id;
+  // Fallback to x-razorpay-event-id header if payload id is missing
+  const razorpayEventId = rawJson.id || headers?.get("x-razorpay-event-id");
   if (!razorpayEventId) {
     console.warn(
       "[Razorpay Webhook] Payload missing 'id' for deduplication. Processing as non-idempotent.",
@@ -147,6 +149,13 @@ export async function handleWebhookEvent(
 
   const parsed = WebhookPayloadSchema.safeParse(rawJson);
   if (!parsed.success) {
+    const eventName = rawJson.event || "unknown";
+    console.error(
+      `[Razorpay] Validation failed for supported event: ${eventName}`,
+    );
+    console.error("[Razorpay Validation Error]:", parsed.error.format());
+    console.debug("[Razorpay Raw Payload]:", JSON.stringify(rawJson, null, 2));
+
     console.warn(
       "[Razorpay] Unrecognised webhook event branch or invalid payload.",
     );
