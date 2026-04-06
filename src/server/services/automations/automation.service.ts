@@ -360,7 +360,7 @@ export async function updateAutomation(
     const triggersSignature =
       input.triggers !== undefined
         ? computeTriggersSignature(input.triggers)
-        : computeTriggersSignature((existingAutomation as any).triggers);
+        : (existingAutomation as any).triggersSignature;
 
     updatedAutomation = await updateAutomationRecord(automationId, {
       ...input,

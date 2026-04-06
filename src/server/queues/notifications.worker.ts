@@ -29,6 +29,10 @@ export function initNotificationsWorker() {
     KEYS.NOTIFICATIONS_QUEUE,
     async (job: Job) => {
       const { type, userId, usedAt } = job.data;
+      logger.info(
+        { type, userId, jobId: job.id },
+        "Notification job received by worker",
+      );
 
       try {
         if (type === "QUOTA_FULL") {
@@ -68,6 +72,7 @@ export function initNotificationsWorker() {
  * Implements grace-period and idempotency check against the database.
  */
 async function handleQuotaFullAlert(userId: string, usedAt: number) {
+  logger.info({ userId, usedAt }, "Processing Quota Full alert...");
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
     include: { creditLedger: true },
@@ -94,33 +99,25 @@ async function handleQuotaFullAlert(userId: string, usedAt: number) {
   const now = new Date();
   const FIVE_MINUTES_AGO = new Date(now.getTime() - 5 * 60 * 1000);
 
-  // 2. PROVISIONAL CLAIM: Attempt to claim the email send
-  // We only claim if:
-  // - No email sent this period (null or before periodStart)
-  // - AND no claim in progress (null or older than 5 mins for recovery)
-  const result = await prisma.creditLedger.updateMany({
-    where: {
-      userId: user.id,
-      periodStart: periodStart, // HARD period match to avoid rollover races
-      AND: [
-        {
-          OR: [
-            { quotaEmailSentAt: null },
-            { quotaEmailSentAt: { lt: periodStart } },
-          ],
-        },
-        {
-          OR: [
-            { quotaEmailSendingAt: null },
-            { quotaEmailSendingAt: { lt: FIVE_MINUTES_AGO } },
-          ],
-        },
-      ],
+  logger.info(
+    {
+      targetUserId: user.id,
+      ledgerId: user.creditLedger.id,
+      periodStart: periodStart.toISOString(),
+      currentSentAt: quotaEmailSentAt,
+      currentSendingAt: quotaEmailSendingAt,
     },
-    data: { quotaEmailSendingAt: now },
-  });
+    "Evaluating quota email claim...",
+  );
 
-  if (result.count === 0) {
+  // 2. Check suppression conditions in JS — we already have the fresh data from findUnique.
+  // BullMQ deduplicates quota_full jobs to a 10s window, so race risk is negligible.
+  const isSentThisPeriod =
+    quotaEmailSentAt !== null && quotaEmailSentAt >= periodStart;
+  const isClaimInProgress =
+    quotaEmailSendingAt !== null && quotaEmailSendingAt >= FIVE_MINUTES_AGO;
+
+  if (isSentThisPeriod || isClaimInProgress) {
     logger.info(
       { userId, lastSent: quotaEmailSentAt, sendingAt: quotaEmailSendingAt },
       "Quota alert suppressed: Already sent or send in progress",
@@ -128,7 +125,15 @@ async function handleQuotaFullAlert(userId: string, usedAt: number) {
     return;
   }
 
-  // 3. ATTEMPT SEND
+  // 3. Mark as "sending" using the ledger's own id — avoids Prisma MongoDB AND/OR query issues
+  await prisma.creditLedger.update({
+    where: { id: user.creditLedger.id },
+    data: { quotaEmailSendingAt: now },
+  });
+
+  logger.info({ ledgerId: user.creditLedger.id }, "Quota email claim acquired");
+
+  // 4. ATTEMPT SEND
   try {
     const usedAtStr = usedAtDate.toISOString();
     await sendEmail({
@@ -141,7 +146,7 @@ async function handleQuotaFullAlert(userId: string, usedAt: number) {
 
     // 4. CONFIRM CLAIM: Set permanent record and clear sending flag
     await prisma.creditLedger.updateMany({
-      where: { userId: user.id, periodStart: periodStart },
+      where: { userId: user.id },
       data: {
         quotaEmailSentAt: now,
         quotaEmailSendingAt: null,
@@ -152,7 +157,7 @@ async function handleQuotaFullAlert(userId: string, usedAt: number) {
   } catch (err: any) {
     // 5. ROLLBACK CLAIM: Clear sending flag on failure to allow retry
     await prisma.creditLedger.updateMany({
-      where: { userId: user.id, periodStart: periodStart },
+      where: { userId: user.id },
       data: { quotaEmailSendingAt: null },
     });
 

@@ -179,20 +179,4 @@ export async function handleWebhookEvent(
       await onSubscriptionHalted(event);
       break;
   }
-
-  // Idempotency check 2 — Successful processing, record event
-  if (razorpayEventId) {
-    try {
-      await prisma.processedWebhookEvent.create({ data: { razorpayEventId } });
-    } catch (err) {
-      // If someone processed it during our run, just log and finish
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === "P2002"
-      ) {
-        return;
-      }
-      throw err;
-    }
-  }
 }

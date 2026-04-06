@@ -165,6 +165,8 @@ export async function handleOAuthCallback(code: string, state: string) {
                     creditLimit: plan.creditLimit,
                     periodStart,
                     periodEnd,
+                    quotaEmailSentAt: null,
+                    quotaEmailSendingAt: null,
                   },
                 },
               },
@@ -296,7 +298,7 @@ export async function handleOAuthCallback(code: string, state: string) {
     // Background sync to Redis after successful transaction commit
     const plan = PLANS[currentPlan] || PLANS.FREE;
     if (userCreated) {
-      syncCreditStateToRedis(user.id, 0, plan.creditLimit, "ACTIVE").catch(
+      syncCreditStateToRedis(clerkId, 0, plan.creditLimit, "ACTIVE").catch(
         (err) => clogger.error("Failed to sync new user billing state:", err),
       );
     }
