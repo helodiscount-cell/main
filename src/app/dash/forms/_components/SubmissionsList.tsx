@@ -42,13 +42,13 @@ export const SubmissionsList = ({
   }
 
   return (
-    <div className="w-full rounded-2xl border border-slate-100 overflow-hidden">
+    <div className="w-full rounded-2xl overflow-hidden">
       {/* List Header */}
-      <div className="grid grid-cols-[1fr_auto] items-center px-8 py-4 bg-slate-50/50 border-b border-slate-100">
-        <span className="text-sm font-semibold text-slate-500 text-left">
+      <div className="grid grid-cols-[1fr_auto] items-center px-8 py-4 bg-[#F9F9F9] m-4 rounded-md">
+        <span className="text-sm font-semibold text-[#212121] text-left">
           Title
         </span>
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#212121]">
           <span>Submitted</span>
           <div className="bg-slate-900 text-white rounded-md p-1">
             <ArrowDown size={14} />

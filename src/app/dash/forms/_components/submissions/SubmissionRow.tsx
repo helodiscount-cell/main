@@ -34,13 +34,13 @@ export const SubmissionRow = ({
         <div className="w-10 h-10 rounded-lg bg-[#F5F3FF] flex items-center justify-center text-[#6A06E4] group-hover:bg-[#6A06E4] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#E9E4FF]">
           <Layers size={18} />
         </div>
-        <span className="text-sm font-medium text-slate-700 group-hover:text-[#6A06E4] transition-colors">
+        <span className="capitalize text-sm font-medium text-[#212121] group-hover:text-[#6A06E4] transition-colors">
           {name}
         </span>
       </div>
 
       {/* Timestamp Column */}
-      <div className="text-sm text-slate-400 font-medium whitespace-nowrap">
+      <div className="text-sm text-[#212121] font-medium whitespace-nowrap">
         {formattedDate}
       </div>
     </div>

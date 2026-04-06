@@ -58,8 +58,10 @@ const TableHeader = ({
         <div className="w-px h-4 bg-slate-200" />
       </div>
 
-      <ColHeader label="Runs" />
-      <ColHeader label="Last Triggered" />
+      <ColHeader label={title === "Forms" ? "Submissions" : "Runs"} />
+      <ColHeader
+        label={title === "Forms" ? "Last Submitted" : "Last Triggered"}
+      />
       <SlidersHorizontal size={14} />
     </div>
   );

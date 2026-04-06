@@ -1,24 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { runWithErrorHandling } from "@/server/middleware/errors";
+import { NextRequest } from "next/server";
+import {
+  runWithErrorHandling,
+  ApiRouteError,
+} from "@/server/middleware/errors";
 import { getBestPerformerStats } from "@/server/services/stats/best-performer.service";
+import { getFeatureGates } from "@/server/services/billing/feature-gates";
 
 /**
  * GET /api/stats/best-performer
  *
- * Fetches the user's top three performing posts based on internal automation execution stats
+ * Fetches the user's top three performing posts based on internal automation execution stats.
+ * Properly gated for Black plan users.
  */
-import { getFeatureGates } from "@/server/services/billing/feature-gates";
-import { auth } from "@clerk/nextjs/server";
-
 export async function GET(req: NextRequest) {
   return runWithErrorHandling(
-    async ({ instaAccountId }) => {
-      const { userId } = await auth();
-      if (!userId) throw new Error("Unauthorized");
+    async ({ clerkId, instaAccountId }) => {
+      // clerkId is guaranteed by runWithErrorHandling when requireWorkspace is true
+      const gates = await getFeatureGates(clerkId!);
 
-      const gates = await getFeatureGates(userId);
       if (!gates.access.hasBestPerformer) {
-        throw new Error("This feature requires a Black plan subscription.");
+        throw new ApiRouteError(
+          "This feature requires a BLACK plan subscription.",
+          "FEATURE_LOCKED",
+          403,
+        );
       }
 
       const { searchParams } = new URL(req.url);

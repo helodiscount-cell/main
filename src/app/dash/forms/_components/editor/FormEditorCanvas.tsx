@@ -45,13 +45,13 @@ export const FormEditorCanvas = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full overflow-hidden">
+    <div className="flex flex-col flex-1 h-full overflow-hidden bg-[#E0E0E0] rounded-xl">
       {/* Canvas scrollable area */}
-      <div className="flex-1 overflow-y-auto mt-2 rounded-xl shadow-inner-sm">
+      <div className="flex-1 overflow-y-auto rounded-xl shadow-inner-sm ">
         <FormProvider {...methods}>
           <form
             onSubmit={handleCanvasSubmit}
-            className="max-w-lg mx-auto space-y-4"
+            className="max-w-lg mx-auto space-y-4 h-full flex flex-col justify-center"
           >
             {/* Form visual elements */}
             <CoverImageUpload />

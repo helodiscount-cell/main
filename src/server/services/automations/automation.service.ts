@@ -33,9 +33,13 @@ import { getFeatureGates } from "@/server/services/billing/feature-gates";
 async function validateFeatureAccess(
   clerkId: string,
   input: CreateAutomationInput | UpdateAutomationInput,
+  existingEnabledState: boolean = false,
 ) {
+  // Use the effective state (payload value OR existing DB value if omitted)
+  const isAskToFollowActive = input.askToFollowEnabled ?? existingEnabledState;
+
   // Gate: Ask to Follow (available on FREE and BLACK only)
-  if (input.askToFollowEnabled) {
+  if (isAskToFollowActive) {
     const gates = await getFeatureGates(clerkId);
     if (!gates.access.hasAskToFollow) {
       throw new ApiRouteError(
@@ -337,7 +341,11 @@ export async function updateAutomation(
     select: { clerkId: true },
   });
   if (user?.clerkId) {
-    await validateFeatureAccess(user.clerkId, input);
+    await validateFeatureAccess(
+      user.clerkId,
+      input,
+      existingAutomation.askToFollowEnabled ?? false,
+    );
   }
 
   const instaAccountId = (existingAutomation as any).instaAccountId;

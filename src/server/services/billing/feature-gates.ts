@@ -10,21 +10,7 @@ import {
 } from "@/server/redis/operations/billing";
 import { logger } from "@/server/utils/pino";
 
-export type FeatureGates = {
-  state: {
-    currentPlan: PlanId;
-    creditsUsed: number;
-    creditLimit: number;
-    subStatus: string;
-  };
-  access: {
-    canAddAccount: boolean;
-    hasLeadGen: boolean;
-    canCreateForms: boolean;
-    hasAskToFollow: boolean;
-    hasBestPerformer: boolean;
-  };
-};
+import { type FeatureGates } from "@/types/billing";
 
 /**
  * Returns the current feature access and credit state for a user.

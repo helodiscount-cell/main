@@ -51,14 +51,17 @@ export function BestPerformerWidget({
   const options = ["Last 7 days", "Last 30 days", "All time"];
   const [range, setRange] = useState(options[0]);
 
-  const { data: gates } = useFeatureGates();
+  const { data: gates, isLoading: isGatesLoading } = useFeatureGates();
   const isLocked = gates?.access?.hasBestPerformer === false;
+  const canFetch = gates?.access?.hasBestPerformer === true;
 
-  const { data: config, isLoading } = useQuery({
+  const { data: config, isLoading: isStatsLoading } = useQuery({
     queryKey: statsKeys.bestPerformer(range),
     queryFn: () => statsService.getBestPerformerStats(range),
-    enabled: !isLocked,
+    enabled: canFetch,
   });
+
+  const isWidgetLoading = isStatsLoading || isGatesLoading;
 
   // Chart calculations
   const chartData = config?.chartData || [];
@@ -102,7 +105,7 @@ export function BestPerformerWidget({
           </DropdownMenu>
         </div>
 
-        {isLoading ? (
+        {isWidgetLoading ? (
           <div className="flex-1 flex items-center justify-center min-h-[250px]">
             <div className="w-full h-full bg-gray-50 animate-pulse rounded-2xl flex items-center justify-center">
               <span className="text-gray-400 font-medium">

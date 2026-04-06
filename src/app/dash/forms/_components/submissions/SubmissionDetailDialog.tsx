@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { getDisplayName, getInitials, formatDate } from "./submission-utils";
 import { SubmissionAnswerValue } from "./SubmissionAnswerValue";
+import { Separator } from "@/components/ui/separator";
 
 interface SubmissionDetailDialogProps {
   submission: FormSubmission | null;
@@ -36,21 +37,25 @@ export const SubmissionDetailDialog = ({
 
   return (
     <Dialog open={!!submission} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden rounded-3xl border-0 shadow-2xl">
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-xl p-0 overflow-hidden rounded-xl border-0 shadow-2xl"
+      >
         <DialogHeader className="px-8 pt-8 pb-4">
-          <DialogTitle className="text-lg font-bold text-slate-900 tracking-tight text-left">
+          <DialogTitle className="text-lg font-semibold text-[#212121] tracking-tight text-left">
             Submission Details
           </DialogTitle>
+          <Separator />
         </DialogHeader>
 
         <div className="px-8 pb-8 space-y-6">
           {/* Profile Card */}
           <div className="flex items-center gap-4 py-2">
-            <div className="w-20 h-20 rounded-full bg-[#E9E4FF] flex items-center justify-center text-[#6A06E4] text-3xl font-bold border-2 border-white shadow-sm shrink-0">
+            <div className="w-20 h-20 rounded-full bg-[#E9E4FF] flex items-center justify-center text-[#6A06E4] text-3xl font-semibold border-2 border-white shadow-sm shrink-0">
               {initials}
             </div>
             <div className="space-y-1 min-w-0">
-              <h2 className="text-xl font-bold text-slate-900 truncate">
+              <h2 className="capitalize text-xl font-semibold text-[#212121] truncate">
                 {name}
               </h2>
               <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
@@ -60,17 +65,9 @@ export const SubmissionDetailDialog = ({
             </div>
           </div>
 
-          {/* Verification Status Pill */}
-          <div className="flex items-center justify-between px-5 py-3.5 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
-            <span className="text-sm font-semibold text-slate-700">
-              Email Verification Status
-            </span>
-            <span className="text-sm font-bold text-red-600">Not Verified</span>
-          </div>
-
           {/* Form Responses Section */}
           <div className="space-y-4">
-            <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+            <h3 className="text-md font-semibold text-slate-900 flex items-center gap-2">
               Form Responses
             </h3>
 
@@ -86,7 +83,7 @@ export const SubmissionDetailDialog = ({
                     key={field.id}
                     className="bg-[#F8FAFC] p-5 rounded-2xl border border-slate-100/50 space-y-1.5 transition-all hover:bg-slate-100/50"
                   >
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">
                       {field.label}
                     </label>
                     {/* Smart renderer: image preview, file download, or plain text */}
@@ -100,7 +97,9 @@ export const SubmissionDetailDialog = ({
           {/* Timestamp Footer */}
           <div className="pt-5 border-t border-slate-100 flex items-center gap-2 text-slate-400 text-xs font-semibold">
             <span className="uppercase tracking-widest">Submitted At:</span>
-            <span className="text-slate-900 font-bold">{formattedDate}</span>
+            <span className="text-slate-900 font-semibold">
+              {formattedDate}
+            </span>
           </div>
         </div>
       </DialogContent>
