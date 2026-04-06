@@ -56,11 +56,11 @@ const OrderPaidSchema = z.object({
 });
 
 const BaseWebhookSchema = z.object({
-  id: z.string(),
-  entity: z.literal("event"),
+  id: z.string().optional(),
+  entity: z.literal("event").optional(),
   account_id: z.string().optional(),
-  contains: z.array(z.string()),
-  created_at: z.number(),
+  contains: z.array(z.string()).optional(),
+  created_at: z.number().optional(),
 });
 
 const SubscriptionEntitySchema = z.object({
