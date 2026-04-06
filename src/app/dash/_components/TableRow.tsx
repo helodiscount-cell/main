@@ -2,21 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { FileText, ExternalLink, Copy, MoreVertical } from "lucide-react";
-import { toast } from "sonner";
 import type { AutomationListItem } from "@/types/automation";
 import type { FormListItem } from "@/types/form";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
-import { getAutomationRoute, getAutomationLabel } from "@/utils/automation";
-
-// Styles
-const FORM_STATUS_STYLES: Record<string, string> = {
-  PUBLISHED: "bg-emerald-50 text-emerald-700",
-  DRAFT: "bg-slate-100 text-slate-500",
-};
+import { useDashboardItemMapper } from "./useDashboardItemMapper";
+import { MoreVertical } from "lucide-react";
 
 /**
  * Props for the dumb UI component.
@@ -107,129 +98,52 @@ const TableRowUI = ({
 /**
  * Maps Automation and Form data to TableRow UI pieces.
  */
-const useTableRowMapper = (
-  data: AutomationListItem | FormListItem,
-  menuOpen: boolean,
-  setMenuOpen: (o: boolean) => void,
-): TableRowUIProps => {
-  const isAutomation = "triggerType" in data;
-
-  if (isAutomation) {
-    const automation = data as AutomationListItem;
-    return {
-      title: automation.automationName || "Unnamed Automation",
-      subtitle:
-        automation.post?.caption ||
-        automation.story?.caption ||
-        (automation.triggers.length > 0
-          ? `Keywords: ${automation.triggers.join(", ")}`
-          : "No keyword triggers"),
-      href: getAutomationRoute(automation.triggerType, automation.id),
-      icon:
-        automation.post?.thumbnailUrl ||
-        automation.post?.mediaUrl ||
-        automation.story?.thumbnailUrl ||
-        automation.story?.mediaUrl ? (
-          <Image
-            alt="Media preview"
-            src={
-              (automation.post?.thumbnailUrl ??
-                automation.post?.mediaUrl ??
-                automation.story?.thumbnailUrl ??
-                automation.story?.mediaUrl) as string
-            }
-            width={32}
-            height={32}
-            className="rounded-md object-cover w-full h-full"
-          />
-        ) : (
-          <span className="text-[10px] text-slate-400 font-bold uppercase">
-            {getAutomationLabel(automation.triggerType) || "Unknown Trigger"}
-          </span>
-        ),
-      status: (
-        <StatusBadge
-          status={
-            automation.story &&
-            Date.now() - new Date(automation.story.timestamp).getTime() >=
-              24 * 60 * 60 * 1000
-              ? "EXPIRED"
-              : automation.status
-          }
-        />
-      ),
-      stats: automation._count.executions,
-      date: automation.lastTriggeredAt
-        ? new Date(automation.lastTriggeredAt).toLocaleDateString()
-        : "—",
-      actions: (
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="text-slate-400 hover:text-slate-700 transition-colors p-1.5"
-            title="More actions"
-          >
-            <MoreVertical size={16} />
-          </button>
-          {menuOpen && (
-            <AutomationActionsMenu
-              onClose={() => setMenuOpen(false)}
-              fullAutomation={automation}
-            />
-          )}
-        </div>
-      ),
-    };
-  }
-
-  // Map Form data
-  const form = data as FormListItem;
-
-  return {
-    title: form.title || "Untitled Form",
-    subtitle: form.description || "No description",
-    href: `/dash/forms/${form.id}`,
-    icon: <FileText size={15} className="text-slate-400" />,
-    status: (
-      <span
-        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${FORM_STATUS_STYLES[form.status] ?? FORM_STATUS_STYLES.DRAFT}`}
-      >
-        {form.status}
-      </span>
-    ),
-    stats: form.submissionCount,
-    date: new Date(form.updatedAt).toLocaleDateString(),
-    actions: (
-      <div className="flex items-center gap-1">
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-            title="More actions"
-          >
-            <MoreVertical size={16} />
-          </button>
-          {menuOpen && (
-            <FormActionsMenu
-              formId={form.id}
-              onClose={() => setMenuOpen(false)}
-              slug={form.slug}
-            />
-          )}
-        </div>
-      </div>
-    ),
-  };
-};
-
 /**
  * Main component that decides what to render based on input data.
+ * Refactored to use a shared mapper for consistency with mobile views.
  */
 const TableRow = ({ data }: { data: AutomationListItem | FormListItem }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const rowProps = useTableRowMapper(data, menuOpen, setMenuOpen);
+  const mapped = useDashboardItemMapper(data);
 
-  return <TableRowUI {...rowProps} />;
+  // Desktop-specific actions
+  const actions = (
+    <div className="relative">
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+        title="More actions"
+      >
+        <MoreVertical size={16} />
+      </button>
+      {menuOpen &&
+        ("triggerType" in data ? (
+          <AutomationActionsMenu
+            onClose={() => setMenuOpen(false)}
+            fullAutomation={data as AutomationListItem}
+          />
+        ) : (
+          <FormActionsMenu
+            formId={data.id}
+            onClose={() => setMenuOpen(false)}
+            slug={(data as FormListItem).slug}
+          />
+        ))}
+    </div>
+  );
+
+  return (
+    <TableRowUI
+      icon={mapped.image}
+      title={mapped.title}
+      subtitle={mapped.subtitle}
+      href={mapped.href}
+      status={mapped.status}
+      stats={mapped.stats}
+      date={mapped.date}
+      actions={actions}
+    />
+  );
 };
 
 export default TableRow;

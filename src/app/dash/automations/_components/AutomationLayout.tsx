@@ -44,7 +44,7 @@ export function AutomationLayout({
           {/* Center: Phone mockup */}
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-full flex items-start justify-center">
-              <div className="relative drop-shadow-2xl h-full w-full">
+              <div className="relative drop-   -2xl h-full w-full">
                 <Image
                   src={phoneImg}
                   alt="Phone preview"

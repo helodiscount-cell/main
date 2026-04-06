@@ -8,10 +8,17 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
 import { formKeys } from "@/keys/react-query";
-import { DashboardHeader, TableHeader, TableRow } from "../_components";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DashboardHeader,
+  TableHeader,
+  TableRow,
+  MobilePageLayout,
+} from "../_components";
 import { StatusFilter, STATUS_OPTIONS } from "../_components/TableHeader";
 
 export default function FormsPage() {
+  const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
   const { data: forms = [], isLoading } = useQuery({
@@ -24,8 +31,32 @@ export default function FormsPage() {
   const selectedLabel =
     STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? "All";
 
+  const newFormAction = (
+    <Button
+      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-14 rounded-2xl text-lg font-bold      -purple-200"
+      asChild
+    >
+      <Link href="/dash/forms/editor" className="flex items-center gap-2">
+        <PlusIcon size={20} />
+        New Form
+      </Link>
+    </Button>
+  );
+
+  if (isMobile) {
+    return (
+      <MobilePageLayout
+        title="Forms"
+        items={forms}
+        isLoading={isLoading}
+        emptyMessage="No forms yet. Create your first one!"
+        actionButton={newFormAction}
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#F8FAFC]">
       {/* Top header */}
       <DashboardHeader
         showSearch={true}
@@ -46,7 +77,7 @@ export default function FormsPage() {
       />
 
       {/* Table */}
-      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1">
+      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50">
         {/* Column headers */}
         <TableHeader
           title="Forms"

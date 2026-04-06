@@ -25,12 +25,12 @@ export function UsageBar({ used, limit }: UsageBarProps) {
         </span>
       </div>
 
-      <div className="h-6 w-full bg-muted rounded-2xl overflow-hidden border shadow-inner">
+      <div className="h-6 w-full bg-muted rounded-2xl overflow-hidden border    -inner">
         <div
           className={`h-full transition-all duration-700 ease-out flex items-center justify-end pr-3 ${
             isExhausted
-              ? "bg-red-500 shadow-lg shadow-red-500/20"
-              : "bg-primary shadow-lg shadow-primary/20"
+              ? "bg-red-500      -red-500/20"
+              : "bg-primary      -primary/20"
           }`}
           style={{ width: `${limit === -1 ? 0 : percentage}%` }}
         >

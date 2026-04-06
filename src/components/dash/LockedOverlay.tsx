@@ -42,8 +42,8 @@ export const LockedOverlay = ({
       <div className="absolute inset-0 z-40 bg-slate-900/[0.01] flex items-center justify-center p-3 text-center">
         <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-300 scale-90 sm:scale-100">
           {/* Badge */}
-          <div className="bg-white/95 backdrop-blur-md border border-slate-200 shadow-[0_15px_40px_rgba(0,0,0,0.08)] rounded-xl px-4 py-2.5 flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg">
+          <div className="bg-white/95 backdrop-blur-md border border-slate-200    -[0_15px_40px_rgba(0,0,0,0.08)] rounded-xl px-4 py-2.5 flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center  ">
               <Lock className="text-white w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col text-left">
@@ -59,7 +59,7 @@ export const LockedOverlay = ({
           {/* Action Button */}
           <Link
             href="/dash/billing"
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-xs shadow-lg shadow-purple-200 transition-all active:scale-95"
+            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-xs      -purple-200 transition-all active:scale-95"
           >
             Upgrade Now
           </Link>

@@ -52,7 +52,7 @@ const ImageAnswer = ({ url }: { url: string }) => {
         <button
           type="button"
           onClick={() => triggerDownload(url, filename)}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-slate-800 text-xs font-bold rounded-full shadow-lg hover:bg-[#6A06E4] hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-slate-800 text-xs font-bold rounded-full   hover:bg-[#6A06E4] hover:text-white transition-colors"
         >
           <Download size={13} />
           Download

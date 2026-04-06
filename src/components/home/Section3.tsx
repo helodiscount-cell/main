@@ -44,7 +44,7 @@ const TabChanger = () => {
       </div>
 
       {/* Content Area */}
-      <div className="bg-[#7500FF] p-12 shadow-lg border border-purple-200">
+      <div className="bg-[#7500FF] p-12   border border-purple-200">
         <div className="grid grid-cols-2 gap-12">
           {/* Left: Text Content */}
           <div className="space-y-2">

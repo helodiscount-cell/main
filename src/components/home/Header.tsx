@@ -36,7 +36,7 @@ export const LandingHeader = () => {
   return (
     <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
       <nav
-        className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all duration-500 shadow-lg ${
+        className={`flex items-center gap-1 px-3 py-2 rounded-full border transition-all duration-500   ${
           isHeroInView
             ? "bg-white/90 text-black border-black/10 backdrop-blur-xl"
             : "bg-black/90 text-white border-white/10 backdrop-blur-xl"

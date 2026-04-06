@@ -5,9 +5,12 @@ import {
   FormEditorProvider,
   useFormEditor,
 } from "../_components/FormEditorProvider";
+import { MobileEditorHeader } from "../_components/editor/mobile/MobileEditorHeader";
 import { EditorHeader } from "../_components/editor/EditorHeader";
 import { FormTabs } from "../_components/editor/FormTabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "next/navigation";
+import { cn } from "@/server/utils";
 
 export default function FormDetailLayout({
   children,
@@ -17,8 +20,8 @@ export default function FormDetailLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   // Determine active tab based on URL path
   const activeTab = pathname.endsWith("/submissions")
@@ -30,9 +33,17 @@ export default function FormDetailLayout({
       <div className="flex flex-col h-full min-h-screen">
         <FormLayoutHeader formId={id} />
         <div
-          className="flex-1 overflow-hidden m-4 rounded-xl"
+          className={cn(
+            "flex-1 overflow-hidden rounded-xl",
+            isMobile ? "m-0 px-1" : "m-4",
+          )}
           style={{
-            backgroundColor: activeTab === "editor" ? "#F1F1F1" : "white",
+            backgroundColor:
+              activeTab === "editor"
+                ? isMobile
+                  ? "transparent"
+                  : "#F1F1F1"
+                : "white",
           }}
         >
           {children}
@@ -46,6 +57,7 @@ export default function FormDetailLayout({
 const FormLayoutHeader = ({ formId }: { formId: string }) => {
   const { save, isLoading } = useFormEditor();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   // Determine active tab based on URL path
   const activeTab = pathname.endsWith("/submissions")
@@ -53,6 +65,27 @@ const FormLayoutHeader = ({ formId }: { formId: string }) => {
     : "editor";
 
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
+  const handleSave = useCallback(() => save("DRAFT"), [save]);
+  const handlePreview = useCallback(() => {
+    if (formId) {
+      window.open(`/f/${formId}`, "_blank");
+    }
+  }, [formId]);
+
+  if (isMobile) {
+    return (
+      <>
+        <MobileEditorHeader
+          formId={formId}
+          onPublish={handlePublish}
+          onSave={handleSave}
+          onPreview={handlePreview}
+          isLoading={isLoading}
+        />
+        <FormTabs formId={formId} activeTab={activeTab} />
+      </>
+    );
+  }
 
   return (
     <>

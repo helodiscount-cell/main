@@ -52,7 +52,7 @@ const HeroSection = () => {
 
 const MessageCard = () => (
   <div
-    className="w-[250px] p-4 bg-white/70 backdrop-blur-3xl rounded-[15px] shadow-lg"
+    className="w-[250px] p-4 bg-white/70 backdrop-blur-3xl rounded-[15px]  "
     // style={{
     //   backdropFilter: "blur(5px)",
     //   WebkitBackdropFilter: "blur(5px)",
@@ -79,7 +79,7 @@ const MessageCard = () => (
 
 const DmCard = () => (
   <div
-    className="w-[250px] p-4 bg-white/70 backdrop-blur-3xl rounded-[15px] shadow-lg"
+    className="w-[250px] p-4 bg-white/70 backdrop-blur-3xl rounded-[15px]  "
     style={{
       backdropFilter: "blur(5px)",
       WebkitBackdropFilter: "blur(5px)",

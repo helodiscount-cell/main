@@ -87,16 +87,16 @@ const Testimony = () => {
         <TestimonyCard {...testimonies[3]} className="bottom-10 right-[60px]" />
 
         {/* Floating Avatars */}
-        {/* <div className="absolute top-5 left-[380px] w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg hover:scale-110 transition-transform">
+        {/* <div className="absolute top-5 left-[380px] w-20 h-20 rounded-full overflow-hidden border-4 border-white   hover:scale-110 transition-transform">
           <Image src={PlaceHolderImage7} alt="Avatar" className="w-full h-full object-cover" />
         </div>
-        <div className="absolute top-[120px] left-5 w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg hover:scale-110 transition-transform">
+        <div className="absolute top-[120px] left-5 w-20 h-20 rounded-full overflow-hidden border-4 border-white   hover:scale-110 transition-transform">
           <Image src={PlaceHolderImage8} alt="Avatar" className="w-full h-full object-cover" />
         </div>
-        <div className="absolute bottom-[120px] right-5 w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg hover:scale-110 transition-transform">
+        <div className="absolute bottom-[120px] right-5 w-20 h-20 rounded-full overflow-hidden border-4 border-white   hover:scale-110 transition-transform">
           <Image src={PlaceHolderImag2} alt="Avatar" className="w-full h-full object-cover" />
         </div>
-        <div className="absolute bottom-5 left-[380px] w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg hover:scale-110 transition-transform">
+        <div className="absolute bottom-5 left-[380px] w-20 h-20 rounded-full overflow-hidden border-4 border-white   hover:scale-110 transition-transform">
           <Image src={PlaceHolderImage4} alt="Avatar" className="w-full h-full object-cover" />
         </div> */}
       </div>

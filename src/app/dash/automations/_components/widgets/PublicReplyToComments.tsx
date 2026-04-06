@@ -56,7 +56,7 @@ const PublicReplyToComments = ({
           }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full     transition-transform duration-200 ${
               enabled ? "translate-x-5" : "translate-x-0"
             }`}
           />
@@ -113,7 +113,7 @@ const PublicReplyToComments = ({
                 <button
                   type="button"
                   onClick={addReply}
-                  className="px-4 py-1.5 text-xs font-semibold bg-[#6A06E4] text-white rounded-lg hover:bg-[#5a05c4] transition-colors shadow-sm"
+                  className="px-4 py-1.5 text-xs font-semibold bg-[#6A06E4] text-white rounded-lg hover:bg-[#5a05c4] transition-colors    -sm"
                 >
                   Add Reply
                 </button>

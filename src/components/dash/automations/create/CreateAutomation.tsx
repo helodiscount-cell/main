@@ -16,7 +16,13 @@ import {
   TabSelector,
 } from "@/components/dash/automations/create";
 
-export default function CreateAutomationDialog({ title }: { title: string }) {
+export default function CreateAutomationDialog({
+  title,
+  triggerClassName,
+}: {
+  title: string;
+  triggerClassName?: string;
+}) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   const renderContent = () => {
@@ -39,7 +45,12 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
   return (
     <Dialog onOpenChange={(open) => !open && setActiveTab(null)}>
       <DialogTrigger asChild>
-        <Button className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none">
+        <Button
+          className={
+            triggerClassName ||
+            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none"
+          }
+        >
           <PlusIcon />
           {title}
         </Button>
@@ -49,7 +60,7 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
         showCloseButton={false}
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold tracking-tight">
+          <DialogTitle className="text-xl font-semibold tracking-tight">
             <div className="flex flex-1 justify-between">
               {activeTab ? "Configure Automation" : "Choose a Template"}
             </div>

@@ -4,6 +4,7 @@ import React from "react";
 import { SquarePen, Inbox } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/server/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TabType = "editor" | "submissions";
 
@@ -17,6 +18,7 @@ interface FormTabsProps {
  * Handles navigation between "Editor" and "Submissions" for a specific form.
  */
 export const FormTabs = ({ formId, activeTab }: FormTabsProps) => {
+  const isMobile = useIsMobile();
   // Routes — If no formId, we are on the /editor page
   const editorPath = formId ? `/dash/forms/${formId}` : "/dash/forms/editor";
   const submissionsPath = formId
@@ -25,7 +27,12 @@ export const FormTabs = ({ formId, activeTab }: FormTabsProps) => {
 
   return (
     <div className="px-4 py-2">
-      <div className="bg-white flex items-center w-full h-16 px-6 rounded-xl border border-[#E2E8F0] gap-8">
+      <div
+        className={cn(
+          "bg-white flex items-center w-full h-16 px-6 rounded-xl border border-[#E2E8F0] gap-8",
+          isMobile && "justify-center",
+        )}
+      >
         {/* Editor Tab */}
         <Link
           href={editorPath}
@@ -45,7 +52,7 @@ export const FormTabs = ({ formId, activeTab }: FormTabsProps) => {
           />
           <span className="text-sm tracking-tight text-inherit">Editor</span>
           {activeTab === "editor" && (
-            <div className="w-1/2 mx-auto absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full shadow-[0_-2px_6px_rgba(106,6,228,0.2)]" />
+            <div className="w-1/2 mx-auto absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full    -[0_-2px_6px_rgba(106,6,228,0.2)]" />
           )}
         </Link>
 
@@ -73,7 +80,7 @@ export const FormTabs = ({ formId, activeTab }: FormTabsProps) => {
             Submissions
           </span>
           {activeTab === "submissions" && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full shadow-[0_-2px_6px_rgba(106,6,228,0.2)]" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full    -[0_-2px_6px_rgba(106,6,228,0.2)]" />
           )}
         </Link>
       </div>
