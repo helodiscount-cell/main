@@ -21,6 +21,8 @@ export type FeatureGates = {
     canAddAccount: boolean;
     hasLeadGen: boolean;
     canCreateForms: boolean;
+    hasAskToFollow: boolean;
+    hasBestPerformer: boolean;
   };
 };
 
@@ -95,6 +97,8 @@ export async function getFeatureGates(
       canAddAccount: activeAccountCount < maxAccounts && subStatus === "ACTIVE",
       hasLeadGen: plan.hasLeadGen && subStatus === "ACTIVE",
       canCreateForms: plan.hasLeadGen && subStatus === "ACTIVE",
+      hasAskToFollow: plan.hasAskToFollow && subStatus === "ACTIVE",
+      hasBestPerformer: plan.hasBestPerformer && subStatus === "ACTIVE",
     },
   };
 }

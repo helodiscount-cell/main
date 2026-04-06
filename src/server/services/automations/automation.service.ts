@@ -25,6 +25,27 @@ import { AutomationFilters } from "@/types/automation";
 import { prisma } from "@/server/db";
 import crypto from "crypto";
 import { TriggerType } from "@/types/automation";
+import { getFeatureGates } from "@/server/services/billing/feature-gates";
+
+/**
+ * Helper to validate feature access for specific automation features
+ */
+async function validateFeatureAccess(
+  clerkId: string,
+  input: CreateAutomationInput | UpdateAutomationInput,
+) {
+  // Gate: Ask to Follow (available on FREE and BLACK only)
+  if (input.askToFollowEnabled) {
+    const gates = await getFeatureGates(clerkId);
+    if (!gates.access.hasAskToFollow) {
+      throw new ApiRouteError(
+        "The 'Ask to Follow' feature is a special feature available on our Black and Free plans. Please upgrade to unlock.",
+        "FEATURE_LOCKED",
+        403,
+      );
+    }
+  }
+}
 
 /**
  * Helper to compute the cache invalidation type from a trigger type
@@ -146,6 +167,9 @@ export async function createAutomation(
 
   const triggerType = input.triggerType ?? "COMMENT_ON_POST";
   const warnings: string[] = [];
+
+  // Feature Access Validation (Config Driven)
+  await validateFeatureAccess(clerkId, input);
 
   // Name uniqueness check
   await validateAutomationName(instaAccountId, input.automationName);
@@ -305,6 +329,15 @@ export async function updateAutomation(
 
   if (!existingAutomation) {
     throw new Error("Automation not found or access denied");
+  }
+
+  // Feature Access Validation (Config Driven)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { clerkId: true },
+  });
+  if (user?.clerkId) {
+    await validateFeatureAccess(user.clerkId, input);
   }
 
   const instaAccountId = (existingAutomation as any).instaAccountId;

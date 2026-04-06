@@ -80,6 +80,8 @@ export const PLANS: Record<
     creditLimit: number;
     maxAccounts: number;
     hasLeadGen: boolean;
+    hasAskToFollow: boolean;
+    hasBestPerformer: boolean;
     priceInRupees: number;
     razorpayPlanId: string | null;
   }
@@ -88,6 +90,8 @@ export const PLANS: Record<
     creditLimit: 1000,
     maxAccounts: 1,
     hasLeadGen: true,
+    hasAskToFollow: true,
+    hasBestPerformer: true,
     priceInRupees: 0,
     razorpayPlanId: null,
   },
@@ -95,6 +99,8 @@ export const PLANS: Record<
     creditLimit: 10000,
     maxAccounts: 1,
     hasLeadGen: true,
+    hasAskToFollow: false,
+    hasBestPerformer: false,
     priceInRupees: 99,
     razorpayPlanId: process.env.RAZORPAY_PLAN_ID_BASIC ?? null,
   },
@@ -102,6 +108,8 @@ export const PLANS: Record<
     creditLimit: 25000,
     maxAccounts: 1,
     hasLeadGen: true,
+    hasAskToFollow: false,
+    hasBestPerformer: false,
     priceInRupees: 279,
     razorpayPlanId: process.env.RAZORPAY_PLAN_ID_PREMIUM ?? null,
   },
@@ -109,6 +117,8 @@ export const PLANS: Record<
     creditLimit: -1,
     maxAccounts: 2,
     hasLeadGen: true,
+    hasAskToFollow: true,
+    hasBestPerformer: true,
     priceInRupees: 479,
     razorpayPlanId: process.env.RAZORPAY_PLAN_ID_BLACK ?? null,
   },
