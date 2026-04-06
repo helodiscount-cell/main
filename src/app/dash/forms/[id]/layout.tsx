@@ -66,11 +66,6 @@ const FormLayoutHeader = ({ formId }: { formId: string }) => {
 
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
   const handleSave = useCallback(() => save("DRAFT"), [save]);
-  const handlePreview = useCallback(() => {
-    if (formId) {
-      window.open(`/f/${formId}`, "_blank");
-    }
-  }, [formId]);
 
   if (isMobile) {
     return (
@@ -79,7 +74,6 @@ const FormLayoutHeader = ({ formId }: { formId: string }) => {
           formId={formId}
           onPublish={handlePublish}
           onSave={handleSave}
-          onPreview={handlePreview}
           isLoading={isLoading}
         />
         <FormTabs formId={formId} activeTab={activeTab} />

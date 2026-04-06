@@ -2,64 +2,41 @@
 
 import React from "react";
 import { GripVertical, Trash2, Plus, X, Star } from "lucide-react";
-import { useFormContext, useFieldArray } from "react-hook-form";
 import { FIELD_TYPE_LABELS } from "../config";
-import type { FormValues, FieldType } from "@dm-broo/common-types";
+import { useFieldCardLogic, FIELD_INPUT_TYPE_MAP } from "../useFieldCardLogic";
 
 type MobileFieldCardProps = {
   index: number;
   onRemove: () => void;
 };
 
-// Map of field types to their preview input types
-const INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
-  text: "text",
-  number: "number",
-  email: "email",
-  url: "url",
-  phone: "tel",
-  date: "date",
-};
-
 /**
  * Mobile-specific field card design.
  * Matches the requested image with drag handle on left, purple toggle, and red trash icon.
+ * Refactored to use useFieldCardLogic for a cleaner, DRYer implementation.
  */
 export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
   const {
     register,
-    watch,
-    setValue,
-    control,
-    formState: { errors },
-  } = useFormContext<FormValues>();
-
-  const fieldType = watch(`fields.${index}.type`);
-  const isRequired = watch(`fields.${index}.required`);
-
-  const {
-    fields: options,
-    append: appendOption,
-    remove: removeOption,
-  } = useFieldArray({
-    control,
-    // @ts-ignore - Dynamic path for nested field array
-    name: `fields.${index}.options`,
-  });
-
-  const showOptions = fieldType === "dropdown" || fieldType === "checkbox";
+    fieldType,
+    isRequired,
+    toggleRequired,
+    options,
+    appendOption,
+    removeOption,
+    errors,
+    showOptions,
+  } = useFieldCardLogic(index);
 
   return (
     <div className="relative flex items-center gap-3 group animate-in fade-in slide-in-from-bottom-4 duration-300">
-      {/* Drag Handle (Visual only for now) */}
-      <div className="flex flex-col items-center justify-center p-2 rounded-full bg-white/60 text-slate-400 shrink-0    -sm border border-slate-50 cursor-grab active:cursor-grabbing">
+      {/* Drag Handle (Visual only) */}
+      <div className="flex flex-col items-center justify-center p-2 rounded-full bg-white/60 text-slate-400 shrink-0 -sm border border-slate-50 cursor-grab active:cursor-grabbing">
         <GripVertical size={16} />
       </div>
 
-      {/*
-          FIELD CONTAINER
-      */}
-      <div className="flex-1 bg-white rounded-[24px] p-5 space-y-4    -[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-50 relative">
+      {/* FIELD CONTAINER */}
+      <div className="flex-1 bg-white rounded-[24px] p-5 space-y-4 -[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-50 relative">
         {/* HEADER SECTION: Type + Required Toggle */}
         <div className="flex items-center justify-between">
           <span className="text-[17px] font-bold text-slate-800">
@@ -72,17 +49,13 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
             </span>
             <button
               type="button"
-              onClick={() =>
-                setValue(`fields.${index}.required`, !isRequired, {
-                  shouldDirty: true,
-                })
-              }
+              onClick={toggleRequired}
               className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors cursor-pointer ${
                 isRequired ? "bg-[#6A06E4]" : "bg-slate-200"
               }`}
             >
               <span
-                className={`inline-block h-5 w-5 rounded-full bg-white    -sm transition-transform mt-0.5 ${
+                className={`inline-block h-5 w-5 rounded-full bg-white -sm transition-transform mt-0.5 ${
                   isRequired ? "translate-x-5.5" : "translate-x-0.5"
                 }`}
               />
@@ -107,9 +80,7 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
           )}
         </div>
 
-        {/*
-            DYNAMIC CONFIG AREA
-        */}
+        {/* DYNAMIC CONFIG AREA */}
         <div className="space-y-3">
           {fieldType === "rating" ? (
             <div className="flex gap-1.5 py-1">
@@ -160,20 +131,16 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
             </div>
           ) : fieldType === "upload" ? (
             <div className="bg-[#F8FAFC] border-2 border-dashed border-slate-100 rounded-xl p-4 flex flex-col items-center gap-1.5 text-slate-300">
-              <span className="text-xs font-semibold">
+              <span className="text-xs font-semibold text-slate-400">
                 User will upload a file here
               </span>
             </div>
           ) : (
-            /* DEFAULT INPUT MOCKUP (Matches design) */
             <div className="bg-[#F8FAFC] rounded-xl px-4 py-3 border border-slate-50 focus-within:border-[#6A06E4]/10 transition-colors">
               <input
                 {...register(`fields.${index}.placeholder`)}
-                type={INPUT_TYPE_MAP[fieldType] || "text"}
+                type={FIELD_INPUT_TYPE_MAP[fieldType] || "text"}
                 placeholder="Add Placeholder"
-                onClick={(e) =>
-                  fieldType === "date" && e.currentTarget.showPicker?.()
-                }
                 className="w-full text-sm font-medium text-slate-500 bg-transparent outline-none placeholder:text-slate-300"
               />
             </div>
@@ -181,7 +148,7 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
         </div>
       </div>
 
-      {/* DELETE BUTTON: Repositioned as per design (Icon Red) */}
+      {/* DELETE BUTTON: Red Trash Icon */}
       <button
         type="button"
         onClick={onRemove}

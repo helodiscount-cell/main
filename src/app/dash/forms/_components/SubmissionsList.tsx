@@ -44,7 +44,7 @@ export const SubmissionsList = ({
   return (
     <div className="w-full rounded-2xl overflow-hidden">
       {/* List Header */}
-      <div className="grid grid-cols-[1fr_auto] items-center px-8 py-4 bg-[#F9F9F9] m-4 rounded-md">
+      <div className="grid grid-cols-[1fr_auto] items-center px-8 py-4 bg-[#f1f1f1] m-4 rounded-md">
         <span className="text-sm font-semibold text-[#212121] text-left">
           Title
         </span>

@@ -55,7 +55,7 @@ const AutomationPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC]">
+    <div className="flex flex-col h-full bg-[#F1F1F1]">
       <DashboardHeader
         showSearch={true}
         childComp={

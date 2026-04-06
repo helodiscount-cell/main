@@ -45,7 +45,7 @@ export const MobileCard = ({ data }: MobileCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-[24px] p-5 border border-slate-50 flex flex-col gap-5 mb-4    -[0_4px_20px_rgba(0,0,0,0.02)]">
+    <div className="bg-white rounded-xl p-5 border border-slate-50 flex flex-col gap-5 mb-4    -[0_4px_20px_rgba(0,0,0,0.02)]">
       {/* Top Row: Info + Status + Menu */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">

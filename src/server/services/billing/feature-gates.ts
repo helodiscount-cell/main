@@ -11,6 +11,7 @@ import {
 import { logger } from "@/server/utils/pino";
 
 import { type FeatureGates } from "@/types/billing";
+export type { FeatureGates };
 
 /**
  * Returns the current feature access and credit state for a user.

@@ -52,7 +52,7 @@ export const FormTabs = ({ formId, activeTab }: FormTabsProps) => {
           />
           <span className="text-sm tracking-tight text-inherit">Editor</span>
           {activeTab === "editor" && (
-            <div className="w-1/2 mx-auto absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full    -[0_-2px_6px_rgba(106,6,228,0.2)]" />
+            <div className="w-1/2 mx-auto absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full -[0_-2px_6px_rgba(106,6,228,0.2)]" />
           )}
         </Link>
 
@@ -80,7 +80,7 @@ export const FormTabs = ({ formId, activeTab }: FormTabsProps) => {
             Submissions
           </span>
           {activeTab === "submissions" && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full    -[0_-2px_6px_rgba(106,6,228,0.2)]" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#6A06E4] rounded-t-full -[0_-2px_6px_rgba(106,6,228,0.2)]" />
           )}
         </Link>
       </div>

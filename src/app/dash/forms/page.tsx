@@ -56,7 +56,7 @@ export default function FormsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC]">
+    <div className="flex flex-col h-full bg-[#F1F1F1]">
       {/* Top header */}
       <DashboardHeader
         showSearch={true}

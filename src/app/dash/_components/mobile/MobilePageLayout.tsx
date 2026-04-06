@@ -31,7 +31,7 @@ export const MobilePageLayout = ({
       <MobileDashboardHeader title={title} />
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-5">
+      <div className="flex-1 overflow-y-auto px-5 bg-[#f1f1f1]">
         {/* Sort/Filter Bar */}
         <div className="flex items-center justify-between mb-4 mt-2">
           <button className="flex items-center gap-1.5 text-[#212121] font-semibold text-sm">
