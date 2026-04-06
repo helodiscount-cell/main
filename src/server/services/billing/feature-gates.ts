@@ -10,19 +10,7 @@ import {
 } from "@/server/redis/operations/billing";
 import { logger } from "@/server/utils/pino";
 
-export type FeatureGates = {
-  state: {
-    currentPlan: PlanId;
-    creditsUsed: number;
-    creditLimit: number;
-    subStatus: string;
-  };
-  access: {
-    canAddAccount: boolean;
-    hasLeadGen: boolean;
-    canCreateForms: boolean;
-  };
-};
+import { type FeatureGates } from "@/types/billing";
 
 /**
  * Returns the current feature access and credit state for a user.
@@ -95,6 +83,8 @@ export async function getFeatureGates(
       canAddAccount: activeAccountCount < maxAccounts && subStatus === "ACTIVE",
       hasLeadGen: plan.hasLeadGen && subStatus === "ACTIVE",
       canCreateForms: plan.hasLeadGen && subStatus === "ACTIVE",
+      hasAskToFollow: plan.hasAskToFollow && subStatus === "ACTIVE",
+      hasBestPerformer: plan.hasBestPerformer && subStatus === "ACTIVE",
     },
   };
 }

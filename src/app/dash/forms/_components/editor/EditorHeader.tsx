@@ -5,17 +5,64 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { EDITOR_HEADER_CONFIG, HEADER_ACTIONS } from "./config";
+import { useQuery } from "@tanstack/react-query";
+import { formService } from "@/api/services/forms";
+import { Download } from "lucide-react";
+import { downloadSubmissionsCSV } from "./utils/export";
 
 type EditorHeaderProps = {
   onPublish: () => void;
   isLoading?: boolean;
+  formId: string;
+  activeTab: string;
 };
 
 // Breadcrumb + action buttons — Refresh saves as draft, Publish publishes
-export const EditorHeader = ({ onPublish, isLoading }: EditorHeaderProps) => {
+export const EditorHeader = ({
+  onPublish,
+  isLoading,
+  formId,
+  activeTab,
+}: EditorHeaderProps) => {
+  const [exportStatus, setExportStatus] = React.useState<
+    "idle" | "exporting" | "exported"
+  >("idle");
+
   // Maps action id to its click handler
   const ACTION_HANDLERS: Record<string, () => void> = {
     publish: onPublish,
+  };
+
+  const { data } = useQuery({
+    queryKey: ["form", formId],
+    queryFn: () => formService.getById(formId),
+  });
+
+  /**
+   * Fetches all form submissions and triggers a CSV download
+   * Maps dynamic field IDs to human-readable labels for the CSV header
+   */
+  const handleExport = async () => {
+    if (!data?.fields) return;
+
+    try {
+      setExportStatus("exporting");
+      const submissions = await formService.getSubmissions(formId);
+
+      if (!submissions?.length) {
+        setExportStatus("idle");
+        return;
+      }
+
+      // Deletage CSV building and download trigger to utility
+      downloadSubmissionsCSV(submissions, data.fields, data.slug);
+
+      setExportStatus("exported");
+      setTimeout(() => setExportStatus("idle"), 3000);
+    } catch (err) {
+      console.error("CSV Export Error:", err);
+      setExportStatus("idle");
+    }
   };
 
   return (
@@ -33,35 +80,47 @@ export const EditorHeader = ({ onPublish, isLoading }: EditorHeaderProps) => {
             {EDITOR_HEADER_CONFIG.BREADCRUMB_ROOT}
           </span>
           <span className="text-sm text-slate-400 mx-1">/</span>
-          <span className="text-sm font-semibold text-slate-900">
-            {EDITOR_HEADER_CONFIG.BREADCRUMB_CURRENT}
+          <span className="capitalize text-sm font-semibold text-slate-900">
+            {data?.title}
           </span>
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons — Conditional display based on active tab */}
         <div className="flex items-center gap-2">
-          {HEADER_ACTIONS.map((action) =>
-            action.variant === "primary" ? (
-              <Button
-                key={action.id}
-                disabled={isLoading}
-                onClick={ACTION_HANDLERS[action.id]}
-                className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4"
-              >
-                <action.icon size={15} />
-                {action.label}
-              </Button>
-            ) : (
-              <Button
-                key={action.id}
-                size="icon"
-                variant="secondary"
-                className="h-9 w-9 bg-slate-900 hover:bg-slate-700 text-white"
-                aria-label={action.label}
-              >
-                <action.icon size={15} />
-              </Button>
-            ),
+          {HEADER_ACTIONS.filter(
+            (a) => activeTab !== "submissions" || a.id === "refresh",
+          ).map(({ id, icon: Icon, label, variant }) => (
+            <Button
+              key={id}
+              disabled={isLoading}
+              onClick={ACTION_HANDLERS[id]}
+              size={variant === "primary" ? "default" : "icon"}
+              variant={variant === "primary" ? "default" : "secondary"}
+              title={label} // Show label on hover for icon buttons
+              className={
+                variant === "primary"
+                  ? EDITOR_HEADER_CONFIG.STYLES.PRIMARY
+                  : EDITOR_HEADER_CONFIG.STYLES.ICON
+              }
+            >
+              <Icon size={EDITOR_HEADER_CONFIG.ICON_SIZE} />
+              {variant === "primary" && label}
+            </Button>
+          ))}
+
+          {activeTab === "submissions" && (
+            <Button
+              disabled={isLoading || exportStatus !== "idle"}
+              onClick={handleExport}
+              className={EDITOR_HEADER_CONFIG.STYLES.PRIMARY}
+            >
+              <Download size={EDITOR_HEADER_CONFIG.ICON_SIZE} />
+              {exportStatus === "exporting"
+                ? "Exporting..."
+                : exportStatus === "exported"
+                  ? "Exported"
+                  : "Export List"}
+            </Button>
           )}
         </div>
       </div>

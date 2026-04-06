@@ -44,3 +44,8 @@ export const contactKeys = {
   list: (filters?: ContactFilters) =>
     [...contactKeys.all, "list", filters] as const,
 };
+
+export const billingKeys = {
+  all: ["billing"] as const,
+  featureGates: () => [...billingKeys.all, "feature-gates"] as const,
+};

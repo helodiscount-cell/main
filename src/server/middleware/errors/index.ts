@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { logger } from "../../utils/pino";
+export { ApiRouteError } from "./classes";
 import { ApiRouteError } from "./classes";
 import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
 import { workspaceService } from "@/server/workspace";
