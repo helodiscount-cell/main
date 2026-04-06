@@ -5,6 +5,7 @@ import { getResendClient } from "./resend";
 import { AccountExpiredEmail } from "./templates/account-expired";
 import { InvoiceEmail } from "./templates/invoice";
 import { OnboardingEmail } from "./templates/onboarding";
+import { QuotaFullEmail } from "./templates/quota-full";
 import { EmailPayload } from "./types";
 
 /**
@@ -63,6 +64,13 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
           />,
         );
         subject = `New Invoice ${payload.invoiceNumber} from ${EMAIL_CONFIG.APP.NAME}`;
+        break;
+
+      case "quota-full":
+        html = await render(
+          <QuotaFullEmail name={name} upgradeUrl={payload.upgradeUrl} />,
+        );
+        subject = `Action Required: Your ${EMAIL_CONFIG.APP.NAME} quota is full`;
         break;
 
       default:

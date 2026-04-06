@@ -17,7 +17,7 @@ const navItems = [
   { title: "Automations", url: "/dash/automations", Icon: MessageSquare },
   { title: "Forms", url: "/dash/forms", Icon: ClipboardList },
   { title: "Contacts", url: "/dash/contacts", Icon: Users },
-  { title: "Refer & Earn", url: "/dash/refer", Icon: Database },
+  { title: "Billing", url: "/dash/billing", Icon: Database },
   { title: "Settings", url: "/dash/settings", Icon: Settings },
 ];
 

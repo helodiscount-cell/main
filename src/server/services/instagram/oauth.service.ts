@@ -19,6 +19,16 @@ import {
   subscribeToWebhooks,
   markWebhooksEnabled,
 } from "@/server/instagram/webhook/registration";
+import {
+  PLANS,
+  type PlanId,
+  PlanIdSchema,
+  getEffectiveMaxAccounts,
+} from "@/configs/plans.config";
+
+import { getPeriodEnd } from "../billing/subscription.service";
+import { syncCreditStateToRedis } from "@/server/redis/operations/billing";
+
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
 import { clogger } from "@/server/utils/consola";
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
@@ -122,122 +132,176 @@ export async function handleOAuthCallback(code: string, state: string) {
     const { executeTransaction } =
       await import("@/server/repository/repository-utils");
 
-    const { user, instaAccount, isFirstAccount } = await executeTransaction(
-      async (tx) => {
-        // Finds or creates the platform user record
-        let user = await tx.user.findUnique({ where: { clerkId } });
-        let isFirstAccount = false;
+    const { user, instaAccount, userCreated, currentPlan } =
+      await executeTransaction(
+        async (tx) => {
+          // Finds or creates the platform user record
+          let user = await tx.user.findUnique({ where: { clerkId } });
+          let userCreated = false;
 
-        if (!user) {
-          user = await tx.user.create({
-            data: {
-              clerkId,
-              fullName: instagramUser.username,
-              email: currentClerkUser?.primaryEmailAddress?.emailAddress,
-              imageUrl: instagramUser.profile_picture_url,
-            },
-          });
-        }
+          if (!user) {
+            const plan = PLANS.FREE;
+            const periodStart = new Date();
+            const periodEnd = getPeriodEnd(periodStart);
 
-        const instagramUserIdString = String(instagramUser.id);
+            user = await tx.user.create({
+              data: {
+                clerkId,
+                fullName: instagramUser.username,
+                email: currentClerkUser?.primaryEmailAddress?.emailAddress,
+                imageUrl: instagramUser.profile_picture_url,
+                // Initialize FREE subscription and ledger
+                subscription: {
+                  create: {
+                    plan: "FREE",
+                    status: "ACTIVE",
+                    currentPeriodStart: periodStart,
+                    currentPeriodEnd: periodEnd,
+                  },
+                },
+                creditLedger: {
+                  create: {
+                    creditsUsed: 0,
+                    creditLimit: plan.creditLimit,
+                    periodStart,
+                    periodEnd,
+                    quotaEmailSentAt: null,
+                    quotaEmailSendingAt: null,
+                  },
+                },
+              },
+              include: { subscription: true },
+            });
 
-        // Pre-flight: ensure this IG account isn't already claimed by another user
-        const existingAccount = await tx.instaAccount.findUnique({
-          where: { instagramUserId: instagramUserIdString },
-          select: { id: true, userId: true, isActive: true },
-        });
-
-        if (existingAccount && existingAccount.userId !== user.id) {
-          throw new ApiRouteError(
-            "This Instagram account is already connected to another Dmbroo account.",
-            "IG_ACCOUNT_ALREADY_CLAIMED",
-            409,
-          );
-        }
-
-        // Limit enforcement: Verify count before creating a new entry
-        if (!existingAccount) {
-          const accountCount = await tx.instaAccount.count({
-            where: { userId: user.id },
-          });
-
-          if (accountCount === 0) {
-            isFirstAccount = true;
+            userCreated = true;
+          } else {
+            // Refresh user with subscription for limit check
+            user = await tx.user.findUniqueOrThrow({
+              where: { id: user.id },
+              include: { subscription: true },
+            });
           }
 
-          if (accountCount >= WORKSPACE_CONFIG.MAX_ACCOUNTS) {
+          const instagramUserIdString = String(instagramUser.id);
+
+          // Pre-flight: ensure this IG account isn't already claimed by another user
+          const existingAccount = await tx.instaAccount.findUnique({
+            where: { instagramUserId: instagramUserIdString },
+            select: { id: true, userId: true, isActive: true },
+          });
+
+          if (existingAccount && existingAccount.userId !== user.id) {
             throw new ApiRouteError(
-              `You have reached the maximum of ${WORKSPACE_CONFIG.MAX_ACCOUNTS} connected accounts.`,
+              "This Instagram account is already connected to another Dmbroo account.",
+              "IG_ACCOUNT_ALREADY_CLAIMED",
+              409,
+            );
+          }
+
+          // Count active connections only
+          const activeAccountCount = await tx.instaAccount.count({
+            where: { userId: user.id, isActive: true },
+          });
+
+          const planValidation = PlanIdSchema.safeParse(
+            user.subscription?.plan,
+          );
+          const currentPlan: PlanId = planValidation.success
+            ? planValidation.data
+            : "FREE";
+
+          const maxAllowed = getEffectiveMaxAccounts(
+            user.createdAt,
+            currentPlan,
+          );
+
+          // Capacity Check: Required for both new connections AND reactivation of inactive rows
+          const isReactivating = existingAccount && !existingAccount.isActive;
+          const isNewConnection = !existingAccount;
+
+          if (
+            (isNewConnection || isReactivating) &&
+            activeAccountCount >= maxAllowed
+          ) {
+            throw new ApiRouteError(
+              `Your ${currentPlan} plan allows a maximum of ${maxAllowed} connected accounts. Please upgrade to add more.`,
               "ACCOUNT_LIMIT_REACHED",
               403,
             );
           }
-        }
 
-        const accountPayload = {
-          instagramUserId: instagramUserIdString,
-          username: instagramUser.username,
-          accountType: instagramUser.account_type,
-          webhookUserId: instagramUser.user_id,
-          profilePictureUrl: instagramUser.profile_picture_url,
-          biography: instagramUser.biography,
-          followersCount: instagramUser.followers_count,
-          followsCount: instagramUser.follows_count,
-          mediaCount: instagramUser.media_count,
-          accessToken: longLivedToken.access_token,
-          refreshToken: null as null,
-          tokenExpiresAt,
-          grantedScopes,
-          webhooksEnabled: false,
-          isActive: true,
-        };
+          const accountPayload = {
+            instagramUserId: instagramUserIdString,
+            username: instagramUser.username,
+            accountType: instagramUser.account_type,
+            webhookUserId: instagramUser.user_id,
+            profilePictureUrl: instagramUser.profile_picture_url,
+            biography: instagramUser.biography,
+            followersCount: instagramUser.followers_count,
+            followsCount: instagramUser.follows_count,
+            mediaCount: instagramUser.media_count,
+            accessToken: longLivedToken.access_token,
+            refreshToken: null as null,
+            tokenExpiresAt,
+            grantedScopes,
+            webhooksEnabled: false,
+            isActive: true,
+          };
 
-        // If it's a reconnect of an existing account, update in place; otherwise create a new workspace
-        let instaAccount;
-        if (existingAccount) {
-          instaAccount = await tx.instaAccount.update({
-            where: { id: existingAccount.id },
-            data: accountPayload,
-          });
-        } else {
-          instaAccount = await tx.instaAccount.create({
-            data: { userId: user.id, ...accountPayload },
-          });
-        }
+          // If it's a reconnect of an existing account, update in place; otherwise create a new workspace
+          let instaAccount;
+          if (existingAccount) {
+            instaAccount = await tx.instaAccount.update({
+              where: { id: existingAccount.id },
+              data: accountPayload,
+            });
+          } else {
+            instaAccount = await tx.instaAccount.create({
+              data: { userId: user.id, ...accountPayload },
+            });
+          }
 
-        // Baseline follower snapshot for the day
-        const nowUtc = new Date();
-        const todayUtc = new Date(
-          Date.UTC(
-            nowUtc.getUTCFullYear(),
-            nowUtc.getUTCMonth(),
-            nowUtc.getUTCDate(),
-          ),
-        );
+          // Baseline follower snapshot for the day
+          const nowUtc = new Date();
+          const todayUtc = new Date(
+            Date.UTC(
+              nowUtc.getUTCFullYear(),
+              nowUtc.getUTCMonth(),
+              nowUtc.getUTCDate(),
+            ),
+          );
 
-        const existingSnapshot = await tx.instaFollowerSnapshot.findUnique({
-          where: {
-            instaAccountId_date: {
-              instaAccountId: instaAccount.id,
-              date: todayUtc,
-            },
-          },
-        });
-
-        if (!existingSnapshot) {
-          await tx.instaFollowerSnapshot.create({
-            data: {
-              instaAccountId: instaAccount.id,
-              followersCount: instagramUser.followers_count || 0,
-              date: todayUtc,
+          const existingSnapshot = await tx.instaFollowerSnapshot.findUnique({
+            where: {
+              instaAccountId_date: {
+                instaAccountId: instaAccount.id,
+                date: todayUtc,
+              },
             },
           });
-        }
 
-        return { user, instaAccount, isFirstAccount };
-      },
-      { operation: "handleOAuthCallback", models: ["User", "InstaAccount"] },
-    );
+          if (!existingSnapshot) {
+            await tx.instaFollowerSnapshot.create({
+              data: {
+                instaAccountId: instaAccount.id,
+                followersCount: instagramUser.followers_count || 0,
+                date: todayUtc,
+              },
+            });
+          }
+
+          return { user, instaAccount, userCreated, currentPlan };
+        },
+        { operation: "handleOAuthCallback", models: ["User", "InstaAccount"] },
+      );
+
+    // Background sync to Redis after successful transaction commit
+    const plan = PLANS[currentPlan] || PLANS.FREE;
+    if (userCreated) {
+      syncCreditStateToRedis(clerkId, 0, plan.creditLimit, "ACTIVE").catch(
+        (err) => clogger.error("Failed to sync new user billing state:", err),
+      );
+    }
 
     // Register webhooks (non-fatal)
     try {
@@ -257,7 +321,7 @@ export async function handleOAuthCallback(code: string, state: string) {
     await cacheAccessTokenR(instaAccount.id, longLivedToken.access_token);
 
     // Trigger onboarding email only for the first connected account
-    if (isFirstAccount && user.email) {
+    if (userCreated && user.email) {
       // Use fire-and-forget approach or awaited call depending on preference.
       // Given it's production-ready, we await but catch errors to prevent killing the callback redirect.
       sendEmail({

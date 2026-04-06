@@ -107,7 +107,7 @@ export default function LiveHeader({
           ) : (
             <span className="w-2 h-2 rounded-full bg-white mr-1" />
           )}
-          {isStarting ? "Starting…" : "Live"}
+          {isStarting ? "Starting…" : "Go Live"}
         </Button>
       )}
     </div>

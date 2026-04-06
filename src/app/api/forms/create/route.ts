@@ -4,6 +4,8 @@ import { CreateFormSchema } from "@dm-broo/common-types";
 import { createForm } from "@/server/services/forms";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
+import { getFeatureGates } from "@/server/services/billing/feature-gates";
+
 import {
   parseRequestBodySafely,
   REQUEST_SIZE_LIMITS,
@@ -23,6 +25,16 @@ export async function POST(request: NextRequest) {
         validation.error.issues[0]?.message || "Invalid input",
         "INVALID_INPUT",
         400,
+      );
+    }
+
+    // CHECK FEATURE GATE
+    const { access } = await getFeatureGates(clerkId!);
+    if (!access.canCreateForms) {
+      throw new ApiRouteError(
+        "Your current plan does not allow lead generation forms. Please upgrade.",
+        "FEATURE_GATED",
+        403,
       );
     }
 

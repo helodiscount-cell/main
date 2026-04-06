@@ -36,6 +36,7 @@ export async function createAutomation(
   userId: string,
   instaAccountId: string,
   data: CreateAutomationInput,
+  triggersSignature: string,
 ) {
   const triggerType = data.triggerType ?? "COMMENT_ON_POST";
   const targetId =
@@ -92,7 +93,9 @@ export async function createAutomation(
               }
             : {}),
           triggers: data.triggers,
+          triggersSignature,
           matchType: data.matchType,
+
           actionType: data.actionType,
           replyMessage: data.replyMessage,
           replyImage: data.replyImage,
@@ -485,6 +488,7 @@ export async function softDeleteAutomation(automationId: string) {
           triggers: {
             set: [`deleted_${automationId}_${Date.now()}`],
           },
+          triggersSignature: `deleted_${automationId}_${Date.now()}`,
           // Release indexing target so others can use it
           targetId: null,
           targetType: null,
