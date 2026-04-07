@@ -93,7 +93,13 @@ export const useDashboardItemMapper = (
     href: `/dash/forms/${form.id}`,
     image: (
       <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg">
-        <FileText size={18} className="text-slate-400" />
+        <Image
+          src={form.coverImage as string}
+          className="h-full w-full object-cover"
+          height={100}
+          width={100}
+          alt=""
+        />
       </div>
     ),
     status: (

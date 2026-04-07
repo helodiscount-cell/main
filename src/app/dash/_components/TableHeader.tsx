@@ -10,11 +10,17 @@ import React from "react";
 import ColHeader from "./ColHeader";
 
 export type StatusFilter = "ACTIVE" | "PAUSED" | "ALL";
+export type SortField = "count" | "date";
+export type SortOrder = "asc" | "desc" | null;
+
 interface Props {
   title: string;
   selectedLabel: string;
   statusFilter: StatusFilter;
   setStatusFilter: (value: StatusFilter) => void;
+  sortField?: SortField;
+  sortOrder?: SortOrder;
+  onSort?: (field: SortField) => void;
 }
 
 export const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
@@ -28,6 +34,9 @@ const TableHeader = ({
   selectedLabel,
   statusFilter,
   setStatusFilter,
+  sortField,
+  sortOrder,
+  onSort,
 }: Props) => {
   return (
     <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg">
@@ -58,9 +67,17 @@ const TableHeader = ({
         <div className="w-px h-4 bg-slate-200" />
       </div>
 
-      <ColHeader label={title === "Forms" ? "Submissions" : "Runs"} />
+      <ColHeader
+        label={title === "Forms" ? "Submissions" : "Runs"}
+        sortable
+        sortOrder={sortField === "count" ? sortOrder : null}
+        onSort={() => onSort?.("count")}
+      />
       <ColHeader
         label={title === "Forms" ? "Last Submitted" : "Last Triggered"}
+        sortable
+        sortOrder={sortField === "date" ? sortOrder : null}
+        onSort={() => onSort?.("date")}
       />
       <button className="p-2 bg-slate-800 text-white rounded-md">
         <SlidersHorizontal size={14} />

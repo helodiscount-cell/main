@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
@@ -15,13 +15,20 @@ import {
   TableRow,
   MobilePageLayout,
 } from "../_components";
-import { StatusFilter, STATUS_OPTIONS } from "../_components/TableHeader";
+import {
+  StatusFilter,
+  STATUS_OPTIONS,
+  SortOrder,
+  SortField,
+} from "../_components/TableHeader";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import Image from "next/image";
 
 export default function FormsPage() {
   const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const { data: forms = [], isLoading } = useQuery({
     queryKey: formKeys.list(
@@ -29,6 +36,31 @@ export default function FormsPage() {
     ),
     queryFn: () => formService.list(),
   });
+
+  const sortedForms = useMemo(() => {
+    return [...forms].sort((a, b) => {
+      const fieldA =
+        sortField === "count"
+          ? a.submissionCount
+          : new Date(a.updatedAt).getTime();
+      const fieldB =
+        sortField === "count"
+          ? b.submissionCount
+          : new Date(b.updatedAt).getTime();
+
+      if (sortOrder === "asc") return fieldA - fieldB;
+      return fieldB - fieldA;
+    });
+  }, [forms, sortField, sortOrder]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
 
   const selectedLabel =
     STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? "All";
@@ -49,7 +81,7 @@ export default function FormsPage() {
     return (
       <MobilePageLayout
         title="Forms"
-        items={forms}
+        items={sortedForms}
         isLoading={isLoading}
         emptyMessage="No forms yet. Create your first one!"
         actionButton={newFormAction}
@@ -89,6 +121,9 @@ export default function FormsPage() {
           selectedLabel={selectedLabel}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
         />
 
         {/* Rows */}
@@ -96,13 +131,13 @@ export default function FormsPage() {
           <div className="flex items-center justify-center py-16 text-sm text-slate-400">
             Loading forms…
           </div>
-        ) : forms.length === 0 ? (
+        ) : sortedForms.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
             <span className="text-3xl">📋</span>
             <p className="text-sm">No forms yet. Create your first one!</p>
           </div>
         ) : (
-          forms.map((form) => <TableRow key={form.id} data={form} />)
+          sortedForms.map((form) => <TableRow key={form.id} data={form} />)
         )}
       </div>
     </div>

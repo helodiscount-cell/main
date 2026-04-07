@@ -10,7 +10,7 @@ import { EditorHeader } from "../_components/editor/EditorHeader";
 import { FormTabs } from "../_components/editor/FormTabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export default function FormEditorLayout({
   children,
@@ -37,6 +37,7 @@ export default function FormEditorLayout({
  * It connects to the FormEditorProvider to trigger saves across the layout and page.
  */
 const EditorLayoutHeader = () => {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const formId = searchParams.get("id") || "";
   const { save, isLoading } = useFormEditor();
@@ -63,6 +64,7 @@ const EditorLayoutHeader = () => {
     <>
       {/* Top Header with Save/Publish buttons */}
       <EditorHeader
+        pathname={pathname}
         onPublish={handlePublish}
         isLoading={isLoading}
         formId={formId}

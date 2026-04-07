@@ -17,6 +17,7 @@ type EditorHeaderProps = {
   isLoading?: boolean;
   formId: string;
   activeTab: string;
+  pathname: string;
 };
 
 // Breadcrumb + action buttons — Refresh saves as draft, Publish publishes
@@ -25,12 +26,13 @@ export const EditorHeader = ({
   isLoading,
   formId,
   activeTab,
+  pathname,
 }: EditorHeaderProps) => {
   const [exportStatus, setExportStatus] = React.useState<
     "idle" | "exporting" | "exported"
   >("idle");
 
-  const { data, refetch } = useQuery({
+  const { data } = useQuery({
     queryKey: ["form", formId],
     queryFn: () => formService.getById(formId),
   });
@@ -89,11 +91,23 @@ export const EditorHeader = ({
       <div className="flex w-full items-center justify-between gap-4">
         {/* Breadcrumb pill */}
         <div className="bg-white rounded-md px-4 flex items-center h-9 flex-1">
-          <span className="text-sm text-slate-400">
+          <span
+            className="text-sm text-[#212121] font-semibold"
+            style={{
+              opacity: pathname === "/dash/forms/editor" ? 1 : 0.5,
+            }}
+          >
             {EDITOR_HEADER_CONFIG.BREADCRUMB_ROOT}
           </span>
-          <span className="text-sm text-slate-400 mx-1">/</span>
-          <span className="capitalize text-sm font-semibold text-slate-900">
+          {pathname !== "/dash/forms/editor" && (
+            <span className="text-sm text-[#212121] font-semibold mx-1">/</span>
+          )}
+          <span
+            className="capitalize text-sm font-semibold text-slate-900"
+            style={{
+              opacity: pathname === "/dash/forms" ? 0.5 : 1,
+            }}
+          >
             {data?.title}
           </span>
         </div>

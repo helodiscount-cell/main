@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CreateAutomationDialog } from "@/components/dash/automations/create";
 import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -13,11 +13,18 @@ import {
   TableRow,
   MobilePageLayout,
 } from "../_components";
-import { StatusFilter, STATUS_OPTIONS } from "../_components/TableHeader";
+import {
+  StatusFilter,
+  STATUS_OPTIONS,
+  SortOrder,
+  SortField,
+} from "../_components/TableHeader";
 
 const AutomationPage = () => {
   const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const { data, isLoading } = useQuery({
     queryKey: automationKeys.list(
@@ -30,6 +37,32 @@ const AutomationPage = () => {
   });
 
   const automations = data?.automations ?? [];
+
+  const sortedAutomations = useMemo(() => {
+    return [...automations].sort((a, b) => {
+      const fieldA =
+        sortField === "count"
+          ? a.timesTriggered || 0
+          : new Date(a.lastTriggeredAt || a.updatedAt).getTime();
+      const fieldB =
+        sortField === "count"
+          ? b.timesTriggered || 0
+          : new Date(b.lastTriggeredAt || b.updatedAt).getTime();
+
+      if (sortOrder === "asc") return fieldA - fieldB;
+      return fieldB - fieldA;
+    });
+  }, [automations, sortField, sortOrder]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
   const selectedLabel =
     STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? "All";
 
@@ -46,7 +79,7 @@ const AutomationPage = () => {
     return (
       <MobilePageLayout
         title="Automations"
-        items={automations}
+        items={sortedAutomations}
         isLoading={isLoading}
         emptyMessage="No automations found."
         actionButton={newAutomationAction}
@@ -74,6 +107,9 @@ const AutomationPage = () => {
           selectedLabel={selectedLabel}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
         />
 
         {/* Rows */}
@@ -81,12 +117,12 @@ const AutomationPage = () => {
           <div className="flex items-center justify-center py-16 text-sm text-slate-400">
             Loading automations…
           </div>
-        ) : automations.length === 0 ? (
+        ) : sortedAutomations.length === 0 ? (
           <div className="flex items-center justify-center py-16 text-sm text-slate-400">
             No automations found.
           </div>
         ) : (
-          automations.map((automation) => (
+          sortedAutomations.map((automation) => (
             <TableRow key={automation.id} data={automation} />
           ))
         )}
