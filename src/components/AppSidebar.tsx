@@ -24,9 +24,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup className="h-full">
           <SidebarGroupContent className="h-full">
             <SidebarMenu className="h-full">
-              <div className="flex flex-col h-full justify-between">
+              <div className="p-4 flex flex-col h-full justify-between">
                 <AppSidebarNav />
-                <Button variant={"destructive"}>
+                <Button variant={"destructive"} size="lg">
                   <LogOut className="text-red-600" />
                   <Link href={"/auth/logout"} className="text-primary">
                     Log out

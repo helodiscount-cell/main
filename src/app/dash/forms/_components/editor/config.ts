@@ -40,7 +40,6 @@ export type HeaderAction = {
 };
 
 export const HEADER_ACTIONS: HeaderAction[] = [
-  { id: "refresh", icon: RefreshCw, label: "", variant: "primary" },
   { id: "copy-link", icon: Link2, label: "Copy Link", variant: "icon" },
   { id: "preview", icon: Play, label: "Preview", variant: "icon" },
   { id: "publish", icon: Send, label: "Publish", variant: "primary" },

@@ -8,13 +8,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon } from "lucide-react";
+import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import { useEffect, useState } from "react";
 import {
   DMForComments,
   DmForStories,
   TabSelector,
 } from "@/components/dash/automations/create";
+import Image from "next/image";
 
 export default function CreateAutomationDialog({
   title,
@@ -51,7 +52,7 @@ export default function CreateAutomationDialog({
             "bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none"
           }
         >
-          <PlusIcon />
+          <Image src={PlusIconSvg} alt="add" width={15} height={15} />
           {title}
         </Button>
       </DialogTrigger>

@@ -10,6 +10,8 @@ import { formService } from "@/api/services/forms";
 import { Download } from "lucide-react";
 import { downloadSubmissionsCSV } from "./utils/export";
 
+import { toast } from "sonner";
+
 type EditorHeaderProps = {
   onPublish: () => void;
   isLoading?: boolean;
@@ -28,15 +30,26 @@ export const EditorHeader = ({
     "idle" | "exporting" | "exported"
   >("idle");
 
-  // Maps action id to its click handler
-  const ACTION_HANDLERS: Record<string, () => void> = {
-    publish: onPublish,
-  };
-
-  const { data } = useQuery({
+  const { data, refetch } = useQuery({
     queryKey: ["form", formId],
     queryFn: () => formService.getById(formId),
   });
+
+  // Maps action id to its click handler
+  const ACTION_HANDLERS: Record<string, () => void> = {
+    publish: onPublish,
+    "copy-link": () => {
+      if (!data?.slug) return;
+      const url = `${window.location.origin}/f/${data.slug}`;
+      navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    },
+    preview: () => {
+      if (!data?.slug) return;
+      const url = `${window.location.origin}/f/${data.slug}`;
+      window.open(url, "_blank");
+    },
+  };
 
   /**
    * Fetches all form submissions and triggers a CSV download
@@ -66,7 +79,7 @@ export const EditorHeader = ({
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+    <header className="flex h-16 shrink-0 items-center gap-2 px-4">
       <SidebarTrigger className="-ml-1" />
       <Separator
         orientation="vertical"
@@ -87,9 +100,18 @@ export const EditorHeader = ({
 
         {/* Action buttons — Conditional display based on active tab */}
         <div className="flex items-center gap-2">
-          {HEADER_ACTIONS.filter(
-            (a) => activeTab !== "submissions" || a.id === "refresh",
-          ).map(({ id, icon: Icon, label, variant }) => (
+          {HEADER_ACTIONS.filter((a) => {
+            // If form is not ready (no slug), hide copy-link and preview
+            if (!data?.slug && (a.id === "copy-link" || a.id === "preview")) {
+              return false;
+            }
+
+            if (activeTab === "submissions") {
+              return false;
+            }
+
+            return true;
+          }).map(({ id, icon: Icon, label, variant }) => (
             <Button
               key={id}
               disabled={isLoading}

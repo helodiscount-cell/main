@@ -72,30 +72,36 @@ export const MobileEditorHeader = ({
           </Button>
 
           {/* Link (Copy Link) */}
-          <Button
-            size="icon"
-            className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
-            onClick={() => {
-              if (form?.slug) {
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/f/${form.slug}`,
-                );
-              }
-              toast.success("Copied to clipboard");
-            }}
-          >
-            <Link2 size={24} />
-          </Button>
+          {form?.slug && (
+            <>
+              <Button
+                size="icon"
+                className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/f/${form.slug}`,
+                  );
+                  toast.success("Link copied to clipboard!");
+                }}
+              >
+                <Link2 size={24} />
+              </Button>
 
-          {/* Preview */}
-          <Button
-            size="icon"
-            className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
-          >
-            <a href={`/f/${form?.slug}`} target="_blank">
-              <Eye size={24} />
-            </a>
-          </Button>
+              {/* Preview */}
+              <Button
+                size="icon"
+                className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
+                onClick={() => {
+                  window.open(
+                    `${window.location.origin}/f/${form.slug}`,
+                    "_blank",
+                  );
+                }}
+              >
+                <Eye size={24} />
+              </Button>
+            </>
+          )}
 
           {/* Publish */}
           <Button

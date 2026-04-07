@@ -16,6 +16,8 @@ import {
   MobilePageLayout,
 } from "../_components";
 import { StatusFilter, STATUS_OPTIONS } from "../_components/TableHeader";
+import PlusIconSvg from "@/assets/svgs/addthis.svg";
+import Image from "next/image";
 
 export default function FormsPage() {
   const isMobile = useIsMobile();
@@ -33,7 +35,7 @@ export default function FormsPage() {
 
   const newFormAction = (
     <Button
-      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-14 rounded-2xl text-lg font-bold      -purple-200"
+      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-14 rounded-xl text-lg font-bold"
       asChild
     >
       <Link href="/dash/forms/editor" className="flex items-center gap-2">
@@ -63,12 +65,15 @@ export default function FormsPage() {
         childComp={
           <>
             <RefreshInstaDialog />
-            <Button className="bg-[#6A06E4] hover:bg-[#5a05c4]" asChild>
+            <Button
+              className="rounded-sm bg-[#6A06E4] hover:bg-[#5a05c4]"
+              asChild
+            >
               <Link
                 href="/dash/forms/editor"
                 className="flex items-center gap-2"
               >
-                <PlusIcon size={15} />
+                <Image src={PlusIconSvg} alt="add" width={15} height={15} />
                 New Form
               </Link>
             </Button>

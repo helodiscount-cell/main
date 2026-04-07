@@ -68,7 +68,7 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-[#6A06E4] hover:bg-[#5a05c4] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+        className="w-full bg-[#6A06E4] hover:bg-[#5a05c4] disabled:opacity-60 text-white font-semibold py-3 rounded-md transition-colors"
       >
         {isLoading ? "Submitting..." : "Submit"}
       </button>

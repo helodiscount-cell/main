@@ -44,12 +44,6 @@ const EditorLayoutHeader = () => {
 
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
   const handleSave = useCallback(() => save("DRAFT"), [save]);
-  const handlePreview = useCallback(() => {
-    // Open preview in new tab if form is saved (has ID)
-    if (formId) {
-      window.open(`/f/${formId}`, "_blank");
-    }
-  }, [formId]);
 
   if (isMobile) {
     return (
@@ -58,7 +52,6 @@ const EditorLayoutHeader = () => {
           formId={formId}
           onPublish={handlePublish}
           onSave={handleSave}
-          onPreview={handlePreview}
           isLoading={isLoading}
         />
         <FormTabs activeTab="editor" formId={formId} />

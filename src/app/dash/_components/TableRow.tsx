@@ -40,7 +40,7 @@ const TableRowUI = ({
 }: TableRowUIProps) => {
   return (
     <div
-      className={`grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-4 py-4 gap-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group/row ${className}`}
+      className={`grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-8 py-4 gap-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group/row ${className}`}
     >
       {/* 1. Icon + Info */}
       <div className="flex items-center gap-3 min-w-0">

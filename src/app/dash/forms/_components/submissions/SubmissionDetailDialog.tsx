@@ -74,9 +74,6 @@ export const SubmissionDetailDialog = ({
             <div className="max-h-[320px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
               {fields.map((field) => {
                 const answer = submission.answers[field.id];
-                const displayValue = Array.isArray(answer)
-                  ? answer.join(", ")
-                  : (answer as string) || "—";
 
                 return (
                   <div
@@ -87,7 +84,7 @@ export const SubmissionDetailDialog = ({
                       {field.label}
                     </label>
                     {/* Smart renderer: image preview, file download, or plain text */}
-                    <SubmissionAnswerValue value={displayValue} />
+                    <SubmissionAnswerValue value={answer} />
                   </div>
                 );
               })}

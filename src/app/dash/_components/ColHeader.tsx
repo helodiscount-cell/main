@@ -1,12 +1,11 @@
 import { ArrowDown } from "lucide-react";
 
 const ColHeader = ({ label }: { label: string }) => (
-  <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+  <div className="flex items-center gap-2 text-sm font-medium text-[#212121]">
     {label}
-    <ArrowDown
-      size={13}
-      className="bg-slate-900 text-white rounded-sm p-[2px]"
-    />
+    <div className="bg-slate-800 p-1 rounded-sm">
+      <ArrowDown className="text-white" size={12} />
+    </div>
   </div>
 );
 

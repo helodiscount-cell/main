@@ -10,6 +10,7 @@ import type {
 import { Star, Upload, FileCheck, Loader2 } from "lucide-react";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { toast } from "sonner";
+import { CountryPicker } from "./CountryPicker";
 
 type PublicFieldRendererProps = {
   field: FormField;
@@ -48,7 +49,7 @@ export const PublicFieldRenderer = ({
   // Standard text-like inputs (excluding phone which we customize)
   if (INPUT_TYPE_MAP[field.type as FieldType] && field.type !== "phone") {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -82,26 +83,19 @@ export const PublicFieldRenderer = ({
     const number = parts[1] || "";
 
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>
         <div className="flex gap-2">
-          {/* Country Code */}
-          <div className="relative w-24 shrink-0">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-              +
-            </span>
-            <input
-              type="text"
-              placeholder="91"
-              value={code}
-              onChange={(e) => handlePhoneChange(e.target.value, number)}
-              className={`${inputClass} pl-6 pr-2`}
-              maxLength={4}
-            />
-          </div>
+          {/* Country Picker Toggle */}
+          <CountryPicker
+            value={code}
+            onChange={(newCode) => handlePhoneChange(newCode, number)}
+            className="w-24 shrink-0"
+          />
+
           {/* Main Number */}
           <input
             type="text"
@@ -122,7 +116,7 @@ export const PublicFieldRenderer = ({
   // Dropdown – native select
   if (field.type === "dropdown") {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -156,7 +150,7 @@ export const PublicFieldRenderer = ({
     };
 
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -184,7 +178,7 @@ export const PublicFieldRenderer = ({
   // Star rating
   if (field.type === "rating") {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -221,7 +215,7 @@ export const PublicFieldRenderer = ({
     const fileUrl = watch(field.id) as string | undefined;
 
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -262,7 +256,7 @@ export const PublicFieldRenderer = ({
                 "border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 transition-colors duration-200 py-8",
               label: "text-[#6A06E4] hover:text-[#5a05c4]",
               button:
-                "bg-[#6A06E4] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
+                "bg-[#6A06E4] w-[40%] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
               allowedContent: "text-slate-400 text-[10px]",
             }}
           />

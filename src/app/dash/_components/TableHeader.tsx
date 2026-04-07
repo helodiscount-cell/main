@@ -30,14 +30,14 @@ const TableHeader = ({
   setStatusFilter,
 }: Props) => {
   return (
-    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-4 py-3 gap-4 border-b border-slate-100">
-      <span className="text-sm font-medium text-slate-700">{title}</span>
+    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg">
+      <span className="text-sm font-medium text-[#212121]">{title}</span>
 
       {/* Status column with filter dropdown */}
       <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
+            <button className="flex items-center gap-1 text-sm font-medium text-[#212121] hover:text-[#212121] transition-colors">
               {selectedLabel === "All" ? "Status" : selectedLabel}
               <ChevronDown size={13} className="text-slate-400" />
             </button>
@@ -62,7 +62,9 @@ const TableHeader = ({
       <ColHeader
         label={title === "Forms" ? "Last Submitted" : "Last Triggered"}
       />
-      <SlidersHorizontal size={14} />
+      <button className="p-2 bg-slate-800 text-white rounded-md">
+        <SlidersHorizontal size={14} />
+      </button>
     </div>
   );
 };
