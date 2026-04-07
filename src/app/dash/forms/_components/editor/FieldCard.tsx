@@ -131,10 +131,12 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
                 ADD OPTION
               </button>
             </div>
-          ) : fieldType === "upload" ? (
+          ) : fieldType === "upload" || fieldType === "location" ? (
             <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-lg p-4 flex flex-col items-center gap-1 text-slate-300">
               <span className="text-[10px] font-medium">
-                User will upload a file here
+                {fieldType === "upload"
+                  ? "User will upload a file here"
+                  : "Hierarchical location picker (Country, State, City)"}
               </span>
             </div>
           ) : (

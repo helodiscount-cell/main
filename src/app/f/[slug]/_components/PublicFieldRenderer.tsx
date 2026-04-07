@@ -11,6 +11,7 @@ import { Star, Upload, FileCheck, Loader2 } from "lucide-react";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { CountryPicker } from "./CountryPicker";
+import { HierarchicalLocationPicker } from "./HierarchicalLocationPicker";
 
 type PublicFieldRendererProps = {
   field: FormField;
@@ -25,9 +26,7 @@ const INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
   number: "number",
   email: "email",
   url: "url",
-  phone: "tel",
   date: "date",
-  location: "text",
   country: "text",
 };
 
@@ -46,8 +45,8 @@ export const PublicFieldRenderer = ({
   const inputClass =
     "w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#6A06E4] focus:ring-1 focus:ring-[#6A06E4] transition-colors";
 
-  // Standard text-like inputs (excluding phone which we customize)
-  if (INPUT_TYPE_MAP[field.type as FieldType] && field.type !== "phone") {
+  // Standard text-like inputs
+  if (INPUT_TYPE_MAP[field.type as FieldType]) {
     return (
       <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
@@ -65,9 +64,37 @@ export const PublicFieldRenderer = ({
     );
   }
 
+  // Location — Hierarchical picker (Country > State > City)
+  if (field.type === "location") {
+    const value = (watch(field.id) as string) || "";
+
+    return (
+      <div className="space-y-1.5 flex flex-col gap-2">
+        <label className="text-sm font-semibold text-slate-700">
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        <HierarchicalLocationPicker
+          value={value}
+          onChange={(val) => setValue(field.id, val)}
+          required={field.required}
+        />
+        {/* Hidden input to hold the joined value for react-hook-form */}
+        <input type="hidden" {...register(field.id)} />
+      </div>
+    );
+  }
+
   // Phone — custom dual-input renderer for country code + 10-digit number
   if (field.type === "phone") {
     const fullValue = (watch(field.id) as string) || "";
+
+    // Default to India (+91) if field is empty
+    React.useEffect(() => {
+      if (!fullValue) {
+        setValue(field.id, "+91|phone|");
+      }
+    }, [fullValue, field.id, setValue]);
 
     // Helper to join code and number
     const handlePhoneChange = (code: string, num: string) => {
@@ -79,7 +106,7 @@ export const PublicFieldRenderer = ({
 
     // Extract code and number from the joined value (+CODE|phone|NUMBER)
     const parts = fullValue.replace("+", "").split("|phone|");
-    const code = parts[0] || "";
+    const code = parts[0] || (fullValue ? "" : "91");
     const number = parts[1] || "";
 
     return (

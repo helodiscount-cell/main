@@ -30,7 +30,9 @@ const FIELD_VALIDATORS: Partial<
     !isNaN(Number(v)) &&
     v.trim() !== "" &&
     v.length <= 15,
-  phone: (v) => typeof v === "string" && /^\+\d{11,14}$/.test(v),
+  phone: (v) =>
+    typeof v === "string" &&
+    (/^\+\d{11,14}$/.test(v) || /^\+\d{1,4}\|phone\|\d{7,10}$/.test(v)),
   rating: (v) =>
     typeof v === "string" &&
     Number(v) >= 1 &&

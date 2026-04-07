@@ -39,7 +39,7 @@ export const SubmissionDetailDialog = ({
     <Dialog open={!!submission} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="sm:max-w-xl p-0 overflow-hidden rounded-xl border-0    -2xl"
+        className="sm:max-w-xl p-0 overflow-hidden rounded-xl"
       >
         <DialogHeader className="px-8 pt-8 pb-4">
           <DialogTitle className="text-lg font-semibold text-[#212121] tracking-tight text-left">
@@ -48,7 +48,7 @@ export const SubmissionDetailDialog = ({
           <Separator />
         </DialogHeader>
 
-        <div className="px-8 pb-8 space-y-6">
+        <div className="w-xl px-8 pb-8 space-y-6">
           {/* Profile Card */}
           <div className="flex items-center gap-4 py-2">
             <div className="w-20 h-20 rounded-full bg-[#E9E4FF] flex items-center justify-center text-[#6A06E4] text-3xl font-semibold border-2 border-white    -sm shrink-0">
@@ -92,7 +92,7 @@ export const SubmissionDetailDialog = ({
           </div>
 
           {/* Timestamp Footer */}
-          <div className="pt-5 border-t border-slate-100 flex items-center gap-2 text-slate-400 text-xs font-semibold">
+          <div className="flex justify-between pt-5 border-t border-slate-100 items-center gap-2 text-slate-400 text-xs font-semibold">
             <span className="uppercase tracking-widest">Submitted At:</span>
             <span className="text-slate-900 font-semibold">
               {formattedDate}

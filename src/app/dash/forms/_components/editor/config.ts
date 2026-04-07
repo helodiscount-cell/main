@@ -80,10 +80,7 @@ export const FIELD_TYPE_GROUPS: FieldTypeGroup[] = [
   },
   {
     groupLabel: "Location",
-    options: [
-      { type: "location", label: "Location", icon: MapPin },
-      { type: "country", label: "Country", icon: Globe },
-    ],
+    options: [{ type: "location", label: "Location", icon: MapPin }],
   },
   {
     groupLabel: "Date",
