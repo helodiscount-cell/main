@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
-import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useAutomationManager } from "@/hooks/use-automations";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
@@ -100,10 +100,14 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   });
 
   const automationName = watch("automationName");
+  const postsResponse = queryClient.getQueryData<any>(instagramKeys.posts());
+  const selectedPost = postsResponse?.result?.data?.data?.find(
+    (p: any) => p.id === post_id,
+  );
 
   // Creation page always uses the FreshHeader
   const headerContent = {
-    loading: <HeaderSkeleton />,
+    loading: null,
     fresh: (
       <FreshHeader
         isPending={isCreating}
@@ -113,11 +117,26 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
     ),
     live: null, // Creation pages don't have a live state anymore
   };
+  if (pageState === "loading") {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#09090B]">
+        <Spinner className="text-[#6A06E4] size-6" strokeWidth={2.5} />
+      </div>
+    );
+  }
 
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
+        post={
+          selectedPost
+            ? {
+                mediaUrl: selectedPost.media_url,
+                mediaType: selectedPost.media_type,
+              }
+            : null
+        }
         leftCol={
           // Keywords input section for what triggers the automation via comment
           <div className="flex flex-col gap-6">

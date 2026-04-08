@@ -35,6 +35,20 @@ export const HierarchicalLocationPicker = ({
     initialParts.length === 3 ? initialParts[0] : "",
   );
 
+  // Seed local state from value prop whenever it changes (e.g. form reset or parent update)
+  useEffect(() => {
+    const parts = value ? value.split(", ").map((p) => p.trim()) : [];
+    if (parts.length === 3) {
+      if (parts[2] !== selectedCountry) setSelectedCountry(parts[2]);
+      if (parts[1] !== selectedState) setSelectedState(parts[1]);
+      if (parts[0] !== selectedCity) setSelectedCity(parts[0]);
+    } else if (!value) {
+      if (selectedCountry !== "India") setSelectedCountry("India");
+      if (selectedState !== "") setSelectedState("");
+      if (selectedCity !== "") setSelectedCity("");
+    }
+  }, [value, selectedCountry, selectedState, selectedCity]);
+
   // Sync back to parent whenever local state changes
   useEffect(() => {
     if (selectedCountry && selectedState && selectedCity) {

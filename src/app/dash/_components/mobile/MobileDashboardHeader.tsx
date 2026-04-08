@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 
 interface MobileDashboardHeaderProps {
   title: string;
+  onSearch?: () => void;
+  onRefresh?: () => void;
 }
 
 /**
@@ -16,6 +18,8 @@ interface MobileDashboardHeaderProps {
  */
 export const MobileDashboardHeader = ({
   title,
+  onSearch,
+  onRefresh,
 }: MobileDashboardHeaderProps) => {
   return (
     <div className="flex flex-col gap-6 px-5 py-6 bg-[#f1f1f1]">
@@ -45,7 +49,10 @@ export const MobileDashboardHeader = ({
         <Button
           size="icon"
           variant="ghost"
-          className="h-12 w-12 bg-white rounded-2xl text-slate-400 -sm border border-slate-50 hover:bg-white active:scale-95 transition-transform"
+          aria-label="Open search"
+          onClick={onSearch}
+          disabled={!onSearch}
+          className="h-12 w-12 bg-white rounded-2xl text-slate-400 -sm border border-slate-50 hover:bg-white active:scale-95 transition-transform disabled:opacity-50"
         >
           <Search size={22} />
         </Button>
@@ -53,7 +60,10 @@ export const MobileDashboardHeader = ({
         {/* Refresh Action */}
         <Button
           size="icon"
-          className="h-12 w-12 bg-[#6A06E4] hover:bg-[#5a05c4] rounded-xl text-white -sm border-none active:scale-95 transition-transform"
+          aria-label="Refresh"
+          onClick={onRefresh}
+          disabled={!onRefresh}
+          className="h-12 w-12 bg-[#6A06E4] hover:bg-[#5a05c4] rounded-xl text-white -sm border-none active:scale-95 transition-transform disabled:opacity-50"
         >
           <RefreshCw size={22} />
         </Button>

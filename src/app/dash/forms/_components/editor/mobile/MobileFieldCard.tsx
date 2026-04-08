@@ -3,7 +3,7 @@
 import React from "react";
 import { GripVertical, Trash2, Plus, X, Star } from "lucide-react";
 import { FIELD_TYPE_LABELS } from "../config";
-import { useFieldCardLogic, FIELD_INPUT_TYPE_MAP } from "../useFieldCardLogic";
+import { useFieldCardLogic } from "../useFieldCardLogic";
 
 type MobileFieldCardProps = {
   index: number;
@@ -49,6 +49,9 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
             </span>
             <button
               type="button"
+              role="switch"
+              aria-checked={isRequired}
+              aria-label="Toggle required"
               onClick={toggleRequired}
               className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors cursor-pointer ${
                 isRequired ? "bg-[#6A06E4]" : "bg-slate-200"
@@ -109,7 +112,7 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
                   <button
                     type="button"
                     onClick={() => removeOption(optIndex)}
-                    className="opacity-0 group-hover/opt:opacity-100 text-slate-300 hover:text-red-400 transition-all cursor-pointer p-0.5"
+                    className="opacity-100 text-slate-300 hover:text-red-400 transition-all cursor-pointer p-0.5"
                   >
                     <X size={14} />
                   </button>
@@ -139,7 +142,7 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
             <div className="bg-[#F8FAFC] rounded-xl px-4 py-3 border border-slate-50 focus-within:border-[#6A06E4]/10 transition-colors">
               <input
                 {...register(`fields.${index}.placeholder`)}
-                type={FIELD_INPUT_TYPE_MAP[fieldType] || "text"}
+                type="text"
                 placeholder="Add Placeholder"
                 className="w-full text-sm font-medium text-slate-500 bg-transparent outline-none placeholder:text-slate-300"
               />
@@ -151,6 +154,7 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
       {/* DELETE BUTTON: Red Trash Icon */}
       <button
         type="button"
+        aria-label="Delete field"
         onClick={onRemove}
         className="text-red-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-all shrink-0 cursor-pointer self-center"
       >

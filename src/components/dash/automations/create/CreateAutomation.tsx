@@ -61,13 +61,11 @@ export default function CreateAutomationDialog({
         showCloseButton={false}
       >
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold tracking-tight">
-            <div className="flex flex-1 justify-between">
-              {activeTab ? "Configure Automation" : "Choose a Template"}
-            </div>
+          <DialogTitle className="text-xl font-semibold tracking-tight flex flex-1 justify-between">
+            {activeTab ? "Configure Automation" : "Choose a Template"}
           </DialogTitle>
         </DialogHeader>
-        <div>{renderContent()}</div>
+        <div className="w-2xl">{renderContent()}</div>
       </DialogContent>
     </Dialog>
   );

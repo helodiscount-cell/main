@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
-import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useAutomationManager } from "@/hooks/use-automations";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
@@ -70,7 +70,7 @@ const Page = () => {
   const automationName = watch("automationName");
 
   const headerContent = {
-    loading: <HeaderSkeleton />,
+    loading: null,
     fresh: (
       <FreshHeader
         isPending={isCreating}
@@ -82,10 +82,19 @@ const Page = () => {
     live: null,
   };
 
+  if (pageState === "loading") {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#09090B]">
+        <Spinner className="text-[#6A06E4] size-6" strokeWidth={2.5} />
+      </div>
+    );
+  }
+
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
+        triggerType="RESPOND_TO_ALL_DMS"
         leftCol={
           <div className="flex flex-col gap-6">
             <Controller

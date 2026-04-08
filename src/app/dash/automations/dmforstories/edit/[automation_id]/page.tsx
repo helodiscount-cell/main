@@ -3,7 +3,7 @@
 import { use } from "react";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
-import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useAutomationManager } from "@/hooks/use-automations";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
@@ -92,7 +92,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
   const automationName = watch("automationName");
 
   const headerContent = {
-    loading: <HeaderSkeleton />,
+    loading: null,
     fresh: null,
     live: existingAutomation ? (
       <LiveHeader
@@ -101,8 +101,6 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
         isStopping={isStopping}
         onStart={startAutomation}
         isStarting={isStarting}
-        onReRun={handleReRun}
-        isReRunning={isReRunning}
         isUpdating={isUpdating}
         onNameChange={handleNameChange}
         breadcrumb={AUTOMATION_CONFIGS.STORY_REPLY.breadcrumb}
@@ -112,14 +110,8 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
 
   if (pageState === "loading") {
     return (
-      <div className="flex flex-col h-full bg-[#09090B]">
-        <HeaderSkeleton />
-        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-          <div className="flex gap-6 h-full animate-pulse opacity-50">
-            <div className="flex-1 bg-white/5 rounded-2xl border border-white/10" />
-            <div className="flex-[0.6] bg-white/5 rounded-2xl border border-white/10" />
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-full bg-[#09090B]">
+        <Spinner className="text-[#6A06E4] size-6" strokeWidth={2.5} />
       </div>
     );
   }
@@ -136,6 +128,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
+        post={existingAutomation?.story as any}
         leftCol={
           <Controller
             control={control}

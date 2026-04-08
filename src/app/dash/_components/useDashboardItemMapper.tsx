@@ -91,15 +91,19 @@ export const useDashboardItemMapper = (
     title: form.title || "Untitled Form",
     subtitle: form.description || "No description",
     href: `/dash/forms/${form.id}`,
-    image: (
-      <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg">
+    image: form.coverImage ? (
+      <div className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden border border-slate-100">
         <Image
-          src={form.coverImage as string}
+          src={form.coverImage}
           className="h-full w-full object-cover"
           height={100}
           width={100}
-          alt=""
+          alt={form.title}
         />
+      </div>
+    ) : (
+      <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg text-slate-300">
+        <FileText size={20} />
       </div>
     ),
     status: (

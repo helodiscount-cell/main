@@ -1,6 +1,10 @@
 "use client";
 
-import { useFormContext, useFieldArray } from "react-hook-form";
+import {
+  useFormContext,
+  useFieldArray,
+  type FieldArrayPath,
+} from "react-hook-form";
 import type { FormValues, FieldType } from "@dm-broo/common-types";
 
 /**
@@ -25,8 +29,7 @@ export const useFieldCardLogic = (index: number) => {
     remove: removeOption,
   } = useFieldArray({
     control,
-    // @ts-ignore - Dynamic path for nested field array
-    name: `fields.${index}.options`,
+    name: `fields.${index}.options` as FieldArrayPath<FormValues>,
   });
 
   const toggleRequired = () => {

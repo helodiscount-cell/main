@@ -48,7 +48,7 @@ export const CountryPicker = ({
 
   // Find the currently selected country to show in the trigger
   const selectedCountry = useMemo(() => {
-    return COUNTRIES.find((c) => c.dialCode === value) || COUNTRIES[0];
+    return COUNTRIES.find((c) => c.dialCode === value);
   }, [value]);
 
   const handleSelect = (country: Country) => {
@@ -66,7 +66,7 @@ export const CountryPicker = ({
         className="flex items-center justify-between w-full h-full border border-slate-200 rounded-lg px-3 py-2.5 bg-white hover:border-[#6A06E4] transition-colors gap-1"
       >
         <span className="text-sm text-slate-700 font-medium">
-          +{selectedCountry?.dialCode}
+          {selectedCountry ? `+${selectedCountry.dialCode}` : "Code"}
         </span>
         <ChevronDown
           size={14}

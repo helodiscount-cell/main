@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Spinner } from "@/components/ui/spinner";
 import {
   DashboardHeader,
   TableHeader,
@@ -83,6 +84,7 @@ const AutomationPage = () => {
         isLoading={isLoading}
         emptyMessage="No automations found."
         actionButton={newAutomationAction}
+        onSortChange={() => toggleSort("date")}
       />
     );
   }
@@ -114,7 +116,8 @@ const AutomationPage = () => {
 
         {/* Rows */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-16 text-sm text-slate-400">
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-sm text-slate-400">
+            <Spinner className="text-[#6A06E4] size-5" strokeWidth={2.5} />
             Loading automations…
           </div>
         ) : sortedAutomations.length === 0 ? (

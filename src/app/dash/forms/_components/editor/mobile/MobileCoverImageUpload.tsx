@@ -69,6 +69,7 @@ const MobileCoverArea = ({
         {value && (
           <button
             type="button"
+            aria-label="Remove cover image"
             onClick={(e) => {
               e.stopPropagation();
               onChange(undefined);

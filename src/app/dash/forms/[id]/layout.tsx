@@ -75,6 +75,7 @@ const FormLayoutHeader = ({ formId }: { formId: string }) => {
           onPublish={handlePublish}
           onSave={handleSave}
           isLoading={isLoading}
+          activeTab={activeTab}
         />
         <FormTabs formId={formId} activeTab={activeTab} />
       </>
@@ -88,6 +89,7 @@ const FormLayoutHeader = ({ formId }: { formId: string }) => {
         onPublish={handlePublish}
         isLoading={isLoading}
         formId={formId}
+        pathname={pathname}
       />
       <FormTabs formId={formId} activeTab={activeTab} />
     </>

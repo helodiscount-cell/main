@@ -15,6 +15,7 @@ interface MobileEditorHeaderProps {
   onPublish: () => void;
   onSave: () => void;
   isLoading?: boolean;
+  activeTab: string;
 }
 
 /**
@@ -26,6 +27,7 @@ export const MobileEditorHeader = ({
   onPublish,
   onSave,
   isLoading,
+  activeTab,
 }: MobileEditorHeaderProps) => {
   const { data: form } = useQuery({
     queryKey: ["form", formId],
@@ -48,72 +50,81 @@ export const MobileEditorHeader = ({
         </div>
       </div>
 
-      {/* Second Row: Breadcrumb + Action Buttons */}
-      <div className="flex items-center gap-2 pt-1">
-        {/* Breadcrumb box */}
-        <div className="flex items-center h-12 bg-white rounded-xl px-4 flex-1 min-w-0">
-          <span className="text-sm font-medium text-slate-300">Forms</span>
-          <span className="text-sm font-medium text-slate-300 mx-1">/</span>
-          <span className="text-sm font-bold text-[#0F172A] truncate">
-            Editor
-          </span>
+      {/* Second Row: Breadcrumb + Action Buttons - Only visible on editor tab */}
+      {activeTab === "editor" && (
+        <div className="flex items-center gap-2 pt-1">
+          {/* Breadcrumb box */}
+          <div className="flex items-center h-12 bg-white rounded-xl px-4 flex-1 min-w-0">
+            <span className="text-sm font-medium text-slate-300">Forms</span>
+            <span className="text-sm font-medium text-slate-300 mx-1">/</span>
+            <span className="text-sm font-bold text-[#0F172A] truncate">
+              Editor
+            </span>
+          </div>
+
+          {/* Action icons */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Refresh (Save Draft) */}
+            <Button
+              onClick={onSave}
+              disabled={isLoading}
+              size="icon"
+              aria-label="Save draft"
+              className="h-12 w-12 rounded-xl bg-[#6A06E4] hover:bg-[#5a05c4] text-white shrink-0 border-none -none"
+            >
+              <RefreshCw
+                size={24}
+                className={cn(isLoading && "animate-spin")}
+              />
+            </Button>
+
+            {/* Link (Copy Link) */}
+            {form?.slug && (
+              <>
+                <Button
+                  size="icon"
+                  aria-label="Copy form link"
+                  className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `${window.location.origin}/f/${form.slug}`,
+                    );
+                    toast.success("Link copied to clipboard!");
+                  }}
+                >
+                  <Link2 size={24} />
+                </Button>
+
+                {/* Preview */}
+                <Button
+                  size="icon"
+                  aria-label="Preview form"
+                  className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
+                  onClick={() => {
+                    window.open(
+                      `${window.location.origin}/f/${form.slug}`,
+                      "_blank",
+                    );
+                  }}
+                >
+                  <Eye size={24} />
+                </Button>
+              </>
+            )}
+
+            {/* Publish */}
+            <Button
+              onClick={onPublish}
+              disabled={isLoading}
+              size="icon"
+              aria-label="Publish form"
+              className="h-12 w-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none -none"
+            >
+              <Send size={24} />
+            </Button>
+          </div>
         </div>
-
-        {/* Action icons */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Refresh (Save Draft) */}
-          <Button
-            onClick={onSave}
-            disabled={isLoading}
-            size="icon"
-            className="h-12 w-12 rounded-xl bg-[#6A06E4] hover:bg-[#5a05c4] text-white shrink-0 border-none -none"
-          >
-            <RefreshCw size={24} className={cn(isLoading && "animate-spin")} />
-          </Button>
-
-          {/* Link (Copy Link) */}
-          {form?.slug && (
-            <>
-              <Button
-                size="icon"
-                className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    `${window.location.origin}/f/${form.slug}`,
-                  );
-                  toast.success("Link copied to clipboard!");
-                }}
-              >
-                <Link2 size={24} />
-              </Button>
-
-              {/* Preview */}
-              <Button
-                size="icon"
-                className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none -none"
-                onClick={() => {
-                  window.open(
-                    `${window.location.origin}/f/${form.slug}`,
-                    "_blank",
-                  );
-                }}
-              >
-                <Eye size={24} />
-              </Button>
-            </>
-          )}
-
-          {/* Publish */}
-          <Button
-            onClick={onPublish}
-            disabled={isLoading}
-            size="icon"
-            className="h-12 w-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none -none"
-          >
-            <Send size={24} />
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

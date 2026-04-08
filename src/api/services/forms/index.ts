@@ -30,9 +30,9 @@ export const formService = {
   },
 
   // Lists all forms for the dashboard
-  list: async (): Promise<FormListItem[]> => {
+  list: async (params?: { status?: string }): Promise<FormListItem[]> => {
     const envelope = await request(
-      api.get<ApiResponse<FormListItem[]>>("/forms"),
+      api.get<ApiResponse<FormListItem[]>>("/forms", { params }),
     );
     return envelope.result;
   },

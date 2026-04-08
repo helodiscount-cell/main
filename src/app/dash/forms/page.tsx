@@ -34,7 +34,10 @@ export default function FormsPage() {
     queryKey: formKeys.list(
       statusFilter !== "ALL" ? { status: statusFilter } : undefined,
     ),
-    queryFn: () => formService.list(),
+    queryFn: () =>
+      formService.list(
+        statusFilter !== "ALL" ? { status: statusFilter } : undefined,
+      ),
   });
 
   const sortedForms = useMemo(() => {
@@ -85,6 +88,7 @@ export default function FormsPage() {
         isLoading={isLoading}
         emptyMessage="No forms yet. Create your first one!"
         actionButton={newFormAction}
+        onSortChange={() => toggleSort("date")}
       />
     );
   }

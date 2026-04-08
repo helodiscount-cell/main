@@ -2,7 +2,7 @@
 import { use, useMemo } from "react";
 import { Controller } from "react-hook-form";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
-import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useAutomationManager } from "@/hooks/use-automations";
 import {
   AUTOMATION_CONFIGS,
@@ -86,7 +86,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
 
   const headerContent = useMemo(
     () => ({
-      loading: <HeaderSkeleton />,
+      loading: null,
       live: existingAutomation && (
         <LiveHeader
           automation={existingAutomation}
@@ -95,8 +95,6 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
           isStopping={isStopping}
           onStart={startAutomation}
           onStop={stopAutomation}
-          onReRun={() => {}}
-          isReRunning={false}
           breadcrumb={AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.breadcrumb}
         />
       ),
@@ -115,6 +113,14 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     ],
   );
 
+  if (pageState === "loading") {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#09090B]">
+        <Spinner className="text-[#6A06E4] size-6" strokeWidth={2.5} />
+      </div>
+    );
+  }
+
   if (pageState === "not-found") {
     return (
       <AutomationLayout
@@ -129,6 +135,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
+        triggerType="RESPOND_TO_ALL_DMS"
         leftCol={
           <div className="flex flex-col gap-6">
             <Controller

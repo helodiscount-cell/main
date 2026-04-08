@@ -10,7 +10,7 @@ import { instagramKeys } from "@/keys/react-query";
 import { AutomationLayout } from "@/app/dash/automations/_components/AutomationLayout";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
-import { HeaderSkeleton } from "@/components/Loaders/HeaderSkeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useAutomationManager } from "@/hooks/use-automations";
 import {
   AddKeywords,
@@ -116,7 +116,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
   const automationName = watch("automationName");
 
   const headerContent = {
-    loading: <HeaderSkeleton />,
+    loading: null,
     fresh: (
       <FreshHeader
         isPending={isCreating}
@@ -127,11 +127,26 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
     ),
     live: null, // Creation pages don't have a live state anymore
   };
+  if (pageState === "loading") {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#09090B]">
+        <Spinner className="text-[#6A06E4] size-6" strokeWidth={2.5} />
+      </div>
+    );
+  }
 
   return (
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
+        post={
+          currentStory
+            ? {
+                mediaUrl: currentStory.media_url!,
+                mediaType: currentStory.media_type,
+              }
+            : null
+        }
         leftCol={
           <div className="flex flex-col gap-6">
             <Controller

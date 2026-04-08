@@ -3,7 +3,7 @@
 import React from "react";
 import { Trash2, Plus, X, Star } from "lucide-react";
 import { FIELD_TYPE_LABELS } from "./config";
-import { useFieldCardLogic, FIELD_INPUT_TYPE_MAP } from "./useFieldCardLogic";
+import { useFieldCardLogic } from "./useFieldCardLogic";
 
 type FieldCardProps = {
   index: number;
@@ -143,7 +143,7 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
             <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 focus-within:border-[#6A06E4]/20 transition-colors">
               <input
                 {...register(`fields.${index}.placeholder`)}
-                type={FIELD_INPUT_TYPE_MAP[fieldType] || "text"}
+                type="text"
                 placeholder="Edit placeholder text..."
                 className="w-full text-xs text-slate-500 bg-transparent outline-none placeholder:text-slate-300"
               />

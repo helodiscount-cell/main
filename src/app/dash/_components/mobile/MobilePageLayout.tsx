@@ -6,6 +6,7 @@ import { MobileDashboardHeader } from "./MobileDashboardHeader";
 import { MobileCard } from "./MobileCard";
 import { AutomationListItem } from "@/types/automation";
 import { FormListItem } from "@/types/form";
+import { Spinner } from "@/components/ui/spinner";
 
 interface MobilePageLayoutProps {
   title: string;
@@ -13,6 +14,8 @@ interface MobilePageLayoutProps {
   isLoading: boolean;
   emptyMessage: string;
   actionButton: React.ReactNode;
+  onSortChange?: (sortKey: string) => void;
+  onFilterToggle?: () => void;
 }
 
 /**
@@ -25,6 +28,8 @@ export const MobilePageLayout = ({
   isLoading,
   emptyMessage,
   actionButton,
+  onSortChange,
+  onFilterToggle,
 }: MobilePageLayoutProps) => {
   return (
     <div className="flex flex-col h-screen bg-[#FAFAFA] pb-[100px] overflow-hidden relative">
@@ -33,19 +38,29 @@ export const MobilePageLayout = ({
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto px-5 bg-[#f1f1f1]">
         {/* Sort/Filter Bar */}
-        <div className="flex items-center justify-between mb-4 mt-2">
-          <button className="flex items-center gap-1.5 text-[#212121] font-semibold text-sm">
-            Last Published
-            <ChevronDown size={16} className="text-[#212121]" />
-          </button>
-          <button className="p-2 bg-slate-800 text-white rounded-lg">
-            <SlidersHorizontal size={16} />
-          </button>
-        </div>
-
+        {(onSortChange || onFilterToggle) && (
+          <div className="flex items-center justify-between mb-4 mt-2">
+            <button
+              onClick={() => onSortChange?.("createdAt")}
+              className="flex items-center gap-1.5 text-[#212121] font-semibold text-sm active:opacity-50 transition-opacity"
+              aria-label="Change sort order"
+            >
+              Last Published
+              <ChevronDown size={16} className="text-[#212121]" />
+            </button>
+            <button
+              onClick={onFilterToggle}
+              className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal size={16} />
+            </button>
+          </div>
+        )}
         {/* Content */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-sm text-slate-400">
+          <div className="flex flex-col items-center justify-center py-12 gap-3 text-sm text-slate-400">
+            <Spinner className="text-[#6A06E4] size-5" strokeWidth={2.5} />
             Loading {title.toLowerCase()}...
           </div>
         ) : items.length === 0 ? (

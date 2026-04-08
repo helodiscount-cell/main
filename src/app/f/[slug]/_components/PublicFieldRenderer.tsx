@@ -40,7 +40,10 @@ export const PublicFieldRenderer = ({
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
 
-  const checkedValues = (watch(field.id) as string[]) ?? [];
+  // Watch field value at top level to avoid rule of hook violations in branches
+  const rawValue = watch(field.id);
+  const fullValue = (rawValue as string) || "";
+  const checkedValues = (rawValue as string[]) ?? [];
 
   const inputClass =
     "w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#6A06E4] focus:ring-1 focus:ring-[#6A06E4] transition-colors";
@@ -66,8 +69,6 @@ export const PublicFieldRenderer = ({
 
   // Location — Hierarchical picker (Country > State > City)
   if (field.type === "location") {
-    const value = (watch(field.id) as string) || "";
-
     return (
       <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
@@ -75,7 +76,7 @@ export const PublicFieldRenderer = ({
           {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>
         <HierarchicalLocationPicker
-          value={value}
+          value={fullValue}
           onChange={(val) => setValue(field.id, val)}
           required={field.required}
         />
@@ -87,27 +88,22 @@ export const PublicFieldRenderer = ({
 
   // Phone — custom dual-input renderer for country code + 10-digit number
   if (field.type === "phone") {
-    const fullValue = (watch(field.id) as string) || "";
-
-    // Default to India (+91) if field is empty
-    React.useEffect(() => {
-      if (!fullValue) {
-        setValue(field.id, "+91|phone|");
-      }
-    }, [fullValue, field.id, setValue]);
-
-    // Helper to join code and number
-    const handlePhoneChange = (code: string, num: string) => {
-      const cleanCode = code.replace(/\D/g, "").slice(0, 4);
-      const cleanNum = num.replace(/\D/g, "").slice(0, 10);
-
-      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
-    };
-
     // Extract code and number from the joined value (+CODE|phone|NUMBER)
     const parts = fullValue.replace("+", "").split("|phone|");
-    const code = parts[0] || (fullValue ? "" : "91");
+    const code = parts[0] || "91";
     const number = parts[1] || "";
+
+    // Helper to join code and number
+    const handlePhoneChange = (newCode: string, newNum: string) => {
+      const cleanCode = newCode.replace(/\D/g, "").slice(0, 4);
+      const cleanNum = newNum.replace(/\D/g, "").slice(0, 10);
+
+      if (cleanNum) {
+        setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
+      } else {
+        setValue(field.id, "");
+      }
+    };
 
     return (
       <div className="space-y-1.5 flex flex-col gap-2">
@@ -239,7 +235,7 @@ export const PublicFieldRenderer = ({
   }
 
   if (field.type === "upload") {
-    const fileUrl = watch(field.id) as string | undefined;
+    const fileUrl = fullValue;
 
     return (
       <div className="space-y-1.5 flex flex-col gap-2">

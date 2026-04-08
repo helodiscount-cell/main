@@ -1,6 +1,6 @@
 import { AutomationListItem } from "@/types/automation";
 import { Button } from "../../../ui/button";
-import { Play, RefreshCw, RotateCcw, Square } from "lucide-react";
+import { RefreshCw, Square } from "lucide-react";
 import { EditableAutomationName } from "./EditableAutomationName";
 
 interface LiveHeaderProps {
@@ -9,8 +9,6 @@ interface LiveHeaderProps {
   isStopping: boolean;
   onStart: () => void;
   isStarting: boolean;
-  onReRun: () => void;
-  isReRunning: boolean;
   isUpdating?: boolean;
   breadcrumb?: string;
   label?: string;
@@ -23,8 +21,6 @@ export default function LiveHeader({
   isStopping,
   onStart,
   isStarting,
-  onReRun,
-  isReRunning,
   isUpdating,
   breadcrumb = "DM For Comment",
   label,
@@ -46,17 +42,6 @@ export default function LiveHeader({
           />
         </p>
       </div>
-
-      {/* Re-Run */}
-      <Button
-        type="button"
-        onClick={onReRun}
-        disabled={isReRunning}
-        className="bg-slate-900 hover:bg-slate-700 h-9 transition-all"
-      >
-        <Play size={13} />
-        {isReRunning ? "Running…" : "Re-Run"}
-      </Button>
 
       {/* Stop - Only visible when Active */}
       {isActive && (
