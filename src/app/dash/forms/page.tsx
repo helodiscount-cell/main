@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
   MobilePageLayout,
+  Pagination,
 } from "../_components";
 import {
   StatusFilter,
@@ -29,6 +30,9 @@ export default function FormsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const { data: forms = [], isLoading } = useQuery({
     queryKey: formKeys.list(
@@ -40,8 +44,22 @@ export default function FormsPage() {
       ),
   });
 
-  const sortedForms = useMemo(() => {
-    return [...forms].sort((a, b) => {
+  // Filter and Sort forms
+  const filteredAndSortedForms = useMemo(() => {
+    let result = [...forms];
+
+    // Real-time Search Filter
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(
+        (f) =>
+          f.title?.toLowerCase().includes(s) ||
+          f.description?.toLowerCase().includes(s),
+      );
+    }
+
+    // Existing Sort Logic
+    return result.sort((a, b) => {
       const fieldA =
         sortField === "count"
           ? a.submissionCount
@@ -54,7 +72,19 @@ export default function FormsPage() {
       if (sortOrder === "asc") return fieldA - fieldB;
       return fieldB - fieldA;
     });
-  }, [forms, sortField, sortOrder]);
+  }, [forms, search, sortField, sortOrder]);
+
+  // Handle Search Change (reset pagination)
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setPage(1);
+  };
+
+  // Pagination Slice
+  const paginatedForms = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredAndSortedForms.slice(start, start + PAGE_SIZE);
+  }, [filteredAndSortedForms, page]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -84,7 +114,7 @@ export default function FormsPage() {
     return (
       <MobilePageLayout
         title="Forms"
-        items={sortedForms}
+        items={filteredAndSortedForms}
         isLoading={isLoading}
         emptyMessage="No forms yet. Create your first one!"
         actionButton={newFormAction}
@@ -98,6 +128,8 @@ export default function FormsPage() {
       {/* Top header */}
       <DashboardHeader
         showSearch={true}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
         childComp={
           <>
             <RefreshInstaDialog />
@@ -118,31 +150,45 @@ export default function FormsPage() {
       />
 
       {/* Table */}
-      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50">
-        {/* Column headers */}
-        <TableHeader
-          title="Forms"
-          selectedLabel={selectedLabel}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          onSort={toggleSort}
-        />
+      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
+        <div className="flex-1">
+          {/* Column headers */}
+          <TableHeader
+            title="Forms"
+            selectedLabel={selectedLabel}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={toggleSort}
+          />
 
-        {/* Rows */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16 text-sm text-slate-400">
-            Loading forms…
-          </div>
-        ) : sortedForms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
-            <span className="text-3xl">📋</span>
-            <p className="text-sm">No forms yet. Create your first one!</p>
-          </div>
-        ) : (
-          sortedForms.map((form) => <TableRow key={form.id} data={form} />)
-        )}
+          {/* Rows */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-sm text-slate-400">
+              Loading forms…
+            </div>
+          ) : paginatedForms.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
+              <span className="text-3xl">📋</span>
+              <p className="text-sm">
+                {search
+                  ? "No matches found."
+                  : "No forms yet. Create your first one!"}
+              </p>
+            </div>
+          ) : (
+            paginatedForms.map((form) => <TableRow key={form.id} data={form} />)
+          )}
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={page}
+          totalItems={filteredAndSortedForms.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

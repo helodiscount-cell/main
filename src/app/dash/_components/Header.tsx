@@ -7,10 +7,17 @@ import { Search } from "lucide-react";
 
 interface Props {
   showSearch?: boolean;
+  searchValue?: string;
+  onSearchChange?: (val: string) => void;
   childComp: React.ReactNode;
 }
 
-function DashboardHeader({ showSearch, childComp }: Props) {
+function DashboardHeader({
+  showSearch,
+  searchValue,
+  onSearchChange,
+  childComp,
+}: Props) {
   const pathname = usePathname();
 
   const title = pathname
@@ -40,7 +47,9 @@ function DashboardHeader({ showSearch, childComp }: Props) {
             <Search size={15} className="text-slate-400 shrink-0" />
             <input
               type="text"
-              placeholder="Search automations"
+              placeholder={`Search ${title[title.length - 1]}`}
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               className="w-full text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
             />
           </div>

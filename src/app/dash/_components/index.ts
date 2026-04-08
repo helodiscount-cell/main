@@ -8,3 +8,4 @@ export { useDashboardItemMapper } from "./useDashboardItemMapper";
 export * from "./mobile/MobileCard";
 export * from "./mobile/MobileDashboardHeader";
 export * from "./mobile/MobilePageLayout";
+export { Pagination } from "./Pagination";

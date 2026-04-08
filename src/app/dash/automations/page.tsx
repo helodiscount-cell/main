@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
   MobilePageLayout,
+  Pagination,
 } from "../_components";
 import {
   StatusFilter,
@@ -26,6 +27,9 @@ const AutomationPage = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: automationKeys.list(
@@ -39,8 +43,20 @@ const AutomationPage = () => {
 
   const automations = data?.automations ?? [];
 
-  const sortedAutomations = useMemo(() => {
-    return [...automations].sort((a, b) => {
+  // Filter and Sort automations
+  const filteredAndSorted = useMemo(() => {
+    let result = [...automations];
+
+    // Real-time Search Filter
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter((a) =>
+        a.automationName?.toLowerCase().includes(s),
+      );
+    }
+
+    // Existing Sort Logic
+    return result.sort((a, b) => {
       const fieldA =
         sortField === "count"
           ? a.timesTriggered || 0
@@ -53,7 +69,19 @@ const AutomationPage = () => {
       if (sortOrder === "asc") return fieldA - fieldB;
       return fieldB - fieldA;
     });
-  }, [automations, sortField, sortOrder]);
+  }, [automations, search, sortField, sortOrder]);
+
+  // Handle Search Change (reset pagination)
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setPage(1);
+  };
+
+  // Pagination Slice
+  const paginatedAutomations = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredAndSorted.slice(start, start + PAGE_SIZE);
+  }, [filteredAndSorted, page]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -80,7 +108,7 @@ const AutomationPage = () => {
     return (
       <MobilePageLayout
         title="Automations"
-        items={sortedAutomations}
+        items={filteredAndSorted}
         isLoading={isLoading}
         emptyMessage="No automations found."
         actionButton={newAutomationAction}
@@ -93,6 +121,8 @@ const AutomationPage = () => {
     <div className="flex flex-col h-full bg-[#F1F1F1]">
       <DashboardHeader
         showSearch={true}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
         childComp={
           <>
             <RefreshInstaDialog />
@@ -102,33 +132,43 @@ const AutomationPage = () => {
       />
 
       {/* Table */}
-      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50">
-        {/* Table header */}
-        <TableHeader
-          title="Automations"
-          selectedLabel={selectedLabel}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          onSort={toggleSort}
-        />
+      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
+        <div className="flex-1">
+          {/* Table header */}
+          <TableHeader
+            title="Automations"
+            selectedLabel={selectedLabel}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={toggleSort}
+          />
 
-        {/* Rows */}
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-sm text-slate-400">
-            <Spinner className="text-[#6A06E4] size-5" strokeWidth={2.5} />
-            Loading automations…
-          </div>
-        ) : sortedAutomations.length === 0 ? (
-          <div className="flex items-center justify-center py-16 text-sm text-slate-400">
-            No automations found.
-          </div>
-        ) : (
-          sortedAutomations.map((automation) => (
-            <TableRow key={automation.id} data={automation} />
-          ))
-        )}
+          {/* Rows */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-sm text-slate-400">
+              <Spinner className="text-[#6A06E4] size-5" strokeWidth={2.5} />
+              Loading automations…
+            </div>
+          ) : paginatedAutomations.length === 0 ? (
+            <div className="flex items-center justify-center py-16 text-sm text-slate-400">
+              {search ? "No matches found." : "No automations found."}
+            </div>
+          ) : (
+            paginatedAutomations.map((automation) => (
+              <TableRow key={automation.id} data={automation} />
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={page}
+          totalItems={filteredAndSorted.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
