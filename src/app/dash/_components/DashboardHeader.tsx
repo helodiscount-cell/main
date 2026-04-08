@@ -14,7 +14,7 @@ interface Props {
 
 function DashboardHeader({
   showSearch,
-  searchValue,
+  searchValue = "",
   onSearchChange,
   childComp,
 }: Props) {
@@ -22,6 +22,7 @@ function DashboardHeader({
 
   const title = pathname
     .split("/")
+    .filter(Boolean)
     .map((item) => item.charAt(0).toUpperCase() + item.slice(1));
 
   return (

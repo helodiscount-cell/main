@@ -38,9 +38,11 @@ export const HierarchicalLocationPicker = ({
   const countryId = useId();
   const stateId = useId();
   const cityId = useId();
+  const isHydratingRef = useRef(false);
 
   // Seed local state from value prop whenever it changes (e.g. form reset or parent update)
   useEffect(() => {
+    isHydratingRef.current = true;
     const parts = value ? value.split(", ").map((p) => p.trim()) : [];
     if (parts.length === 3) {
       setSelectedCountry(parts[2]);
@@ -51,6 +53,7 @@ export const HierarchicalLocationPicker = ({
       setSelectedState("");
       setSelectedCity("");
     }
+    isHydratingRef.current = false;
     // Only depends on value to avoid re-triggering on local state changes
   }, [value]);
 
@@ -61,8 +64,8 @@ export const HierarchicalLocationPicker = ({
         ? `${selectedCity}, ${selectedState}, ${selectedCountry}`
         : "";
 
-    // Only call onChange if the value is complete and actually different from prop
-    if (composedValue && composedValue !== value) {
+    // Only call onChange if the value is complete or if it has been cleared, and not during hydration
+    if (!isHydratingRef.current && composedValue !== value) {
       onChange(composedValue);
     }
     // value is omitted from deps to avoid "barking back" with stale state
@@ -88,9 +91,11 @@ export const HierarchicalLocationPicker = ({
           options={COUNTRIES.map((c) => c.name)}
           value={selectedCountry}
           onChange={(val) => {
-            setSelectedCountry(val);
-            setSelectedState("");
-            setSelectedCity("");
+            if (val !== selectedCountry) {
+              setSelectedCountry(val);
+              setSelectedState("");
+              setSelectedCity("");
+            }
           }}
           placeholder="Select country"
         />
@@ -112,8 +117,10 @@ export const HierarchicalLocationPicker = ({
               options={INDIAN_STATES}
               value={selectedState}
               onChange={(val) => {
-                setSelectedState(val);
-                setSelectedCity("");
+                if (val !== selectedState) {
+                  setSelectedState(val);
+                  setSelectedCity("");
+                }
               }}
               placeholder="Select state"
               disabled={!selectedCountry}
@@ -179,12 +186,13 @@ const SearchableSelect = ({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Reset highlight when search or menu state changes
+  // Reset highlight and clear search when menu state changed to closed
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      setSearch("");
       setHighlightedIndex(-1);
     }
-  }, [isOpen, search]);
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -243,6 +251,9 @@ const SearchableSelect = ({
       <button
         id={id}
         type="button"
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full border border-slate-200 rounded-lg px-4 py-2.5 bg-white hover:border-[#6A06E4] transition-colors gap-2 disabled:bg-slate-50 disabled:cursor-not-allowed group"
@@ -266,13 +277,18 @@ const SearchableSelect = ({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          role="listbox"
+          aria-labelledby={id}
+          className="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        >
           <div className="p-2 border-b border-slate-50 flex items-center gap-2 bg-slate-50/50">
             <Search size={14} className="text-slate-400 shrink-0" />
             <input
               autoFocus
               type="text"
               placeholder="Search..."
+              aria-label="Search options"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-transparent border-none outline-none text-sm text-slate-700 placeholder:text-slate-400"
@@ -282,9 +298,10 @@ const SearchableSelect = ({
           <div className="max-h-52 overflow-y-auto no-scrollbar py-1">
             {filtered.length > 0 ? (
               filtered.map((opt, index) => (
-                <button
+                <div
                   key={opt}
-                  type="button"
+                  role="option"
+                  aria-selected={opt === value}
                   onClick={() => {
                     onChange(opt);
                     setIsOpen(false);
@@ -292,7 +309,7 @@ const SearchableSelect = ({
                   }}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={cn(
-                    "flex items-center justify-between w-full px-4 py-2 text-sm transition-colors text-left",
+                    "flex items-center justify-between w-full px-4 py-2 text-sm transition-colors text-left cursor-pointer",
                     highlightedIndex === index
                       ? "bg-[#F7F0FF] text-[#6A06E4]"
                       : "text-slate-600",
@@ -306,7 +323,7 @@ const SearchableSelect = ({
                   {opt === value && (
                     <Check size={14} className="text-[#6A06E4]" />
                   )}
-                </button>
+                </div>
               ))
             ) : (
               <p className="px-4 py-4 text-xs text-slate-400 text-center">

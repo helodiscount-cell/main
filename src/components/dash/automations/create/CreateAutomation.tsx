@@ -33,7 +33,9 @@ export default function CreateAutomationDialog({
       case "dm-from-stories":
         return <DmForStories onSetActiveTab={setActiveTab} />;
       default:
-        return <TabSelector setActiveTab={setActiveTab} />;
+        return (
+          <TabSelector setActiveTab={setActiveTab} activeTab={activeTab} />
+        );
     }
   };
 
@@ -65,7 +67,7 @@ export default function CreateAutomationDialog({
             {activeTab ? "Configure Automation" : "Choose a Template"}
           </DialogTitle>
         </DialogHeader>
-        <div className="w-2xl">{renderContent()}</div>
+        <div className="max-w-2xl">{renderContent()}</div>
       </DialogContent>
     </Dialog>
   );

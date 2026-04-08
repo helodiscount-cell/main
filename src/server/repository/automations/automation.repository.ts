@@ -7,6 +7,7 @@ import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
 import { CreateAutomationInput } from "@dm-broo/common-types";
 import { invalidateAutomations } from "@/server/redis";
+import { logger } from "@/server/utils/pino";
 
 import {
   CreateAutomationData,
@@ -122,12 +123,17 @@ export async function createAutomation(
     // 1. Fetch the instagramUserId to use for the standardized Redis key
     const account = await prisma.instaAccount.findUnique({
       where: { id: instaAccountId },
-      select: { webhookUserId: true },
+      select: { webhookUserId: true, instagramUserId: true },
     });
 
-    if (account?.webhookUserId) {
-      // 2. Invalidate workspace automation cache using the Webhook identifier (178...)
-      await invalidateAutomations(account.webhookUserId).catch(() => {});
+    const identifier = account?.webhookUserId || account?.instagramUserId;
+    if (identifier) {
+      await invalidateAutomations(identifier).catch(() => {});
+    } else {
+      logger.warn(
+        { instaAccountId },
+        "[Repository:Automation] Skipping cache invalidation: No account identifiers found",
+      );
     }
   }
   return result;
@@ -441,11 +447,13 @@ export async function updateAutomation(
   if (result) {
     const account = await prisma.instaAccount.findUnique({
       where: { id: result.instaAccountId },
-      select: { webhookUserId: true },
+      select: { webhookUserId: true, instagramUserId: true },
     });
-    if (account?.webhookUserId) {
-      await invalidateAutomations(account.webhookUserId).catch(() => {});
-    }
+    const identifier =
+      account?.webhookUserId ||
+      account?.instagramUserId ||
+      result.instaAccountId;
+    await invalidateAutomations(identifier).catch(() => {});
   }
   return result;
 }
@@ -521,11 +529,13 @@ export async function softDeleteAutomation(automationId: string) {
   if (result) {
     const account = await prisma.instaAccount.findUnique({
       where: { id: result.instaAccountId },
-      select: { webhookUserId: true },
+      select: { webhookUserId: true, instagramUserId: true },
     });
-    if (account?.webhookUserId) {
-      await invalidateAutomations(account.webhookUserId).catch(() => {});
-    }
+    const identifier =
+      account?.webhookUserId ||
+      account?.instagramUserId ||
+      result.instaAccountId;
+    await invalidateAutomations(identifier).catch(() => {});
   }
   return result;
 }

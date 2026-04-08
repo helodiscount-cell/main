@@ -1,8 +1,5 @@
 /**
- * Redis Key Registry
- * Single source of truth for ALL Redis keys and TTL configs.
- * This file is kept byte-for-byte identical to worker/src/redis/keys.ts.
- * Any change here MUST be mirrored in the worker.
+ * This file contains the registry for all Redis keys and TTL configs.
  */
 
 // TTL configurations in seconds
@@ -19,7 +16,7 @@ export const TTL = {
   FOLLOW_WARNING: 60 * 60, // 1 hour
 } as const;
 
-// Key generation functions — all IG-scoped keys use instaAccountId, not userId
+// Key generation functions — all IG-scoped keys use webhookUserId, not userId
 export const KEYS = {
   // Domain: User (keyed by webhookUserId 178...)
   USER_CONNECTION: (webhookUserId: string) =>
@@ -96,13 +93,10 @@ export const KEYS = {
   // Domain: Buffers (Async Persistence)
   PENDING_OUTCOMES: "pending:outcomes:buffer",
 
-  // Domain: Billing / Credits (keyed by clerkId with user_ prefix)
-  CREDIT_USED: (clerkId: string) =>
-    `billing:credits:used:${clerkId.startsWith("user_") ? clerkId : `user_${clerkId}`}`,
-  CREDIT_LIMIT: (clerkId: string) =>
-    `billing:credits:limit:${clerkId.startsWith("user_") ? clerkId : `user_${clerkId}`}`,
-  SUB_STATUS: (clerkId: string) =>
-    `billing:sub:status:${clerkId.startsWith("user_") ? clerkId : `user_${clerkId}`}`,
+  // Domain: Billing / Credits (keyed by clerkId)
+  CREDIT_USED: (clerkId: string) => `billing:credits:used:${clerkId}`,
+  CREDIT_LIMIT: (clerkId: string) => `billing:credits:limit:${clerkId}`,
+  SUB_STATUS: (clerkId: string) => `billing:sub:status:${clerkId}`,
   // Domain: Notifications (BullMQ)
   NOTIFICATIONS_QUEUE: "notifications",
 } as const;

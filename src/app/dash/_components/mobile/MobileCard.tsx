@@ -39,13 +39,20 @@ export const MobileCard = ({ data }: MobileCardProps) => {
     }
 
     if (textToCopy) {
-      navigator.clipboard.writeText(textToCopy);
-      toast.success("Copied to clipboard!");
+      navigator.clipboard
+        .writeText(textToCopy)
+        .then(() => {
+          toast.success("Copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy:", err);
+          toast.error("Failed to copy to clipboard");
+        });
     }
   };
 
   return (
-    <div className="bg-white rounded-xl p-5 border border-slate-50 flex flex-col gap-5 mb-4    -[0_4px_20px_rgba(0,0,0,0.02)]">
+    <div className="bg-white rounded-xl p-5 border border-slate-50 flex flex-col gap-5 mb-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
       {/* Top Row: Info + Status + Menu */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -81,12 +88,16 @@ export const MobileCard = ({ data }: MobileCardProps) => {
                 className={`px-3 py-1 rounded-lg text-xs font-bold ${
                   (data as AutomationListItem).status === "ACTIVE"
                     ? "bg-emerald-100 text-emerald-600"
-                    : "bg-blue-100 text-blue-600"
+                    : (data as AutomationListItem).status === "EXPIRED"
+                      ? "bg-red-100 text-red-600"
+                      : "bg-blue-100 text-blue-600"
                 }`}
               >
                 {(data as AutomationListItem).status === "ACTIVE"
                   ? "Live"
-                  : "Paused"}
+                  : (data as AutomationListItem).status === "EXPIRED"
+                    ? "Expired"
+                    : "Paused"}
               </div>
             ) : (
               mapped.status
@@ -96,11 +107,13 @@ export const MobileCard = ({ data }: MobileCardProps) => {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-1 text-slate-400 active:bg-slate-50 rounded-full transition-colors"
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
             >
               <MoreVertical size={20} />
             </button>
             {menuOpen &&
-              ("triggerType" in data ? (
+              (isAutomation ? (
                 <AutomationActionsMenu
                   onClose={() => setMenuOpen(false)}
                   fullAutomation={data as AutomationListItem}
@@ -119,28 +132,34 @@ export const MobileCard = ({ data }: MobileCardProps) => {
       {/* Bottom Row: Stats + Date + Copy Link */}
       <div className="flex items-center justify-between border-t border-slate-50 pt-4">
         <div className="flex items-center gap-4 flex-1">
-          {isAutomation && (
-            <div className="flex items-center gap-1.5 min-w-fit">
-              <span className="text-sm text-slate-400 font-medium">
-                New Follower:
+          <div className="flex flex-col gap-1 min-w-fit">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                {mapped.statsLabel}
               </span>
-              <span className="text-sm text-[#6A06E4] font-semibold font-mono">
-                56
+              <span className="text-sm text-[#6A06E4] font-bold font-mono">
+                {mapped.stats}
               </span>
             </div>
-          )}
-
-          <div className="flex items-center gap-1.5 min-w-fit">
-            <span className="text-sm text-slate-400 font-medium">
-              {isAutomation ? "Run" : mapped.statsLabel}:
-            </span>
-            <span className="text-sm text-slate-600 font-semibold font-mono">
-              {mapped.stats}
-            </span>
+            {isAutomation && mapped.secondaryStats !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  {mapped.secondaryStatsLabel}
+                </span>
+                <span className="text-sm text-slate-600 font-bold font-mono">
+                  {mapped.secondaryStats}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="ml-auto text-sm text-slate-500 font-medium">
-            {mapped.date}
+          <div className="ml-auto flex flex-col items-end gap-0.5">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              {mapped.dateLabel}
+            </span>
+            <div className="text-sm text-slate-500 font-semibold italic">
+              {mapped.date}
+            </div>
           </div>
         </div>
 

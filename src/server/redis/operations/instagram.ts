@@ -11,35 +11,35 @@ import { logger } from "../../utils/pino";
  * Deletes cached posts and stories for a user — forces fresh fetch from Instagram API
  */
 export async function invalidateInstagramCache(
-  instagramUserId: string,
+  identifier: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
 
   const pipeline = redis.pipeline();
-  pipeline.del(KEYS.INSTAGRAM_POSTS(instagramUserId));
-  pipeline.del(KEYS.INSTAGRAM_STORIES(instagramUserId));
+  pipeline.del(KEYS.INSTAGRAM_POSTS(identifier));
+  pipeline.del(KEYS.INSTAGRAM_STORIES(identifier));
 
   await pipeline.exec();
-  logger.info({ instagramUserId }, "[Redis:Instagram] Cache invalidated");
+  logger.info({ identifier }, "[Redis:Instagram] Cache invalidated");
 }
 
 /**
  * Retrieves cached Instagram posts or executes fallback
  */
 export async function getCachedPosts<T>(
-  instagramUserId: string,
+  identifier: string,
   fetchNative: () => Promise<T>,
 ): Promise<T> {
   const redis = getRedisClient();
-  const key = KEYS.INSTAGRAM_POSTS(instagramUserId);
+  const key = KEYS.INSTAGRAM_POSTS(identifier);
 
   if (!redis) return fetchNative();
 
   try {
     const cached = await redis.get(key);
     if (cached) {
-      logger.info({ instagramUserId }, "[Redis:Instagram] Hit: Posts");
+      logger.info({ identifier }, "[Redis:Instagram] Hit: Posts");
       return JSON.parse(cached);
     }
 
@@ -69,18 +69,18 @@ export async function getCachedPosts<T>(
  * Retrieves cached Instagram stories or executes fallback
  */
 export async function getCachedStories<T>(
-  instagramUserId: string,
+  identifier: string,
   fetchNative: () => Promise<T>,
 ): Promise<T> {
   const redis = getRedisClient();
-  const key = KEYS.INSTAGRAM_STORIES(instagramUserId);
+  const key = KEYS.INSTAGRAM_STORIES(identifier);
 
   if (!redis) return fetchNative();
 
   try {
     const cached = await redis.get(key);
     if (cached) {
-      logger.info({ instagramUserId }, "[Redis:Instagram] Hit: Stories");
+      logger.info({ identifier }, "[Redis:Instagram] Hit: Stories");
       return JSON.parse(cached);
     }
 

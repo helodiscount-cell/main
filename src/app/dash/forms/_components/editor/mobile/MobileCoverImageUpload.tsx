@@ -46,7 +46,7 @@ const MobileCoverArea = ({
   );
 
   return (
-    <div className="relative w-full aspect-video rounded-[24px] overflow-hidden bg-slate-100 group -[0_4px_30px_rgba(0,0,0,0.02)]">
+    <div className="relative w-full aspect-video rounded-[24px] overflow-hidden bg-slate-100 group shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
       {/* Background image */}
       {value && <Image src={value} alt="Cover" fill className="object-cover" />}
 
@@ -54,7 +54,7 @@ const MobileCoverArea = ({
       <div
         className={`absolute inset-0 flex items-center justify-center gap-3 bg-black/10 transition-colors duration-300`}
       >
-        <label className="flex items-center gap-2 bg-white/95 rounded-full px-5 py-2.5 text-sm font-bold text-slate-800 -xl border border-white/50 active:scale-95 transition-transform cursor-pointer">
+        <label className="flex items-center gap-2 bg-white/95 rounded-full px-5 py-2.5 text-sm font-bold text-slate-800 shadow-xl border border-white/50 active:scale-95 transition-transform cursor-pointer">
           <ImageIcon size={18} className="text-[#6A06E4]" />
           {isUploading ? "Uploading…" : "Select"}
           <input
@@ -74,7 +74,7 @@ const MobileCoverArea = ({
               e.stopPropagation();
               onChange(undefined);
             }}
-            className="bg-red-500/90 text-white rounded-xl p-2.5 -lg active:scale-95 transition-transform"
+            className="bg-red-500/90 text-white rounded-xl p-2.5 shadow-lg active:scale-95 transition-transform"
           >
             <Trash2 size={18} />
           </button>

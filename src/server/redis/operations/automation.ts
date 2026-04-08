@@ -83,7 +83,7 @@ export async function invalidateAutomationCache(
   pipeline.del(cacheKey);
 
   if (automationId) {
-    pipeline.del(KEYS.AUTOMATION_BY_ID(automationId));
+    pipeline.del(KEYS.AUTOMATION_BY_ID(webhookUserId, automationId));
   }
 
   await pipeline.exec();
@@ -93,11 +93,16 @@ export async function invalidateAutomationCache(
  * Checks if a comment was already processed (with caching)
  */
 export async function isCommentProcessedCached(
+  webhookUserId: string,
   commentId: string,
   automationId: string,
   dbCheck: () => Promise<boolean>,
 ): Promise<boolean> {
-  const cacheKey = KEYS.COMMENT_PROCESSED(commentId, automationId);
+  const cacheKey = KEYS.COMMENT_PROCESSED(
+    webhookUserId,
+    commentId,
+    automationId,
+  );
 
   const redis = getRedisClient();
   if (!redis) return dbCheck();
@@ -121,13 +126,18 @@ export async function isCommentProcessedCached(
  * Marks a comment as processed in cache
  */
 export async function markCommentProcessed(
+  webhookUserId: string,
   commentId: string,
   automationId: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
 
-  const cacheKey = KEYS.COMMENT_PROCESSED(commentId, automationId);
+  const cacheKey = KEYS.COMMENT_PROCESSED(
+    webhookUserId,
+    commentId,
+    automationId,
+  );
   await redis.set(cacheKey, "1", "EX", TTL.COMMENT_PROCESSED);
 }
 

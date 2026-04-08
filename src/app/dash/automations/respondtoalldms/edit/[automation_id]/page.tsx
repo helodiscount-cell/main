@@ -137,7 +137,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
-        triggerType="RESPOND_TO_ALL_DMS"
+        triggerType={AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.triggerType}
         leftCol={
           <div className="flex flex-col gap-6">
             <Controller

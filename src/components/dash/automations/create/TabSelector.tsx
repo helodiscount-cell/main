@@ -22,8 +22,10 @@ const tabs = [
 
 export default function TabSelector({
   setActiveTab,
+  activeTab,
 }: {
   setActiveTab: (value: string | null) => void;
+  activeTab?: string | null;
 }) {
   const router = useRouter();
 
@@ -33,7 +35,13 @@ export default function TabSelector({
         <button
           key={tab.id}
           type="button"
-          className="group relative rounded-xl border border-gray-100 bg-gray-50/50 p-6 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all cursor-pointer flex flex-col text-left"
+          role="tab"
+          aria-selected={tab.id === activeTab}
+          className={`group relative rounded-xl border p-6 transition-all cursor-pointer flex flex-col text-left ${
+            tab.id === activeTab
+              ? "bg-white border-purple-200 shadow-sm"
+              : "border-gray-100 bg-gray-50/50 hover:bg-white hover:border-purple-200 hover:shadow-sm"
+          }`}
           onClick={() => {
             if (tab.id === "respond-to-all-dms") {
               router.push("/dash/automations/respondtoalldms");

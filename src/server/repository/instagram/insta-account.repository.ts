@@ -136,7 +136,7 @@ export async function deleteInstaAccount(
         const { clearAllUserCache } =
           await import("@/server/redis/operations/automation");
         const identifier =
-          result.account.instagramUserId || result.account.webhookUserId || "";
+          result.account.webhookUserId || result.account.instagramUserId || "";
         const clerkUserId = result.account.user.clerkId;
 
         await clearAllUserCache(clerkUserId, identifier).catch((error) => {

@@ -17,7 +17,10 @@ export interface MappedDashboardItem {
   statusText: string;
   stats: number;
   statsLabel: string;
+  secondaryStats?: number;
+  secondaryStatsLabel?: string;
   date: string;
+  dateLabel: string;
   href: string | null;
   raw: AutomationListItem | FormListItem;
 }
@@ -76,10 +79,13 @@ export const mapDashboardItem = (
       ),
       statusText: automation.status,
       stats: automation._count.executions,
-      statsLabel: "Executions",
+      statsLabel: "Total Executions",
+      secondaryStats: automation.timesTriggered,
+      secondaryStatsLabel: "Runs",
       date: automation.lastTriggeredAt
         ? new Date(automation.lastTriggeredAt).toLocaleDateString()
         : "—",
+      dateLabel: "Last Triggered",
       raw: data,
     };
   }
@@ -121,6 +127,7 @@ export const mapDashboardItem = (
     stats: form.submissionCount,
     statsLabel: "Submissions",
     date: new Date(form.updatedAt).toLocaleDateString(),
+    dateLabel: "Last Updated",
     raw: data,
   };
 };

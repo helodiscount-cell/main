@@ -48,7 +48,7 @@ export const SubmissionDetailDialog = ({
           <Separator />
         </DialogHeader>
 
-        <div className="w-xl px-8 pb-8 space-y-6">
+        <div className="max-w-xl px-8 pb-8 space-y-6">
           {/* Profile Card */}
           <div className="flex items-center gap-4 py-2">
             <div className="w-20 h-20 rounded-full bg-[#E9E4FF] flex items-center justify-center text-[#6A06E4] text-3xl font-semibold border-2 border-white shrink-0">
@@ -73,7 +73,7 @@ export const SubmissionDetailDialog = ({
 
             <div className="max-h-[320px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
               {fields.map((field) => {
-                const answer = submission.answers[field.id];
+                const answer = submission.answers[field.id] ?? "—";
 
                 return (
                   <div

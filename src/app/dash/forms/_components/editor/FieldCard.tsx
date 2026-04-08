@@ -35,7 +35,7 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
   return (
     <div className="relative flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-200">
       {/* FIELD CONTAINER */}
-      <div className="flex-1 bg-white rounded-xl border border-slate-100 px-4 py-3 space-y-3 -sm hover:border-[#6A06E4]/20 transition-colors">
+      <div className="flex-1 bg-white rounded-xl border border-slate-100 px-4 py-3 space-y-3 shadow-sm hover:border-[#6A06E4]/20 transition-colors">
         {/* HEADER SECTION: Displays field type, Required toggle and Delete button */}
         <div className="flex items-center justify-between border-b border-slate-50 pb-2">
           <span className="text-[10px] font-bold text-[#6A06E4] uppercase tracking-wider">
@@ -43,18 +43,24 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
           </span>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-medium text-slate-400">
+            <span
+              id={`required-label-${index}`}
+              className="text-[10px] font-medium text-slate-400"
+            >
               Required
             </span>
             <button
               type="button"
               onClick={toggleRequired}
+              role="switch"
+              aria-checked={isRequired}
+              aria-labelledby={`required-label-${index}`}
               className={`relative inline-flex h-4 w-8 shrink-0 rounded-full transition-colors cursor-pointer ${
                 isRequired ? "bg-[#6A06E4]" : "bg-slate-200"
               }`}
             >
               <span
-                className={`inline-block h-3 w-3 rounded-full bg-white -sm transition-transform mt-0.5 ${
+                className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform mt-0.5 ${
                   isRequired ? "translate-x-4" : "translate-x-0.5"
                 }`}
               />
@@ -76,10 +82,19 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
           <input
             {...register(`fields.${index}.label`)}
             placeholder="What's the question?"
+            aria-invalid={!!fieldError?.label?.message}
+            aria-describedby={
+              fieldError?.label?.message
+                ? `field-${index}-label-error`
+                : undefined
+            }
             className="w-full text-sm font-semibold text-slate-900 bg-transparent outline-none placeholder:text-slate-300"
           />
           {fieldError?.label?.message && (
-            <p className="text-[10px] text-red-500 font-medium">
+            <p
+              id={`field-${index}-label-error`}
+              className="text-[10px] text-red-500 font-medium"
+            >
               {fieldError.label.message}
             </p>
           )}

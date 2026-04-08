@@ -16,14 +16,24 @@ export function CreditIndicator() {
   }
 
   if (error || !data) {
-    return null;
+    return (
+      <div className="flex items-center gap-1.5 px-3 h-9 bg-white border border-slate-100 rounded-sm text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+        Credits Unavailable
+      </div>
+    );
   }
 
   const { creditsUsed, creditLimit } = data.state;
 
   // Calculate percentage for the circular progress (max 100)
   const percentage =
-    creditLimit <= 0 ? 0 : Math.min((creditsUsed / creditLimit) * 100, 100);
+    creditLimit === 0
+      ? creditsUsed > 0
+        ? 100
+        : 0
+      : creditLimit < 0
+        ? 0
+        : Math.min((creditsUsed / creditLimit) * 100, 100);
 
   // SVG configuration for the circular gauge
   const size = 18;
@@ -34,10 +44,19 @@ export function CreditIndicator() {
   const dashOffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="flex items-center gap-3 px-3 h-9 bg-white border border-slate-100 rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.05)] select-none">
+    <div
+      className="flex items-center gap-3 px-3 h-9 bg-white border border-slate-100 rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.05)] select-none"
+      role="img"
+      aria-label={`${creditsUsed.toLocaleString()} of ${creditLimit === -1 ? "unlimited" : creditLimit.toLocaleString()} credits used`}
+    >
       {/* Circular Progress Gauge */}
       <div className="relative inline-flex items-center justify-center">
-        <svg width={size} height={size} className="-rotate-90">
+        <svg
+          width={size}
+          height={size}
+          className="-rotate-90"
+          aria-hidden="true"
+        >
           {/* Background circle */}
           <circle
             cx={center}

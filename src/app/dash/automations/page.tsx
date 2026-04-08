@@ -23,6 +23,8 @@ import {
   SortField,
 } from "../_components/TableHeader";
 
+const PAGE_SIZE = 10;
+
 const AutomationPage = () => {
   const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -30,7 +32,6 @@ const AutomationPage = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: automationKeys.list(
@@ -52,7 +53,7 @@ const AutomationPage = () => {
     if (search) {
       const s = search.toLowerCase();
       result = result.filter((a) =>
-        a.automationName?.toLowerCase().includes(s),
+        (a.automationName || "").toLowerCase().includes(s),
       );
     }
 
@@ -100,7 +101,7 @@ const AutomationPage = () => {
     <div className="w-full">
       <CreateAutomationDialog
         title="New Automation"
-        triggerClassName="w-full h-14 rounded-2xl text-lg font-bold      -purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
+        triggerClassName="w-full h-14 rounded-2xl text-lg font-bold border-purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
       />
     </div>
   );
@@ -111,9 +112,13 @@ const AutomationPage = () => {
         title="Automations"
         items={filteredAndSorted}
         isLoading={isLoading}
-        emptyMessage="No automations found."
+        emptyMessage={search ? "No matches found." : "No automations found."}
         actionButton={newAutomationAction}
-        onSortChange={() => toggleSort("date")}
+        onSortChange={(sortKey) => {
+          if (sortKey === "date" || sortKey === "count") {
+            toggleSort(sortKey);
+          }
+        }}
       />
     );
   }

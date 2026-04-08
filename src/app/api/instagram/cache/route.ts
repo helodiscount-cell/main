@@ -13,7 +13,7 @@ export async function DELETE() {
           user: { clerkId: clerkId! },
           isActive: true,
         },
-        select: { instagramUserId: true },
+        select: { instagramUserId: true, webhookUserId: true },
       });
 
       if (!account) {
@@ -24,7 +24,8 @@ export async function DELETE() {
         );
       }
 
-      await invalidateInstagramCache(account.instagramUserId);
+      const identifier = account.webhookUserId || account.instagramUserId;
+      await invalidateInstagramCache(identifier);
 
       return { success: true };
     },
