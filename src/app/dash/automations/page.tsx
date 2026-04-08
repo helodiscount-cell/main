@@ -14,6 +14,7 @@ import {
   TableRow,
   MobilePageLayout,
   Pagination,
+  CreditIndicator,
 } from "../_components";
 import {
   StatusFilter,
@@ -125,6 +126,7 @@ const AutomationPage = () => {
         onSearchChange={handleSearchChange}
         childComp={
           <>
+            <CreditIndicator />
             <RefreshInstaDialog />
             <CreateAutomationDialog title="New Automation" />
           </>

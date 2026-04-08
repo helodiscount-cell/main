@@ -31,7 +31,7 @@ export default function FormDetailLayout({
   return (
     <FormEditorProvider formId={id}>
       <div className="flex flex-col h-full min-h-screen">
-        <FormLayoutHeader formId={id} />
+        <FormLayoutHeader formId={id} activeTab={activeTab} />
         <div
           className={cn(
             "flex-1 overflow-hidden rounded-xl",
@@ -54,15 +54,16 @@ export default function FormDetailLayout({
 }
 
 // Visual header logic for the form editor flow
-const FormLayoutHeader = ({ formId }: { formId: string }) => {
+const FormLayoutHeader = ({
+  formId,
+  activeTab,
+}: {
+  formId: string;
+  activeTab: "submissions" | "editor";
+}) => {
   const { save, isLoading } = useFormEditor();
   const pathname = usePathname();
   const isMobile = useIsMobile();
-
-  // Determine active tab based on URL path
-  const activeTab = pathname.endsWith("/submissions")
-    ? "submissions"
-    : "editor";
 
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
   const handleSave = useCallback(() => save("DRAFT"), [save]);

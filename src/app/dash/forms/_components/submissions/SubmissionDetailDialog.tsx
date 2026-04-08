@@ -51,7 +51,7 @@ export const SubmissionDetailDialog = ({
         <div className="w-xl px-8 pb-8 space-y-6">
           {/* Profile Card */}
           <div className="flex items-center gap-4 py-2">
-            <div className="w-20 h-20 rounded-full bg-[#E9E4FF] flex items-center justify-center text-[#6A06E4] text-3xl font-semibold border-2 border-white    -sm shrink-0">
+            <div className="w-20 h-20 rounded-full bg-[#E9E4FF] flex items-center justify-center text-[#6A06E4] text-3xl font-semibold border-2 border-white shrink-0">
               {initials}
             </div>
             <div className="space-y-1 min-w-0">

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import { Search, ChevronDown, Check, MapPin } from "lucide-react";
-import { COUNTRIES, type Country } from "@/configs/countries";
+import React, { useState, useMemo, useEffect, useRef, useId } from "react";
+import { Search, ChevronDown, Check } from "lucide-react";
+import { COUNTRIES } from "@/configs/countries";
 import { INDIAN_STATES } from "@/configs/india-regions";
 import { cn } from "@/server/utils";
 
@@ -35,27 +35,39 @@ export const HierarchicalLocationPicker = ({
     initialParts.length === 3 ? initialParts[0] : "",
   );
 
+  const countryId = useId();
+  const stateId = useId();
+  const cityId = useId();
+
   // Seed local state from value prop whenever it changes (e.g. form reset or parent update)
   useEffect(() => {
     const parts = value ? value.split(", ").map((p) => p.trim()) : [];
     if (parts.length === 3) {
-      if (parts[2] !== selectedCountry) setSelectedCountry(parts[2]);
-      if (parts[1] !== selectedState) setSelectedState(parts[1]);
-      if (parts[0] !== selectedCity) setSelectedCity(parts[0]);
+      setSelectedCountry(parts[2]);
+      setSelectedState(parts[1]);
+      setSelectedCity(parts[0]);
     } else if (!value) {
-      if (selectedCountry !== "India") setSelectedCountry("India");
-      if (selectedState !== "") setSelectedState("");
-      if (selectedCity !== "") setSelectedCity("");
+      setSelectedCountry("India");
+      setSelectedState("");
+      setSelectedCity("");
     }
-  }, [value, selectedCountry, selectedState, selectedCity]);
+    // Only depends on value to avoid re-triggering on local state changes
+  }, [value]);
 
   // Sync back to parent whenever local state changes
   useEffect(() => {
-    if (selectedCountry && selectedState && selectedCity) {
-      onChange(`${selectedCity}, ${selectedState}, ${selectedCountry}`);
-    } else {
-      onChange(""); // Keep it empty until fully filled if required
+    const composedValue =
+      selectedCountry && selectedState && selectedCity
+        ? `${selectedCity}, ${selectedState}, ${selectedCountry}`
+        : "";
+
+    // Only call onChange if the value is complete and actually different from prop
+    if (composedValue && composedValue !== value) {
+      onChange(composedValue);
     }
+    // value is omitted from deps to avoid "barking back" with stale state
+    // when parent updates the value prop. The change will be handled in the
+    // next render cycle after the first effect updates local state.
   }, [selectedCountry, selectedState, selectedCity, onChange]);
 
   const isIndia = selectedCountry.toLowerCase() === "india";
@@ -64,10 +76,15 @@ export const HierarchicalLocationPicker = ({
     <div className="space-y-4 animate-in fade-in duration-300">
       {/* 1. Country Selection */}
       <div className="space-y-1.5">
-        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+        <label
+          htmlFor={countryId}
+          className="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        >
           Country
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
         <SearchableSelect
+          id={countryId}
           options={COUNTRIES.map((c) => c.name)}
           value={selectedCountry}
           onChange={(val) => {
@@ -83,11 +100,15 @@ export const HierarchicalLocationPicker = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* State */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <label
+            htmlFor={stateId}
+            className="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+          >
             State / Province
           </label>
           {isIndia ? (
             <SearchableSelect
+              id={stateId}
               options={INDIAN_STATES}
               value={selectedState}
               onChange={(val) => {
@@ -99,11 +120,13 @@ export const HierarchicalLocationPicker = ({
             />
           ) : (
             <input
+              id={stateId}
               type="text"
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
               disabled={!selectedCountry}
               placeholder="Enter state"
+              required={required}
               className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#6A06E4] focus:ring-1 focus:ring-[#6A06E4] transition-colors disabled:bg-slate-50 disabled:text-slate-400"
             />
           )}
@@ -111,15 +134,20 @@ export const HierarchicalLocationPicker = ({
 
         {/* City */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <label
+            htmlFor={cityId}
+            className="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+          >
             City
           </label>
           <input
+            id={cityId}
             type="text"
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
             disabled={!selectedState}
             placeholder="Enter city"
+            required={required}
             className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#6A06E4] focus:ring-1 focus:ring-[#6A06E4] transition-colors disabled:bg-slate-50 disabled:text-slate-400"
           />
         </div>
@@ -137,16 +165,26 @@ const SearchableSelect = ({
   onChange,
   placeholder,
   disabled,
+  id,
 }: {
   options: string[];
   value: string;
   onChange: (val: string) => void;
   placeholder: string;
   disabled?: boolean;
+  id?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Reset highlight when search or menu state changes
+  useEffect(() => {
+    if (isOpen) {
+      setHighlightedIndex(-1);
+    }
+  }, [isOpen, search]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -167,9 +205,43 @@ const SearchableSelect = ({
     return options.filter((o) => o.toLowerCase().includes(s));
   }, [options, search]);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen) {
+      if (e.key === "ArrowDown" || e.key === "Enter") {
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev < filtered.length - 1 ? prev + 1 : prev,
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
+          onChange(filtered[highlightedIndex]);
+          setIsOpen(false);
+          setSearch("");
+        }
+        break;
+      case "Escape":
+        setIsOpen(false);
+        break;
+    }
+  };
+
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative" ref={containerRef} onKeyDown={handleKeyDown}>
       <button
+        id={id}
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
@@ -209,7 +281,7 @@ const SearchableSelect = ({
 
           <div className="max-h-52 overflow-y-auto no-scrollbar py-1">
             {filtered.length > 0 ? (
-              filtered.map((opt) => (
+              filtered.map((opt, index) => (
                 <button
                   key={opt}
                   type="button"
@@ -218,7 +290,13 @@ const SearchableSelect = ({
                     setIsOpen(false);
                     setSearch("");
                   }}
-                  className="flex items-center justify-between w-full px-4 py-2 text-sm text-slate-600 hover:bg-[#F7F0FF] hover:text-[#6A06E4] transition-colors text-left"
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  className={cn(
+                    "flex items-center justify-between w-full px-4 py-2 text-sm transition-colors text-left",
+                    highlightedIndex === index
+                      ? "bg-[#F7F0FF] text-[#6A06E4]"
+                      : "text-slate-600",
+                  )}
                 >
                   <span
                     className={cn(opt === value && "font-bold text-[#6A06E4]")}

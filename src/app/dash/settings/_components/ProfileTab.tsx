@@ -27,7 +27,7 @@ export function ProfileTab({ data }: ProfileTabProps) {
             <span>{data.email}</span>
             {data.isEmailVerified && (
               <div
-                className="bg-[#00FF66] rounded-full p-1    -sm"
+                className="bg-[#00FF66] rounded-full p-1"
                 role="img"
                 aria-label="Email verified"
               >

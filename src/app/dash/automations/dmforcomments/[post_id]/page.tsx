@@ -32,6 +32,11 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   const { post_id } = use(params);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const postsResponse = queryClient.getQueryData<any>(instagramKeys.posts());
+  const selectedPost = postsResponse?.result?.data?.data?.find(
+    (p: any) => p.id === post_id,
+  );
+
   const {
     form: { control, watch },
     pageState,
@@ -55,13 +60,6 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       dmLinks: [],
     },
     onBuildPayload: (form) => {
-      // Find the specific post to include its metadata (mediaUrl, permalink, timestamp)
-      const postsResponse = queryClient.getQueryData<any>(
-        instagramKeys.posts(),
-      );
-      const posts = postsResponse?.result?.data?.data || [];
-      const selectedPost = posts.find((p: any) => p.id === post_id);
-
       return {
         triggerType: AUTOMATION_CONFIGS.COMMENT_REPLY.triggerType,
         postId: post_id,
@@ -100,10 +98,6 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   });
 
   const automationName = watch("automationName");
-  const postsResponse = queryClient.getQueryData<any>(instagramKeys.posts());
-  const selectedPost = postsResponse?.result?.data?.data?.find(
-    (p: any) => p.id === post_id,
-  );
 
   // Creation page always uses the FreshHeader
   const headerContent = {

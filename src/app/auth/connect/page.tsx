@@ -16,7 +16,7 @@ export default async function ConnectPage() {
     <div className="min-h-screen bg-[#F1F1F1] flex items-center justify-center p-4 md:p-8 font-sans">
       <div className="max-w-[960px] w-full grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
         {/* Left: auth card */}
-        <div className="bg-white rounded-[20px]    -sm flex flex-col items-center justify-between p-10 lg:p-12 text-center h-full min-h-[560px]">
+        <div className="bg-white rounded-[20px] flex flex-col items-center justify-between p-10 lg:p-12 text-center h-full min-h-[560px]">
           <div className="w-full flex flex-col items-center grow">
             <h2 className="text-[#6A06E4] font-bold text-[18px] mb-12">
               DmBroo

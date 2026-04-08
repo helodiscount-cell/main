@@ -119,8 +119,16 @@ export async function createAutomation(
   );
 
   if (result) {
-    // Invalidate workspace automation cache so the worker pulls fresh rules
-    await invalidateAutomations(instaAccountId).catch(() => {});
+    // 1. Fetch the instagramUserId to use for the standardized Redis key
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: instaAccountId },
+      select: { webhookUserId: true },
+    });
+
+    if (account?.webhookUserId) {
+      // 2. Invalidate workspace automation cache using the Webhook identifier (178...)
+      await invalidateAutomations(account.webhookUserId).catch(() => {});
+    }
   }
   return result;
 }
@@ -431,8 +439,13 @@ export async function updateAutomation(
   );
 
   if (result) {
-    // Invalidate the post/story automations cache so the worker pulls fresh rules
-    await invalidateAutomations(result.instaAccountId).catch(() => {});
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: result.instaAccountId },
+      select: { webhookUserId: true },
+    });
+    if (account?.webhookUserId) {
+      await invalidateAutomations(account.webhookUserId).catch(() => {});
+    }
   }
   return result;
 }
@@ -506,8 +519,13 @@ export async function softDeleteAutomation(automationId: string) {
   );
 
   if (result) {
-    // Invalidate workspace automation cache so the worker pulls fresh rules
-    await invalidateAutomations(result.instaAccountId).catch(() => {});
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: result.instaAccountId },
+      select: { webhookUserId: true },
+    });
+    if (account?.webhookUserId) {
+      await invalidateAutomations(account.webhookUserId).catch(() => {});
+    }
   }
   return result;
 }

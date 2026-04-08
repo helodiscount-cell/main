@@ -52,7 +52,7 @@ export const ContactsTable = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden flex-1 mt-4 flex flex-col pt-2    -sm border border-slate-100">
+    <div className="bg-white rounded-xl overflow-hidden flex-1 mt-4 flex flex-col pt-2 border border-slate-100">
       {/* Table header */}
       <div className="grid grid-cols-[1.5fr_0.8fr_auto_1.5fr_auto_1fr] items-center px-6 py-4 border-b border-slate-100">
         <span className="text-sm font-medium text-slate-500">
@@ -151,7 +151,7 @@ export const ContactsTable = () => {
             onClick={handlePrev}
             disabled={!canGoPrev}
             title="Previous Page"
-            className="p-1.5 rounded-lg border border-slate-200 bg-white    -sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all active:scale-95"
+            className="p-1.5 rounded-lg border border-slate-200 bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all active:scale-95"
           >
             <ChevronLeft size={18} className="text-slate-600" />
           </button>
@@ -159,7 +159,7 @@ export const ContactsTable = () => {
             onClick={handleNext}
             disabled={!canGoNext}
             title="Next Page"
-            className="p-1.5 rounded-lg border border-slate-200 bg-white    -sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all active:scale-95"
+            className="p-1.5 rounded-lg border border-slate-200 bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all active:scale-95"
           >
             <ChevronRight size={18} className="text-slate-600" />
           </button>

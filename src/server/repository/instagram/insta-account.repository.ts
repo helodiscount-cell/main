@@ -102,7 +102,12 @@ export async function deleteInstaAccount(
         // 1. Verify ownership
         const account = await tx.instaAccount.findFirst({
           where: { id: instaAccountId, user: { clerkId } },
-          select: { id: true, webhookUserId: true },
+          select: {
+            id: true,
+            webhookUserId: true,
+            instagramUserId: true,
+            user: { select: { clerkId: true } },
+          },
         });
 
         if (!account) {
@@ -130,17 +135,17 @@ export async function deleteInstaAccount(
       if (result.count > 0) {
         const { clearAllUserCache } =
           await import("@/server/redis/operations/automation");
-        const webhookUserId = result.account.webhookUserId || "";
+        const identifier =
+          result.account.instagramUserId || result.account.webhookUserId || "";
+        const clerkUserId = result.account.user.clerkId;
 
-        await clearAllUserCache(webhookUserId, instaAccountId).catch(
-          (error) => {
-            logger.error(
-              { instaAccountId, clerkId, webhookUserId },
-              "Failed to clear account cache after disconnect",
-              error instanceof Error ? error : new Error(String(error)),
-            );
-          },
-        );
+        await clearAllUserCache(clerkUserId, identifier).catch((error) => {
+          logger.error(
+            { instaAccountId, clerkId, identifier },
+            "Failed to clear account cache after disconnect",
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        });
       }
 
       return { count: result.count };

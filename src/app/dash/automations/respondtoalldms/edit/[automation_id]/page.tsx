@@ -93,6 +93,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
           onNameChange={handleNameChange}
           isStarting={isStarting}
           isStopping={isStopping}
+          isUpdating={isUpdating}
           onStart={startAutomation}
           onStop={stopAutomation}
           breadcrumb={AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.breadcrumb}
@@ -108,6 +109,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       handleNameChange,
       isStarting,
       isStopping,
+      isUpdating,
       startAutomation,
       stopAutomation,
     ],

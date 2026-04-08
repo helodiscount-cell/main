@@ -38,17 +38,23 @@ export const CountryPicker = ({
   const filteredCountries = useMemo(() => {
     if (!search) return COUNTRIES;
     const lowerSearch = search.toLowerCase();
+    const cleanSearch = lowerSearch.replace(/\D/g, "");
+
     return COUNTRIES.filter(
       (c) =>
         c.name.toLowerCase().includes(lowerSearch) ||
         c.dialCode.includes(lowerSearch) ||
-        c.code.toLowerCase().includes(lowerSearch),
+        c.code.toLowerCase().includes(lowerSearch) ||
+        (cleanSearch !== "" &&
+          c.dialCode.replace(/\D/g, "").includes(cleanSearch)),
     );
-  }, [search]);
+  }, [search, COUNTRIES]);
 
   // Find the currently selected country to show in the trigger
   const selectedCountry = useMemo(() => {
-    return COUNTRIES.find((c) => c.dialCode === value);
+    if (!value) return undefined;
+    const cleanValue = value.replace(/\D/g, "");
+    return COUNTRIES.find((c) => c.dialCode.replace(/\D/g, "") === cleanValue);
   }, [value]);
 
   const handleSelect = (country: Country) => {
@@ -107,7 +113,8 @@ export const CountryPicker = ({
                       +{country.dialCode}
                     </span>
                   </div>
-                  {country.dialCode === value && <Check size={14} />}
+                  {country.dialCode.replace(/\D/g, "") ===
+                    (value || "").replace(/\D/g, "") && <Check size={14} />}
                 </button>
               ))
             ) : (

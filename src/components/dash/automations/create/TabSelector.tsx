@@ -30,9 +30,10 @@ export default function TabSelector({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
       {tabs.map((tab) => (
-        <div
+        <button
           key={tab.id}
-          className="group relative rounded-xl border border-gray-100 bg-gray-50/50 p-6 hover:bg-white hover:border-purple-200 hover:   -sm transition-all cursor-pointer flex flex-col"
+          type="button"
+          className="group relative rounded-xl border border-gray-100 bg-gray-50/50 p-6 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all cursor-pointer flex flex-col text-left"
           onClick={() => {
             if (tab.id === "respond-to-all-dms") {
               router.push("/dash/automations/respondtoalldms");
@@ -47,7 +48,7 @@ export default function TabSelector({
           <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
             {tab.description}
           </p>
-        </div>
+        </button>
       ))}
     </div>
   );

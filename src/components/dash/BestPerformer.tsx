@@ -79,7 +79,7 @@ export function BestPerformerWidget({
       borderRadius="32px"
     >
       <div
-        className={`bg-white rounded-[32px] p-7    -sm border border-gray-100 flex flex-col gap-6 w-full min-h-[380px]`}
+        className={`bg-white rounded-[32px] p-7 border border-gray-100 flex flex-col gap-6 w-full min-h-[380px]`}
       >
         {/* Header section with title and range */}
         <div className="flex justify-between items-center">
@@ -190,7 +190,7 @@ export function BestPerformerWidget({
 
                       {/* Bar with gradient */}
                       <div
-                        className="w-[44px] bg-linear-to-t from-purple-600 to-purple-400 rounded-t-xl transition-all duration-700 ease-out    -sm group-hover:from-purple-500 group-hover:to-purple-300"
+                        className="w-[44px] bg-linear-to-t from-purple-600 to-purple-400 rounded-t-xl transition-all duration-700 ease-out group-hover:from-purple-500 group-hover:to-purple-300"
                         style={{ height: `${heightPercent}%` }}
                       />
 

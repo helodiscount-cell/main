@@ -18,7 +18,7 @@ export interface MappedDashboardItem {
   stats: number;
   statsLabel: string;
   date: string;
-  href: string;
+  href: string | null;
   raw: AutomationListItem | FormListItem;
 }
 
@@ -26,7 +26,7 @@ export interface MappedDashboardItem {
  * Shared hook to map raw dashboard data (Forms or Automations) into a unified UI structure.
  * This ensures consistency between desktop TableRow and mobile MobileCard.
  */
-export const useDashboardItemMapper = (
+export const mapDashboardItem = (
   data: AutomationListItem | FormListItem,
 ): MappedDashboardItem => {
   const isAutomation = "triggerType" in data;
@@ -48,7 +48,7 @@ export const useDashboardItemMapper = (
         (automation.triggers.length > 0
           ? `Keywords: ${automation.triggers.join(", ")}`
           : "No keyword triggers"),
-      href: getAutomationRoute(automation.triggerType, automation.id) || "#",
+      href: getAutomationRoute(automation.triggerType, automation.id),
       image:
         typeof imageUrl === "string" ? (
           <Image
@@ -70,7 +70,7 @@ export const useDashboardItemMapper = (
             Date.now() - new Date(automation.story.timestamp).getTime() >=
               24 * 60 * 60 * 1000
               ? "EXPIRED"
-              : (automation.status as any)
+              : (automation.status as string)
           }
         />
       ),
@@ -98,7 +98,7 @@ export const useDashboardItemMapper = (
           className="h-full w-full object-cover"
           height={100}
           width={100}
-          alt={form.title}
+          alt={form.title || "Untitled Form"}
         />
       </div>
     ) : (

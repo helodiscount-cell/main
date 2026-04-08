@@ -29,7 +29,7 @@ export default function ClaimPage() {
             <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center animate-pulse">
               <AlertCircle className="w-10 h-10 text-red-500" />
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full border    -sm">
+            <div className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full border">
               <Instagram className="w-5 h-5 text-[#E4405F]" />
             </div>
           </div>

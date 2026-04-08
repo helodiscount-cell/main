@@ -32,8 +32,6 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     isStarting,
     stopAutomation,
     startAutomation,
-    isReRunning,
-    handleReRun,
     handleSubmit,
     handleNameChange,
   } = useAutomationManager<StoryFormValues>({
@@ -128,7 +126,14 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     <form className="flex flex-col h-full" onSubmit={handleSubmit}>
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
-        post={existingAutomation?.story as any}
+        post={
+          existingAutomation?.story
+            ? {
+                mediaUrl: existingAutomation.story.mediaUrl,
+                mediaType: existingAutomation.story.mediaType,
+              }
+            : null
+        }
         leftCol={
           <Controller
             control={control}

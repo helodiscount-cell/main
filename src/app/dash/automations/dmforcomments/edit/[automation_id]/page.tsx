@@ -38,8 +38,6 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     isStarting,
     stopAutomation,
     startAutomation,
-    isReRunning,
-    handleReRun,
     handleSubmit,
     handleNameChange,
   } = useAutomationManager<CommentsFormValues>({

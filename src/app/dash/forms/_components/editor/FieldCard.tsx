@@ -27,6 +27,11 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
     showOptions,
   } = useFieldCardLogic(index);
 
+  // Safely type errors for field access as react-hook-form can have complex nested types
+  const fieldError = (errors.fields as any)?.[index] as {
+    label?: { message?: string };
+  };
+
   return (
     <div className="relative flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-200">
       {/* FIELD CONTAINER */}
@@ -73,11 +78,9 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
             placeholder="What's the question?"
             className="w-full text-sm font-semibold text-slate-900 bg-transparent outline-none placeholder:text-slate-300"
           />
-          {/* @ts-ignore */}
-          {errors.fields?.[index]?.label && (
+          {fieldError?.label?.message && (
             <p className="text-[10px] text-red-500 font-medium">
-              {/* @ts-ignore */}
-              {errors.fields[index].label.message}
+              {fieldError.label.message}
             </p>
           )}
         </div>

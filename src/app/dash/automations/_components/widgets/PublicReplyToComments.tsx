@@ -113,7 +113,7 @@ const PublicReplyToComments = ({
                 <button
                   type="button"
                   onClick={addReply}
-                  className="px-4 py-1.5 text-xs font-semibold bg-[#6A06E4] text-white rounded-lg hover:bg-[#5a05c4] transition-colors    -sm"
+                  className="px-4 py-1.5 text-xs font-semibold bg-[#6A06E4] text-white rounded-lg hover:bg-[#5a05c4] transition-colors"
                 >
                   Add Reply
                 </button>

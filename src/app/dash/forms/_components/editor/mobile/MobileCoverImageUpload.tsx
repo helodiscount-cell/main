@@ -56,7 +56,7 @@ const MobileCoverArea = ({
       >
         <label className="flex items-center gap-2 bg-white/95 rounded-full px-5 py-2.5 text-sm font-bold text-slate-800 -xl border border-white/50 active:scale-95 transition-transform cursor-pointer">
           <ImageIcon size={18} className="text-[#6A06E4]" />
-          {isUploading ? "Uploading…" : "Select/Drop an image"}
+          {isUploading ? "Uploading…" : "Select"}
           <input
             type="file"
             accept="image/*"

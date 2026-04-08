@@ -25,7 +25,7 @@ const OpeningMessage = ({
   const [isEditable, setIsEditable] = useState(false);
 
   return (
-    <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden    -sm">
+    <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden">
       {/* Header section with toggle */}
       <div className="flex items-center justify-between px-4 py-3.5">
         <span className="text-sm font-bold text-slate-800">

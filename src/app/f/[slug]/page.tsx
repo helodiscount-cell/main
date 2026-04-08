@@ -46,7 +46,7 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
         </div>
 
         {/* Interactive form */}
-        <div className="bg-white rounded-2xl p-6    -sm border border-slate-100">
+        <div className="bg-white rounded-2xl p-6 border border-slate-100">
           <PublicFormView form={form as unknown as FormPublic} slug={slug} />
         </div>
       </div>

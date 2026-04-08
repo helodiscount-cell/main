@@ -258,7 +258,7 @@ const SendDm = ({
               {links.map((link, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 bg-[#F8F9FA] px-4 py-3 rounded-2xl border border-slate-100 group hover:border-purple-200 hover:bg-white transition-all    -sm active:scale-[0.99]"
+                  className="flex items-center gap-3 bg-[#F8F9FA] px-4 py-3 rounded-2xl border border-slate-100 group hover:border-purple-200 hover:bg-white transition-all active:scale-[0.99]"
                 >
                   <div className="bg-purple-100 p-2 rounded-xl text-purple-600">
                     <LinkIcon size={16} />
@@ -308,7 +308,7 @@ const SendDm = ({
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
-                <div className="rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50    -sm bg-slate-50/50">
+                <div className="rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50 bg-slate-50/50">
                   {/* Title Row */}
                   <div className="flex items-center gap-4 px-4 py-3.5 bg-white group transition-colors hover:bg-slate-50">
                     <div className="text-slate-400 group-hover:text-purple-500 transition-colors">

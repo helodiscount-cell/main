@@ -87,7 +87,7 @@ const FeatureCard = () => (
         <GrowthLine className="absolute top-10" />
 
         {/* "After" label */}
-        <div className="absolute top-8 right-12 flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200    -sm">
+        <div className="absolute top-8 right-12 flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200">
           <span className="text-sm font-semibold text-gray-900">After</span>
           <MessageSquare className="w-4 h-4 text-purple-600" />
         </div>

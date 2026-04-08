@@ -13,7 +13,7 @@ import { KEYS, TTL } from "../keys";
  * Invoked by Next.js when automations are created, updated, or deleted.
  */
 export async function invalidateAutomations(
-  instaAccountId: string,
+  webhookUserId: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
@@ -21,8 +21,8 @@ export async function invalidateAutomations(
   try {
     const pipeline = redis.pipeline();
 
-    // 1. Delete the specific account-level DM cache key (not matched by the broad scan pattern)
-    pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId));
+    // 1. Delete the specific account-level DM cache key
+    pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(webhookUserId));
 
     // 2. SCAN for all post and story automation caches scoped to this workspace
     let cursor = "0";
@@ -30,7 +30,7 @@ export async function invalidateAutomations(
       const [nextCursor, keys] = await redis.scan(
         cursor,
         "MATCH",
-        `ig:automation:*:${instaAccountId}:*`,
+        `ig:automation:*:${webhookUserId}:*`,
         "COUNT",
         100,
       );
@@ -42,13 +42,13 @@ export async function invalidateAutomations(
 
     await pipeline.exec();
     logger.info(
-      { instaAccountId },
-      "[Redis:Automation] Workspace cache invalidated",
+      { webhookUserId },
+      "[Redis:Automation] Workspace cache invalidated using Webhook ID",
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error(
-      { instaAccountId, error: message },
+      { webhookUserId, error: message },
       "[Redis:Automation] Failed to invalidate cache",
     );
   }
@@ -58,7 +58,7 @@ export async function invalidateAutomations(
  * Invalidates the automation cache for a specific workspace and post/story target
  */
 export async function invalidateAutomationCache(
-  instaAccountId: string,
+  webhookUserId: string,
   targetId: string,
   type: "post" | "story" | "account" = "post",
   automationId?: string,
@@ -69,13 +69,13 @@ export async function invalidateAutomationCache(
   let cacheKey: string;
   switch (type) {
     case "post":
-      cacheKey = KEYS.AUTOMATIONS_BY_POST(instaAccountId, targetId);
+      cacheKey = KEYS.AUTOMATIONS_BY_POST(webhookUserId, targetId);
       break;
     case "story":
-      cacheKey = KEYS.AUTOMATIONS_BY_STORY(instaAccountId, targetId);
+      cacheKey = KEYS.AUTOMATIONS_BY_STORY(webhookUserId, targetId);
       break;
     case "account":
-      cacheKey = KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId);
+      cacheKey = KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(webhookUserId);
       break;
   }
 
@@ -135,8 +135,8 @@ export async function markCommentProcessed(
  * Clears all cache associated with a specific Instagram workspace on disconnect
  */
 export async function clearAllUserCache(
+  clerkId: string,
   webhookUserId: string,
-  instaAccountId: string,
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) return;
@@ -146,10 +146,12 @@ export async function clearAllUserCache(
   // 1. Webhook connection marker for this IG account
   if (webhookUserId) {
     pipeline.del(`ig:webhook:${webhookUserId}`);
+    pipeline.del(KEYS.ACCESS_TOKEN(clerkId, webhookUserId));
+    pipeline.del(KEYS.USER_CONNECTION(webhookUserId));
   }
 
   // 2. Global account-level DM automation cache
-  pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(instaAccountId));
+  pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(webhookUserId));
 
   // 3. All post/story automation caches scoped to this workspace
   let cursor = "0";
@@ -157,7 +159,7 @@ export async function clearAllUserCache(
     const [nextCursor, keys] = await redis.scan(
       cursor,
       "MATCH",
-      `ig:automation:*:${instaAccountId}:*`,
+      `ig:automation:*:${webhookUserId}:*`,
       "COUNT",
       100,
     );

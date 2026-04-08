@@ -91,7 +91,7 @@ const UserSection = async () => {
           @{account.username}
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500    -sm" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
             Active
           </span>

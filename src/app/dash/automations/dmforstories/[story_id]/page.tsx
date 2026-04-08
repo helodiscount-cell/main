@@ -140,9 +140,9 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       <AutomationLayout
         header={headerContent[pageState as keyof typeof headerContent]}
         post={
-          currentStory
+          currentStory && currentStory.media_url
             ? {
-                mediaUrl: currentStory.media_url!,
+                mediaUrl: currentStory.media_url,
                 mediaType: currentStory.media_type,
               }
             : null

@@ -6,7 +6,7 @@ import { MoreVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationListItem } from "@/types/automation";
 import { FormListItem } from "@/types/form";
-import { useDashboardItemMapper } from "../useDashboardItemMapper";
+import { mapDashboardItem } from "../useDashboardItemMapper";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../../forms/_components/FormActionsMenu";
 
@@ -20,7 +20,7 @@ interface MobileCardProps {
  */
 export const MobileCard = ({ data }: MobileCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const mapped = useDashboardItemMapper(data);
+  const mapped = mapDashboardItem(data);
   const isAutomation = "triggerType" in data;
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -52,14 +52,25 @@ export const MobileCard = ({ data }: MobileCardProps) => {
           <div className="w-12 h-12 rounded-xl bg-slate-50 shrink-0 overflow-hidden border border-slate-100 flex items-center justify-center">
             {mapped.image}
           </div>
-          <Link href={mapped.href} className="flex flex-col gap-0.5 min-w-0">
-            <span className="capitalize text-[17px] font-semibold text-slate-800 truncate">
-              {mapped.title}
-            </span>
-            <span className="text-xs text-slate-400 truncate max-w-[180px]">
-              {mapped.subtitle}
-            </span>
-          </Link>
+          {mapped.href ? (
+            <Link href={mapped.href} className="flex flex-col gap-0.5 min-w-0">
+              <span className="capitalize text-[17px] font-semibold text-slate-800 truncate">
+                {mapped.title}
+              </span>
+              <span className="text-xs text-slate-400 truncate max-w-[180px]">
+                {mapped.subtitle}
+              </span>
+            </Link>
+          ) : (
+            <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
+              <span className="capitalize text-[17px] font-semibold text-slate-800 truncate">
+                {mapped.title}
+              </span>
+              <span className="text-xs text-slate-400 truncate max-w-[180px]">
+                {mapped.subtitle}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">

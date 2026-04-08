@@ -12,7 +12,7 @@ export const PatternedBackground = ({
   children: React.ReactNode;
 }) => {
   return (
-    <div className="relative flex-1 h-full overflow-hidden bg-[#F1F5F9] rounded-xl border border-slate-200    -sm">
+    <div className="relative flex-1 h-full overflow-hidden bg-[#F1F5F9] rounded-xl border border-slate-200">
       {/*
           PATTERN OVERLAY
           Uses a CSS background-image with a tiny cross (plus) shape

@@ -118,7 +118,9 @@ export default function FormsPage() {
         isLoading={isLoading}
         emptyMessage="No forms yet. Create your first one!"
         actionButton={newFormAction}
-        onSortChange={() => toggleSort("date")}
+        onSortChange={(sortKey) =>
+          toggleSort(sortKey === "createdAt" ? "date" : (sortKey as SortField))
+        }
       />
     );
   }

@@ -31,7 +31,7 @@ const AskToFollow = ({
       className="w-full"
       borderRadius="1rem"
     >
-      <div className="bg-white rounded-2xl border border-purple-200    -sm w-full overflow-hidden transition-all duration-200">
+      <div className="bg-white rounded-2xl border border-purple-200 w-full overflow-hidden transition-all duration-200">
         {/* Header section with title and toggle */}
         <div className="flex items-center justify-between px-5 py-4">
           <h3 className="text-sm font-semibold text-slate-800">
@@ -45,7 +45,7 @@ const AskToFollow = ({
             type="button"
           >
             <span
-              className={`absolute top-1 left-1 w-4.5 h-4.5 bg-white rounded-full    -sm transition-transform duration-300 ease-in-out ${
+              className={`absolute top-1 left-1 w-4.5 h-4.5 bg-white rounded-full transition-transform duration-300 ease-in-out ${
                 enabled ? "translate-x-5.5" : "translate-x-0"
               }`}
             />
@@ -65,7 +65,7 @@ const AskToFollow = ({
             {/* Visit Profile / Link display section */}
             <div className="flex items-center justify-between bg-[#F5F3FF] rounded-xl px-4 py-3 border border-purple-50 group transition-all hover:bg-[#EDE9FE]">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center    -sm text-[#6A06E4]">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#6A06E4]">
                   <LinkIcon size={16} />
                 </div>
                 <span className="text-sm font-semibold text-[#4F46E5]">

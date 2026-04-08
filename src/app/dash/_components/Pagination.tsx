@@ -23,7 +23,8 @@ export const Pagination = ({
   onPageChange,
   className,
 }: PaginationProps) => {
-  const totalPages = Math.ceil(totalItems / pageSize);
+  const safePageSize = pageSize > 0 ? pageSize : 1;
+  const totalPages = Math.ceil(totalItems / safePageSize);
 
   if (totalPages <= 1) return null;
 

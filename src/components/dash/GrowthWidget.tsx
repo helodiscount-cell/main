@@ -95,7 +95,7 @@ export function GrowthWidget({
   }
 
   return (
-    <div className="bg-white rounded-[32px] p-7    -sm border border-gray-100 flex flex-col gap-2 min-h-[380px] w-full max-w-sm">
+    <div className="bg-white rounded-[32px] p-7 border border-gray-100 flex flex-col gap-2 min-h-[380px] w-full max-w-sm">
       {/* Header section with title and range */}
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-[#1E293B] font-bold text-xl">{config.title}</h3>

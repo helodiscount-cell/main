@@ -6,7 +6,7 @@ import type { AutomationListItem } from "@/types/automation";
 import type { FormListItem } from "@/types/form";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
-import { useDashboardItemMapper } from "./useDashboardItemMapper";
+import { mapDashboardItem } from "./useDashboardItemMapper";
 import { MoreVertical } from "lucide-react";
 
 /**
@@ -104,7 +104,7 @@ const TableRowUI = ({
  */
 const TableRow = ({ data }: { data: AutomationListItem | FormListItem }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const mapped = useDashboardItemMapper(data);
+  const mapped = mapDashboardItem(data);
 
   // Desktop-specific actions
   const actions = (

@@ -12,18 +12,23 @@ import { encrypt, decrypt } from "../../utils/encryption";
 /**
  * Fetches the user Access Token securely. Needs MongoDB fallback.
  *
- * @param accountId Intenal Instagram Account DB ID
+ * @param clerkId Clerk User ID
+ * @param webhookUserId Instagram/Webhook User ID
  * @param dbFallback Database fallback query returning a guaranteed valid token
  */
 export async function getAccessTokenR(
-  accountId: string,
+  clerkId: string,
+  webhookUserId: string,
   dbFallback: () => Promise<string>,
 ): Promise<string> {
   const redis = getRedisClient();
-  const key = KEYS.ACCESS_TOKEN(accountId);
+  const key = KEYS.ACCESS_TOKEN(clerkId, webhookUserId);
 
   if (!redis) {
-    logger.debug({ accountId }, "[Redis:Token] Client down, falling back");
+    logger.debug(
+      { clerkId, webhookUserId },
+      "[Redis:Token] Client down, falling back",
+    );
     return dbFallback();
   }
 
@@ -35,13 +40,13 @@ export async function getAccessTokenR(
       try {
         const decrypted = decrypt(cachedEncrypted);
         logger.debug(
-          { accountId, hit: true },
+          { clerkId, webhookUserId, hit: true },
           "[Redis:Token] Token retrieved and decrypted",
         );
         return decrypted;
       } catch (err: any) {
         logger.warn(
-          { accountId, error: err.message },
+          { clerkId, webhookUserId, error: err.message },
           "[Redis:Token] Failed to decrypt cached token. Falling back to DB.",
         );
       }
@@ -49,7 +54,7 @@ export async function getAccessTokenR(
 
     // Cache Miss -> Fallback -> Repopulate
     logger.debug(
-      { accountId, hit: false },
+      { clerkId, webhookUserId, hit: false },
       "[Redis:Token] Token missing or invalid, fetching via fallback",
     );
     const validToken = await dbFallback();
@@ -57,7 +62,7 @@ export async function getAccessTokenR(
     const encrypted = encrypt(validToken);
     redis.set(key, encrypted, "EX", TTL.ACCESS_TOKEN).catch((e) => {
       logger.warn(
-        { accountId, error: e.message },
+        { clerkId, webhookUserId, error: e.message },
         "[Redis:Token] Failed to cache token after fallback",
       );
     });
@@ -65,7 +70,7 @@ export async function getAccessTokenR(
     return validToken;
   } catch (error: any) {
     logger.error(
-      { accountId, error: error.message },
+      { clerkId, webhookUserId, error: error.message },
       "[Redis:Token] Cache fetch failed, fetching natively via DB fallback",
     );
     return dbFallback();
@@ -76,7 +81,8 @@ export async function getAccessTokenR(
  * Forces a token into Redis cache (typically right after the backend refreshes and stores it)
  */
 export async function cacheAccessTokenR(
-  accountId: string,
+  clerkId: string,
+  webhookUserId: string,
   token: string,
 ): Promise<void> {
   const redis = getRedisClient();
@@ -85,19 +91,19 @@ export async function cacheAccessTokenR(
   try {
     const encrypted = encrypt(token);
     await redis.set(
-      KEYS.ACCESS_TOKEN(accountId),
+      KEYS.ACCESS_TOKEN(clerkId, webhookUserId),
       encrypted,
       "EX",
       TTL.ACCESS_TOKEN,
     );
     logger.info(
-      { accountId },
+      { clerkId, webhookUserId },
       "[Redis:Token] Token forcibly refreshed in cache (encrypted)",
     );
   } catch (error: any) {
     // Fire and forget
     logger.error(
-      { accountId, error: error.message },
+      { clerkId, webhookUserId, error: error.message },
       "[Redis:Token] Failed to manually cache token",
     );
   }
