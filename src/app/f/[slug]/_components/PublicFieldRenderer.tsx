@@ -18,6 +18,7 @@ type PublicFieldRendererProps = {
   register: UseFormRegister<Record<string, string | string[]>>;
   setValue: UseFormSetValue<Record<string, string | string[]>>;
   watch: UseFormWatch<Record<string, string | string[]>>;
+  onUploadStateChange?: (isUploading: boolean) => void;
 };
 
 // Maps field types to the correct HTML input type for the public form
@@ -27,7 +28,6 @@ const INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
   email: "email",
   url: "url",
   date: "date",
-  country: "text",
 };
 
 // Renders the correct interactive input for each field type
@@ -36,6 +36,7 @@ export const PublicFieldRenderer = ({
   register,
   setValue,
   watch,
+  onUploadStateChange,
 }: PublicFieldRendererProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -265,13 +266,16 @@ export const PublicFieldRenderer = ({
         ) : (
           <UploadDropzone
             endpoint="formAttachment"
+            onUploadBegin={() => onUploadStateChange?.(true)}
             onClientUploadComplete={(res) => {
+              onUploadStateChange?.(false);
               if (res?.[0]) {
                 setValue(field.id, res[0].url);
                 toast.success("File uploaded!");
               }
             }}
             onUploadError={(error: Error) => {
+              onUploadStateChange?.(false);
               toast.error(`Upload failed: ${error.message}`);
             }}
             appearance={{

@@ -70,10 +70,14 @@ const FormLayoutHeader = ({
   pathname: string;
   isMobile: boolean;
 }) => {
-  const { save, isLoading } = useFormEditor();
+  const { save, isLoading, currentStatus } = useFormEditor();
 
   const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
   const handleSave = useCallback(() => save("DRAFT"), [save]);
+  const handleUpdate = useCallback(
+    () => save(currentStatus || "DRAFT"),
+    [save, currentStatus],
+  );
 
   if (isMobile) {
     return (
@@ -95,6 +99,8 @@ const FormLayoutHeader = ({
       <EditorHeader
         activeTab={activeTab}
         onPublish={handlePublish}
+        onSaveDraft={handleSave}
+        onUpdate={handleUpdate}
         isLoading={isLoading}
         formId={formId}
         pathname={pathname}

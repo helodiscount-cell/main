@@ -14,6 +14,7 @@ type ActionsMenuProps = {
   onDelete?: () => void;
   onEdit?: () => void;
   onCustom?: () => void;
+  onToggle?: () => void;
 };
 
 export function ActionsMenu({
@@ -23,6 +24,7 @@ export function ActionsMenu({
   onDelete,
   onEdit,
   onCustom,
+  onToggle,
 }: ActionsMenuProps) {
   type MenuKey = (typeof menuItems)[number]["key"];
 
@@ -49,6 +51,9 @@ export function ActionsMenu({
         break;
       case "copy":
         if (onCustom) onCustom();
+        break;
+      case "toggle":
+        if (onToggle) onToggle();
         break;
       default:
         import("sonner").then(({ toast }) => {

@@ -5,7 +5,6 @@ import {
   Link,
   Phone,
   MapPin,
-  Globe,
   Calendar,
   ChevronDown,
   CheckSquare,
@@ -80,10 +79,7 @@ export const FIELD_TYPE_GROUPS: FieldTypeGroup[] = [
   },
   {
     groupLabel: "Location",
-    options: [
-      { type: "location", label: "Location", icon: MapPin },
-      { type: "country", label: "Country", icon: Globe },
-    ],
+    options: [{ type: "location", label: "Location", icon: MapPin }],
   },
   {
     groupLabel: "Date",
@@ -111,7 +107,6 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   url: "URL",
   phone: "Phone",
   location: "Location",
-  country: "Country",
   date: "Date",
   dropdown: "Dropdown",
   checkbox: "Checkbox",

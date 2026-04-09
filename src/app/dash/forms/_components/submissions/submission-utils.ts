@@ -26,9 +26,23 @@ export const isImageUrl = (value: string): boolean => {
 // Extracts a human-readable filename from a URL for use in download attribute
 export const getFileNameFromUrl = (url: string): string => {
   try {
-    const pathname = new URL(url).pathname;
+    const parsed = new URL(url);
+    const pathname = parsed.pathname;
     const segments = pathname.split("/").filter(Boolean);
-    return decodeURIComponent(segments[segments.length - 1] ?? "download");
+    let filename = decodeURIComponent(
+      segments[segments.length - 1] ?? "download",
+    );
+
+    // Handle Uploadthing specific prefix stripping (UUID-filename)
+    if (parsed.hostname === "utfs.io" && pathname.startsWith("/f/")) {
+      const parts = filename.split("-");
+      if (parts.length > 1) {
+        // Remove the first part if it looks like a hex/uuid segment
+        filename = parts.slice(1).join("-");
+      }
+    }
+
+    return filename;
   } catch {
     return "download";
   }

@@ -18,7 +18,7 @@ import {
 } from "../_components";
 import {
   StatusFilter,
-  STATUS_OPTIONS,
+  getStatusOptions,
   SortOrder,
   SortField,
 } from "../_components/TableHeader";
@@ -95,7 +95,8 @@ const AutomationPage = () => {
   };
 
   const selectedLabel =
-    STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? "All";
+    getStatusOptions("Automations").find((o) => o.value === statusFilter)
+      ?.label ?? "All";
 
   const newAutomationAction = (
     <div className="w-full">

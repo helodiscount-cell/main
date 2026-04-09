@@ -126,13 +126,15 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
                     placeholder={`Option ${optIndex + 1}`}
                     className="flex-1 text-sm bg-transparent outline-none text-slate-600 placeholder:text-slate-200"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeOption(optIndex)}
-                    className="opacity-0 group-hover/opt:opacity-100 text-slate-300 hover:text-red-400 transition-all cursor-pointer"
-                  >
-                    <X size={14} />
-                  </button>
+                  {options.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeOption(optIndex)}
+                      className="opacity-0 group-hover/opt:opacity-100 text-slate-300 hover:text-red-400 transition-all cursor-pointer"
+                    >
+                      <X className="text-[#212121]" size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
               <button

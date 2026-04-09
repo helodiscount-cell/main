@@ -67,7 +67,7 @@ export default function CreateAutomationDialog({
             {activeTab ? "Configure Automation" : "Choose a Template"}
           </DialogTitle>
         </DialogHeader>
-        <div className="max-w-2xl">{renderContent()}</div>
+        <div className="w-2xl">{renderContent()}</div>
       </DialogContent>
     </Dialog>
   );

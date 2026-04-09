@@ -9,7 +9,7 @@ import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import React from "react";
 import ColHeader from "./ColHeader";
 
-export type StatusFilter = "ACTIVE" | "PAUSED" | "ALL";
+export type StatusFilter = "ACTIVE" | "PAUSED" | "PUBLISHED" | "DRAFT" | "ALL";
 export type SortField = "count" | "date";
 export type SortOrder = "asc" | "desc" | null;
 
@@ -23,11 +23,22 @@ interface Props {
   onSort?: (field: SortField) => void;
 }
 
-export const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
-  { label: "All", value: "ALL" },
-  { label: "Live", value: "ACTIVE" },
-  { label: "Paused", value: "PAUSED" },
-];
+export const getStatusOptions = (
+  title: string,
+): { label: string; value: string }[] => {
+  if (title === "Forms") {
+    return [
+      { label: "All", value: "ALL" },
+      { label: "Live", value: "PUBLISHED" },
+      { label: "Draft", value: "DRAFT" },
+    ];
+  }
+  return [
+    { label: "All", value: "ALL" },
+    { label: "Live", value: "ACTIVE" },
+    { label: "Paused", value: "PAUSED" },
+  ];
+};
 
 const TableHeader = ({
   title,
@@ -47,7 +58,10 @@ const TableHeader = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1 text-sm font-medium text-[#212121] hover:text-[#212121] transition-colors">
-              {selectedLabel === "All" ? "Status" : selectedLabel}
+              {statusFilter === "ALL"
+                ? "Status"
+                : getStatusOptions(title).find((o) => o.value === statusFilter)
+                    ?.label}
               <ChevronDown size={13} className="text-slate-400" />
             </button>
           </DropdownMenuTrigger>
@@ -56,7 +70,7 @@ const TableHeader = ({
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as StatusFilter)}
             >
-              {STATUS_OPTIONS.map((opt) => (
+              {getStatusOptions(title).map((opt) => (
                 <DropdownMenuRadioItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </DropdownMenuRadioItem>
@@ -74,7 +88,7 @@ const TableHeader = ({
         onSort={() => onSort?.("count")}
       />
       <ColHeader
-        label={title === "Forms" ? "Last Submitted" : "Last Triggered"}
+        label={title === "Forms" ? "Last Updated" : "Last Triggered"}
         sortable
         sortOrder={sortField === "date" ? sortOrder : null}
         onSort={() => onSort?.("date")}

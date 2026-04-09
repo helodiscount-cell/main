@@ -4,30 +4,38 @@ import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { EDITOR_HEADER_CONFIG, HEADER_ACTIONS } from "./config";
+import { EDITOR_HEADER_CONFIG } from "./config";
+import { useFormEditor } from "../FormEditorProvider";
 import { useQuery } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
-import { Download } from "lucide-react";
+import { Play, Download, Square, RefreshCw, Link2 } from "lucide-react";
 import { downloadSubmissionsCSV } from "./utils/export";
-
 import { toast } from "sonner";
 
 type EditorHeaderProps = {
   onPublish: () => void;
+  onSaveDraft: () => void;
+  onUpdate: () => void;
   isLoading?: boolean;
   formId: string;
   activeTab: string;
   pathname: string;
 };
 
-// Breadcrumb + action buttons — Refresh saves as draft, Publish publishes
+/**
+ * Enhanced form editor header with automation-style controls.
+ * Displays [Stop] [Update] [Live Badge] when active.
+ */
 export const EditorHeader = ({
   onPublish,
+  onSaveDraft,
+  onUpdate,
   isLoading,
   formId,
   activeTab,
   pathname,
 }: EditorHeaderProps) => {
+  const { currentStatus } = useFormEditor();
   const [exportStatus, setExportStatus] = React.useState<
     "idle" | "exporting" | "exported"
   >("idle");
@@ -35,28 +43,9 @@ export const EditorHeader = ({
   const { data } = useQuery({
     queryKey: ["form", formId],
     queryFn: () => formService.getById(formId),
+    enabled: !!formId,
   });
 
-  // Maps action id to its click handler
-  const ACTION_HANDLERS: Record<string, () => void> = {
-    publish: onPublish,
-    "copy-link": () => {
-      if (!data?.slug) return;
-      const url = `${window.location.origin}/f/${data.slug}`;
-      navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
-    },
-    preview: () => {
-      if (!data?.slug) return;
-      const url = `${window.location.origin}/f/${data.slug}`;
-      window.open(url, "_blank");
-    },
-  };
-
-  /**
-   * Fetches all form submissions and triggers a CSV download
-   * Maps dynamic field IDs to human-readable labels for the CSV header
-   */
   const handleExport = async () => {
     if (!data?.fields) return;
 
@@ -66,10 +55,10 @@ export const EditorHeader = ({
 
       if (!submissions?.length) {
         setExportStatus("idle");
+        toast.info("No submissions to export.");
         return;
       }
 
-      // Deletage CSV building and download trigger to utility
       downloadSubmissionsCSV(submissions, data.fields, data.slug);
 
       setExportStatus("exported");
@@ -90,67 +79,113 @@ export const EditorHeader = ({
 
       <div className="flex w-full items-center justify-between gap-4">
         {/* Breadcrumb pill */}
-        <div className="bg-white rounded-md px-4 flex items-center h-9 flex-1">
+        <div className="bg-white rounded-md px-4 flex items-center h-9 flex-1 min-w-0">
           <span
             className="text-sm text-[#212121] font-semibold"
             style={{
-              opacity: pathname === "/dash/forms/editor" ? 1 : 0.5,
+              opacity: pathname === "/dash/forms" ? 1 : 0.5,
             }}
           >
             {EDITOR_HEADER_CONFIG.BREADCRUMB_ROOT}
           </span>
-          {pathname !== "/dash/forms/editor" && (
-            <span className="text-sm text-[#212121] font-semibold mx-1">/</span>
-          )}
-          <span
-            className="capitalize text-sm font-semibold text-slate-900"
-            style={{
-              opacity: pathname === "/dash/forms" ? 0.5 : 1,
-            }}
-          >
-            {data?.title}
+          <span className="text-sm text-[#212121] font-semibold mx-1">/</span>
+          <span className="capitalize text-sm font-semibold text-slate-900 truncate">
+            {data?.title || "Untitled Form"}
           </span>
         </div>
 
-        {/* Action buttons — Conditional display based on active tab */}
-        <div className="flex items-center gap-2">
-          {HEADER_ACTIONS.filter((a) => {
-            // If form is not ready (no slug), hide copy-link and preview
-            if (!data?.slug && (a.id === "copy-link" || a.id === "preview")) {
-              return false;
-            }
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          {activeTab === "editor" && data?.slug && (
+            <>
+              <Button
+                disabled={isLoading}
+                onClick={() => {
+                  const url = `${window.location.origin}/f/${data?.slug}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success("Link copied to clipboard!");
+                }}
+                size="icon"
+                variant="secondary"
+                title="Copy Link"
+                className="h-9 w-9 bg-slate-900 hover:bg-slate-700 text-white"
+              >
+                <Link2 size={15} />
+              </Button>
+              <Button
+                disabled={isLoading}
+                onClick={() => window.open(`/f/${data?.slug}`, "_blank")}
+                size="icon"
+                variant="secondary"
+                title="Preview"
+                className="h-9 w-9 bg-slate-900 hover:bg-slate-700 text-white"
+              >
+                <Play size={15} />
+              </Button>
+            </>
+          )}
 
-            if (activeTab === "submissions") {
-              return false;
-            }
+          {activeTab === "editor" && (
+            <div className="flex items-center gap-2 scale-90 sm:scale-100 origin-right">
+              {/* Stop Button - Only if Live */}
+              {currentStatus === "PUBLISHED" && (
+                <Button
+                  onClick={onSaveDraft}
+                  disabled={isLoading}
+                  className="bg-red-500 hover:bg-red-600 text-white gap-2 h-9 px-4 transition-all"
+                >
+                  {isLoading ? (
+                    <RefreshCw size={13} className="animate-spin" />
+                  ) : (
+                    <Square size={13} fill="currentColor" />
+                  )}
+                  {isLoading ? "Stopping..." : "Stop"}
+                </Button>
+              )}
 
-            return true;
-          }).map(({ id, icon: Icon, label, variant }) => (
-            <Button
-              key={id}
-              disabled={isLoading}
-              onClick={ACTION_HANDLERS[id]}
-              size={variant === "primary" ? "default" : "icon"}
-              variant={variant === "primary" ? "default" : "secondary"}
-              title={label} // Show label on hover for icon buttons
-              className={
-                variant === "primary"
-                  ? EDITOR_HEADER_CONFIG.STYLES.PRIMARY
-                  : EDITOR_HEADER_CONFIG.STYLES.ICON
-              }
-            >
-              <Icon size={EDITOR_HEADER_CONFIG.ICON_SIZE} />
-              {variant === "primary" && label}
-            </Button>
-          ))}
+              {/* Update Button - Always visible */}
+              <Button
+                onClick={onUpdate}
+                disabled={isLoading}
+                className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4 transition-all"
+              >
+                <RefreshCw
+                  size={13}
+                  className={isLoading ? "animate-spin" : ""}
+                />
+                Update
+              </Button>
+
+              {/* Status Indicator / Go Live Button */}
+              {currentStatus === "PUBLISHED" ? (
+                <div className="h-9 px-4 rounded-md border-2 border-green-500 text-green-600 text-sm font-semibold flex items-center gap-1.5 shrink-0 bg-white">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  Live
+                </div>
+              ) : (
+                <Button
+                  onClick={onPublish}
+                  disabled={isLoading}
+                  className="bg-green-500 hover:bg-green-600 text-white gap-2 h-9 px-4 font-semibold transition-all"
+                >
+                  {isLoading ? (
+                    <RefreshCw size={13} className="animate-spin" />
+                  ) : (
+                    <span className="w-2 h-2 rounded-full bg-white" />
+                  )}
+                  {isLoading ? "Starting..." : "Go Live"}
+                </Button>
+              )}
+            </div>
+          )}
 
           {activeTab === "submissions" && (
             <Button
               disabled={isLoading || exportStatus !== "idle"}
               onClick={handleExport}
-              className={EDITOR_HEADER_CONFIG.STYLES.PRIMARY}
+              className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4"
             >
-              <Download size={EDITOR_HEADER_CONFIG.ICON_SIZE} />
+              <Download size={15} />
               {exportStatus === "exporting"
                 ? "Exporting..."
                 : exportStatus === "exported"

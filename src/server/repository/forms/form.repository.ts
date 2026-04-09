@@ -45,14 +45,18 @@ export async function createForm(
   throw new Error("Failed to generate a unique slug after 5 attempts");
 }
 
-// All forms for a workspace, ordered newest first
+// All forms for a workspace, ordered newest first. Optionally filter by status.
 export async function findFormsByInstaAccountId(
   instaAccountId: string,
+  status?: string,
 ): Promise<Form[]> {
   return executeWithErrorHandling(
     () =>
       prisma.form.findMany({
-        where: { instaAccountId },
+        where: {
+          instaAccountId,
+          ...(status ? { status: status as any } : {}),
+        },
         orderBy: { createdAt: "desc" },
       }),
     { operation: "findFormsByInstaAccountId", model: "Form", fallback: [] },

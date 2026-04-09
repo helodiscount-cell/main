@@ -35,7 +35,7 @@ export const SubmissionRow = ({
           <Layers size={18} />
         </div>
         <span className="capitalize text-sm font-medium text-[#212121] group-hover:text-[#6A06E4] transition-colors">
-          {name}
+          {name.length > 0 ? name : "Unknown User"}
         </span>
       </div>
 

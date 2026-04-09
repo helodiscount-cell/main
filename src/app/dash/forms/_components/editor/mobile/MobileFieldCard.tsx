@@ -109,13 +109,15 @@ export const MobileFieldCard = ({ index, onRemove }: MobileFieldCardProps) => {
                     placeholder={`Option ${optIndex + 1}`}
                     className="flex-1 text-sm font-medium bg-transparent outline-none text-slate-700 placeholder:text-slate-200"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeOption(optIndex)}
-                    className="opacity-100 text-slate-300 hover:text-red-400 transition-all cursor-pointer p-0.5"
-                  >
-                    <X size={14} />
-                  </button>
+                  {options.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeOption(optIndex)}
+                      className="opacity-100 text-slate-300 hover:text-red-400 transition-all cursor-pointer p-0.5"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
               <button

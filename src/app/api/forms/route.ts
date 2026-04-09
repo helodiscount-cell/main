@@ -2,10 +2,13 @@
 import { getUserForms } from "@/server/services/forms";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status") || undefined;
+
   return runWithErrorHandling(
     async ({ instaAccountId }) => {
-      return getUserForms(instaAccountId!);
+      return getUserForms(instaAccountId!, status);
     },
     { requireWorkspace: true },
   );

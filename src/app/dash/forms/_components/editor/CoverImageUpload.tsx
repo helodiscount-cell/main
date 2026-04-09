@@ -7,6 +7,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { useUploadThing } from "@/lib/uploadthing";
 import { EDITOR_CANVAS_CONFIG } from "./config";
 import type { FormValues } from "@dm-broo/common-types";
+import { useFormEditor } from "../FormEditorProvider";
 
 // Cover image area with upload overlay and delete button
 // Uses uploadthing's hook under the hood, fires onChange to react-hook-form
@@ -30,9 +31,16 @@ type CoverImageAreaProps = {
 };
 
 const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
+  const { setIsMediaUploading } = useFormEditor();
+
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
+    onUploadBegin: () => setIsMediaUploading(true),
     onClientUploadComplete: (res) => {
+      setIsMediaUploading(false);
       if (res[0]?.ufsUrl) onChange(res[0].ufsUrl);
+    },
+    onUploadError: () => {
+      setIsMediaUploading(false);
     },
   });
 

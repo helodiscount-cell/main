@@ -36,11 +36,26 @@ export const ourFileRouter = {
   formAttachment: f({
     image: { maxFileSize: "4MB", maxFileCount: 1 },
     pdf: { maxFileSize: "4MB", maxFileCount: 1 },
+    text: { maxFileSize: "4MB", maxFileCount: 1 },
+    video: { maxFileSize: "16MB", maxFileCount: 1 },
+    audio: { maxFileSize: "8MB", maxFileCount: 1 },
     "application/msword": { maxFileSize: "4MB", maxFileCount: 1 },
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
+    "application/vnd.ms-excel": { maxFileSize: "4MB", maxFileCount: 1 },
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+    "application/vnd.ms-powerpoint": { maxFileSize: "4MB", maxFileCount: 1 },
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+      {
+        maxFileSize: "4MB",
+        maxFileCount: 1,
+      },
+    "application/zip": { maxFileSize: "8MB", maxFileCount: 1 },
   })
     .middleware(async () => {
       // No auth requirement for public form submissions
