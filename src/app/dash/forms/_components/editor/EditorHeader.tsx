@@ -17,7 +17,7 @@ type EditorHeaderProps = {
   onSaveDraft: () => void;
   onUpdate: () => void;
   isLoading?: boolean;
-  formId: string;
+  formId?: string;
   activeTab: string;
   pathname: string;
 };
@@ -42,16 +42,18 @@ export const EditorHeader = ({
 
   const { data } = useQuery({
     queryKey: ["form", formId],
-    queryFn: () => formService.getById(formId),
+    queryFn: () => formService.getById(formId!),
     enabled: !!formId,
   });
+
+  const isFormMetadataReady = !!data?.fields;
 
   const handleExport = async () => {
     if (!data?.fields) return;
 
     try {
       setExportStatus("exporting");
-      const submissions = await formService.getSubmissions(formId);
+      const submissions = await formService.getSubmissions(formId!);
 
       if (!submissions?.length) {
         setExportStatus("idle");
@@ -100,10 +102,17 @@ export const EditorHeader = ({
             <>
               <Button
                 disabled={isLoading}
-                onClick={() => {
+                onClick={async () => {
                   const url = `${window.location.origin}/f/${data?.slug}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success("Link copied to clipboard!");
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Link copied to clipboard!");
+                  } catch (err) {
+                    toast.error("Failed to copy link.", {
+                      description:
+                        "Please copy the URL manually from the address bar.",
+                    });
+                  }
                 }}
                 size="icon"
                 variant="secondary"
@@ -114,7 +123,14 @@ export const EditorHeader = ({
               </Button>
               <Button
                 disabled={isLoading}
-                onClick={() => window.open(`/f/${data?.slug}`, "_blank")}
+                onClick={() => {
+                  const w = window.open(
+                    `/f/${data?.slug}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                  if (w) w.opener = null;
+                }}
                 size="icon"
                 variant="secondary"
                 title="Preview"
@@ -143,18 +159,20 @@ export const EditorHeader = ({
                 </Button>
               )}
 
-              {/* Update Button - Always visible */}
-              <Button
-                onClick={onUpdate}
-                disabled={isLoading}
-                className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4 transition-all"
-              >
-                <RefreshCw
-                  size={13}
-                  className={isLoading ? "animate-spin" : ""}
-                />
-                Update
-              </Button>
+              {/* Update Button - Only if Live */}
+              {currentStatus === "PUBLISHED" && (
+                <Button
+                  onClick={onUpdate}
+                  disabled={isLoading}
+                  className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4 transition-all"
+                >
+                  <RefreshCw
+                    size={13}
+                    className={isLoading ? "animate-spin" : ""}
+                  />
+                  Update
+                </Button>
+              )}
 
               {/* Status Indicator / Go Live Button */}
               {currentStatus === "PUBLISHED" ? (
@@ -181,7 +199,9 @@ export const EditorHeader = ({
 
           {activeTab === "submissions" && (
             <Button
-              disabled={isLoading || exportStatus !== "idle"}
+              disabled={
+                !isFormMetadataReady || isLoading || exportStatus !== "idle"
+              }
               onClick={handleExport}
               className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4"
             >

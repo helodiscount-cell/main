@@ -362,6 +362,7 @@ export async function refreshAccessToken(
       refreshToken: true,
       tokenExpiresAt: true,
       webhookUserId: true,
+      instagramUserId: true,
     },
   });
 
@@ -372,9 +373,14 @@ export async function refreshAccessToken(
   const { accessToken, expiresAt } = await refreshToken(account);
 
   // Push new token to cache so worker picks it up immediately
-  const webhookUserId = account.webhookUserId;
-  if (webhookUserId) {
-    await cacheAccessTokenR(clerkId, webhookUserId, accessToken);
+  const identifier = account.webhookUserId || account.instagramUserId;
+  if (identifier) {
+    await cacheAccessTokenR(clerkId, identifier, accessToken);
+  } else {
+    clogger.warn(
+      { clerkId, instaAccountId },
+      "[OAuthService:Refresh] No usable identifiers found for account; skipping cache update",
+    );
   }
 
   return {
@@ -407,12 +413,12 @@ export async function disconnectAccount(
     );
   }
 
-  // Flush Redis cache for this workspace immediately
-  const identifier = account.webhookUserId || account.instagramUserId;
-  await invalidateUser(account.user.clerkId, identifier);
-
   // Soft-deactivate; keeps historical data intact
   await deactivateInstaAccount(account.id, account.user.id);
+
+  // Flush Redis cache for this workspace only after successful DB update
+  const identifier = account.webhookUserId || account.instagramUserId;
+  await invalidateUser(account.user.clerkId, identifier);
 
   return { message: "Instagram account disconnected successfully" };
 }

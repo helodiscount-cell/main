@@ -20,10 +20,15 @@ function DashboardHeader({
 }: Props) {
   const pathname = usePathname();
 
-  const title = pathname
+  const titleSegments = pathname
     .split("/")
     .filter(Boolean)
-    .map((item) => item.charAt(0).toUpperCase() + item.slice(1));
+    .map((item: string) => item.charAt(0).toUpperCase() + item.slice(1));
+
+  const pageTitle =
+    titleSegments.length > 0
+      ? titleSegments[titleSegments.length - 1]
+      : "Dashboard";
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 px-4">
@@ -38,9 +43,7 @@ function DashboardHeader({
           className="flex-1 bg-white rounded-md pl-4 flex items-center"
           style={{ height: "inherit" }}
         >
-          <p className="text-sm font-semibold capitalize">
-            {title[title.length - 1]}
-          </p>
+          <p className="text-sm font-semibold capitalize">{pageTitle}</p>
         </div>
 
         {showSearch && (
@@ -48,9 +51,13 @@ function DashboardHeader({
             <Search size={15} className="text-slate-400 shrink-0" />
             <input
               type="text"
-              placeholder={`Search ${title[title.length - 1]}`}
-              value={searchValue}
-              onChange={(e) => onSearchChange?.(e.target.value)}
+              placeholder={`Search ${pageTitle}`}
+              {...(onSearchChange
+                ? {
+                    value: searchValue,
+                    onChange: (e) => onSearchChange(e.target.value),
+                  }
+                : { defaultValue: searchValue })}
               className="w-full text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
             />
           </div>

@@ -12,10 +12,11 @@ import {
 } from "@/server/repository/forms";
 import { prisma } from "@/server/db";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import type {
+import {
   CreateFormInput,
   SubmitFormInput,
   FieldType,
+  FormStatus,
 } from "@dm-broo/common-types";
 import type { FormFieldEntry } from "@prisma/client";
 
@@ -85,7 +86,10 @@ export async function createForm(
 }
 
 // Lightweight list for the dashboard — workspace scoped
-export async function getUserForms(instaAccountId: string, status?: string) {
+export async function getUserForms(
+  instaAccountId: string,
+  status?: FormStatus,
+) {
   const forms = await findFormsByInstaAccountId(instaAccountId, status);
 
   return forms.map((f) => ({
@@ -131,7 +135,7 @@ export async function getPublicFormBySlug(slug: string) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 
-  if (form.status === "DRAFT") {
+  if (form.status !== "PUBLISHED") {
     throw new ApiRouteError("Form is not published", "NOT_PUBLISHED", 403);
   }
 
@@ -155,6 +159,10 @@ export async function submitForm(
 
   if (!form) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
+  }
+
+  if (form.status !== "PUBLISHED") {
+    throw new ApiRouteError("Form is not published", "NOT_PUBLISHED", 403);
   }
 
   // Walk every field and validate the submitted answer

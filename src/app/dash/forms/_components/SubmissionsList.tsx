@@ -62,19 +62,28 @@ export const SubmissionsList = ({
         <span className="text-sm font-semibold text-[#212121] text-left">
           Title
         </span>
-        <button
-          onClick={toggleSort}
-          className="flex items-center gap-2 text-sm font-semibold text-[#212121] hover:text-[#6A06E4] transition-colors group"
+        <div
+          aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
+          className="flex items-center"
         >
-          <span>Submitted</span>
-          <div className="bg-slate-900 text-white rounded-md p-1 group-hover:bg-[#6A06E4] transition-colors">
-            {sortOrder === "desc" ? (
-              <ArrowDown size={14} />
-            ) : (
-              <ArrowUp size={14} />
-            )}
-          </div>
-        </button>
+          <button
+            type="button"
+            onClick={toggleSort}
+            aria-label={`Sort submissions, ${
+              sortOrder === "desc" ? "newest first" : "oldest first"
+            }`}
+            className="flex items-center gap-2 text-sm font-semibold text-[#212121] hover:text-[#6A06E4] transition-colors group"
+          >
+            <span>Submitted</span>
+            <div className="bg-slate-900 text-white rounded-md p-1 group-hover:bg-[#6A06E4] transition-colors">
+              {sortOrder === "desc" ? (
+                <ArrowDown size={14} />
+              ) : (
+                <ArrowUp size={14} />
+              )}
+            </div>
+          </button>
+        </div>
       </div>
 
       <div className="divide-y divide-slate-50">

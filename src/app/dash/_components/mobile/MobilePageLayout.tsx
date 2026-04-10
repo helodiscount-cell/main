@@ -40,21 +40,25 @@ export const MobilePageLayout = ({
         {/* Sort/Filter Bar */}
         {(onSortChange || onFilterToggle) && (
           <div className="flex items-center justify-between mb-4 mt-2">
-            <button
-              onClick={() => onSortChange?.("createdAt")}
-              className="flex items-center gap-1.5 text-[#212121] font-semibold text-sm active:opacity-50 transition-opacity"
-              aria-label="Change sort order"
-            >
-              Last Published
-              <ChevronDown size={16} className="text-[#212121]" />
-            </button>
-            <button
-              onClick={onFilterToggle}
-              className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
-              aria-label="Toggle filters"
-            >
-              <SlidersHorizontal size={16} />
-            </button>
+            {onSortChange && (
+              <button
+                onClick={() => onSortChange?.("createdAt")}
+                className="flex items-center gap-1.5 text-[#212121] font-semibold text-sm active:opacity-50 transition-opacity"
+                aria-label="Change sort order"
+              >
+                Last Published
+                <ChevronDown size={16} className="text-[#212121]" />
+              </button>
+            )}
+            {onFilterToggle && (
+              <button
+                onClick={onFilterToggle}
+                className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
+                aria-label="Toggle filters"
+              >
+                <SlidersHorizontal size={16} />
+              </button>
+            )}
           </div>
         )}
         {/* Content */}

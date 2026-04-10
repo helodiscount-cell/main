@@ -22,7 +22,7 @@ export default function ClaimPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F1F1F1] p-4 font-sans">
-      <div className="w-full max-w-xl bg-white rounded-[32px]    -xl overflow-hidden animate-in fade-in zoom-in duration-500">
+      <div className="w-full max-w-xl bg-white rounded-[32px]  overflow-hidden animate-in fade-in zoom-in duration-500">
         <div className="p-8 md:p-12 space-y-8 flex flex-col items-center">
           {/* Status Icon */}
           <div className="relative">
@@ -50,7 +50,7 @@ export default function ClaimPage() {
             {/* Option 1: Login with another email */}
             <button
               onClick={handleLogoutAndRedirect}
-              className="w-full group p-5 bg-white border-2 border-gray-100 rounded-2xl flex items-center text-left hover:border-purple-500 hover:   transition-all duration-300 transform hover:-translate-y-1"
+              className="w-full group p-5 bg-white border-2 border-gray-100 rounded-2xl flex items-center text-left hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-600 transition-colors">
                 <Mail className="w-6 h-6 text-purple-600 group-hover:text-white" />
@@ -69,7 +69,7 @@ export default function ClaimPage() {
             {/* Option 2: Connect another IG account */}
             <Link
               href="/dash"
-              className="w-full group p-5 bg-white border-2 border-gray-100 rounded-2xl flex items-center text-left hover:border-blue-500 hover:   transition-all duration-300 transform hover:-translate-y-1"
+              className="w-full group p-5 bg-white border-2 border-gray-100 rounded-2xl flex items-center text-left hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
                 <Instagram className="w-6 h-6 text-blue-600 group-hover:text-white" />

@@ -28,8 +28,54 @@ export const Pagination = ({
 
   if (totalPages <= 1) return null;
 
-  const canPrev = currentPage > 1;
-  const canNext = currentPage < totalPages;
+  // Clamp current page to valid range
+  const clampedPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+  const canPrev = clampedPage > 1;
+  const canNext = clampedPage < totalPages;
+
+  /**
+   * Helper to build a compact page model to avoid O(totalPages) rendering
+   */
+  const buildPageModel = (total: number, current: number) => {
+    const items: Array<{
+      type: "page" | "ellipsis";
+      value?: number;
+      key: string;
+    }> = [];
+
+    if (total <= 5) {
+      for (let i = 1; i <= total; i++) {
+        items.push({ type: "page", value: i, key: `page-${i}` });
+      }
+      return items;
+    }
+
+    // Always show page 1
+    items.push({ type: "page", value: 1, key: "page-1" });
+
+    if (current > 3) {
+      items.push({ type: "ellipsis", key: "left" });
+    }
+
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    for (let i = start; i <= end; i++) {
+      items.push({ type: "page", value: i, key: `page-${i}` });
+    }
+
+    if (current < total - 2) {
+      items.push({ type: "ellipsis", key: "right" });
+    }
+
+    // Always show last page
+    items.push({ type: "page", value: total, key: `page-${total}` });
+
+    return items;
+  };
+
+  const pageItems = buildPageModel(totalPages, clampedPage);
 
   return (
     <div
@@ -41,11 +87,11 @@ export const Pagination = ({
       <div className="text-xs text-slate-500 font-medium">
         Showing{" "}
         <span className="text-slate-900 font-bold">
-          {(currentPage - 1) * pageSize + 1}
+          {(clampedPage - 1) * safePageSize + 1}
         </span>{" "}
         to{" "}
         <span className="text-slate-900 font-bold">
-          {Math.min(currentPage * pageSize, totalItems)}
+          {Math.min(clampedPage * safePageSize, totalItems)}
         </span>{" "}
         of <span className="text-slate-900 font-bold">{totalItems}</span>{" "}
         results
@@ -55,54 +101,52 @@ export const Pagination = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
+          onClick={() => onPageChange(clampedPage - 1)}
           disabled={!canPrev}
+          aria-label="Previous page"
           className="h-8 px-2 border-slate-200 text-slate-600 hover:text-[#6A06E4] hover:bg-[#F7F0FF] hover:border-[#6A06E4]"
         >
           <ChevronLeft size={16} />
         </Button>
 
         <div className="flex items-center gap-1 mx-1">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-            // Simple logic: show first, last, and around current
-            const isNear = Math.abs(page - currentPage) <= 1;
-            const isEdge = page === 1 || page === totalPages;
-
-            if (isNear || isEdge) {
+          {pageItems.map((item) => {
+            if (item.type === "page") {
               return (
                 <button
-                  key={page}
-                  onClick={() => onPageChange(page)}
+                  key={item.key}
+                  onClick={() => onPageChange(item.value!)}
+                  aria-current={item.value === clampedPage ? "page" : undefined}
+                  aria-label={`Page ${item.value}`}
                   className={cn(
                     "w-8 h-8 text-xs font-bold rounded-md transition-all",
-                    page === currentPage
+                    item.value === clampedPage
                       ? "bg-[#6A06E4] text-white"
                       : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
                   )}
                 >
-                  {page}
+                  {item.value}
                 </button>
               );
             }
-
-            // Ellipsis placeholder logic
-            if (page === 2 || page === totalPages - 1) {
-              return (
-                <span key={page} className="text-slate-300 px-1">
-                  ...
-                </span>
-              );
-            }
-
-            return null;
+            return (
+              <span
+                key={item.key}
+                className="text-slate-300 px-1"
+                aria-hidden="true"
+              >
+                ...
+              </span>
+            );
           })}
         </div>
 
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
+          onClick={() => onPageChange(clampedPage + 1)}
           disabled={!canNext}
+          aria-label="Next page"
           className="h-8 px-2 border-slate-200 text-slate-600 hover:text-[#6A06E4] hover:bg-[#F7F0FF] hover:border-[#6A06E4]"
         >
           <ChevronRight size={16} />

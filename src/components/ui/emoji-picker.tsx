@@ -13,7 +13,7 @@ import {
 const Picker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
   loading: () => (
-    <div className="w-[350px] h-[400px] flex items-center justify-center bg-white rounded-lg    -xl border border-slate-100">
+    <div className="w-[350px] h-[400px] flex items-center justify-center bg-white rounded-lg  border border-slate-100">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
     </div>
   ),
@@ -45,7 +45,7 @@ export function EmojiPicker({
       <DropdownMenuContent
         side="bottom"
         align="end"
-        className="p-0 border-none    -2xl rounded-2xl overflow-hidden"
+        className="p-0 border-none  rounded-2xl overflow-hidden"
         onCloseAutoFocus={(e) => {
           e.preventDefault();
         }}

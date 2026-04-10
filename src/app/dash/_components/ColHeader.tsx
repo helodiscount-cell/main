@@ -10,6 +10,7 @@ interface ColHeaderProps {
 
 const ColHeader = ({ label, sortable, sortOrder, onSort }: ColHeaderProps) => (
   <button
+    type="button"
     onClick={onSort}
     disabled={!sortable}
     className={cn(

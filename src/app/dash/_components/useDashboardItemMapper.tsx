@@ -34,6 +34,12 @@ export const mapDashboardItem = (
 ): MappedDashboardItem => {
   const isAutomation = "triggerType" in data;
 
+  const safeFormatDate = (date: string | Date | null | undefined) => {
+    if (!date) return "—";
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+  };
+
   if (isAutomation) {
     const automation = data as AutomationListItem;
     const imageUrl =
@@ -41,6 +47,13 @@ export const mapDashboardItem = (
       automation.post?.mediaUrl ||
       automation.story?.thumbnailUrl ||
       automation.story?.mediaUrl;
+
+    const currentStatus =
+      automation.story &&
+      Date.now() - new Date(automation.story.timestamp).getTime() >=
+        24 * 60 * 60 * 1000
+        ? "EXPIRED"
+        : (automation.status as string);
 
     return {
       id: automation.id,
@@ -53,7 +66,7 @@ export const mapDashboardItem = (
           : "No keyword triggers"),
       href: getAutomationRoute(automation.triggerType, automation.id),
       image:
-        typeof imageUrl === "string" ? (
+        typeof imageUrl === "string" && imageUrl.trim().length > 0 ? (
           <Image
             alt="Media preview"
             src={imageUrl}
@@ -66,25 +79,13 @@ export const mapDashboardItem = (
             {getAutomationLabel(automation.triggerType) || "Auto"}
           </div>
         ),
-      status: (
-        <StatusBadge
-          status={
-            automation.story &&
-            Date.now() - new Date(automation.story.timestamp).getTime() >=
-              24 * 60 * 60 * 1000
-              ? "EXPIRED"
-              : (automation.status as string)
-          }
-        />
-      ),
-      statusText: automation.status,
+      status: <StatusBadge status={currentStatus} />,
+      statusText: currentStatus,
       stats: automation._count.executions,
       statsLabel: "Total Executions",
       secondaryStats: automation.timesTriggered,
       secondaryStatsLabel: "Runs",
-      date: automation.lastTriggeredAt
-        ? new Date(automation.lastTriggeredAt).toLocaleDateString()
-        : "—",
+      date: safeFormatDate(automation.lastTriggeredAt),
       dateLabel: "Last Triggered",
       raw: data,
     };
@@ -97,21 +98,23 @@ export const mapDashboardItem = (
     title: form.title || "Untitled Form",
     subtitle: form.description || "No description",
     href: `/dash/forms/${form.id}`,
-    image: form.coverImage ? (
-      <div className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden border border-slate-100">
-        <Image
-          src={form.coverImage}
-          className="h-full w-full object-cover"
-          height={100}
-          width={100}
-          alt={form.title || "Untitled Form"}
-        />
-      </div>
-    ) : (
-      <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg text-slate-300">
-        <FileText size={20} />
-      </div>
-    ),
+    image:
+      typeof form.coverImage === "string" &&
+      form.coverImage.trim().length > 0 ? (
+        <div className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden border border-slate-100">
+          <Image
+            src={form.coverImage}
+            className="h-full w-full object-cover"
+            height={100}
+            width={100}
+            alt={form.title || "Untitled Form"}
+          />
+        </div>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg text-slate-300">
+          <FileText size={20} />
+        </div>
+      ),
     status: (
       <span
         className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
@@ -126,7 +129,7 @@ export const mapDashboardItem = (
     statusText: form.status,
     stats: form.submissionCount,
     statsLabel: "Submissions",
-    date: new Date(form.updatedAt).toLocaleDateString(),
+    date: safeFormatDate(form.updatedAt),
     dateLabel: "Last Updated",
     raw: data,
   };

@@ -15,7 +15,6 @@ export type SortOrder = "asc" | "desc" | null;
 
 interface Props {
   title: string;
-  selectedLabel: string;
   statusFilter: StatusFilter;
   setStatusFilter: (value: StatusFilter) => void;
   sortField?: SortField;
@@ -24,9 +23,9 @@ interface Props {
 }
 
 export const getStatusOptions = (
-  title: string,
+  variant: "forms" | "automations",
 ): { label: string; value: string }[] => {
-  if (title === "Forms") {
+  if (variant === "forms") {
     return [
       { label: "All", value: "ALL" },
       { label: "Live", value: "PUBLISHED" },
@@ -42,13 +41,14 @@ export const getStatusOptions = (
 
 const TableHeader = ({
   title,
-  selectedLabel,
   statusFilter,
   setStatusFilter,
   sortField,
   sortOrder,
   onSort,
 }: Props) => {
+  const variant = title === "Forms" ? "forms" : "automations";
+
   return (
     <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg">
       <span className="text-sm font-medium text-[#212121]">{title}</span>
@@ -60,8 +60,9 @@ const TableHeader = ({
             <button className="flex items-center gap-1 text-sm font-medium text-[#212121] hover:text-[#212121] transition-colors">
               {statusFilter === "ALL"
                 ? "Status"
-                : getStatusOptions(title).find((o) => o.value === statusFilter)
-                    ?.label}
+                : getStatusOptions(variant).find(
+                    (o) => o.value === statusFilter,
+                  )?.label}
               <ChevronDown size={13} className="text-slate-400" />
             </button>
           </DropdownMenuTrigger>
@@ -70,7 +71,7 @@ const TableHeader = ({
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as StatusFilter)}
             >
-              {getStatusOptions(title).map((opt) => (
+              {getStatusOptions(variant).map((opt) => (
                 <DropdownMenuRadioItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </DropdownMenuRadioItem>
@@ -93,9 +94,9 @@ const TableHeader = ({
         sortOrder={sortField === "date" ? sortOrder : null}
         onSort={() => onSort?.("date")}
       />
-      <button className="p-2 bg-slate-800 text-white rounded-md">
+      <div className="p-2 bg-slate-800 text-white rounded-md">
         <SlidersHorizontal size={14} />
-      </button>
+      </div>
     </div>
   );
 };

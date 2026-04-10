@@ -69,22 +69,44 @@ export default function FormsPage() {
           ? b.submissionCount
           : new Date(b.updatedAt).getTime();
 
-      if (sortOrder === "asc") return fieldA - fieldB;
-      return fieldB - fieldA;
+      if (fieldA !== fieldB) {
+        if (sortOrder === "asc") return fieldA - fieldB;
+        return fieldB - fieldA;
+      }
+      // Deterministic tie-breaker
+      return a.id.localeCompare(b.id);
     });
   }, [forms, search, sortField, sortOrder]);
 
-  // Handle Search Change (reset pagination)
   const handleSearchChange = (val: string) => {
     setSearch(val);
     setPage(1);
   };
 
+  const handleStatusChange = (status: StatusFilter) => {
+    setStatusFilter(status);
+    setPage(1);
+  };
+
   // Pagination Slice
   const paginatedForms = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
+    // Clamp page before slicing
+    const total = filteredAndSortedForms.length;
+    const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const normalizedPage = page > maxPage ? maxPage : page;
+
+    const start = (normalizedPage - 1) * PAGE_SIZE;
     return filteredAndSortedForms.slice(start, start + PAGE_SIZE);
   }, [filteredAndSortedForms, page]);
+
+  // Sync page state if it was invalid (outside render)
+  React.useEffect(() => {
+    const total = filteredAndSortedForms.length;
+    const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (page > maxPage) {
+      setPage(maxPage);
+    }
+  }, [filteredAndSortedForms.length, page]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -94,10 +116,6 @@ export default function FormsPage() {
       setSortOrder("desc");
     }
   };
-
-  const selectedLabel =
-    getStatusOptions("Forms").find((o) => o.value === statusFilter)?.label ??
-    "All";
 
   const newFormAction = (
     <Button
@@ -117,11 +135,22 @@ export default function FormsPage() {
         title="Forms"
         items={filteredAndSortedForms}
         isLoading={isLoading}
-        emptyMessage="No forms yet. Create your first one!"
+        emptyMessage={
+          search ? "No matches found." : "No forms yet. Create your first one!"
+        }
         actionButton={newFormAction}
         onSortChange={(sortKey) =>
           toggleSort(sortKey === "createdAt" ? "date" : (sortKey as SortField))
         }
+        onFilterToggle={() => {
+          const nextStatus: StatusFilter =
+            statusFilter === "ALL"
+              ? "PUBLISHED"
+              : statusFilter === "PUBLISHED"
+                ? "DRAFT"
+                : "ALL";
+          handleStatusChange(nextStatus);
+        }}
       />
     );
   }
@@ -158,9 +187,8 @@ export default function FormsPage() {
           {/* Column headers */}
           <TableHeader
             title="Forms"
-            selectedLabel={selectedLabel}
             statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
+            setStatusFilter={handleStatusChange}
             sortField={sortField}
             sortOrder={sortOrder}
             onSort={toggleSort}

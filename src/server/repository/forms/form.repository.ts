@@ -1,6 +1,6 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
-import type { CreateFormInput } from "@dm-broo/common-types";
+import type { CreateFormInput, FormStatus } from "@dm-broo/common-types";
 import type { Form, FormSubmission } from "@prisma/client";
 
 // Generates a short 8-char alphanumeric slug from a UUID
@@ -48,14 +48,14 @@ export async function createForm(
 // All forms for a workspace, ordered newest first. Optionally filter by status.
 export async function findFormsByInstaAccountId(
   instaAccountId: string,
-  status?: string,
+  status?: FormStatus,
 ): Promise<Form[]> {
   return executeWithErrorHandling(
     () =>
       prisma.form.findMany({
         where: {
           instaAccountId,
-          ...(status ? { status: status as any } : {}),
+          ...(status ? { status } : {}),
         },
         orderBy: { createdAt: "desc" },
       }),

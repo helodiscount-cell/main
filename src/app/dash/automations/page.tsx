@@ -68,22 +68,45 @@ const AutomationPage = () => {
           ? b.timesTriggered || 0
           : new Date(b.lastTriggeredAt || b.updatedAt).getTime();
 
-      if (sortOrder === "asc") return fieldA - fieldB;
-      return fieldB - fieldA;
+      if (fieldA !== fieldB) {
+        if (sortOrder === "asc") return fieldA - fieldB;
+        return fieldB - fieldA;
+      }
+
+      // Tie-breaker: consistent order for equal values
+      return a.id.localeCompare(b.id);
     });
   }, [automations, search, sortField, sortOrder]);
 
-  // Handle Search Change (reset pagination)
   const handleSearchChange = (val: string) => {
     setSearch(val);
     setPage(1);
   };
 
+  const handleStatusChange = (status: StatusFilter) => {
+    setStatusFilter(status);
+    setPage(1);
+  };
+
   // Pagination Slice
   const paginatedAutomations = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
+    // Clamp page before slicing
+    const total = filteredAndSorted.length;
+    const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const normalizedPage = page > maxPage ? maxPage : page;
+
+    const start = (normalizedPage - 1) * PAGE_SIZE;
     return filteredAndSorted.slice(start, start + PAGE_SIZE);
   }, [filteredAndSorted, page]);
+
+  // Sync page state if it was invalid (outside render)
+  React.useEffect(() => {
+    const total = filteredAndSorted.length;
+    const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (page > maxPage) {
+      setPage(maxPage);
+    }
+  }, [filteredAndSorted.length, page]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -93,10 +116,6 @@ const AutomationPage = () => {
       setSortOrder("desc");
     }
   };
-
-  const selectedLabel =
-    getStatusOptions("Automations").find((o) => o.value === statusFilter)
-      ?.label ?? "All";
 
   const newAutomationAction = (
     <div className="w-full">
@@ -116,9 +135,20 @@ const AutomationPage = () => {
         emptyMessage={search ? "No matches found." : "No automations found."}
         actionButton={newAutomationAction}
         onSortChange={(sortKey) => {
-          if (sortKey === "date" || sortKey === "count") {
-            toggleSort(sortKey);
+          const normalizedKey =
+            sortKey === "createdAt" ? "date" : (sortKey as SortField);
+          if (normalizedKey === "date" || normalizedKey === "count") {
+            toggleSort(normalizedKey);
           }
+        }}
+        onFilterToggle={() => {
+          const nextStatus: StatusFilter =
+            statusFilter === "ALL"
+              ? "ACTIVE"
+              : statusFilter === "ACTIVE"
+                ? "PAUSED"
+                : "ALL";
+          handleStatusChange(nextStatus);
         }}
       />
     );
@@ -145,9 +175,8 @@ const AutomationPage = () => {
           {/* Table header */}
           <TableHeader
             title="Automations"
-            selectedLabel={selectedLabel}
             statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
+            setStatusFilter={handleStatusChange}
             sortField={sortField}
             sortOrder={sortOrder}
             onSort={toggleSort}

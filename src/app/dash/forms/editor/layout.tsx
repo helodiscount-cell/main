@@ -23,7 +23,7 @@ export default function FormEditorLayout({
   return (
     <FormEditorProvider formId={formId}>
       <div className="flex flex-col h-full min-h-screen">
-        <EditorLayoutHeader />
+        <EditorLayoutHeader formId={formId} />
 
         {/* Child components (the page canvas) */}
         {children}
@@ -36,10 +36,8 @@ export default function FormEditorLayout({
  * EditorLayoutHeader handles the header and tab bar visuals.
  * It connects to the FormEditorProvider to trigger saves across the layout and page.
  */
-const EditorLayoutHeader = () => {
+const EditorLayoutHeader = ({ formId }: { formId?: string }) => {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const formId = searchParams.get("id") || "";
   const { save, isLoading } = useFormEditor();
   const isMobile = useIsMobile();
 
@@ -54,6 +52,7 @@ const EditorLayoutHeader = () => {
           onPublish={handlePublish}
           onSave={handleSave}
           isLoading={isLoading}
+          activeTab="editor"
         />
         <FormTabs activeTab="editor" formId={formId} />
       </>
@@ -66,6 +65,8 @@ const EditorLayoutHeader = () => {
       <EditorHeader
         pathname={pathname}
         onPublish={handlePublish}
+        onSaveDraft={handleSave}
+        onUpdate={handleSave}
         isLoading={isLoading}
         formId={formId}
         activeTab="editor"

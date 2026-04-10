@@ -120,21 +120,7 @@ export async function createAutomation(
   );
 
   if (result) {
-    // 1. Fetch the instagramUserId to use for the standardized Redis key
-    const account = await prisma.instaAccount.findUnique({
-      where: { id: instaAccountId },
-      select: { webhookUserId: true, instagramUserId: true },
-    });
-
-    const identifier = account?.webhookUserId || account?.instagramUserId;
-    if (identifier) {
-      await invalidateAutomations(identifier).catch(() => {});
-    } else {
-      logger.warn(
-        { instaAccountId },
-        "[Repository:Automation] Skipping cache invalidation: No account identifiers found",
-      );
-    }
+    await invalidateAutomationsForAccount(instaAccountId, "create");
   }
   return result;
 }
@@ -445,15 +431,7 @@ export async function updateAutomation(
   );
 
   if (result) {
-    const account = await prisma.instaAccount.findUnique({
-      where: { id: result.instaAccountId },
-      select: { webhookUserId: true, instagramUserId: true },
-    });
-    const identifier =
-      account?.webhookUserId ||
-      account?.instagramUserId ||
-      result.instaAccountId;
-    await invalidateAutomations(identifier).catch(() => {});
+    await invalidateAutomationsForAccount(result.instaAccountId, "update");
   }
   return result;
 }
@@ -527,15 +505,43 @@ export async function softDeleteAutomation(automationId: string) {
   );
 
   if (result) {
-    const account = await prisma.instaAccount.findUnique({
-      where: { id: result.instaAccountId },
-      select: { webhookUserId: true, instagramUserId: true },
-    });
-    const identifier =
-      account?.webhookUserId ||
-      account?.instagramUserId ||
-      result.instaAccountId;
-    await invalidateAutomations(identifier).catch(() => {});
+    await invalidateAutomationsForAccount(result.instaAccountId, "delete");
   }
   return result;
+}
+
+/**
+ * Best-effort invalidation of automations for an Instagram account.
+ * Used after mutations to clear cache.
+ */
+async function invalidateAutomationsForAccount(
+  instaAccountId: string,
+  action: "create" | "update" | "delete",
+) {
+  try {
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: instaAccountId },
+      select: { webhookUserId: true },
+    });
+
+    const identifier = account?.webhookUserId;
+    if (identifier) {
+      await invalidateAutomations(identifier).catch((err) => {
+        logger.error(
+          { err, identifier, action },
+          `[Repository:Automation] Post-${action} cache invalidation failed`,
+        );
+      });
+    } else {
+      logger.warn(
+        { instaAccountId, action },
+        `[Repository:Automation] Skipping post-${action} cache invalidation: No webhookUserId found`,
+      );
+    }
+  } catch (err) {
+    logger.error(
+      { err, instaAccountId, action },
+      `[Repository:Automation] Post-${action} account lookup for cache invalidation failed`,
+    );
+  }
 }

@@ -1,9 +1,12 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Image from "next/image";
 import phoneImg from "@/assets/png/phone.png";
 
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, AlertCircle } from "lucide-react";
 
 type AutomationLayoutProps = {
   header: React.ReactNode;
@@ -17,7 +20,7 @@ type AutomationLayoutProps = {
 };
 
 const DMPlaceholder = () => (
-  <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 drop-   -2xl bg-white flex flex-col pt-10 px-4">
+  <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-white flex flex-col pt-10 px-4">
     {/* Mock Header */}
     <div className="flex items-center gap-3 mb-8 px-2">
       <div className="w-10 h-10 rounded-full bg-linear-to-tr from-purple-500 to-pink-500 shrink-0" />
@@ -51,7 +54,7 @@ const DMPlaceholder = () => (
     </div>
 
     <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/20 to-white/60 pointer-events-none flex items-center justify-center">
-      <div className="bg-white p-6 rounded-3xl    -xl flex flex-col items-center gap-3">
+      <div className="bg-white p-6 rounded-3xl  flex flex-col items-center gap-3">
         <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
           <MessageCircle size={28} />
         </div>
@@ -68,19 +71,46 @@ export function AutomationLayout({
   post,
   triggerType,
 }: AutomationLayoutProps) {
+  const [mediaError, setMediaError] = useState(false);
+
+  // Clear sticky media errors when the preview target changes
+  useEffect(() => {
+    setMediaError(false);
+  }, [post?.mediaUrl]);
+
   const renderMedia = () => {
-    if (!post || !post.mediaUrl) {
-      if (triggerType === "RESPOND_TO_ALL_DMS") {
+    if (!post || !post.mediaUrl || mediaError) {
+      if (triggerType === "RESPOND_TO_ALL_DMS" && !mediaError) {
         return <DMPlaceholder />;
       }
+
+      const isPostMissing = !mediaError && (!post || !post.mediaUrl);
+
       return (
-        <div className="relative drop-   -2xl h-full w-full">
-          <Image
-            src={phoneImg}
-            alt="Phone preview"
-            className="w-full h-auto"
-            priority
-          />
+        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center text-zinc-400">
+            {mediaError ? (
+              <AlertCircle size={24} />
+            ) : (
+              <MessageCircle size={24} />
+            )}
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-zinc-800">
+              {mediaError || isPostMissing
+                ? "Preview unavailable"
+                : "Account Wide"}
+            </p>
+            <p className="text-[10px] text-zinc-500 leading-tight">
+              {mediaError || isPostMissing
+                ? "Could not load the Instagram media preview."
+                : "This automation responds to all incoming messages."}
+            </p>
+          </div>
+          {/* Fallback backrgound image to keep phone shape context if needed */}
+          <div className="absolute inset-0 -z-10 opacity-20 grayscale pointer-events-none">
+            <Image src={phoneImg} alt="" className="w-full h-auto" priority />
+          </div>
         </div>
       );
     }
@@ -88,13 +118,14 @@ export function AutomationLayout({
     // Video handles Reels and standard videos
     if (post.mediaType === "VIDEO") {
       return (
-        <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 drop-   -2xl bg-black">
+        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
           <video
             src={post.mediaUrl}
             autoPlay
             muted
             loop
             playsInline
+            onError={() => setMediaError(true)}
             className="w-full h-full object-cover"
           />
         </div>
@@ -103,14 +134,15 @@ export function AutomationLayout({
 
     // Standard static image or carousel (showing first frame)
     return (
-      <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 drop-   -2xl bg-black">
+      <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
         <Image
           src={post.mediaUrl}
           alt="Post preview"
           fill
           className="object-cover"
-          unoptimized={post.mediaUrl?.includes("fbcdn.net")}
+          unoptimized
           priority
+          onError={() => setMediaError(true)}
         />
       </div>
     );

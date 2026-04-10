@@ -27,6 +27,7 @@ interface FormEditorContextType {
   isMediaUploading: boolean;
   setIsMediaUploading: (uploading: boolean) => void;
   currentStatus?: "DRAFT" | "PUBLISHED";
+  formId?: string;
 }
 
 const FormEditorContext = createContext<FormEditorContextType | null>(null);
@@ -83,7 +84,9 @@ export const FormEditorProvider = ({
           : "Saved successfully.",
       );
       queryClient.invalidateQueries({ queryKey: formKeys.all });
-      queryClient.invalidateQueries({ queryKey: formKeys.detail(formId!) });
+      if (formId) {
+        queryClient.invalidateQueries({ queryKey: formKeys.detail(formId) });
+      }
       router.push("/dash/forms");
     },
     onError: (err: unknown) => {
@@ -134,7 +137,11 @@ export const FormEditorProvider = ({
         isLoading,
         isMediaUploading,
         setIsMediaUploading,
-        currentStatus: form?.status as any,
+        currentStatus:
+          form?.status === "DRAFT" || form?.status === "PUBLISHED"
+            ? form.status
+            : undefined,
+        formId,
       }}
     >
       {children}
