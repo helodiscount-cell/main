@@ -8,7 +8,6 @@ export const FieldTypeSchema = z.enum([
   "url",
   "phone",
   "location",
-  "country",
   "date",
   "dropdown",
   "checkbox",

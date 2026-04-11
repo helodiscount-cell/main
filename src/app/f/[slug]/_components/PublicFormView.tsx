@@ -19,10 +19,16 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [activeUploads, setActiveUploads] = useState(0);
+  const isMediaUploading = activeUploads > 0;
   const [submitted, setSubmitted] = useState(false);
   const { register, handleSubmit, setValue, watch } = useForm<
     Record<string, string | string[]>
   >({ defaultValues: {} });
+
+  const handleUploadStateChange = (uploading: boolean) => {
+    setActiveUploads((prev) => (uploading ? prev + 1 : Math.max(0, prev - 1)));
+  };
 
   const onSubmit = async (answers: Record<string, string | string[]>) => {
     setIsLoading(true);
@@ -62,15 +68,20 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
           register={register}
           setValue={setValue}
           watch={watch}
+          onUploadStateChange={handleUploadStateChange}
         />
       ))}
 
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full bg-[#6A06E4] hover:bg-[#5a05c4] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+        disabled={isLoading || isMediaUploading}
+        className="w-full bg-[#6A06E4] hover:bg-[#5a05c4] disabled:opacity-60 text-white font-semibold py-3 rounded-md transition-colors"
       >
-        {isLoading ? "Submitting..." : "Submit"}
+        {isLoading
+          ? "Submitting..."
+          : isMediaUploading
+            ? "Uploading..."
+            : "Submit"}
       </button>
     </form>
   );

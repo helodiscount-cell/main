@@ -64,7 +64,7 @@ export function ExistingAutomationsBlock({
             {existingOnThisTarget.map((auto) => (
               <div
                 key={auto.id}
-                className="flex items-center justify-between p-3 rounded-md border border-slate-50 bg-white shadow-sm"
+                className="flex items-center justify-between p-3 rounded-md border border-slate-50 bg-white"
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-slate-700">

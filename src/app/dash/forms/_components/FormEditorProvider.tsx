@@ -24,6 +24,10 @@ interface FormEditorContextType {
   methods: UseFormReturn<FormValues>;
   save: (status: "DRAFT" | "PUBLISHED") => Promise<void>;
   isLoading: boolean;
+  isMediaUploading: boolean;
+  setIsMediaUploading: (uploading: boolean) => void;
+  currentStatus?: "DRAFT" | "PUBLISHED";
+  formId?: string;
 }
 
 const FormEditorContext = createContext<FormEditorContextType | null>(null);
@@ -80,7 +84,9 @@ export const FormEditorProvider = ({
           : "Saved successfully.",
       );
       queryClient.invalidateQueries({ queryKey: formKeys.all });
-      queryClient.invalidateQueries({ queryKey: formKeys.detail(formId!) });
+      if (formId) {
+        queryClient.invalidateQueries({ queryKey: formKeys.detail(formId) });
+      }
       router.push("/dash/forms");
     },
     onError: (err: unknown) => {
@@ -91,12 +97,21 @@ export const FormEditorProvider = ({
     },
   });
 
+  const [isMediaUploading, setIsMediaUploading] = React.useState(false);
+
   // Combined loading state for header and canvas
-  const isLoading = isFetching || isSaving;
+  const isLoading = isFetching || isSaving || isMediaUploading;
 
   // Core save handler
   const save = useCallback(
     async (status: "DRAFT" | "PUBLISHED") => {
+      if (isMediaUploading) {
+        toast.error("Image being uploaded", {
+          description: "Please wait for the banner to finish uploading.",
+        });
+        return;
+      }
+
       const isValid = await methods.trigger();
       if (!isValid) {
         if (methods.formState.errors.fields) {
@@ -111,11 +126,24 @@ export const FormEditorProvider = ({
       const data = methods.getValues();
       saveForm({ ...data, status });
     },
-    [methods, saveForm],
+    [methods, saveForm, isMediaUploading],
   );
 
   return (
-    <FormEditorContext.Provider value={{ methods, save, isLoading }}>
+    <FormEditorContext.Provider
+      value={{
+        methods,
+        save,
+        isLoading,
+        isMediaUploading,
+        setIsMediaUploading,
+        currentStatus:
+          form?.status === "DRAFT" || form?.status === "PUBLISHED"
+            ? form.status
+            : undefined,
+        formId,
+      }}
+    >
       {children}
     </FormEditorContext.Provider>
   );

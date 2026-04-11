@@ -13,7 +13,7 @@ export async function register() {
         await import("./server/queues/notifications.worker");
       initNotificationsWorker();
     } catch (err) {
-      logger.error("Failed to initialize background workers");
+      logger.error(err, "Failed to initialize background workers:");
     }
   }
 }

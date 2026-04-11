@@ -10,12 +10,15 @@ import type {
 import { Star, Upload, FileCheck, Loader2 } from "lucide-react";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { toast } from "sonner";
+import { CountryPicker } from "./CountryPicker";
+import { HierarchicalLocationPicker } from "./HierarchicalLocationPicker";
 
 type PublicFieldRendererProps = {
   field: FormField;
   register: UseFormRegister<Record<string, string | string[]>>;
   setValue: UseFormSetValue<Record<string, string | string[]>>;
   watch: UseFormWatch<Record<string, string | string[]>>;
+  onUploadStateChange?: (isUploading: boolean) => void;
 };
 
 // Maps field types to the correct HTML input type for the public form
@@ -24,10 +27,7 @@ const INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
   number: "number",
   email: "email",
   url: "url",
-  phone: "tel",
   date: "date",
-  location: "text",
-  country: "text",
 };
 
 // Renders the correct interactive input for each field type
@@ -36,19 +36,23 @@ export const PublicFieldRenderer = ({
   register,
   setValue,
   watch,
+  onUploadStateChange,
 }: PublicFieldRendererProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
 
-  const checkedValues = (watch(field.id) as string[]) ?? [];
+  // Watch field value at top level to avoid rule of hook violations in branches
+  const rawValue = watch(field.id);
+  const fullValue = (rawValue as string) || "";
+  const checkedValues = (rawValue as string[]) ?? [];
 
   const inputClass =
     "w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#6A06E4] focus:ring-1 focus:ring-[#6A06E4] transition-colors";
 
-  // Standard text-like inputs (excluding phone which we customize)
-  if (INPUT_TYPE_MAP[field.type as FieldType] && field.type !== "phone") {
+  // Standard text-like inputs
+  if (INPUT_TYPE_MAP[field.type as FieldType]) {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -64,44 +68,58 @@ export const PublicFieldRenderer = ({
     );
   }
 
+  // Location — Hierarchical picker (Country > State > City)
+  if (field.type === "location") {
+    return (
+      <div className="space-y-1.5 flex flex-col gap-2">
+        <label className="text-sm font-semibold text-slate-700">
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        <HierarchicalLocationPicker
+          value={fullValue}
+          onChange={(val) => setValue(field.id, val)}
+          required={field.required}
+        />
+        {/* Hidden input to hold the joined value for react-hook-form */}
+        <input type="hidden" {...register(field.id)} />
+      </div>
+    );
+  }
+
   // Phone — custom dual-input renderer for country code + 10-digit number
   if (field.type === "phone") {
-    const fullValue = (watch(field.id) as string) || "";
-
-    // Helper to join code and number
-    const handlePhoneChange = (code: string, num: string) => {
-      const cleanCode = code.replace(/\D/g, "").slice(0, 4);
-      const cleanNum = num.replace(/\D/g, "").slice(0, 10);
-
-      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
-    };
-
     // Extract code and number from the joined value (+CODE|phone|NUMBER)
     const parts = fullValue.replace("+", "").split("|phone|");
-    const code = parts[0] || "";
+    const code = parts[0] || "91";
     const number = parts[1] || "";
 
+    // Helper to join code and number
+    const handlePhoneChange = (newCode: string, newNum: string) => {
+      const cleanCode = newCode.replace(/\D/g, "").slice(0, 4);
+      const cleanNum = newNum.replace(/\D/g, "").slice(0, 10);
+
+      if (cleanNum) {
+        setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
+      } else {
+        setValue(field.id, "");
+      }
+    };
+
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>
         <div className="flex gap-2">
-          {/* Country Code */}
-          <div className="relative w-24 shrink-0">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-              +
-            </span>
-            <input
-              type="text"
-              placeholder="91"
-              value={code}
-              onChange={(e) => handlePhoneChange(e.target.value, number)}
-              className={`${inputClass} pl-6 pr-2`}
-              maxLength={4}
-            />
-          </div>
+          {/* Country Picker Toggle */}
+          <CountryPicker
+            value={code}
+            onChange={(newCode) => handlePhoneChange(newCode, number)}
+            className="w-24 shrink-0"
+          />
+
           {/* Main Number */}
           <input
             type="text"
@@ -122,7 +140,7 @@ export const PublicFieldRenderer = ({
   // Dropdown – native select
   if (field.type === "dropdown") {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -156,7 +174,7 @@ export const PublicFieldRenderer = ({
     };
 
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -184,7 +202,7 @@ export const PublicFieldRenderer = ({
   // Star rating
   if (field.type === "rating") {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -218,10 +236,10 @@ export const PublicFieldRenderer = ({
   }
 
   if (field.type === "upload") {
-    const fileUrl = watch(field.id) as string | undefined;
+    const fileUrl = fullValue;
 
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 flex flex-col gap-2">
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -248,13 +266,16 @@ export const PublicFieldRenderer = ({
         ) : (
           <UploadDropzone
             endpoint="formAttachment"
+            onUploadBegin={() => onUploadStateChange?.(true)}
             onClientUploadComplete={(res) => {
+              onUploadStateChange?.(false);
               if (res?.[0]) {
                 setValue(field.id, res[0].url);
                 toast.success("File uploaded!");
               }
             }}
             onUploadError={(error: Error) => {
+              onUploadStateChange?.(false);
               toast.error(`Upload failed: ${error.message}`);
             }}
             appearance={{
@@ -262,7 +283,7 @@ export const PublicFieldRenderer = ({
                 "border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 transition-colors duration-200 py-8",
               label: "text-[#6A06E4] hover:text-[#5a05c4]",
               button:
-                "bg-[#6A06E4] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
+                "bg-[#6A06E4] w-[40%] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
               allowedContent: "text-slate-400 text-[10px]",
             }}
           />

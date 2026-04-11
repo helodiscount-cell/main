@@ -34,12 +34,12 @@ export const ContactsHeader = () => {
         <div className="w-fit flex items-center gap-2">
           <Button
             size="icon"
-            className="h-9 w-9 shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] shadow-sm text-white"
+            className="h-9 w-9 shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] text-white"
           >
             <RefreshCw size={15} />
           </Button>
 
-          <Button className="h-9 shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] gap-2 shadow-sm text-white px-4">
+          <Button className="h-9 shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] gap-2 text-white px-4">
             <Download size={15} />
             Export List
           </Button>

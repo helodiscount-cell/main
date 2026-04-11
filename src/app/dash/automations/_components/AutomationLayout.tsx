@@ -1,22 +1,156 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Image from "next/image";
 import phoneImg from "@/assets/png/phone.png";
 
+import { MessageCircle, Send, AlertCircle } from "lucide-react";
+
 type AutomationLayoutProps = {
   header: React.ReactNode;
   leftCol: React.ReactNode;
   rightCol: React.ReactNode;
+  post?: {
+    mediaUrl: string | null;
+    mediaType: string | null;
+  } | null;
+  triggerType?: string;
 };
+
+const DMPlaceholder = () => (
+  <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-white flex flex-col pt-10 px-4">
+    {/* Mock Header */}
+    <div className="flex items-center gap-3 mb-8 px-2">
+      <div className="w-10 h-10 rounded-full bg-linear-to-tr from-purple-500 to-pink-500 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-2.5 w-24 bg-zinc-100 rounded-full" />
+        <div className="h-2 w-16 bg-zinc-50 rounded-full" />
+      </div>
+    </div>
+
+    {/* Message Bubbles */}
+    <div className="space-y-4">
+      <div className="self-start bg-zinc-100 rounded-2xl rounded-bl-none p-4 max-w-[80%]">
+        <div className="h-2 w-20 bg-zinc-200 rounded-full mb-2" />
+        <div className="h-2 w-32 bg-zinc-200 rounded-full" />
+      </div>
+      <div className="self-end bg-purple-600 rounded-2xl rounded-br-none p-4 max-w-[80%] ml-auto">
+        <div className="h-2 w-24 bg-white/30 rounded-full mb-2" />
+        <div className="h-2 w-16 bg-white/30 rounded-full" />
+      </div>
+      <div className="self-start bg-zinc-100 rounded-2xl rounded-bl-none p-4 max-w-[80%]">
+        <div className="h-2 w-28 bg-zinc-200 rounded-full" />
+      </div>
+    </div>
+
+    {/* Mock Input */}
+    <div className="mt-8 pt-8 border-t border-zinc-50">
+      <div className="bg-zinc-50 rounded-full h-10 px-4 flex items-center justify-between">
+        <div className="h-2 w-24 bg-zinc-200 rounded-full" />
+        <Send size={14} className="text-purple-500" />
+      </div>
+    </div>
+
+    <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/20 to-white/60 pointer-events-none flex items-center justify-center">
+      <div className="bg-white p-6 rounded-3xl  flex flex-col items-center gap-3">
+        <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+          <MessageCircle size={28} />
+        </div>
+        <p className="text-sm font-bold text-zinc-800">All Direct Messages</p>
+      </div>
+    </div>
+  </div>
+);
 
 export function AutomationLayout({
   header,
   leftCol,
   rightCol,
+  post,
+  triggerType,
 }: AutomationLayoutProps) {
+  const [mediaError, setMediaError] = useState(false);
+
+  // Clear sticky media errors when the preview target changes
+  useEffect(() => {
+    setMediaError(false);
+  }, [post?.mediaUrl]);
+
+  const renderMedia = () => {
+    if (!post || !post.mediaUrl || mediaError) {
+      if (triggerType === "RESPOND_TO_ALL_DMS" && !mediaError) {
+        return <DMPlaceholder />;
+      }
+
+      const isPostMissing = !mediaError && (!post || !post.mediaUrl);
+
+      return (
+        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center text-zinc-400">
+            {mediaError ? (
+              <AlertCircle size={24} />
+            ) : (
+              <MessageCircle size={24} />
+            )}
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-zinc-800">
+              {mediaError || isPostMissing
+                ? "Preview unavailable"
+                : "Account Wide"}
+            </p>
+            <p className="text-[10px] text-zinc-500 leading-tight">
+              {mediaError || isPostMissing
+                ? "Could not load the Instagram media preview."
+                : "This automation responds to all incoming messages."}
+            </p>
+          </div>
+          {/* Fallback backrgound image to keep phone shape context if needed */}
+          <div className="absolute inset-0 -z-10 opacity-20 grayscale pointer-events-none">
+            <Image src={phoneImg} alt="" className="w-full h-auto" priority />
+          </div>
+        </div>
+      );
+    }
+
+    // Video handles Reels and standard videos
+    if (post.mediaType === "VIDEO") {
+      return (
+        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+          <video
+            src={post.mediaUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            onError={() => setMediaError(true)}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    }
+
+    // Standard static image or carousel (showing first frame)
+    return (
+      <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+        <Image
+          src={post.mediaUrl}
+          alt="Post preview"
+          fill
+          className="object-cover"
+          unoptimized
+          priority
+          onError={() => setMediaError(true)}
+        />
+      </div>
+    );
+  };
+
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+      <header className="flex h-16 shrink-0 items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator
           orientation="vertical"
@@ -41,17 +175,10 @@ export function AutomationLayout({
             {leftCol}
           </div>
 
-          {/* Center: Phone mockup */}
+          {/* Center: Post Preview */}
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-full flex items-start justify-center">
-              <div className="relative drop-shadow-2xl h-full w-full">
-                <Image
-                  src={phoneImg}
-                  alt="Phone preview"
-                  className="w-full h-auto"
-                  priority
-                />
-              </div>
+            <div className="relative w-full max-w-[280px] flex items-start justify-center">
+              {renderMedia()}
             </div>
           </div>
 

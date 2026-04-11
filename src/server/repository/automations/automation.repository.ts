@@ -5,8 +5,9 @@
 
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
-import { CreateAutomationInput } from "@dm-broo/common-types";
+import type { CreateAutomationInput } from "@dm-broo/common-types";
 import { invalidateAutomations } from "@/server/redis";
+import { logger } from "@/server/utils/pino";
 
 import {
   CreateAutomationData,
@@ -119,8 +120,7 @@ export async function createAutomation(
   );
 
   if (result) {
-    // Invalidate workspace automation cache so the worker pulls fresh rules
-    await invalidateAutomations(instaAccountId).catch(() => {});
+    await invalidateAutomationsForAccount(instaAccountId, "create");
   }
   return result;
 }
@@ -431,8 +431,7 @@ export async function updateAutomation(
   );
 
   if (result) {
-    // Invalidate the post/story automations cache so the worker pulls fresh rules
-    await invalidateAutomations(result.instaAccountId).catch(() => {});
+    await invalidateAutomationsForAccount(result.instaAccountId, "update");
   }
   return result;
 }
@@ -506,8 +505,43 @@ export async function softDeleteAutomation(automationId: string) {
   );
 
   if (result) {
-    // Invalidate workspace automation cache so the worker pulls fresh rules
-    await invalidateAutomations(result.instaAccountId).catch(() => {});
+    await invalidateAutomationsForAccount(result.instaAccountId, "delete");
   }
   return result;
+}
+
+/**
+ * Best-effort invalidation of automations for an Instagram account.
+ * Used after mutations to clear cache.
+ */
+async function invalidateAutomationsForAccount(
+  instaAccountId: string,
+  action: "create" | "update" | "delete",
+) {
+  try {
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: instaAccountId },
+      select: { webhookUserId: true, instagramUserId: true },
+    });
+
+    const identifier = account?.webhookUserId || account?.instagramUserId;
+    if (identifier) {
+      await invalidateAutomations(identifier).catch((err) => {
+        logger.error(
+          { err, identifier, action },
+          `[Repository:Automation] Post-${action} cache invalidation failed`,
+        );
+      });
+    } else {
+      logger.warn(
+        { instaAccountId, action, account },
+        `[Repository:Automation] Skipping post-${action} cache invalidation: No usable identifiers found`,
+      );
+    }
+  } catch (err) {
+    logger.error(
+      { err, instaAccountId, action },
+      `[Repository:Automation] Post-${action} account lookup for cache invalidation failed`,
+    );
+  }
 }

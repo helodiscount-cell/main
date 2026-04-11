@@ -7,6 +7,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { useUploadThing } from "@/lib/uploadthing";
 import { EDITOR_CANVAS_CONFIG } from "./config";
 import type { FormValues } from "@dm-broo/common-types";
+import { useFormEditor } from "../FormEditorProvider";
 
 // Cover image area with upload overlay and delete button
 // Uses uploadthing's hook under the hood, fires onChange to react-hook-form
@@ -30,9 +31,16 @@ type CoverImageAreaProps = {
 };
 
 const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
+  const { setIsMediaUploading } = useFormEditor();
+
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
+    onUploadBegin: () => setIsMediaUploading(true),
     onClientUploadComplete: (res) => {
+      setIsMediaUploading(false);
       if (res[0]?.ufsUrl) onChange(res[0].ufsUrl);
+    },
+    onUploadError: () => {
+      setIsMediaUploading(false);
     },
   });
 
@@ -70,7 +78,7 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
       >
         {/* Upload trigger */}
         <label
-          className={`flex items-center gap-1.5 bg-white/90 rounded-full px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all transform ${
+          className={`flex items-center gap-1.5 bg-white/90 rounded-full px-4 py-2 text-xs font-semibold text-slate-700 transition-all transform ${
             isUploading
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-white cursor-pointer hover:scale-105 active:scale-95"
@@ -96,7 +104,7 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
           <button
             type="button"
             onClick={handleDelete}
-            className="bg-red-500 hover:bg-red-600 rounded-full p-2 shadow-sm transition-all transform hover:scale-105 active:scale-95"
+            className="bg-red-500 hover:bg-red-600 rounded-full p-2 transition-all transform hover:scale-105 active:scale-95"
             aria-label="Remove cover image"
           >
             <Trash2 size={14} className="text-white" />

@@ -5,7 +5,6 @@ import {
   Link,
   Phone,
   MapPin,
-  Globe,
   Calendar,
   ChevronDown,
   CheckSquare,
@@ -40,7 +39,6 @@ export type HeaderAction = {
 };
 
 export const HEADER_ACTIONS: HeaderAction[] = [
-  { id: "refresh", icon: RefreshCw, label: "", variant: "primary" },
   { id: "copy-link", icon: Link2, label: "Copy Link", variant: "icon" },
   { id: "preview", icon: Play, label: "Preview", variant: "icon" },
   { id: "publish", icon: Send, label: "Publish", variant: "primary" },
@@ -81,10 +79,7 @@ export const FIELD_TYPE_GROUPS: FieldTypeGroup[] = [
   },
   {
     groupLabel: "Location",
-    options: [
-      { type: "location", label: "Location", icon: MapPin },
-      { type: "country", label: "Country", icon: Globe },
-    ],
+    options: [{ type: "location", label: "Location", icon: MapPin }],
   },
   {
     groupLabel: "Date",
@@ -112,7 +107,6 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   url: "URL",
   phone: "Phone",
   location: "Location",
-  country: "Country",
   date: "Date",
   dropdown: "Dropdown",
   checkbox: "Checkbox",

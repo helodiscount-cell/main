@@ -79,7 +79,7 @@ export function BestPerformerWidget({
       borderRadius="32px"
     >
       <div
-        className={`bg-white rounded-[32px] p-7 shadow-sm border border-gray-100 flex flex-col gap-6 w-full min-h-[380px]`}
+        className={`bg-white rounded-[32px] p-7 border border-gray-100 flex flex-col gap-6 w-full min-h-[380px]`}
       >
         {/* Header section with title and range */}
         <div className="flex justify-between items-center">
@@ -160,7 +160,7 @@ export function BestPerformerWidget({
                     >
                       {/* Value Badge on Hover */}
                       <div
-                        className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none z-30 whitespace-nowrap -translate-x-1/2 left-1/2 group-hover:-translate-y-2"
+                        className="absolute opacity-0 group-hover:opacity-100 transition-all duration-300 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded   pointer-events-none z-30 whitespace-nowrap -translate-x-1/2 left-1/2 group-hover:-translate-y-2"
                         style={{ bottom: `calc(${heightPercent}% + 56px)` }}
                       >
                         {data.value} Triggers
@@ -168,7 +168,7 @@ export function BestPerformerWidget({
 
                       {/* Image hovering over bar */}
                       <div
-                        className="absolute w-[40px] h-[40px] rounded-lg overflow-hidden shadow-md border-2 border-white transition-transform duration-300 group-hover:-translate-y-2 z-20 bg-slate-100"
+                        className="absolute w-[40px] h-[40px] rounded-lg overflow-hidden    border-2 border-white transition-transform duration-300 group-hover:-translate-y-2 z-20 bg-slate-100"
                         style={{ bottom: `calc(${heightPercent}% + 8px)` }}
                       >
                         {data.imageUrl ? (
@@ -190,7 +190,7 @@ export function BestPerformerWidget({
 
                       {/* Bar with gradient */}
                       <div
-                        className="w-[44px] bg-linear-to-t from-purple-600 to-purple-400 rounded-t-xl transition-all duration-700 ease-out shadow-sm group-hover:from-purple-500 group-hover:to-purple-300"
+                        className="w-[44px] bg-linear-to-t from-purple-600 to-purple-400 rounded-t-xl transition-all duration-700 ease-out group-hover:from-purple-500 group-hover:to-purple-300"
                         style={{ height: `${heightPercent}%` }}
                       />
 
@@ -208,11 +208,11 @@ export function BestPerformerWidget({
             </div>
 
             {/* Right Column: Best Time To Post */}
-            <div className="w-full md:w-[280px] bg-linear-to-br from-[#F8FAFC] to-[#F1F5F9] rounded-[28px] p-6 flex flex-col items-center justify-center text-center gap-4 border border-white shadow-inner shrink-0 relative">
+            <div className="w-full md:w-[280px] bg-linear-to-br from-[#F8FAFC] to-[#F1F5F9] rounded-[28px] p-6 flex flex-col items-center justify-center text-center gap-4 border border-white    -inner shrink-0 relative">
               <h4 className="text-[#1E293B] font-bold text-base">
                 Best Time To Post
               </h4>
-              <div className="w-[130px] h-[130px] rounded-[20px] overflow-hidden shadow-lg border-4 border-white relative transition-transform duration-300">
+              <div className="w-[130px] h-[130px] rounded-[20px] overflow-hidden   border-4 border-white relative transition-transform duration-300">
                 {config.bestTimeData.imageUrl ? (
                   <Image
                     src={config.bestTimeData.imageUrl}

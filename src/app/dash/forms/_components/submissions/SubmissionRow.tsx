@@ -31,11 +31,11 @@ export const SubmissionRow = ({
     >
       {/* User Identity Column */}
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-[#F5F3FF] flex items-center justify-center text-[#6A06E4] group-hover:bg-[#6A06E4] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#E9E4FF]">
+        <div className="w-10 h-10 rounded-lg bg-[#F5F3FF] flex items-center justify-center text-[#6A06E4] group-hover:bg-[#6A06E4] group-hover:text-white transition-colors duration-300 border border-[#E9E4FF]">
           <Layers size={18} />
         </div>
         <span className="capitalize text-sm font-medium text-[#212121] group-hover:text-[#6A06E4] transition-colors">
-          {name}
+          {name.length > 0 ? name : "Unknown User"}
         </span>
       </div>
 

@@ -40,7 +40,7 @@ export default async function BillingPage() {
       </header>
 
       {/* Current Usage Section */}
-      <section className="bg-card border rounded-3xl p-8 shadow-sm">
+      <section className="bg-card border rounded-3xl p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="space-y-2">
             <UsageBar used={creditsUsed} limit={creditLimit} />

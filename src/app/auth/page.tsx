@@ -54,7 +54,7 @@ const AuthPage = async () => {
 
             {/* Log In Button */}
             <div className="animation-delay-500 animate-fade-in">
-              <button className="w-full bg-linear-to-r from-purple-600 to-pink-600 text-white font-semibold py-3.5 rounded-xl hover:shadow-lg hover:shadow-purple-300 transform hover:-translate-y-0.5 transition-all duration-300">
+              <button className="w-full bg-linear-to-r from-purple-600 to-pink-600 text-white font-semibold py-3.5 rounded-xl transform hover:-translate-y-0.5 transition-all duration-300">
                 Log In
               </button>
             </div>
@@ -85,7 +85,7 @@ const AuthPage = async () => {
               src={GirlImage}
               alt="Welcome"
               fill
-              className="object-contain drop-shadow-2xl"
+              className="object-contain drop-"
               priority
             />
           </div>

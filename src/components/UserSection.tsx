@@ -66,7 +66,7 @@ const UserSection = async () => {
   return (
     <div className="flex flex-col items-center gap-3 py-4 px-2">
       {/* Profile Image with polished gradient border */}
-      <div className="relative w-28 h-28 rounded-full p-[3px] bg-linear-to-br from-[#6A06E4] via-purple-300 to-blue-200 shadow-md">
+      <div className="relative w-28 h-28 rounded-full p-[3px] bg-linear-to-br from-[#6A06E4] via-purple-300 to-blue-200">
         <div className="w-full h-full rounded-full overflow-hidden bg-white ring-2 ring-white">
           {account.profilePictureUrl ? (
             <Image
@@ -91,7 +91,7 @@ const UserSection = async () => {
           @{account.username}
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
             Active
           </span>

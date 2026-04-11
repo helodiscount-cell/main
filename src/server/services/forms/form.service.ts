@@ -16,6 +16,7 @@ import type {
   CreateFormInput,
   SubmitFormInput,
   FieldType,
+  FormStatus,
 } from "@dm-broo/common-types";
 import type { FormFieldEntry } from "@prisma/client";
 
@@ -30,7 +31,9 @@ const FIELD_VALIDATORS: Partial<
     !isNaN(Number(v)) &&
     v.trim() !== "" &&
     v.length <= 15,
-  phone: (v) => typeof v === "string" && /^\+\d{11,14}$/.test(v),
+  phone: (v) =>
+    typeof v === "string" &&
+    (/^\+\d{11,14}$/.test(v) || /^\+\d{1,4}\|phone\|\d{7,10}$/.test(v)),
   rating: (v) =>
     typeof v === "string" &&
     Number(v) >= 1 &&
@@ -83,8 +86,11 @@ export async function createForm(
 }
 
 // Lightweight list for the dashboard — workspace scoped
-export async function getUserForms(instaAccountId: string) {
-  const forms = await findFormsByInstaAccountId(instaAccountId);
+export async function getUserForms(
+  instaAccountId: string,
+  status?: FormStatus,
+) {
+  const forms = await findFormsByInstaAccountId(instaAccountId, status);
 
   return forms.map((f) => ({
     id: f.id,
@@ -129,12 +135,17 @@ export async function getPublicFormBySlug(slug: string) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 
+  if (form.status !== "PUBLISHED") {
+    throw new ApiRouteError("Form is not published", "NOT_PUBLISHED", 403);
+  }
+
   return {
     id: form.id,
     title: form.title,
     description: form.description,
     coverImage: form.coverImage,
     fields: form.fields,
+    status: form.status,
   };
 }
 
@@ -148,6 +159,10 @@ export async function submitForm(
 
   if (!form) {
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
+  }
+
+  if (form.status !== "PUBLISHED") {
+    throw new ApiRouteError("Form is not published", "NOT_PUBLISHED", 403);
   }
 
   // Walk every field and validate the submitted answer

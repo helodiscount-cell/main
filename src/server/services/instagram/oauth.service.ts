@@ -40,7 +40,7 @@ import {
   getLongLivedToken,
 } from "@/server/instagram/token-manager";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import { OAuthState } from "@dm-broo/common-types";
+import type { OAuthState } from "@dm-broo/common-types";
 import {
   setUserConnected,
   invalidateUser,
@@ -317,8 +317,12 @@ export async function handleOAuthCallback(code: string, state: string) {
     }
 
     // Populate Redis so the worker instantly knows this workspace is live
-    await setUserConnected(String(instagramUser.id));
-    await cacheAccessTokenR(instaAccount.id, longLivedToken.access_token);
+    await setUserConnected(instagramUser.user_id);
+    await cacheAccessTokenR(
+      clerkId,
+      instagramUser.user_id,
+      longLivedToken.access_token,
+    );
 
     // Trigger onboarding email only for the first connected account
     if (userCreated && user.email) {
@@ -352,6 +356,14 @@ export async function refreshAccessToken(
 ) {
   const account = await prisma.instaAccount.findFirst({
     where: { id: instaAccountId, user: { clerkId }, isActive: true },
+    select: {
+      id: true,
+      accessToken: true,
+      refreshToken: true,
+      tokenExpiresAt: true,
+      webhookUserId: true,
+      instagramUserId: true,
+    },
   });
 
   if (!account) {
@@ -361,7 +373,15 @@ export async function refreshAccessToken(
   const { accessToken, expiresAt } = await refreshToken(account);
 
   // Push new token to cache so worker picks it up immediately
-  await cacheAccessTokenR(account.id, accessToken);
+  const identifier = account.webhookUserId || account.instagramUserId;
+  if (identifier) {
+    await cacheAccessTokenR(clerkId, identifier, accessToken);
+  } else {
+    clogger.warn(
+      { clerkId, instaAccountId },
+      "[OAuthService:Refresh] No usable identifiers found for account; skipping cache update",
+    );
+  }
 
   return {
     message: "Token refreshed successfully",
@@ -380,6 +400,7 @@ export async function disconnectAccount(
       id: true,
       userId: true,
       instagramUserId: true,
+      webhookUserId: true,
       user: { select: { id: true, clerkId: true } },
     },
   });
@@ -392,11 +413,12 @@ export async function disconnectAccount(
     );
   }
 
-  // Flush Redis cache for this workspace immediately (instaAccountId scoped)
-  await invalidateUser(account.instagramUserId, account.id, account.id);
-
   // Soft-deactivate; keeps historical data intact
   await deactivateInstaAccount(account.id, account.user.id);
+
+  // Flush Redis cache for this workspace only after successful DB update
+  const identifier = account.webhookUserId || account.instagramUserId;
+  await invalidateUser(account.user.clerkId, identifier);
 
   return { message: "Instagram account disconnected successfully" };
 }

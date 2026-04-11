@@ -39,7 +39,7 @@ export function AccountsTab({ accounts, activeAccountId }: AccountsTabProps) {
       </div>
 
       <Link href={CONNECT_ROUTE} className="w-full">
-        <Button className="w-full py-6 bg-[#6A06E4] hover:bg-[#5A05C4] text-white font-medium text-md shadow-purple-200 transition-all">
+        <Button className="w-full py-6 bg-[#6A06E4] hover:bg-[#5A05C4] text-white font-medium text-md    -purple-200 transition-all">
           Add New Account
         </Button>
       </Link>

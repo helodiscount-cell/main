@@ -23,7 +23,7 @@ export function RefreshInstaDialog() {
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
-        className="sm:max-w-xl p-8 rounded-[32px] gap-6 flex flex-col items-center shadow-[0_0_50px_rgba(106,6,228,0.4)]"
+        className="sm:max-w-xl p-8 rounded-[32px] gap-6 flex flex-col items-center"
       >
         <DialogHeader className="space-y-1 items-center">
           <DialogTitle className="text-[23px] font-medium text-[#0F172A] text-center leading-tight">

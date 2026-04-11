@@ -57,14 +57,14 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
 
   return (
     <div
-      className={`relative p-8 rounded-3xl border transition-all duration-300 hover:shadow-xl ${
+      className={`relative p-8 rounded-3xl border transition-all duration-300 ${
         isCurrent
-          ? "bg-primary/5 border-primary shadow-lg ring-1 ring-primary/20"
+          ? "bg-primary/5 border-primary   ring-1 ring-primary/20"
           : "bg-card hover:border-primary/50"
       }`}
     >
       {isCurrent && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest   ">
           Current Plan
         </span>
       )}
@@ -118,7 +118,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
           className={`w-full py-4 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 ${
             isCurrent
               ? "bg-emerald-500/10 text-emerald-600 cursor-default"
-              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+              : "bg-primary text-primary-foreground"
           }`}
         >
           {loading ? (

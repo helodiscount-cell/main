@@ -8,15 +8,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon } from "lucide-react";
+import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import { useEffect, useState } from "react";
 import {
   DMForComments,
   DmForStories,
   TabSelector,
 } from "@/components/dash/automations/create";
+import Image from "next/image";
 
-export default function CreateAutomationDialog({ title }: { title: string }) {
+export default function CreateAutomationDialog({
+  title,
+  triggerClassName,
+}: {
+  title: string;
+  triggerClassName?: string;
+}) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   const renderContent = () => {
@@ -26,7 +33,9 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
       case "dm-from-stories":
         return <DmForStories onSetActiveTab={setActiveTab} />;
       default:
-        return <TabSelector setActiveTab={setActiveTab} />;
+        return (
+          <TabSelector setActiveTab={setActiveTab} activeTab={activeTab} />
+        );
     }
   };
 
@@ -39,8 +48,13 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
   return (
     <Dialog onOpenChange={(open) => !open && setActiveTab(null)}>
       <DialogTrigger asChild>
-        <Button className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none">
-          <PlusIcon />
+        <Button
+          className={
+            triggerClassName ||
+            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none"
+          }
+        >
+          <Image src={PlusIconSvg} alt="add" width={15} height={15} />
           {title}
         </Button>
       </DialogTrigger>
@@ -49,13 +63,11 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
         showCloseButton={false}
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold tracking-tight">
-            <div className="flex flex-1 justify-between">
-              {activeTab ? "Configure Automation" : "Choose a Template"}
-            </div>
+          <DialogTitle className="text-xl font-semibold tracking-tight flex flex-1 justify-between">
+            {activeTab ? "Configure Automation" : "Choose a Template"}
           </DialogTitle>
         </DialogHeader>
-        <div>{renderContent()}</div>
+        <div className="w-2xl">{renderContent()}</div>
       </DialogContent>
     </Dialog>
   );

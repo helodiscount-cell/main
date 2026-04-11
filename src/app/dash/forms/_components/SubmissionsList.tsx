@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import type { FormField } from "@dm-broo/common-types";
 import type { FormSubmission } from "@/types/form";
-import { ArrowDown, Layers } from "lucide-react";
+import { ArrowDown, ArrowUp, Layers } from "lucide-react";
 import { SubmissionRow } from "./submissions/SubmissionRow";
 import { SubmissionDetailDialog } from "./submissions/SubmissionDetailDialog";
 
@@ -22,6 +22,20 @@ export const SubmissionsList = ({
 }: SubmissionsListProps) => {
   const [selectedSubmission, setSelectedSubmission] =
     useState<FormSubmission | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const sortedSubmissions = useMemo(() => {
+    return [...submissions].sort((a, b) => {
+      const dateA = new Date(a.submittedAt).getTime();
+      const dateB = new Date(b.submittedAt).getTime();
+      if (sortOrder === "asc") return dateA - dateB;
+      return dateB - dateA;
+    });
+  }, [submissions, sortOrder]);
+
+  const toggleSort = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
 
   if (submissions.length === 0) {
     return (
@@ -44,21 +58,36 @@ export const SubmissionsList = ({
   return (
     <div className="w-full rounded-2xl overflow-hidden">
       {/* List Header */}
-      <div className="grid grid-cols-[1fr_auto] items-center px-8 py-4 bg-[#F9F9F9] m-4 rounded-md">
+      <div className="grid grid-cols-[1fr_auto] items-center px-8 py-4 bg-[#f1f1f1] m-4 rounded-md">
         <span className="text-sm font-semibold text-[#212121] text-left">
           Title
         </span>
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#212121]">
-          <span>Submitted</span>
-          <div className="bg-slate-900 text-white rounded-md p-1">
-            <ArrowDown size={14} />
-          </div>
+        <div
+          aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
+          className="flex items-center"
+        >
+          <button
+            type="button"
+            onClick={toggleSort}
+            aria-label={`Sort submissions, ${
+              sortOrder === "desc" ? "newest first" : "oldest first"
+            }`}
+            className="flex items-center gap-2 text-sm font-semibold text-[#212121] hover:text-[#6A06E4] transition-colors group"
+          >
+            <span>Submitted</span>
+            <div className="bg-slate-900 text-white rounded-md p-1 group-hover:bg-[#6A06E4] transition-colors">
+              {sortOrder === "desc" ? (
+                <ArrowDown size={14} />
+              ) : (
+                <ArrowUp size={14} />
+              )}
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Submission Rows */}
       <div className="divide-y divide-slate-50">
-        {submissions.map((submission) => (
+        {sortedSubmissions.map((submission) => (
           <SubmissionRow
             key={submission.id}
             submission={submission}

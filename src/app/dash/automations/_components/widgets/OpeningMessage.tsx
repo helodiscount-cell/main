@@ -25,7 +25,7 @@ const OpeningMessage = ({
   const [isEditable, setIsEditable] = useState(false);
 
   return (
-    <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden shadow-sm">
+    <div className="bg-white rounded-xl border border-purple-300 w-full overflow-hidden">
       {/* Header section with toggle */}
       <div className="flex items-center justify-between px-4 py-3.5">
         <span className="text-sm font-bold text-slate-800">
@@ -39,7 +39,7 @@ const OpeningMessage = ({
           }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full     transition-transform duration-200 ${
               enabled ? "translate-x-5" : "translate-x-0"
             }`}
           />

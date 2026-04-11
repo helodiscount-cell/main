@@ -1,6 +1,6 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
-import type { CreateFormInput } from "@dm-broo/common-types";
+import type { CreateFormInput, FormStatus } from "@dm-broo/common-types";
 import type { Form, FormSubmission } from "@prisma/client";
 
 // Generates a short 8-char alphanumeric slug from a UUID
@@ -45,14 +45,18 @@ export async function createForm(
   throw new Error("Failed to generate a unique slug after 5 attempts");
 }
 
-// All forms for a workspace, ordered newest first
+// All forms for a workspace, ordered newest first. Optionally filter by status.
 export async function findFormsByInstaAccountId(
   instaAccountId: string,
+  status?: FormStatus,
 ): Promise<Form[]> {
   return executeWithErrorHandling(
     () =>
       prisma.form.findMany({
-        where: { instaAccountId },
+        where: {
+          instaAccountId,
+          ...(status ? { status } : {}),
+        },
         orderBy: { createdAt: "desc" },
       }),
     { operation: "findFormsByInstaAccountId", model: "Form", fallback: [] },

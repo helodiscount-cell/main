@@ -1,25 +1,48 @@
 import type { FormField } from "@dm-broo/common-types";
 import type { FormSubmission } from "@/types/form";
 
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|svg|bmp)$/i;
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|svg|bmp)/i;
 
 // Returns true when the value looks like an image URL
 export const isImageUrl = (value: string): boolean => {
+  if (!value) return false;
   try {
     const url = new URL(value);
     const pathname = url.pathname;
-    return IMAGE_EXTENSIONS.test(pathname);
+
+    // Support Uploadthing: often images don't have extensions in the URL
+    if (url.hostname === "utfs.io" && pathname.startsWith("/f/")) {
+      return true;
+    }
+
+    // Check pathname or query parameters for image extensions
+    return IMAGE_EXTENSIONS.test(pathname) || IMAGE_EXTENSIONS.test(url.search);
   } catch {
-    return false;
+    // If not a URL, check if the string itself ends with an extension
+    return IMAGE_EXTENSIONS.test(value);
   }
 };
 
 // Extracts a human-readable filename from a URL for use in download attribute
 export const getFileNameFromUrl = (url: string): string => {
   try {
-    const pathname = new URL(url).pathname;
+    const parsed = new URL(url);
+    const pathname = parsed.pathname;
     const segments = pathname.split("/").filter(Boolean);
-    return decodeURIComponent(segments[segments.length - 1] ?? "download");
+    let filename = decodeURIComponent(
+      segments[segments.length - 1] ?? "download",
+    );
+
+    // Handle Uploadthing specific prefix stripping (UUID-filename)
+    if (parsed.hostname === "utfs.io" && pathname.startsWith("/f/")) {
+      const parts = filename.split("-");
+      if (parts.length > 1) {
+        // Remove the first part if it looks like a hex/uuid segment
+        filename = parts.slice(1).join("-");
+      }
+    }
+
+    return filename;
   } catch {
     return "download";
   }

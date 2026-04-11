@@ -14,12 +14,12 @@ export function SettingsLayout({ children, header }: SettingsLayoutProps) {
     >
       <div className="w-full max-w-4xl flex flex-col gap-4">
         {/* Navigation/Header Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white rounded-2xl p-6 flex items-center justify-between">
           {header}
         </div>
 
         {/* Content Card */}
-        <div className="bg-white rounded-2xl p-10 shadow-sm min-h-[500px]">
+        <div className="bg-white rounded-2xl p-10 min-h-[500px]">
           {children}
         </div>
       </div>

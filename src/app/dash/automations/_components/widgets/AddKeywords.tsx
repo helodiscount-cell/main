@@ -80,7 +80,7 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-white rounded-full transition-transform duration-200 ${
                   isAnyKeyword ? "translate-x-4.5" : "translate-x-0"
                 }`}
               />

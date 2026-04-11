@@ -32,7 +32,7 @@ const Section2 = () => {
 };
 
 const FeatureCard = () => (
-  <div className="relative w-full max-w-[966px] mx-auto p-12 bg-white rounded-3xl border-2 border-purple-200 shadow-lg overflow-visible">
+  <div className="relative w-full max-w-[966px] mx-auto p-12 bg-white rounded-3xl border-2 border-purple-200   overflow-visible">
     {/* Grid background */}
     <div className="absolute inset-0 opacity-10">
       <div
@@ -87,7 +87,7 @@ const FeatureCard = () => (
         <GrowthLine className="absolute top-10" />
 
         {/* "After" label */}
-        <div className="absolute top-8 right-12 flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200 shadow-sm">
+        <div className="absolute top-8 right-12 flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-purple-200">
           <span className="text-sm font-semibold text-gray-900">After</span>
           <MessageSquare className="w-4 h-4 text-purple-600" />
         </div>

@@ -8,7 +8,7 @@ import type { PlanId } from "@/configs/plans.config";
  * Called on subscription activation, renewal, and downgrade.
  */
 export async function syncCreditStateToRedis(
-  userId: string,
+  clerkId: string,
   creditsUsed: number,
   creditLimit: number,
   status: string,
@@ -16,7 +16,7 @@ export async function syncCreditStateToRedis(
   const redis = getRedisClient();
   if (!redis) {
     logger.warn(
-      { userId },
+      { clerkId },
       "Redis unavailable — billing state not synced to cache",
     );
     return;
@@ -26,28 +26,28 @@ export async function syncCreditStateToRedis(
     const multi = redis.multi();
     const SIX_MONTHS = 180 * 24 * 60 * 60; // 6-month TTL for billing cache
     multi.set(
-      KEYS.CREDIT_USED(userId),
+      KEYS.CREDIT_USED(clerkId),
       creditsUsed.toString(),
       "EX",
       SIX_MONTHS,
     );
     multi.set(
-      KEYS.CREDIT_LIMIT(userId),
+      KEYS.CREDIT_LIMIT(clerkId),
       creditLimit.toString(),
       "EX",
       SIX_MONTHS,
     );
-    multi.set(KEYS.SUB_STATUS(userId), status, "EX", SIX_MONTHS);
+    multi.set(KEYS.SUB_STATUS(clerkId), status, "EX", SIX_MONTHS);
     await multi.exec();
 
     logger.info(
-      { userId, creditsUsed, creditLimit, status },
+      { clerkId, creditsUsed, creditLimit, status },
       "Billing state synced to Redis",
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error(
-      { userId, err: message },
+      { clerkId, err: message },
       "Failed to sync billing state to Redis",
     );
   }
@@ -59,14 +59,14 @@ export async function syncCreditStateToRedis(
  * Ensures an expiry is set if a new key is created.
  */
 export async function incrementCreditUsedR(
-  userId: string,
+  clerkId: string,
 ): Promise<number | null> {
   const redis = getRedisClient();
   if (!redis) return null;
 
   try {
     const SIX_MONTHS = 180 * 24 * 60 * 60;
-    const key = KEYS.CREDIT_USED(userId);
+    const key = KEYS.CREDIT_USED(clerkId);
 
     const multi = redis.multi();
     multi.incr(key);
@@ -88,7 +88,7 @@ export async function incrementCreditUsedR(
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error(
-      { userId, err: message },
+      { clerkId, err: message },
       "Failed to increment credit counter in Redis",
     );
     return null;
@@ -99,7 +99,7 @@ export async function incrementCreditUsedR(
  * Reads current credit state from Redis.
  * Returns null values when the key is missing (indicating a cache miss).
  */
-export async function getCreditStateR(userId: string): Promise<{
+export async function getCreditStateR(clerkId: string): Promise<{
   creditsUsed: number | null;
   creditLimit: number | null;
   subStatus: string | null;
@@ -109,9 +109,9 @@ export async function getCreditStateR(userId: string): Promise<{
 
   try {
     const [used, limit, status] = await redis.mget(
-      KEYS.CREDIT_USED(userId),
-      KEYS.CREDIT_LIMIT(userId),
-      KEYS.SUB_STATUS(userId),
+      KEYS.CREDIT_USED(clerkId),
+      KEYS.CREDIT_LIMIT(clerkId),
+      KEYS.SUB_STATUS(clerkId),
     );
 
     return {
@@ -122,7 +122,7 @@ export async function getCreditStateR(userId: string): Promise<{
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error(
-      { userId, err: message },
+      { clerkId, err: message },
       "Failed to read credit state from Redis",
     );
     return { creditsUsed: null, creditLimit: null, subStatus: null };
