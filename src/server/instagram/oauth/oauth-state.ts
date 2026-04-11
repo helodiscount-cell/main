@@ -3,7 +3,7 @@
  * Provides secure state generation and validation to prevent CSRF attacks
  */
 
-import { OAuthState } from "@dm-broo/common-types";
+import type { OAuthState } from "@dm-broo/common-types";
 import crypto from "crypto";
 
 /**

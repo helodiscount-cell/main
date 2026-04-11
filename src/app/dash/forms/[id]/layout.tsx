@@ -79,6 +79,8 @@ const FormLayoutHeader = ({
     [save, currentStatus],
   );
 
+  const handleUnpublish = useCallback(() => save("DRAFT"), [save]);
+
   if (isMobile) {
     return (
       <>
@@ -88,6 +90,8 @@ const FormLayoutHeader = ({
           onSave={handleSave}
           isLoading={isLoading}
           activeTab={activeTab}
+          onUpdate={handleUpdate}
+          onUnpublish={handleUnpublish}
         />
         <FormTabs formId={formId} activeTab={activeTab} />
       </>

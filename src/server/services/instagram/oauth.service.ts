@@ -40,7 +40,7 @@ import {
   getLongLivedToken,
 } from "@/server/instagram/token-manager";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import { OAuthState } from "@dm-broo/common-types";
+import type { OAuthState } from "@dm-broo/common-types";
 import {
   setUserConnected,
   invalidateUser,

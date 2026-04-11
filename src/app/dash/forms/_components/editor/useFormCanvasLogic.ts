@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useFieldArray, Control } from "react-hook-form";
-import { FieldType, FormValues } from "@dm-broo/common-types";
+import type { FieldType, FormValues } from "@dm-broo/common-types";
 
 /**
  * Shared logic for the form canvas (FormEditorCanvas & MobileFormEditorCanvas).

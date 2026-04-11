@@ -12,7 +12,7 @@ import {
 } from "@/server/repository/forms";
 import { prisma } from "@/server/db";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import {
+import type {
   CreateFormInput,
   SubmitFormInput,
   FieldType,

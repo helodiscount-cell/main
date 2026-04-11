@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
 import { formKeys } from "@/keys/react-query";
+import { type FormStatus } from "@dm-broo/common-types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DashboardHeader,
@@ -40,7 +41,9 @@ export default function FormsPage() {
     ),
     queryFn: () =>
       formService.list(
-        statusFilter !== "ALL" ? { status: statusFilter } : undefined,
+        statusFilter !== "ALL"
+          ? { status: statusFilter as FormStatus }
+          : undefined,
       ),
   });
 
