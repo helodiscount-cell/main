@@ -15,7 +15,8 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "type-check": "tsc --noEmit --pretty false"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.7",

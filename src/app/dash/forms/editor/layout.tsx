@@ -53,6 +53,8 @@ const EditorLayoutHeader = ({ formId }: { formId?: string }) => {
           onSave={handleSave}
           isLoading={isLoading}
           activeTab="editor"
+          onUpdate={handleSave}
+          onUnpublish={handleSave}
         />
         <FormTabs activeTab="editor" formId={formId} />
       </>
