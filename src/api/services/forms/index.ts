@@ -1,6 +1,6 @@
 import { api, request } from "@/api/client";
 import type { ApiResponse } from "@/types/api";
-import type { CreateFormInput } from "@dm-broo/common-types";
+import type { CreateFormInput, FormStatus } from "@dm-broo/common-types";
 import type {
   FormListItem,
   FormDetail,
@@ -30,7 +30,7 @@ export const formService = {
   },
 
   // Lists all forms for the dashboard
-  list: async (params?: { status?: string }): Promise<FormListItem[]> => {
+  list: async (params?: { status?: FormStatus }): Promise<FormListItem[]> => {
     const envelope = await request(
       api.get<ApiResponse<FormListItem[]>>("/forms", { params }),
     );

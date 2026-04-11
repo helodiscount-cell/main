@@ -2,9 +2,15 @@
 import { getUserForms } from "@/server/services/forms";
 import { runWithErrorHandling } from "@/server/middleware/errors";
 
+import { FormStatusSchema } from "@dm-broo/common-types";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get("status") || undefined;
+  const statusParam = searchParams.get("status");
+
+  // Validate status against the strict enum (DRAFT | PUBLISHED)
+  const validation = FormStatusSchema.safeParse(statusParam);
+  const status = validation.success ? validation.data : undefined;
 
   return runWithErrorHandling(
     async ({ instaAccountId }) => {

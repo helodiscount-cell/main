@@ -5,7 +5,7 @@
 
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
-import { CreateAutomationInput } from "@dm-broo/common-types";
+import type { CreateAutomationInput } from "@dm-broo/common-types";
 import { invalidateAutomations } from "@/server/redis";
 import { logger } from "@/server/utils/pino";
 
@@ -521,10 +521,10 @@ async function invalidateAutomationsForAccount(
   try {
     const account = await prisma.instaAccount.findUnique({
       where: { id: instaAccountId },
-      select: { webhookUserId: true },
+      select: { webhookUserId: true, instagramUserId: true },
     });
 
-    const identifier = account?.webhookUserId;
+    const identifier = account?.webhookUserId || account?.instagramUserId;
     if (identifier) {
       await invalidateAutomations(identifier).catch((err) => {
         logger.error(
@@ -534,8 +534,8 @@ async function invalidateAutomationsForAccount(
       });
     } else {
       logger.warn(
-        { instaAccountId, action },
-        `[Repository:Automation] Skipping post-${action} cache invalidation: No webhookUserId found`,
+        { instaAccountId, action, account },
+        `[Repository:Automation] Skipping post-${action} cache invalidation: No usable identifiers found`,
       );
     }
   } catch (err) {
