@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import { Search, RefreshCw, PanelLeft } from "lucide-react";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { Search, PanelLeft } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface MobileDashboardHeaderProps {
   title: string;
-  onSearch?: () => void;
-  onRefresh?: () => void;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 /**
@@ -18,8 +18,8 @@ interface MobileDashboardHeaderProps {
  */
 export const MobileDashboardHeader = ({
   title,
-  onSearch,
-  onRefresh,
+  searchValue = "",
+  onSearchChange,
 }: MobileDashboardHeaderProps) => {
   return (
     <div className="flex flex-col gap-6 px-5 py-6 bg-[#f1f1f1]">
@@ -39,34 +39,27 @@ export const MobileDashboardHeader = ({
       </div>
 
       {/* Action Row */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {/* Title Box */}
-        <div className="h-12 bg-white rounded-2xl px-5 flex items-center flex-1 -sm border border-slate-50">
-          <span className="text-[17px] font-bold text-slate-800">{title}</span>
+        <div className="h-12 bg-white rounded-2xl px-5 flex items-center shrink-0 border border-slate-50">
+          <span className="text-[17px] font-bold text-slate-800 whitespace-nowrap">
+            {title}
+          </span>
         </div>
 
-        {/* Search Toggle */}
-        <Button
-          size="icon"
-          variant="ghost"
-          aria-label="Open search"
-          onClick={onSearch}
-          disabled={!onSearch}
-          className="h-12 w-12 bg-white rounded-2xl text-slate-400 -sm border border-slate-50 hover:bg-white active:scale-95 transition-transform disabled:opacity-50"
-        >
-          <Search size={22} />
-        </Button>
-
-        {/* Refresh Action */}
-        <Button
-          size="icon"
-          aria-label="Refresh"
-          onClick={onRefresh}
-          disabled={!onRefresh}
-          className="h-12 w-12 bg-[#6A06E4] hover:bg-[#5a05c4] rounded-xl text-white -sm border-none active:scale-95 transition-transform disabled:opacity-50"
-        >
-          <RefreshCw size={22} />
-        </Button>
+        {/* Search Input */}
+        <div className="relative flex-1 group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#6A06E4] transition-colors">
+            <Search size={18} />
+          </div>
+          <Input
+            type="text"
+            placeholder="Search"
+            value={searchValue}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            className="h-12 w-full pl-11 pr-4 bg-white rounded-2xl border-slate-50 border outline-none focus-visible:ring-1 focus-visible:ring-purple-200 text-slate-800 text-[15px] font-medium placeholder:text-slate-400 transition-all"
+          />
+        </div>
       </div>
     </div>
   );

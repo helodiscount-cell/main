@@ -123,7 +123,6 @@ export const MobileCard = ({ data }: MobileCardProps) => {
                   formId={data.id}
                   onClose={() => setMenuOpen(false)}
                   slug={(data as FormListItem).slug}
-                  status={(data as FormListItem).status}
                 />
               ))}
           </div>
@@ -143,12 +142,22 @@ export const MobileCard = ({ data }: MobileCardProps) => {
               </span>
             </div>
             {isAutomation && mapped.secondaryStats !== undefined && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 ">
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                   {mapped.secondaryStatsLabel}
                 </span>
                 <span className="text-sm text-slate-600 font-bold font-mono">
                   {mapped.secondaryStats}
+                </span>
+              </div>
+            )}
+            {isAutomation && mapped.newFollowersGained !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  New Followers
+                </span>
+                <span className="text-sm text-emerald-600 font-bold font-mono">
+                  {mapped.newFollowersGained}
                 </span>
               </div>
             )}

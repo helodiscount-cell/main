@@ -19,6 +19,7 @@ export interface MappedDashboardItem {
   statsLabel: string;
   secondaryStats?: number;
   secondaryStatsLabel?: string;
+  newFollowersGained?: number;
   date: string;
   dateLabel: string;
   href: string | null;
@@ -42,6 +43,7 @@ export const mapDashboardItem = (
 
   if (isAutomation) {
     const automation = data as AutomationListItem;
+    const newFollowersGained = data.newFollowersGained;
     const imageUrl =
       automation.post?.thumbnailUrl ||
       automation.post?.mediaUrl ||
@@ -85,6 +87,7 @@ export const mapDashboardItem = (
       statsLabel: "Total Executions",
       secondaryStats: automation._count.executions,
       secondaryStatsLabel: "Runs",
+      newFollowersGained: automation.newFollowersGained,
       date: safeFormatDate(automation.lastTriggeredAt),
       dateLabel: "Last Triggered",
       raw: data,
