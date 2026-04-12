@@ -34,11 +34,12 @@ export const ourFileRouter = {
 
   // Add a route for public form attachments — anonymous users allowed
   formAttachment: f({
-    image: { maxFileSize: "4MB", maxFileCount: 1 },
+    // Permitted image types (excludes GIF)
+    "image/jpeg": { maxFileSize: "4MB", maxFileCount: 1 },
+    "image/png": { maxFileSize: "4MB", maxFileCount: 1 },
+    "image/webp": { maxFileSize: "4MB", maxFileCount: 1 },
     pdf: { maxFileSize: "4MB", maxFileCount: 1 },
     text: { maxFileSize: "4MB", maxFileCount: 1 },
-    video: { maxFileSize: "16MB", maxFileCount: 1 },
-    audio: { maxFileSize: "8MB", maxFileCount: 1 },
     "application/msword": { maxFileSize: "4MB", maxFileCount: 1 },
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
       maxFileSize: "4MB",

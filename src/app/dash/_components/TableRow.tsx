@@ -9,10 +9,13 @@ import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
 import { mapDashboardItem } from "./useDashboardItemMapper";
 import { MoreVertical } from "lucide-react";
 
+import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
+
 /**
  * Props for the dumb UI component.
  */
 export interface TableRowUIProps {
+  variant: TableVariant;
   icon: React.ReactNode;
   title: string;
   subtitle?: string | React.ReactNode;
@@ -22,12 +25,14 @@ export interface TableRowUIProps {
   date: React.ReactNode;
   actions: React.ReactNode;
   className?: string;
+  newFollowersGained: number;
 }
 
 /**
  * Purely presentational component that renders the table row structure.
  */
 const TableRowUI = ({
+  variant,
   icon,
   title,
   subtitle,
@@ -37,63 +42,113 @@ const TableRowUI = ({
   date,
   actions,
   className = "",
+  newFollowersGained,
 }: TableRowUIProps) => {
+  const config = TABLE_CONFIGS[variant];
+
   return (
     <div
-      className={`grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-8 py-4 gap-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group/row ${className}`}
+      className={`grid ${config.gridClass} items-center px-8 py-4 gap-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group/row ${className}`}
     >
-      {/* 1. Icon + Info */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-md bg-slate-50 shrink-0 flex items-center justify-center overflow-hidden border border-slate-100">
-          {icon}
-        </div>
-        {href ? (
-          <Link href={href} className="flex flex-col gap-0.5 group min-w-0">
-            <span className="text-sm font-medium text-slate-800 group-hover:text-[#6A06E4] transition-colors truncate">
-              {title}
-            </span>
-            {subtitle && (
-              <span className="text-xs text-slate-400 truncate max-w-[260px]">
-                {subtitle}
-              </span>
-            )}
-          </Link>
-        ) : (
-          <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
-            <span className="text-sm font-medium text-slate-800 truncate">
-              {title}
-            </span>
-            {subtitle && (
-              <span className="text-xs text-slate-400 truncate max-w-[260px]">
-                {subtitle}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      {config.columns.map((col) => {
+        if (col.type === "main") {
+          return (
+            <div key={col.id} className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-md bg-slate-50 shrink-0 flex items-center justify-center overflow-hidden border border-slate-100">
+                {icon}
+              </div>
+              {href ? (
+                <Link
+                  href={href}
+                  className="flex flex-col gap-0.5 group min-w-0"
+                >
+                  <span className="text-sm font-medium text-slate-800 group-hover:text-[#6A06E4] transition-colors truncate">
+                    {title}
+                  </span>
+                  {subtitle && (
+                    <span className="text-xs text-slate-400 truncate max-w-[260px]">
+                      {subtitle}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
+                  <span className="text-sm font-medium text-slate-800 truncate">
+                    {title}
+                  </span>
+                  {subtitle && (
+                    <span className="text-xs text-slate-400 truncate max-w-[260px]">
+                      {subtitle}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        }
 
-      {/* 2. Status Section */}
-      <div className="flex items-center gap-2 overflow-hidden">
-        {status}
-        <div className="w-px h-4 bg-slate-200 shrink-0" />
-      </div>
+        if (col.type === "status") {
+          return (
+            <div
+              key={col.id}
+              className="flex items-center justify-between gap-2 overflow-hidden"
+            >
+              {status}
+              <div className="w-px h-4 bg-slate-200 shrink-0" />
+            </div>
+          );
+        }
 
-      {/* 3. Stats Section */}
-      <div className="flex items-center gap-2 overflow-hidden">
-        <div className="text-sm text-slate-700 font-medium">{stats}</div>
-        <div className="w-px h-4 bg-slate-200 shrink-0" />
-      </div>
+        if (col.id === "count") {
+          return (
+            <div
+              key={col.id}
+              className="flex items-center justify-between gap-2 overflow-hidden"
+            >
+              <div className="text-sm text-slate-700 font-medium">{stats}</div>
+              <div className="w-px h-4 bg-slate-200 shrink-0" />
+            </div>
+          );
+        }
 
-      {/* 4. Timestamp */}
-      <div className="text-sm text-slate-500 whitespace-nowrap">{date}</div>
+        if (col.id === "followers") {
+          return (
+            <div
+              key={col.id}
+              className="flex items-center justify-between gap-2 overflow-hidden"
+            >
+              <div className="text-sm text-slate-700 font-medium whitespace-nowrap">
+                {newFollowersGained}
+              </div>
+              <div className="w-px h-4 bg-slate-200 shrink-0" />
+            </div>
+          );
+        }
 
-      {/* 5. Actions */}
-      <div className="flex justify-end">{actions}</div>
+        if (col.type === "date") {
+          return (
+            <div
+              key={col.id}
+              className="text-sm text-slate-500 whitespace-nowrap"
+            >
+              {date}
+            </div>
+          );
+        }
+
+        if (col.type === "actions") {
+          return (
+            <div key={col.id} className="flex justify-end">
+              {actions}
+            </div>
+          );
+        }
+
+        return null;
+      })}
     </div>
   );
 };
-
-// --- DATA MAPPING LOGIC SEPARATED FROM UI ---
 
 /**
  * Maps Automation and Form data to TableRow UI pieces.
@@ -102,7 +157,13 @@ const TableRowUI = ({
  * Main component that decides what to render based on input data.
  * Refactored to use a shared mapper for consistency with mobile views.
  */
-const TableRow = ({ data }: { data: AutomationListItem | FormListItem }) => {
+const TableRow = ({
+  data,
+  variant,
+}: {
+  data: AutomationListItem | FormListItem;
+  variant: TableVariant;
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
 
@@ -127,7 +188,6 @@ const TableRow = ({ data }: { data: AutomationListItem | FormListItem }) => {
             formId={data.id}
             onClose={() => setMenuOpen(false)}
             slug={(data as FormListItem).slug}
-            status={(data as FormListItem).status}
           />
         ))}
     </div>
@@ -135,12 +195,14 @@ const TableRow = ({ data }: { data: AutomationListItem | FormListItem }) => {
 
   return (
     <TableRowUI
+      variant={variant}
       icon={mapped.image}
       title={mapped.title}
       subtitle={mapped.subtitle}
       href={mapped.href}
       status={mapped.status}
       stats={mapped.stats}
+      newFollowersGained={mapped.newFollowersGained || 0}
       date={mapped.date}
       actions={actions}
     />

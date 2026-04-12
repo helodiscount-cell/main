@@ -240,6 +240,7 @@ export const PublicFieldRenderer = ({
 
     return (
       <div className="space-y-1.5 flex flex-col gap-2">
+        {/* File upload - Audio, Video, and GIFs are disallowed for public form submissions */}
         <label className="text-sm font-semibold text-slate-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -252,7 +253,14 @@ export const PublicFieldRenderer = ({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-emerald-900 truncate">
-                File uploaded successfully
+                {(() => {
+                  try {
+                    const data = JSON.parse(fileUrl);
+                    return data.name || "File uploaded";
+                  } catch {
+                    return "File uploaded";
+                  }
+                })()}
               </p>
               <button
                 type="button"
@@ -270,7 +278,12 @@ export const PublicFieldRenderer = ({
             onClientUploadComplete={(res) => {
               onUploadStateChange?.(false);
               if (res?.[0]) {
-                setValue(field.id, res[0].url);
+                // Store both URL and original filename as a stringified object
+                const uploadValue = JSON.stringify({
+                  url: res[0].url,
+                  name: res[0].name,
+                });
+                setValue(field.id, uploadValue);
                 toast.success("File uploaded!");
               }
             }}

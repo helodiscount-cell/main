@@ -19,8 +19,8 @@ export async function getUniqueContactsForWorkspace(
         where: {
           automation: { instaAccountId },
         },
-        // We use distinct on commentUserId to ensure each contact appears once
-        distinct: ["commentUserId"],
+        // We use distinct on senderId to ensure each contact appears once
+        distinct: ["senderId"],
         include: {
           automation: {
             select: {
@@ -41,7 +41,7 @@ export async function getUniqueContactsForWorkspace(
 
       // Interface for normalized contact data
       interface RepositoryContact {
-        id: string; // The commentUserId
+        id: string; // The senderId
         username: string;
         avatarUrl: string;
         type: "Post" | "Reel" | "Story";
@@ -60,8 +60,8 @@ export async function getUniqueContactsForWorkspace(
           }
 
           return {
-            id: execution.commentUserId,
-            username: execution.commentUsername,
+            id: execution.senderId,
+            username: execution.senderUsername,
             avatarUrl: "",
             type: type,
             email: null,

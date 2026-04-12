@@ -137,9 +137,10 @@ model Automation {
 
   useVariables Boolean @default(true)
 
-  status            String @default("ACTIVE") // ACTIVE, PAUSED, DELETED
-  timesTriggered    Int    @default(0)
-  triggersSignature String @default("")
+  status             String @default("ACTIVE") // ACTIVE, PAUSED, DELETED
+  timesTriggered     Int    @default(0)
+  newFollowersGained Int    @default(0)
+  triggersSignature  String @default("")
 
   lastTriggeredAt DateTime?
 
@@ -160,11 +161,11 @@ model AutomationExecution {
   automationId String     @db.ObjectId
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
 
-  // Comment/message details
-  commentId       String
-  commentText     String
-  commentUsername String
-  commentUserId   String
+  // Trigger details (Unified for Comment/DM/Story)
+  eventId        String
+  eventText      String
+  senderId       String
+  senderUsername String
 
   // Execution details
   actionType         String // DM or COMMENT_REPLY
@@ -175,7 +176,7 @@ model AutomationExecution {
   executedAt         DateTime @default(now())
   billed             Boolean  @default(false)
 
-  @@unique([commentId, automationId])
+  @@unique([eventId, automationId])
   @@index([automationId, status])
   @@map("automation_executions")
 }

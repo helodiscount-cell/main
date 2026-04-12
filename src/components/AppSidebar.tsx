@@ -30,14 +30,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   variant={"destructive"}
                   size="lg"
                   asChild
-                  className="w-full"
+                  className="w-full text-black"
                 >
                   <Link
                     href={"/auth/logout"}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-black"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Log out</span>
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span className="text-black">Log out</span>
                   </Link>
                 </Button>
               </div>

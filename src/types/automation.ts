@@ -7,6 +7,7 @@ export type TriggerType =
 export interface AutomationListItem {
   id: string;
   triggerType: TriggerType;
+  newFollowersGained: number;
   post: {
     id: string;
     caption: string | null;

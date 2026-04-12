@@ -78,7 +78,7 @@ export function AutomationActionsMenu({
 
   return (
     <ActionsMenu
-      menuItems={MENU_ITEMS as any}
+      menuItems={MENU_ITEMS}
       onClose={onClose}
       isDeleting={isDeleting}
       onDelete={() => deleteAutomation()}

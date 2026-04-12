@@ -4,7 +4,7 @@ import { ActionsMenu } from "@/components/shared/ActionsMenu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Pencil, Trash2, Play, Square } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 
 // Shared row actions menu — consumed by automations, forms, etc.
 const MENU_ITEMS = [
@@ -36,41 +36,13 @@ export function FormActionsMenu({
   onClose,
   formId,
   slug,
-  status,
 }: {
   onClose: () => void;
   formId: string;
   slug: string;
-  status: "DRAFT" | "PUBLISHED";
 }) {
   const navigate = useRouter();
   const queryClient = useQueryClient();
-
-  const isPublished = status === "PUBLISHED";
-
-  const { mutate: toggleStatus } = useMutation({
-    mutationFn: (newStatus: "DRAFT" | "PUBLISHED") =>
-      formService.update(formId, { status: newStatus } as any),
-    onSuccess: (_, variables) => {
-      toast.success(
-        variables === "PUBLISHED" ? "Form published!" : "Form moved to draft.",
-      );
-      queryClient.invalidateQueries({ queryKey: formKeys.all });
-      onClose();
-    },
-    onError: () => toast.error("Failed to update form status."),
-  });
-
-  const menuItems = [
-    {
-      key: "toggle",
-      label: isPublished ? "Pause" : "Publish",
-      icon: isPublished ? Square : Play,
-      className: isPublished ? "text-amber-500" : "text-emerald-500",
-      bg: isPublished ? "hover:bg-amber-50" : "hover:bg-emerald-50",
-    },
-    ...MENU_ITEMS,
-  ];
 
   const { mutate: deleteForm, isPending: isDeleting } = useMutation({
     mutationFn: () => formService.delete(formId),
@@ -95,13 +67,12 @@ export function FormActionsMenu({
 
   return (
     <ActionsMenu
-      menuItems={menuItems as any}
+      menuItems={MENU_ITEMS}
       onClose={onClose}
       isDeleting={isDeleting}
       onDelete={() => deleteForm()}
       onEdit={() => navigate.push(`/dash/forms/editor?id=${formId}`)}
       onCustom={copyToClipboard}
-      onToggle={() => toggleStatus(isPublished ? "DRAFT" : "PUBLISHED")}
     />
   );
 }

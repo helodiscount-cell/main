@@ -8,13 +8,14 @@ import {
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import React from "react";
 import ColHeader from "./ColHeader";
+import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
 export type StatusFilter = "ACTIVE" | "PAUSED" | "PUBLISHED" | "DRAFT" | "ALL";
-export type SortField = "count" | "date";
+export type SortField = "count" | "date" | "newFollowers";
 export type SortOrder = "asc" | "desc" | null;
 
 interface Props {
-  title: string;
+  variant: TableVariant;
   statusFilter: StatusFilter;
   setStatusFilter: (value: StatusFilter) => void;
   sortField?: SortField;
@@ -23,7 +24,7 @@ interface Props {
 }
 
 export const getStatusOptions = (
-  variant: "forms" | "automations",
+  variant: TableVariant,
 ): { label: string; value: string }[] => {
   if (variant === "forms") {
     return [
@@ -40,63 +41,102 @@ export const getStatusOptions = (
 };
 
 const TableHeader = ({
-  title,
+  variant,
   statusFilter,
   setStatusFilter,
   sortField,
   sortOrder,
   onSort,
 }: Props) => {
-  const variant = title === "Forms" ? "forms" : "automations";
+  const config = TABLE_CONFIGS[variant];
 
   return (
-    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg">
-      <span className="text-sm font-medium text-[#212121]">{title}</span>
+    <div
+      className={`grid ${config.gridClass} items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg`}
+    >
+      {config.columns.map((col) => {
+        if (col.type === "main") {
+          return (
+            <span key={col.id} className="text-sm font-medium text-[#212121]">
+              {col.label}
+            </span>
+          );
+        }
 
-      {/* Status column with filter dropdown */}
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1 text-sm font-medium text-[#212121] hover:text-[#212121] transition-colors">
-              {statusFilter === "ALL"
-                ? "Status"
-                : getStatusOptions(variant).find(
-                    (o) => o.value === statusFilter,
-                  )?.label}
-              <ChevronDown size={13} className="text-slate-400" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-[130px]">
-            <DropdownMenuRadioGroup
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        if (col.type === "status") {
+          return (
+            <div
+              key={col.id}
+              className="flex items-center justify-between gap-2"
             >
-              {getStatusOptions(variant).map((opt) => (
-                <DropdownMenuRadioItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="w-px h-4 bg-slate-200" />
-      </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 text-sm font-medium text-[#212121] hover:text-[#212121] transition-colors">
+                    {statusFilter === "ALL"
+                      ? "Status"
+                      : getStatusOptions(variant).find(
+                          (o) => o.value === statusFilter,
+                        )?.label}
+                    <ChevronDown size={13} className="text-slate-400" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-[130px]">
+                  <DropdownMenuRadioGroup
+                    value={statusFilter}
+                    onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+                  >
+                    {getStatusOptions(variant).map((opt) => (
+                      <DropdownMenuRadioItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="w-px h-4 bg-slate-200 shrink-0" />
+            </div>
+          );
+        }
 
-      <ColHeader
-        label={title === "Forms" ? "Submissions" : "Runs"}
-        sortable
-        sortOrder={sortField === "count" ? sortOrder : null}
-        onSort={() => onSort?.("count")}
-      />
-      <ColHeader
-        label={title === "Forms" ? "Last Updated" : "Last Triggered"}
-        sortable
-        sortOrder={sortField === "date" ? sortOrder : null}
-        onSort={() => onSort?.("date")}
-      />
-      <div className="p-2 bg-slate-800 text-white rounded-md">
-        <SlidersHorizontal size={14} />
-      </div>
+        if (col.type === "stats" || col.type === "date") {
+          const field =
+            col.id === "followers"
+              ? "newFollowers"
+              : (col.id as "count" | "date");
+
+          const hasSeparator = col.id !== "date";
+
+          return (
+            <div
+              key={col.id}
+              className="flex items-center justify-between gap-2"
+            >
+              <ColHeader
+                label={col.label}
+                sortable={col.sortable}
+                sortOrder={sortField === field ? sortOrder : null}
+                onSort={() => onSort?.(field)}
+              />
+              {hasSeparator && (
+                <div className="w-px h-4 bg-slate-200 shrink-0" />
+              )}
+            </div>
+          );
+        }
+
+        if (col.type === "actions") {
+          return (
+            <div
+              key={col.id}
+              className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end"
+            >
+              <SlidersHorizontal size={14} />
+            </div>
+          );
+        }
+
+        return null;
+      })}
     </div>
   );
 };

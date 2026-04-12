@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SlidersHorizontal, ChevronDown, MessageCircle } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import { MobileDashboardHeader } from "./MobileDashboardHeader";
 import { MobileCard } from "./MobileCard";
 import { AutomationListItem } from "@/types/automation";
@@ -14,7 +14,10 @@ interface MobilePageLayoutProps {
   isLoading: boolean;
   emptyMessage: string;
   actionButton: React.ReactNode;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
   onSortChange?: (sortKey: string) => void;
+  sortOrder?: "asc" | "desc" | null;
   onFilterToggle?: () => void;
 }
 
@@ -28,12 +31,19 @@ export const MobilePageLayout = ({
   isLoading,
   emptyMessage,
   actionButton,
+  searchValue,
+  onSearchChange,
   onSortChange,
+  sortOrder = "desc",
   onFilterToggle,
 }: MobilePageLayoutProps) => {
   return (
     <div className="flex flex-col h-screen bg-[#FAFAFA] pb-[100px] overflow-hidden relative">
-      <MobileDashboardHeader title={title} />
+      <MobileDashboardHeader
+        title={title}
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto px-5 bg-[#f1f1f1]">
@@ -47,7 +57,11 @@ export const MobilePageLayout = ({
                 aria-label="Change sort order"
               >
                 Last Published
-                <ChevronDown size={16} className="text-[#212121]" />
+                {sortOrder === "desc" ? (
+                  <ChevronDown size={16} className="text-[#212121]" />
+                ) : (
+                  <ChevronUp size={16} className="text-[#212121]" />
+                )}
               </button>
             )}
             {onFilterToggle && (
@@ -80,16 +94,9 @@ export const MobilePageLayout = ({
         )}
       </div>
 
-      {/* Floating Chat Icon (Static for UI) */}
-      <div className="absolute right-6 bottom-[110px] z-20">
-        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#6A06E4] border border-slate-100">
-          <MessageCircle size={24} />
-        </div>
-      </div>
-
       {/* Sticky Bottom Action Button */}
-      <div className="absolute bottom-0 inset-x-0 p-5 bg-[#FAFAFA] z-30">
-        <div className="w-full">{actionButton}</div>
+      <div className="w-full absolute bottom-0 inset-x-0 p-5 z-30">
+        {actionButton}
       </div>
     </div>
   );

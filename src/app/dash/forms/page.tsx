@@ -17,12 +17,7 @@ import {
   MobilePageLayout,
   Pagination,
 } from "../_components";
-import {
-  StatusFilter,
-  getStatusOptions,
-  SortOrder,
-  SortField,
-} from "../_components/TableHeader";
+import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import Image from "next/image";
 
@@ -142,6 +137,9 @@ export default function FormsPage() {
           search ? "No matches found." : "No forms yet. Create your first one!"
         }
         actionButton={newFormAction}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
+        sortOrder={sortOrder}
         onSortChange={(sortKey) =>
           toggleSort(sortKey === "createdAt" ? "date" : (sortKey as SortField))
         }
@@ -189,7 +187,7 @@ export default function FormsPage() {
         <div className="flex-1">
           {/* Column headers */}
           <TableHeader
-            title="Forms"
+            variant="forms"
             statusFilter={statusFilter}
             setStatusFilter={handleStatusChange}
             sortField={sortField}
@@ -212,7 +210,9 @@ export default function FormsPage() {
               </p>
             </div>
           ) : (
-            paginatedForms.map((form) => <TableRow key={form.id} data={form} />)
+            paginatedForms.map((form) => (
+              <TableRow key={form.id} data={form} variant="forms" />
+            ))
           )}
         </div>
 

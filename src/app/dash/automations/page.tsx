@@ -16,12 +16,7 @@ import {
   Pagination,
   CreditIndicator,
 } from "../_components";
-import {
-  StatusFilter,
-  getStatusOptions,
-  SortOrder,
-  SortField,
-} from "../_components/TableHeader";
+import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
 
 const PAGE_SIZE = 10;
 
@@ -62,11 +57,15 @@ const AutomationPage = () => {
       const fieldA =
         sortField === "count"
           ? a.timesTriggered || 0
-          : new Date(a.lastTriggeredAt || a.updatedAt).getTime();
+          : sortField === "newFollowers"
+            ? a.newFollowersGained || 0
+            : new Date(a.lastTriggeredAt || a.updatedAt).getTime();
       const fieldB =
         sortField === "count"
           ? b.timesTriggered || 0
-          : new Date(b.lastTriggeredAt || b.updatedAt).getTime();
+          : sortField === "newFollowers"
+            ? b.newFollowersGained || 0
+            : new Date(b.lastTriggeredAt || b.updatedAt).getTime();
 
       if (fieldA !== fieldB) {
         if (sortOrder === "asc") return fieldA - fieldB;
@@ -134,6 +133,9 @@ const AutomationPage = () => {
         isLoading={isLoading}
         emptyMessage={search ? "No matches found." : "No automations found."}
         actionButton={newAutomationAction}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
+        sortOrder={sortOrder}
         onSortChange={(sortKey) => {
           const normalizedKey =
             sortKey === "createdAt" ? "date" : (sortKey as SortField);
@@ -174,7 +176,7 @@ const AutomationPage = () => {
         <div className="flex-1">
           {/* Table header */}
           <TableHeader
-            title="Automations"
+            variant="automations"
             statusFilter={statusFilter}
             setStatusFilter={handleStatusChange}
             sortField={sortField}
@@ -194,7 +196,11 @@ const AutomationPage = () => {
             </div>
           ) : (
             paginatedAutomations.map((automation) => (
-              <TableRow key={automation.id} data={automation} />
+              <TableRow
+                key={automation.id}
+                data={automation}
+                variant="automations"
+              />
             ))
           )}
         </div>
