@@ -32,13 +32,11 @@ export async function getFeatureGates(
 
   const userId = user.id;
 
-  // Try Redis first (keyed by clerkUserId per keys.ts plan)
-  const cached = await getCreditStateR(clerkUserId);
-
-  // Resolve subscription (in parallel with Redis fallback if needed)
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId },
-  });
+  // Resolve subscription and credit ledger from DB (Authoritative for UI)
+  const [subscription, ledger] = await Promise.all([
+    prisma.subscription.findUnique({ where: { userId } }),
+    prisma.creditLedger.findUnique({ where: { userId } }),
+  ]);
 
   // Default to ACTIVE FREE if no subscription record exists
   const planId: PlanId = (subscription?.plan as PlanId) ?? "FREE";
@@ -47,26 +45,18 @@ export async function getFeatureGates(
 
   const maxAccounts = getEffectiveMaxAccounts(user.createdAt, planId);
 
-  let creditsUsed: number;
-  let creditLimit: number;
+  // Source credits directly from the ledger to match actual billed usage
+  const creditsUsed = ledger?.creditsUsed ?? 0;
+  const creditLimit = ledger?.creditLimit ?? plan.creditLimit;
 
-  if (cached.creditsUsed !== null && cached.creditLimit !== null) {
-    creditsUsed = cached.creditsUsed;
-    creditLimit = cached.creditLimit;
-  } else {
-    // Cache miss — read from DB and restore Redis
-    logger.warn({ userId }, "Credit cache miss — falling back to MongoDB");
-    const ledger = await prisma.creditLedger.findUnique({ where: { userId } });
-    creditsUsed = ledger?.creditsUsed ?? 0;
-    creditLimit = ledger?.creditLimit ?? plan.creditLimit;
-
-    await syncCreditStateToRedis(
-      clerkUserId,
-      creditsUsed,
-      creditLimit,
-      subStatus,
-    );
-  }
+  // Background: Keep Redis in sync (Heal cache if drift occurred)
+  // We don't await this to keep the API response snappy
+  syncCreditStateToRedis(
+    clerkUserId,
+    creditsUsed,
+    creditLimit,
+    subStatus,
+  ).catch(() => {});
 
   // Count active Instagram accounts to enforce multi-account gate
   const activeAccountCount = await prisma.instaAccount.count({

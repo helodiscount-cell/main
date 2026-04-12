@@ -11,7 +11,7 @@ import { getAutomationRoute } from "@/utils/automation";
 // Shared row actions menu — consumed by automations, forms, etc.
 const MENU_ITEMS = [
   {
-    key: "duplicate",
+    key: "copy",
     label: "Duplicate",
     icon: Copy,
     className: "text-purple-500",
@@ -78,7 +78,7 @@ export function AutomationActionsMenu({
 
   return (
     <ActionsMenu
-      menuItems={MENU_ITEMS as any}
+      menuItems={MENU_ITEMS}
       onClose={onClose}
       isDeleting={isDeleting}
       onDelete={() => deleteAutomation()}

@@ -59,8 +59,19 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
   // Replace the form with a thank-you screen after successful submission
   if (submitted) router.push(`/f/${slug}/submitted`);
 
+  // Prevent 'Enter' key from submitting the form accidentally (except in textareas)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={handleKeyDown}
+      className="space-y-6"
+    >
       {form.fields.map((field: FormField) => (
         <PublicFieldRenderer
           key={field.id}

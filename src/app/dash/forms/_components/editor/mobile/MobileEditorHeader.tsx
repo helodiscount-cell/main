@@ -2,8 +2,15 @@
 
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { UserButton, useUser } from "@clerk/nextjs";
-import { RefreshCw, Link2, Eye, Send, Square } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
+import {
+  RefreshCw,
+  Link2,
+  Eye,
+  Send,
+  Square,
+  CircleStopIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
@@ -81,9 +88,9 @@ export const MobileEditorHeader = ({
               disabled={isLoading}
               size="icon"
               aria-label={isPublished ? "Update form" : "Save draft"}
-              className="h-12 w-12 rounded-xl bg-[#6A06E4] hover:bg-[#5a05c4] text-white shrink-0 border-none shadow-none"
+              className="h-12 w-12 rounded-xl bg-red-500 hover:bg-red-600 text-white shrink-0 border-none shadow-none"
             >
-              <RefreshCw
+              <CircleStopIcon
                 size={24}
                 className={cn(isLoading && "animate-spin")}
               />

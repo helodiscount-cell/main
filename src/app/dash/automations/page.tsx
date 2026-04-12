@@ -16,12 +16,7 @@ import {
   Pagination,
   CreditIndicator,
 } from "../_components";
-import {
-  StatusFilter,
-  getStatusOptions,
-  SortOrder,
-  SortField,
-} from "../_components/TableHeader";
+import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
 
 const PAGE_SIZE = 10;
 

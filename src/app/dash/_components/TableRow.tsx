@@ -93,8 +93,6 @@ const TableRowUI = ({
   );
 };
 
-// --- DATA MAPPING LOGIC SEPARATED FROM UI ---
-
 /**
  * Maps Automation and Form data to TableRow UI pieces.
  */
@@ -127,7 +125,6 @@ const TableRow = ({ data }: { data: AutomationListItem | FormListItem }) => {
             formId={data.id}
             onClose={() => setMenuOpen(false)}
             slug={(data as FormListItem).slug}
-            status={(data as FormListItem).status}
           />
         ))}
     </div>

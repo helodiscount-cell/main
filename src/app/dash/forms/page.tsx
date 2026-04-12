@@ -17,12 +17,7 @@ import {
   MobilePageLayout,
   Pagination,
 } from "../_components";
-import {
-  StatusFilter,
-  getStatusOptions,
-  SortOrder,
-  SortField,
-} from "../_components/TableHeader";
+import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import Image from "next/image";
 

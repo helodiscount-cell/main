@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 type ActionsMenuProps = {
-  menuItems: {
+  menuItems: readonly {
     key: string;
     label: string;
     icon: React.ComponentType<{ size?: number }>;
@@ -71,14 +71,13 @@ export function ActionsMenu({
       ref={menuRef}
       className="shadow-sm absolute right-0 top-8 z-50 min-w-[150px] rounded-xl border border-slate-100 bg-white   py-1 animate-in fade-in zoom-in-95 duration-100"
     >
-      {menuItems.map(({ key, label, icon: Icon, className, bg }) => (
+      {menuItems.map(({ key, label, className, bg }) => (
         <button
           key={key}
           disabled={key === "delete" && isDeleting}
           onClick={() => handleAction(key)}
           className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium ${className} ${bg} transition-colors disabled:opacity-50`}
         >
-          <Icon size={14} />
           {key === "delete" && isDeleting ? "Deleting…" : label}
         </button>
       ))}
