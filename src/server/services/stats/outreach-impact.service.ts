@@ -7,7 +7,6 @@ import {
   countExecutionsByDateRange,
   getExecutionDatesByDateRange,
 } from "@/server/repository/automations/automation-execution.repository";
-import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 interface DataPoint {
   label: string;
