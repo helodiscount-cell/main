@@ -21,14 +21,14 @@ const triggerDownload = (url: string, filename: string): void => {
 };
 
 // Image card with a download button that appears on hover
-const ImageAnswer = ({ url }: { url: string }) => {
+const ImageAnswer = ({ url, name }: { url: string; name?: string }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const filename = getFileNameFromUrl(url);
+  const filename = name || getFileNameFromUrl(url);
 
-  // If the image fails to load (e.g. it's actually a PDF or Zip from utfs.io), fallback to file view
+  // If the image fails to load (e.g. it's actually a PDF or Docx), fallback to file view
   if (hasError) {
-    return <FileAnswer url={url} />;
+    return <FileAnswer url={url} name={name} />;
   }
 
   return (
@@ -73,8 +73,8 @@ const ImageAnswer = ({ url }: { url: string }) => {
 };
 
 // Generic file download button for non-image uploads
-const FileAnswer = ({ url }: { url: string }) => {
-  const filename = getFileNameFromUrl(url);
+const FileAnswer = ({ url, name }: { url: string; name?: string }) => {
+  const filename = name || getFileNameFromUrl(url);
 
   return (
     <div className="mt-2 flex items-center justify-between gap-2 px-3 py-2.5 bg-[#EDE9FF] rounded-xl border border-[#D6CFFF]">
@@ -104,12 +104,37 @@ const SingleAnswerValue = ({ val }: { val: string }) => {
     );
   }
 
+  // Attempt to parse JSON to see if it carries metadata (name/url)
+  try {
+    const data = JSON.parse(val);
+    if (data?.url && typeof data.url === "string") {
+      const name = typeof data.name === "string" ? data.name : undefined;
+      // Use the original name (if exists) for better type detection
+      if (isImageUrl(name || data.url)) {
+        return <ImageAnswer url={data.url} name={name} />;
+      }
+      return <FileAnswer url={data.url} name={name} />;
+    }
+  } catch {
+    // Not valid JSON, continue with legacy logic
+  }
+
   if (isImageUrl(val)) {
     return <ImageAnswer url={val} />;
   }
 
+  // Generic URL logic - Render as a link instead of a download card
   if (isUrl(val)) {
-    return <FileAnswer url={val} />;
+    return (
+      <a
+        href={val}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm font-semibold text-[#6A06E4] hover:underline break-all"
+      >
+        {val}
+      </a>
+    );
   }
 
   return (

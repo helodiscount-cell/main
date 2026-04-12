@@ -3,19 +3,13 @@ import type { FormSubmission } from "@/types/form";
 
 const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|svg|bmp)/i;
 
-// Returns true when the value looks like an image URL
+// Returns true when the value looks like an image URL or filename
 export const isImageUrl = (value: string): boolean => {
   if (!value) return false;
   try {
+    // If it's a URL, check the pathname and search params
     const url = new URL(value);
     const pathname = url.pathname;
-
-    // Support Uploadthing: often images don't have extensions in the URL
-    if (url.hostname === "utfs.io" && pathname.startsWith("/f/")) {
-      return true;
-    }
-
-    // Check pathname or query parameters for image extensions
     return IMAGE_EXTENSIONS.test(pathname) || IMAGE_EXTENSIONS.test(url.search);
   } catch {
     // If not a URL, check if the string itself ends with an extension

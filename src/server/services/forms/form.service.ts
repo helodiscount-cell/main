@@ -47,7 +47,18 @@ const FIELD_VALIDATORS: Partial<
     v.every((item) =>
       ((f.options ?? []) as any[]).some((o: any) => o.label === item),
     ),
-  upload: (v) => typeof v === "string" && v.startsWith("https://"),
+  upload: (v) => {
+    if (typeof v !== "string") return false;
+    // Handle legacy plain URL strings
+    if (v.startsWith("https://")) return true;
+    try {
+      // Handle new JSON-encoded metadata (url and name)
+      const data = JSON.parse(v);
+      return typeof data.url === "string" && data.url.startsWith("https://");
+    } catch {
+      return false;
+    }
+  },
 };
 
 // Creates a form scoped to a workspace
