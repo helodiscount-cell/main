@@ -82,4 +82,12 @@ export const formService = {
     );
     return envelope.result;
   },
+
+  // Duplicates an existing form
+  duplicate: async (id: string): Promise<FormSaveResult> => {
+    const envelope = await request(
+      api.post<ApiResponse<FormSaveResult>>(`/forms/${id}/duplicate`, {}),
+    );
+    return envelope.result;
+  },
 };
