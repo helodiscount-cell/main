@@ -1,89 +1,99 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Edit2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Pencil, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface EditableAutomationNameProps {
   value: string;
   onChange: (val: string) => void;
-  onSave?: (val: string) => void;
-  className?: string;
+  onSave?: (val: string) => void; // Keeping for compatibility with potential other usages
 }
 
 /**
- * A reusable component that allows users to click to edit a name.
- * Switches between a display span and an input field.
+ * Component that renders a trigger button (Pencil) to open a name-editing dialog.
+ * Replaces the previous "click-to-edit-inline" behavior.
  */
 export function EditableAutomationName({
   value,
   onChange,
   onSave,
-  className = "",
 }: EditableAutomationNameProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [internalValue, setInternalValue] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [internalName, setInternalName] = useState(value);
 
+  // Synchronize internal state when the external value prop changes
   useEffect(() => {
-    setInternalValue(value);
+    setInternalName(value);
   }, [value]);
 
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    if (internalValue !== value) {
-      onChange(internalValue);
-      onSave?.(internalValue);
-    }
+  const handleSave = () => {
+    onChange(internalName);
+    onSave?.(internalName);
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      inputRef.current?.blur();
-    }
-    if (e.key === "Escape") {
-      setInternalValue(value);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <input
-        ref={inputRef}
-        value={internalValue}
-        onChange={(e) => setInternalValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className={`bg-transparent border-none outline-none font-bold text-slate-900 min-w-[50px] w-fit ${className}`}
-        style={{ width: `${Math.max(internalValue.length, 5)}ch` }}
-      />
-    );
-  }
-
-  const displayValue = value || "/undefined";
-  const isUndefined = !value;
 
   return (
-    <span
-      onClick={() => setIsEditing(true)}
-      className={`cursor-pointer group inline-flex items-center gap-1.5 hover:text-purple-600 transition-colors ${
-        isUndefined
-          ? "text-red-400 font-medium italic"
-          : "text-slate-900 font-bold"
-      } ${className}`}
-    >
-      {displayValue}
-      <Edit2
-        size={12}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400"
-      />
-    </span>
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="text-[#6A06E4] hover:text-[#5a05c4] transition-all p-1 hover:scale-110 active:scale-95 shrink-0"
+        >
+          <Pencil size={15} />
+        </button>
+      </DialogTrigger>
+      <DialogContent
+        showCloseButton={false}
+        className="bg-transparent border-none max-w-[420px] flex flex-col justify-center items-center"
+      >
+        <div className="rounded-3xl gap-8 p-8 flex flex-col items-center bg-white border-none shadow-2xl animate-in zoom-in-95 duration-200">
+          <DialogHeader className="w-full">
+            <DialogTitle className="text-2xl font-semibold text-[#212121] text-center">
+              Change Name
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="w-full space-y-2.5">
+            <Input
+              value={internalName}
+              onChange={(e) => setInternalName(e.target.value)}
+              className="w-[20vw] h-14 bg-[#F8FAFC] border-none rounded-lg text-lg focus-visible:ring-2 focus-visible:ring-[#6A06E4]/20 transition-all font-medium text-[#0F172A]"
+              placeholder="Automation Name"
+              autoFocus
+            />
+          </div>
+
+          <div className="w-full space-y-4 flex flex-col items-center">
+            <DialogClose asChild>
+              <Button
+                onClick={handleSave}
+                className="w-full h-12 bg-[#6A06E4] hover:bg-[#5a05c4] text-white text-lg font-medium rounded-lg shadow-lg shadow-purple-100 transition-all active:scale-[0.98]"
+              >
+                Save
+              </Button>
+            </DialogClose>
+          </div>
+        </div>
+        <DialogClose asChild>
+          <button
+            type="button"
+            className="w-8 h-8 bg-white text-[#0F172A] rounded-full flex items-center justify-center hover:bg-gray-100 transition-all shadow-md group mt-2"
+          >
+            <X
+              size={16}
+              className="group-hover:rotate-90 transition-transform duration-300"
+            />
+          </button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
   );
 }

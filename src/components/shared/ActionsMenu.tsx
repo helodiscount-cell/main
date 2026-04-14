@@ -60,10 +60,11 @@ export function ActionsMenu({
         if (onToggle) onToggle();
         break;
       case "duplicate":
-        if (onDuplicate) {
+        if (onDuplicate && !isDuplicating) {
           onDuplicate();
           break;
         }
+        if (isDuplicating) break;
         /* fallthrough */
         import("sonner").then(({ toast }) => {
           toast.info(
@@ -83,7 +84,10 @@ export function ActionsMenu({
       {menuItems.map(({ key, label, className, bg }) => (
         <button
           key={key}
-          disabled={key === "delete" && isDeleting}
+          disabled={
+            (key === "delete" && isDeleting) ||
+            (key === "duplicate" && isDuplicating)
+          }
           onClick={() => handleAction(key)}
           className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium ${className} ${bg} transition-colors disabled:opacity-50`}
         >

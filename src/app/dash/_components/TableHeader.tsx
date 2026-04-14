@@ -118,9 +118,13 @@ const TableHeader = ({
           return (
             <DropdownMenu key={col.id}>
               <DropdownMenuTrigger asChild>
-                <div className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors">
+                <button
+                  type="button"
+                  aria-label="Open filters"
+                  className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                >
                   <SlidersHorizontal size={14} />
-                </div>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[140px] p-1.5">
                 <DropdownMenuLabel className="px-2 py-1.5 text-sm font-semibold text-slate-900">

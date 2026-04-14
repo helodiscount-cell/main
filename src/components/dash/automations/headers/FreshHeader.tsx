@@ -17,15 +17,26 @@ export default function FreshHeader({
 }) {
   return (
     <div className="flex w-full gap-3 items-center animate-in fade-in duration-300">
-      <div className="flex-2 bg-white rounded-md px-4 flex items-center h-9">
-        <p className="text-sm font-semibold flex gap-1">
-          <span className="opacity-50">Automation </span>/{" "}
-          <span className="opacity-50">{breadcrumb}</span>/{" "}
-          <EditableAutomationName
-            value={automationName}
-            onChange={onNameChange}
-          />
+      <div className="flex-grow flex-2 bg-white rounded-md px-4 flex items-center justify-between h-9 min-w-0">
+        <p className="text-sm font-semibold flex gap-1 items-center truncate">
+          <span className="opacity-50 shrink-0">Automation / </span>
+          <span className="opacity-50 shrink-0">{breadcrumb} / </span>
+          <span
+            className={
+              automationName
+                ? "text-[#0F172A] font-bold"
+                : "text-[#6A06E4] italic font-medium"
+            }
+          >
+            {automationName || "/undefined"}
+          </span>
         </p>
+
+        {/* This triggers the rename dialog */}
+        <EditableAutomationName
+          value={automationName}
+          onChange={onNameChange}
+        />
       </div>
 
       <div className="w-fit flex items-center gap-2 bg-white rounded-md px-3 h-9">
@@ -40,7 +51,7 @@ export default function FreshHeader({
 
       <Button
         type="submit"
-        className="bg-green-500 hover:bg-green-600 transition-all"
+        className="bg-green-500 hover:bg-green-600 transition-all font-bold px-6"
         disabled={isPending}
       >
         {isPending ? (
@@ -50,7 +61,7 @@ export default function FreshHeader({
           </>
         ) : (
           <>
-            <Play size={14} />
+            <Play size={14} fill="currentColor" />
             Go Live
           </>
         )}

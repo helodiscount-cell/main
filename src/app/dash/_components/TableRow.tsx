@@ -168,15 +168,19 @@ const TableRow = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
 
-  const copyToClipboard = (e: React.MouseEvent) => {
+  const copyToClipboard = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (variant !== "forms") return;
     const form = data as FormListItem;
     if (!form.slug) return;
 
     const url = `${window.location.origin}/f/${form.slug}`;
-    void navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard!");
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy to clipboard.");
+    }
   };
 
   // Desktop-specific actions

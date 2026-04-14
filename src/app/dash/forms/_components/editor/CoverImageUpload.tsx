@@ -76,6 +76,11 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Only clear if we actually left the drop zone container
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
     setIsDragging(false);
   }, []);
 
@@ -155,6 +160,7 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
               className="sr-only"
               onChange={handleFileChange}
               disabled={isUploading}
+              multiple={false}
             />
           </label>
 
