@@ -10,7 +10,11 @@ import {
   getUserPostsFromInstagram,
   getUserStoriesFromInstagram,
 } from "@/server/instagram/user";
-import { getCachedPosts, getCachedStories } from "@/server/redis";
+import {
+  getCachedPosts,
+  getCachedStories,
+  invalidateInstagramCache,
+} from "@/server/redis";
 import { prisma } from "@/server/db";
 
 // Resolves the active InstaAccount by its ID or throws if unavailable
@@ -28,10 +32,17 @@ async function resolveActiveAccount(instaAccountId: string) {
 }
 
 // Gets Instagram posts for the active workspace
-export async function getUserPosts(instaAccountId: string) {
+export async function getUserPosts(
+  instaAccountId: string,
+  forceRefresh?: boolean,
+) {
   const account = await resolveActiveAccount(instaAccountId);
   const accessToken = await getValidAccessToken(account);
   const identifier = account.webhookUserId || account.instagramUserId;
+
+  if (forceRefresh) {
+    await invalidateInstagramCache(identifier);
+  }
 
   // Cache by webhookUserId to align with standardized Redis key architecture
   return getCachedPosts(identifier, async () =>
@@ -40,10 +51,17 @@ export async function getUserPosts(instaAccountId: string) {
 }
 
 // Gets Instagram stories for the active workspace
-export async function getUserStories(instaAccountId: string) {
+export async function getUserStories(
+  instaAccountId: string,
+  forceRefresh?: boolean,
+) {
   const account = await resolveActiveAccount(instaAccountId);
   const accessToken = await getValidAccessToken(account);
   const identifier = account.webhookUserId || account.instagramUserId;
+
+  if (forceRefresh) {
+    await invalidateInstagramCache(identifier);
+  }
 
   const result = await getCachedStories(identifier, async () =>
     getUserStoriesFromInstagram(account.instagramUserId, accessToken),

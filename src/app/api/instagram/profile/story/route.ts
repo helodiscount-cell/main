@@ -1,11 +1,19 @@
-import { runWithErrorHandling } from "@/server/middleware/errors";
-import { getUserStories } from "@/server/services/instagram/instagram.service";
+/**
+ * Instagram Stories Endpoint
+ * Retrieves Instagram stories for the authenticated user
+ */
 
-export async function GET() {
+import { getUserStories } from "@/server/services/instagram/instagram.service";
+import { runWithErrorHandling } from "@/server/middleware/errors";
+import { NextRequest } from "next/server";
+
+export async function GET(request: NextRequest) {
   return runWithErrorHandling(
     async ({ instaAccountId }) => {
-      if (!instaAccountId) return { stories: [] };
-      return await getUserStories(instaAccountId);
+      const { searchParams } = new URL(request.url);
+      const forceRefresh = searchParams.get("forceRefresh") === "true";
+
+      return await getUserStories(instaAccountId!, forceRefresh);
     },
     { requireWorkspace: true },
   );

@@ -5,6 +5,7 @@ import { Clock, ImageIcon, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { TemplateHeader } from "./TemplateHeader";
+import { useState } from "react";
 
 export default function DmForStories({
   onSetActiveTab,
@@ -12,18 +13,25 @@ export default function DmForStories({
   onSetActiveTab: (value: string | null) => void;
 }) {
   const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const {
-    data: storiesData,
-    isLoading,
-    isRefetching,
-  } = useQuery({
+  const { data: storiesData, isLoading } = useQuery({
     queryKey: instagramKeys.stories(),
     queryFn: () => instagramService.profile.getUserStories(),
   });
 
   const handleRefresh = async () => {
-    await queryClient.invalidateQueries({ queryKey: instagramKeys.stories() });
+    try {
+      setIsRefreshing(true);
+      const res = await instagramService.profile.getUserStories(true);
+      queryClient.setQueryData(instagramKeys.stories(), res);
+    } catch {
+      await queryClient.invalidateQueries({
+        queryKey: instagramKeys.stories(),
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const stories = storiesData?.result.stories ?? [];
@@ -34,7 +42,7 @@ export default function DmForStories({
         title="Select Story"
         onBack={() => onSetActiveTab(null)}
         onRefresh={handleRefresh}
-        isRefreshing={isRefetching}
+        isRefreshing={isRefreshing}
       />
 
       {isLoading ? (

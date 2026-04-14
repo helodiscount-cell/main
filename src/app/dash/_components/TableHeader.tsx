@@ -10,7 +10,15 @@ import React from "react";
 import ColHeader from "./ColHeader";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
-export type StatusFilter = "ACTIVE" | "PAUSED" | "PUBLISHED" | "DRAFT" | "ALL";
+export type StatusFilter =
+  | "ACTIVE"
+  | "PAUSED"
+  | "PUBLISHED"
+  | "DRAFT"
+  | "ALL"
+  | "COMMENT"
+  | "DM"
+  | "STORY";
 export type SortField = "count" | "date" | "newFollowers";
 export type SortOrder = "asc" | "desc" | null;
 
@@ -35,6 +43,9 @@ export const getStatusOptions = (
   }
   return [
     { label: "All", value: "ALL" },
+    { label: "Comment", value: "COMMENT" },
+    { label: "DM", value: "DM" },
+    { label: "Story", value: "STORY" },
     { label: "Live", value: "ACTIVE" },
     { label: "Paused", value: "PAUSED" },
   ];

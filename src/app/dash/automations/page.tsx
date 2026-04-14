@@ -29,12 +29,12 @@ const AutomationPage = () => {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
-    queryKey: automationKeys.list(
-      statusFilter !== "ALL" ? { status: statusFilter as any } : undefined,
-    ),
+    queryKey: [...automationKeys.all, "list", { statusFilter }],
     queryFn: () =>
       automationService.list(
-        statusFilter !== "ALL" ? { status: statusFilter as any } : undefined,
+        statusFilter === "ACTIVE" || statusFilter === "PAUSED"
+          ? { status: statusFilter }
+          : undefined,
       ),
   });
 
@@ -50,6 +50,15 @@ const AutomationPage = () => {
       result = result.filter((a) =>
         (a.automationName || "").toLowerCase().includes(s),
       );
+    }
+
+    // Trigger Type Filter
+    if (statusFilter === "COMMENT") {
+      result = result.filter((a) => a.triggerType === "COMMENT_ON_POST");
+    } else if (statusFilter === "DM") {
+      result = result.filter((a) => a.triggerType === "RESPOND_TO_ALL_DMS");
+    } else if (statusFilter === "STORY") {
+      result = result.filter((a) => a.triggerType === "STORY_REPLY");
     }
 
     // Existing Sort Logic
@@ -75,7 +84,7 @@ const AutomationPage = () => {
       // Tie-breaker: consistent order for equal values
       return a.id.localeCompare(b.id);
     });
-  }, [automations, search, sortField, sortOrder]);
+  }, [automations, search, sortField, sortOrder, statusFilter]);
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
