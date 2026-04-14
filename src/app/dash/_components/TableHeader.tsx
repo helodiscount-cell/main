@@ -1,11 +1,11 @@
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SlidersHorizontal, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, Check } from "lucide-react";
 import React from "react";
 import ColHeader from "./ColHeader";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
@@ -69,30 +69,9 @@ const TableHeader = ({
               key={col.id}
               className="flex items-center justify-between gap-2"
             >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 text-sm font-medium text-[#212121] hover:text-[#212121] transition-colors">
-                    {statusFilter === "ALL"
-                      ? "Status"
-                      : getStatusOptions(variant).find(
-                          (o) => o.value === statusFilter,
-                        )?.label}
-                    <ChevronDown size={13} className="text-slate-400" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[130px]">
-                  <DropdownMenuRadioGroup
-                    value={statusFilter}
-                    onValueChange={(v) => setStatusFilter(v as StatusFilter)}
-                  >
-                    {getStatusOptions(variant).map((opt) => (
-                      <DropdownMenuRadioItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <span className="text-sm font-medium text-[#212121]">
+                {col.label}
+              </span>
               <div className="w-px h-4 bg-slate-200 shrink-0" />
             </div>
           );
@@ -126,12 +105,58 @@ const TableHeader = ({
 
         if (col.type === "actions") {
           return (
-            <div
-              key={col.id}
-              className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end"
-            >
-              <SlidersHorizontal size={14} />
-            </div>
+            <DropdownMenu key={col.id}>
+              <DropdownMenuTrigger asChild>
+                <div className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors">
+                  <SlidersHorizontal size={14} />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[140px] p-1.5">
+                <DropdownMenuLabel className="px-2 py-1.5 text-sm font-semibold text-slate-900">
+                  Filter By
+                </DropdownMenuLabel>
+                {getStatusOptions(variant)
+                  .filter((opt) => opt.value !== "ALL")
+                  .map((opt) => {
+                    const isActive = statusFilter === opt.value;
+                    return (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onSelect={() =>
+                          setStatusFilter(
+                            isActive ? "ALL" : (opt.value as StatusFilter),
+                          )
+                        }
+                        className="flex items-center gap-3 px-2 py-2 cursor-pointer focus:bg-slate-50 transition-colors"
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-sm border transition-all duration-300 flex items-center justify-center ${
+                            isActive
+                              ? "bg-slate-900 border-slate-900 scale-110"
+                              : "border-slate-300 bg-white"
+                          }`}
+                        >
+                          {isActive && (
+                            <Check
+                              size={12}
+                              className="text-white p-0.5 animate-in zoom-in-50 duration-200"
+                            />
+                          )}
+                        </div>
+                        <span
+                          className={`text-sm transition-colors ${
+                            isActive
+                              ? "text-slate-900 font-semibold"
+                              : "text-slate-600 font-medium"
+                          }`}
+                        >
+                          {opt.label}
+                        </span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         }
 

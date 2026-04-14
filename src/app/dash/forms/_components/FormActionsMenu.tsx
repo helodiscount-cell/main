@@ -9,8 +9,8 @@ import { Copy, Pencil, Trash2 } from "lucide-react";
 // Shared row actions menu — consumed by automations, forms, etc.
 const MENU_ITEMS = [
   {
-    key: "copy",
-    label: "Copy",
+    key: "duplicate",
+    label: "Duplicate",
     icon: Copy,
     className: "text-purple-500",
     bg: "hover:bg-purple-50",

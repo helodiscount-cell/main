@@ -7,7 +7,8 @@ import type { FormListItem } from "@/types/form";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
 import { mapDashboardItem } from "./useDashboardItemMapper";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
@@ -167,12 +168,32 @@ const TableRow = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
 
+  const copyToClipboard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (variant !== "forms") return;
+    const form = data as FormListItem;
+    if (!form.slug) return;
+
+    const url = `${window.location.origin}/f/${form.slug}`;
+    void navigator.clipboard.writeText(url);
+    toast.success("Link copied to clipboard!");
+  };
+
   // Desktop-specific actions
   const actions = (
-    <div className="relative">
+    <div className="relative flex items-center gap-2">
+      {variant === "forms" && (
+        <button
+          onClick={copyToClipboard}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[#6A06E5] hover:bg-purple-50 transition-colors text-sm font-medium whitespace-nowrap"
+        >
+          <Copy size={14} />
+          Copy
+        </button>
+      )}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
-        className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+        className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none"
         title="More actions"
       >
         <MoreVertical size={16} />
