@@ -57,6 +57,7 @@ export function EditableAutomationName({
       <DialogTrigger asChild>
         <button
           type="button"
+          aria-label="Edit automation name"
           className="text-[#6A06E4] hover:text-[#5a05c4] transition-all p-1 hover:scale-110 active:scale-95 shrink-0"
         >
           <Pencil size={15} />
@@ -97,6 +98,7 @@ export function EditableAutomationName({
         <DialogClose asChild>
           <button
             type="button"
+            aria-label="Close"
             className="w-8 h-8 bg-white text-[#0F172A] rounded-full flex items-center justify-center hover:bg-gray-100 transition-all shadow-md group mt-2"
           >
             <X

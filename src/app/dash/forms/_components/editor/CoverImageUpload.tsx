@@ -49,7 +49,10 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
   const startUploadFiles = useCallback(
     (files: File[]) => {
       const filteredFiles = files.filter((f) => f.type?.startsWith("image/"));
-      if (filteredFiles.length > 0) startUpload(filteredFiles);
+      if (filteredFiles.length > 0) {
+        // Only upload the first image for cover field
+        startUpload([filteredFiles[0]]);
+      }
     },
     [startUpload],
   );

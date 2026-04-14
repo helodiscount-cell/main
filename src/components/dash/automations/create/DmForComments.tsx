@@ -46,7 +46,7 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
         isRefreshing={isRefreshing}
       />
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-        {data?.result.data.data.map((item) => {
+        {data?.result.data.map((item) => {
           const previewUrl = item.thumbnail_url || item.media_url || "";
 
           return (

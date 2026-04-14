@@ -56,15 +56,13 @@ export interface InstagramMediaItem {
   media_url: string;
   thumbnail_url?: string;
   caption?: string | null;
-  permalink?: string;
-  timestamp?: string;
+  permalink: string;
+  timestamp: string;
 }
 
 export type PostsResult = {
-  data: {
-    data: InstagramMediaItem[];
-    paging?: any;
-  };
+  data: InstagramMediaItem[];
+  paging?: any;
   status: number;
   statusText: string;
 };
