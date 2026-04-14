@@ -291,3 +291,46 @@ export async function updateForm(
     updatedAt: updated.updatedAt,
   };
 }
+
+/**
+ * Creates a duplicate of an existing form.
+ * Everything is copied exactly, but with (Copy) appended to title and a new slug.
+ */
+export async function duplicateForm(
+  clerkId: string,
+  instaAccountId: string,
+  formId: string,
+) {
+  const user = await findUserByClerkId(clerkId);
+  if (!user) {
+    throw new ApiRouteError("User not found", "NO_USER", 404);
+  }
+
+  // Cross-check both user and workspace for isolation
+  const existingForm = await findFormByIdAndUserId(formId, user.id);
+
+  if (!existingForm || existingForm.instaAccountId !== instaAccountId) {
+    throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
+  }
+
+  const duplicateInput: CreateFormInput = {
+    title: `${existingForm.title ?? "Untitled Form"}`,
+    description: existingForm.description ?? "",
+    coverImage: existingForm.coverImage ?? undefined,
+    fields: existingForm.fields as any,
+    status: "DRAFT",
+  };
+
+  const duplicated = await createFormRecord(
+    user.id,
+    instaAccountId,
+    duplicateInput,
+  );
+
+  return {
+    id: duplicated.id,
+    slug: duplicated.slug,
+    status: duplicated.status,
+    createdAt: duplicated.createdAt,
+  };
+}

@@ -50,13 +50,26 @@ export type UserProfileResult = {
   lastSyncedAt: string;
 };
 
+export interface InstagramMediaItem {
+  id: string;
+  media_type: string;
+  media_url: string;
+  thumbnail_url?: string;
+  caption?: string | null;
+  permalink: string;
+  timestamp: string;
+}
+
 export type PostsResult = {
-  data: InstagramPostsResponse;
+  data: InstagramMediaItem[];
+  paging?: any;
   status: number;
   statusText: string;
 };
 
+export interface InstagramStory extends InstagramMediaItem {}
+
 export type StoriesResult = {
-  stories: InstagramStoriesResponse["data"];
+  stories: InstagramStory[];
   paging: InstagramStoriesResponse["paging"];
 };

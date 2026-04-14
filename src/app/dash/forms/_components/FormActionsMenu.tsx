@@ -9,8 +9,8 @@ import { Copy, Pencil, Trash2 } from "lucide-react";
 // Shared row actions menu — consumed by automations, forms, etc.
 const MENU_ITEMS = [
   {
-    key: "copy",
-    label: "Copy",
+    key: "duplicate",
+    label: "Duplicate",
     icon: Copy,
     className: "text-purple-500",
     bg: "hover:bg-purple-50",
@@ -59,6 +59,21 @@ export function FormActionsMenu({
     },
   });
 
+  const { mutate: duplicateForm, isPending: isDuplicating } = useMutation({
+    mutationFn: () => formService.duplicate(formId),
+    onSuccess: () => {
+      toast.success("Form duplicated.");
+      queryClient.invalidateQueries({ queryKey: formKeys.all });
+      onClose();
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to duplicate form.";
+      toast.error(msg);
+    },
+  });
+
   const copyToClipboard = () => {
     const url = `${window.location.origin}/f/${slug}`;
     navigator.clipboard.writeText(url);
@@ -70,8 +85,10 @@ export function FormActionsMenu({
       menuItems={MENU_ITEMS}
       onClose={onClose}
       isDeleting={isDeleting}
+      isDuplicating={isDuplicating}
       onDelete={() => deleteForm()}
       onEdit={() => navigate.push(`/dash/forms/editor?id=${formId}`)}
+      onDuplicate={() => duplicateForm()}
       onCustom={copyToClipboard}
     />
   );

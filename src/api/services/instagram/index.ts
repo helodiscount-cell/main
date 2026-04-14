@@ -17,14 +17,22 @@ export const instagramService = {
     },
   },
   profile: {
-    getUserPosts: async (): Promise<ApiResponse<PostsResult>> => {
+    getUserPosts: async (
+      forceRefresh?: boolean,
+    ): Promise<ApiResponse<PostsResult>> => {
       return request(
-        api.get<ApiResponse<PostsResult>>("/instagram/profile/posts"),
+        api.get<ApiResponse<PostsResult>>("/instagram/profile/posts", {
+          params: { forceRefresh },
+        }),
       );
     },
-    getUserStories: async (): Promise<ApiResponse<StoriesResult>> => {
+    getUserStories: async (
+      forceRefresh?: boolean,
+    ): Promise<ApiResponse<StoriesResult>> => {
       return request(
-        api.get<ApiResponse<StoriesResult>>("/instagram/profile/story"),
+        api.get<ApiResponse<StoriesResult>>("/instagram/profile/story", {
+          params: { forceRefresh },
+        }),
       );
     },
   },

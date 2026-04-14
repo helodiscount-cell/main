@@ -10,21 +10,25 @@ type ActionsMenuProps = {
   }[];
   onClose: () => void;
   isDeleting?: boolean;
+  isDuplicating?: boolean;
   // Each action is optional — omitting one keeps the button but shows "coming soon"
   onDelete?: () => void;
   onEdit?: () => void;
   onCustom?: () => void;
   onToggle?: () => void;
+  onDuplicate?: () => void;
 };
 
 export function ActionsMenu({
   menuItems,
   onClose,
   isDeleting = false,
+  isDuplicating = false,
   onDelete,
   onEdit,
   onCustom,
   onToggle,
+  onDuplicate,
 }: ActionsMenuProps) {
   type MenuKey = (typeof menuItems)[number]["key"];
 
@@ -55,7 +59,13 @@ export function ActionsMenu({
       case "toggle":
         if (onToggle) onToggle();
         break;
-      default:
+      case "duplicate":
+        if (onDuplicate && !isDuplicating) {
+          onDuplicate();
+          break;
+        }
+        if (isDuplicating) break;
+        /* fallthrough */
         import("sonner").then(({ toast }) => {
           toast.info(
             `${key.charAt(0).toUpperCase() + key.slice(1)} coming soon.`,
@@ -74,11 +84,18 @@ export function ActionsMenu({
       {menuItems.map(({ key, label, className, bg }) => (
         <button
           key={key}
-          disabled={key === "delete" && isDeleting}
+          disabled={
+            (key === "delete" && isDeleting) ||
+            (key === "duplicate" && isDuplicating)
+          }
           onClick={() => handleAction(key)}
           className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium ${className} ${bg} transition-colors disabled:opacity-50`}
         >
-          {key === "delete" && isDeleting ? "Deleting…" : label}
+          {key === "delete" && isDeleting
+            ? "Deleting…"
+            : key === "duplicate" && isDuplicating
+              ? "Duplicating…"
+              : label}
         </button>
       ))}
     </div>

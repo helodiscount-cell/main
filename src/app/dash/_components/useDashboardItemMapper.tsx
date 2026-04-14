@@ -38,7 +38,14 @@ export const mapDashboardItem = (
   const safeFormatDate = (date: string | Date | null | undefined) => {
     if (!date) return "—";
     const d = new Date(date);
-    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+    if (isNaN(d.getTime())) return "—";
+
+    const secondsAgo = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (secondsAgo >= 0 && secondsAgo < 60) {
+      return "just now";
+    }
+
+    return d.toLocaleDateString();
   };
 
   if (isAutomation) {

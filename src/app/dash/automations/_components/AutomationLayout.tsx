@@ -87,7 +87,7 @@ export function AutomationLayout({
       const isPostMissing = !mediaError && (!post || !post.mediaUrl);
 
       return (
-        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
+        <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center text-zinc-400">
             {mediaError ? (
               <AlertCircle size={24} />
