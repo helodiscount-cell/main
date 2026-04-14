@@ -17,13 +17,19 @@ import {
   MobilePageLayout,
   Pagination,
 } from "../_components";
-import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
+import {
+  StatusFilter,
+  TriggerFilter,
+  SortOrder,
+  SortField,
+} from "../_components/TableHeader";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import Image from "next/image";
 
 export default function FormsPage() {
   const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [triggerFilter, setTriggerFilter] = useState<TriggerFilter>("ALL");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [search, setSearch] = useState("");
@@ -190,6 +196,8 @@ export default function FormsPage() {
             variant="forms"
             statusFilter={statusFilter}
             setStatusFilter={handleStatusChange}
+            triggerFilter={triggerFilter}
+            setTriggerFilter={setTriggerFilter}
             sortField={sortField}
             sortOrder={sortOrder}
             onSort={toggleSort}

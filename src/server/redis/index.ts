@@ -37,4 +37,6 @@ export {
   getCachedPosts,
   getCachedStories,
   invalidateInstagramCache,
+  invalidateInstagramPostsCache,
+  invalidateInstagramStoriesCache,
 } from "./operations/instagram";

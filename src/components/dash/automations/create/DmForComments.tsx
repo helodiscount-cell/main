@@ -1,10 +1,12 @@
+"use client";
+
 import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { TemplateHeader } from "./TemplateHeader";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function DMForComments({ onBack }: { onBack: () => void }) {
   const queryClient = useQueryClient();
@@ -16,15 +18,21 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
     queryFn: () => instagramService.profile.getUserPosts(),
   });
 
+  const refreshingRef = useRef(false);
+
   const handleRefresh = async () => {
+    if (refreshingRef.current) return;
     try {
+      refreshingRef.current = true;
       setIsRefreshing(true);
       const res = await instagramService.profile.getUserPosts(true);
       queryClient.setQueryData(instagramKeys.posts(), res);
-    } catch {
+    } catch (e) {
+      console.error("Failed to refresh posts:", e);
       // Background refetch if direct update fails
       await queryClient.invalidateQueries({ queryKey: instagramKeys.posts() });
     } finally {
+      refreshingRef.current = false;
       setIsRefreshing(false);
     }
   };
@@ -39,8 +47,7 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
       />
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
         {data?.result.data.data.map((item) => {
-          const previewUrl =
-            (item as any).thumbnail_url || item.media_url || "";
+          const previewUrl = item.thumbnail_url || item.media_url || "";
 
           return (
             <div

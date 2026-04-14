@@ -2,28 +2,22 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
-  DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { SlidersHorizontal, Check } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 import ColHeader from "./ColHeader";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
-export type StatusFilter =
-  | "ACTIVE"
-  | "PAUSED"
-  | "PUBLISHED"
-  | "DRAFT"
-  | "ALL"
-  | "COMMENT"
-  | "DM"
-  | "STORY";
+export type StatusFilter = "ACTIVE" | "PAUSED" | "PUBLISHED" | "DRAFT" | "ALL";
+export type TriggerFilter = "COMMENT" | "DM" | "STORY" | "ALL";
 export type SortField = "count" | "date" | "newFollowers";
 export type SortOrder = "asc" | "desc" | null;
 
-interface Props {
-  variant: TableVariant;
+interface BaseProps {
   statusFilter: StatusFilter;
   setStatusFilter: (value: StatusFilter) => void;
   sortField?: SortField;
@@ -31,34 +25,58 @@ interface Props {
   onSort?: (field: SortField) => void;
 }
 
+interface AutomationProps extends BaseProps {
+  variant: "automations";
+  triggerFilter: TriggerFilter;
+  setTriggerFilter: (value: TriggerFilter) => void;
+}
+
+interface GenericProps extends BaseProps {
+  variant: Exclude<TableVariant, "automations">;
+  triggerFilter?: never;
+  setTriggerFilter?: never;
+}
+
+type Props = AutomationProps | GenericProps;
+
 export const getStatusOptions = (
   variant: TableVariant,
-): { label: string; value: string }[] => {
+): { label: string; value: StatusFilter }[] => {
   if (variant === "forms") {
     return [
-      { label: "All", value: "ALL" },
+      { label: "All Status", value: "ALL" },
       { label: "Live", value: "PUBLISHED" },
       { label: "Draft", value: "DRAFT" },
     ];
   }
   return [
-    { label: "All", value: "ALL" },
-    { label: "Comment", value: "COMMENT" },
-    { label: "DM", value: "DM" },
-    { label: "Story", value: "STORY" },
+    { label: "All Status", value: "ALL" },
     { label: "Live", value: "ACTIVE" },
     { label: "Paused", value: "PAUSED" },
   ];
 };
 
-const TableHeader = ({
-  variant,
-  statusFilter,
-  setStatusFilter,
-  sortField,
-  sortOrder,
-  onSort,
-}: Props) => {
+export const getTriggerOptions = (): {
+  label: string;
+  value: TriggerFilter;
+}[] => {
+  return [
+    { label: "All Types", value: "ALL" },
+    { label: "Comment", value: "COMMENT" },
+    { label: "DM", value: "DM" },
+    { label: "Story", value: "STORY" },
+  ];
+};
+
+const TableHeader = (props: Props) => {
+  const {
+    variant,
+    statusFilter,
+    setStatusFilter,
+    sortField,
+    sortOrder,
+    onSort,
+  } = props;
   const config = TABLE_CONFIGS[variant];
 
   return (
@@ -126,50 +144,49 @@ const TableHeader = ({
                   <SlidersHorizontal size={14} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[140px] p-1.5">
-                <DropdownMenuLabel className="px-2 py-1.5 text-sm font-semibold text-slate-900">
-                  Filter By
+              <DropdownMenuContent align="end" className="min-w-[180px] p-2">
+                <DropdownMenuLabel className="px-2 pb-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  Status
                 </DropdownMenuLabel>
-                {getStatusOptions(variant)
-                  .filter((opt) => opt.value !== "ALL")
-                  .map((opt) => {
-                    const isActive = statusFilter === opt.value;
-                    return (
-                      <DropdownMenuItem
-                        key={opt.value}
-                        onSelect={() =>
-                          setStatusFilter(
-                            isActive ? "ALL" : (opt.value as StatusFilter),
-                          )
-                        }
-                        className="flex items-center gap-3 px-2 py-2 cursor-pointer focus:bg-slate-50 transition-colors"
-                      >
-                        <div
-                          className={`w-4 h-4 rounded-sm border transition-all duration-300 flex items-center justify-center ${
-                            isActive
-                              ? "bg-slate-900 border-slate-900 scale-110"
-                              : "border-slate-300 bg-white"
-                          }`}
-                        >
-                          {isActive && (
-                            <Check
-                              size={12}
-                              className="text-white p-0.5 animate-in zoom-in-50 duration-200"
-                            />
-                          )}
-                        </div>
-                        <span
-                          className={`text-sm transition-colors ${
-                            isActive
-                              ? "text-slate-900 font-semibold"
-                              : "text-slate-600 font-medium"
-                          }`}
+                <DropdownMenuRadioGroup
+                  value={statusFilter}
+                  onValueChange={(val) => setStatusFilter(val as StatusFilter)}
+                >
+                  {getStatusOptions(variant).map((opt) => (
+                    <DropdownMenuRadioItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="px-2 py-2 cursor-pointer focus:bg-slate-50 transition-colors rounded-md text-sm font-medium text-slate-600 data-[state=checked]:text-slate-900 data-[state=checked]:font-semibold"
+                    >
+                      {opt.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+
+                {props.variant === "automations" && (
+                  <>
+                    <DropdownMenuSeparator className="my-2" />
+                    <DropdownMenuLabel className="px-2 pb-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      Trigger Type
+                    </DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={props.triggerFilter}
+                      onValueChange={(val) =>
+                        props.setTriggerFilter(val as TriggerFilter)
+                      }
+                    >
+                      {getTriggerOptions().map((opt) => (
+                        <DropdownMenuRadioItem
+                          key={opt.value}
+                          value={opt.value}
+                          className="px-2 py-2 cursor-pointer focus:bg-slate-50 transition-colors rounded-md text-sm font-medium text-slate-600 data-[state=checked]:text-slate-900 data-[state=checked]:font-semibold"
                         >
                           {opt.label}
-                        </span>
-                      </DropdownMenuItem>
-                    );
-                  })}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           );

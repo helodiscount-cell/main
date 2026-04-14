@@ -17,7 +17,7 @@ export default function FreshHeader({
 }) {
   return (
     <div className="flex w-full gap-3 items-center animate-in fade-in duration-300">
-      <div className="flex-grow flex-2 bg-white rounded-md px-4 flex items-center justify-between h-9 min-w-0">
+      <div className="grow flex-2 bg-white rounded-md px-4 flex items-center justify-between h-9 min-w-0">
         <p className="text-sm font-semibold flex gap-1 items-center truncate">
           <span className="opacity-50 shrink-0">Automation / </span>
           <span className="opacity-50 shrink-0">{breadcrumb} / </span>

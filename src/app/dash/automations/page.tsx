@@ -16,31 +16,42 @@ import {
   Pagination,
   CreditIndicator,
 } from "../_components";
-import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
+import { AutomationStatus } from "@/types/automation";
+import {
+  StatusFilter,
+  TriggerFilter,
+  SortOrder,
+  SortField,
+} from "../_components/TableHeader";
 
 const PAGE_SIZE = 10;
 
 const AutomationPage = () => {
   const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [triggerFilter, setTriggerFilter] = useState<TriggerFilter>("ALL");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
+  // Map UI filters to server-supported status filters to avoid query key fragmentation
+  const serverStatus =
+    statusFilter === "ACTIVE" || statusFilter === "PAUSED"
+      ? (statusFilter as AutomationStatus)
+      : undefined;
+
   const { data, isLoading } = useQuery({
-    queryKey: [...automationKeys.all, "list", { statusFilter }],
+    queryKey: [...automationKeys.all, "list", { status: serverStatus }],
     queryFn: () =>
       automationService.list(
-        statusFilter === "ACTIVE" || statusFilter === "PAUSED"
-          ? { status: statusFilter }
-          : undefined,
+        serverStatus ? { status: serverStatus } : undefined,
       ),
   });
 
   const automations = data?.automations ?? [];
 
-  // Filter and Sort automations
+  // Filter and Sort automations locally (Search, Trigger Types, Sorting)
   const filteredAndSorted = useMemo(() => {
     let result = [...automations];
 
@@ -52,13 +63,15 @@ const AutomationPage = () => {
       );
     }
 
-    // Trigger Type Filter
-    if (statusFilter === "COMMENT") {
-      result = result.filter((a) => a.triggerType === "COMMENT_ON_POST");
-    } else if (statusFilter === "DM") {
-      result = result.filter((a) => a.triggerType === "RESPOND_TO_ALL_DMS");
-    } else if (statusFilter === "STORY") {
-      result = result.filter((a) => a.triggerType === "STORY_REPLY");
+    // Trigger Type Filter (Client-side only)
+    if (triggerFilter !== "ALL") {
+      if (triggerFilter === "COMMENT") {
+        result = result.filter((a) => a.triggerType === "COMMENT_ON_POST");
+      } else if (triggerFilter === "DM") {
+        result = result.filter((a) => a.triggerType === "RESPOND_TO_ALL_DMS");
+      } else if (triggerFilter === "STORY") {
+        result = result.filter((a) => a.triggerType === "STORY_REPLY");
+      }
     }
 
     // Existing Sort Logic
@@ -84,7 +97,7 @@ const AutomationPage = () => {
       // Tie-breaker: consistent order for equal values
       return a.id.localeCompare(b.id);
     });
-  }, [automations, search, sortField, sortOrder, statusFilter]);
+  }, [automations, search, sortField, sortOrder, triggerFilter]);
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
@@ -93,6 +106,11 @@ const AutomationPage = () => {
 
   const handleStatusChange = (status: StatusFilter) => {
     setStatusFilter(status);
+    setPage(1);
+  };
+
+  const handleTriggerChange = (trigger: TriggerFilter) => {
+    setTriggerFilter(trigger);
     setPage(1);
   };
 
@@ -188,6 +206,8 @@ const AutomationPage = () => {
             variant="automations"
             statusFilter={statusFilter}
             setStatusFilter={handleStatusChange}
+            triggerFilter={triggerFilter}
+            setTriggerFilter={handleTriggerChange}
             sortField={sortField}
             sortOrder={sortOrder}
             onSort={toggleSort}

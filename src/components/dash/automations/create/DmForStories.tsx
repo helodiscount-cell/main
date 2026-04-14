@@ -1,3 +1,5 @@
+"use client";
+
 import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -5,7 +7,7 @@ import { Clock, ImageIcon, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { TemplateHeader } from "./TemplateHeader";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function DmForStories({
   onSetActiveTab,
@@ -14,6 +16,7 @@ export default function DmForStories({
 }) {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshingRef = useRef(false);
 
   const { data: storiesData, isLoading } = useQuery({
     queryKey: instagramKeys.stories(),
@@ -21,15 +24,19 @@ export default function DmForStories({
   });
 
   const handleRefresh = async () => {
+    if (refreshingRef.current) return;
     try {
+      refreshingRef.current = true;
       setIsRefreshing(true);
       const res = await instagramService.profile.getUserStories(true);
       queryClient.setQueryData(instagramKeys.stories(), res);
-    } catch {
+    } catch (e) {
+      console.error("Failed to refresh stories:", e);
       await queryClient.invalidateQueries({
         queryKey: instagramKeys.stories(),
       });
     } finally {
+      refreshingRef.current = false;
       setIsRefreshing(false);
     }
   };
@@ -62,8 +69,7 @@ export default function DmForStories({
       ) : (
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
           {stories.map((story) => {
-            const previewUrl =
-              (story as any).thumbnail_url || story.media_url || "";
+            const previewUrl = story.thumbnail_url || story.media_url || "";
 
             return (
               <Link

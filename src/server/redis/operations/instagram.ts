@@ -8,7 +8,33 @@ import { logger } from "../../utils/pino";
  */
 
 /**
- * Deletes cached posts and stories for a user — forces fresh fetch from Instagram API
+ * Deletes cached posts for a user — forces fresh fetch from Instagram API
+ */
+export async function invalidateInstagramPostsCache(
+  identifier: string,
+): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+
+  await redis.del(KEYS.INSTAGRAM_POSTS(identifier));
+  logger.info({ identifier }, "[Redis:Instagram] Posts cache invalidated");
+}
+
+/**
+ * Deletes cached stories for a user — forces fresh fetch from Instagram API
+ */
+export async function invalidateInstagramStoriesCache(
+  identifier: string,
+): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis) return;
+
+  await redis.del(KEYS.INSTAGRAM_STORIES(identifier));
+  logger.info({ identifier }, "[Redis:Instagram] Stories cache invalidated");
+}
+
+/**
+ * Deletes cached BOTH posts and stories for a user — forces fresh fetch from Instagram API
  */
 export async function invalidateInstagramCache(
   identifier: string,
@@ -21,7 +47,7 @@ export async function invalidateInstagramCache(
   pipeline.del(KEYS.INSTAGRAM_STORIES(identifier));
 
   await pipeline.exec();
-  logger.info({ identifier }, "[Redis:Instagram] Cache invalidated");
+  logger.info({ identifier }, "[Redis:Instagram] Complete cache invalidated");
 }
 
 /**

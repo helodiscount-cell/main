@@ -48,7 +48,8 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
 
   const startUploadFiles = useCallback(
     (files: File[]) => {
-      if (files.length > 0) startUpload(files);
+      const filteredFiles = files.filter((f) => f.type?.startsWith("image/"));
+      if (filteredFiles.length > 0) startUpload(filteredFiles);
     },
     [startUpload],
   );
@@ -92,9 +93,7 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
 
       if (isUploading) return;
 
-      const files = Array.from(e.dataTransfer.files).filter((file) =>
-        file.type.startsWith("image/"),
-      );
+      const files = Array.from(e.dataTransfer.files);
       startUploadFiles(files);
     },
     [isUploading, startUploadFiles],

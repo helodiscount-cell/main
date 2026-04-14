@@ -13,7 +13,8 @@ import {
 import {
   getCachedPosts,
   getCachedStories,
-  invalidateInstagramCache,
+  invalidateInstagramPostsCache,
+  invalidateInstagramStoriesCache,
 } from "@/server/redis";
 import { prisma } from "@/server/db";
 
@@ -41,7 +42,7 @@ export async function getUserPosts(
   const identifier = account.webhookUserId || account.instagramUserId;
 
   if (forceRefresh) {
-    await invalidateInstagramCache(identifier);
+    await invalidateInstagramPostsCache(identifier);
   }
 
   // Cache by webhookUserId to align with standardized Redis key architecture
@@ -60,7 +61,7 @@ export async function getUserStories(
   const identifier = account.webhookUserId || account.instagramUserId;
 
   if (forceRefresh) {
-    await invalidateInstagramCache(identifier);
+    await invalidateInstagramStoriesCache(identifier);
   }
 
   const result = await getCachedStories(identifier, async () =>

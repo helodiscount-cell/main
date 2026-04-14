@@ -29,19 +29,31 @@ export function EditableAutomationName({
   onSave,
 }: EditableAutomationNameProps) {
   const [internalName, setInternalName] = useState(value);
+  const [open, setOpen] = useState(false);
 
   // Synchronize internal state when the external value prop changes
   useEffect(() => {
     setInternalName(value);
-  }, [value]);
+  }, [value, open]);
 
   const handleSave = () => {
-    onChange(internalName);
-    onSave?.(internalName);
+    const trimmed = internalName.trim();
+    if (!trimmed || trimmed === value) {
+      setOpen(false);
+      return;
+    }
+    onChange(trimmed);
+    onSave?.(trimmed);
+    setOpen(false);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSave();
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button
           type="button"
@@ -54,33 +66,33 @@ export function EditableAutomationName({
         showCloseButton={false}
         className="bg-transparent border-none max-w-[420px] flex flex-col justify-center items-center"
       >
-        <div className="rounded-3xl gap-8 p-8 flex flex-col items-center bg-white border-none shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="w-full rounded-3xl gap-8 p-8 flex flex-col items-center bg-white border-none shadow-2xl animate-in zoom-in-95 duration-200">
           <DialogHeader className="w-full">
             <DialogTitle className="text-2xl font-semibold text-[#212121] text-center">
               Change Name
             </DialogTitle>
           </DialogHeader>
 
-          <div className="w-full space-y-2.5">
-            <Input
-              value={internalName}
-              onChange={(e) => setInternalName(e.target.value)}
-              className="w-[20vw] h-14 bg-[#F8FAFC] border-none rounded-lg text-lg focus-visible:ring-2 focus-visible:ring-[#6A06E4]/20 transition-all font-medium text-[#0F172A]"
-              placeholder="Automation Name"
-              autoFocus
-            />
-          </div>
+          <form onSubmit={handleFormSubmit} className="w-full space-y-8">
+            <div className="w-full">
+              <Input
+                value={internalName}
+                onChange={(e) => setInternalName(e.target.value)}
+                className="w-full h-14 bg-[#F8FAFC] border-none rounded-lg text-lg focus-visible:ring-2 focus-visible:ring-[#6A06E4]/20 transition-all font-medium text-[#0F172A]"
+                placeholder="Automation Name"
+                autoFocus
+              />
+            </div>
 
-          <div className="w-full space-y-4 flex flex-col items-center">
-            <DialogClose asChild>
+            <div className="w-full flex flex-col items-center">
               <Button
-                onClick={handleSave}
+                type="submit"
                 className="w-full h-12 bg-[#6A06E4] hover:bg-[#5a05c4] text-white text-lg font-medium rounded-lg shadow-lg shadow-purple-100 transition-all active:scale-[0.98]"
               >
                 Save
               </Button>
-            </DialogClose>
-          </div>
+            </div>
+          </form>
         </div>
         <DialogClose asChild>
           <button

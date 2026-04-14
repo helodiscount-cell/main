@@ -184,12 +184,16 @@ const TableRow = ({
   };
 
   // Desktop-specific actions
+  const isForm = variant === "forms";
+  const slug = isForm ? (data as FormListItem).slug : undefined;
+
   const actions = (
     <div className="relative flex items-center gap-2">
-      {variant === "forms" && (
+      {isForm && (
         <button
           onClick={copyToClipboard}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[#6A06E5] hover:bg-purple-50 transition-colors text-sm font-medium whitespace-nowrap"
+          disabled={!slug}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[#6A06E5] hover:bg-purple-50 transition-colors text-sm font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Copy size={14} />
           Copy
@@ -197,7 +201,7 @@ const TableRow = ({
       )}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
-        className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none"
+        className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
         title="More actions"
       >
         <MoreVertical size={16} />
