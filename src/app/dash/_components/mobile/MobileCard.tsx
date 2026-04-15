@@ -52,16 +52,16 @@ export const MobileCard = ({ data }: MobileCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-5 border border-slate-50 flex flex-col gap-5 mb-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+    <div className="bg-white rounded-lg p-5 border border-slate-50 flex flex-col gap-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
       {/* Top Row: Info + Status + Menu */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-12 h-12 rounded-xl bg-slate-50 shrink-0 overflow-hidden border border-slate-100 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-slate-50 shrink-0 overflow-hidden border border-slate-100 flex items-center justify-center">
             {mapped.image}
           </div>
           {mapped.href ? (
             <Link href={mapped.href} className="flex flex-col gap-0.5 min-w-0">
-              <span className="capitalize text-[17px] font-semibold text-slate-800 truncate">
+              <span className="capitalize text-[15px] font-semibold text-slate-800 truncate">
                 {mapped.title}
               </span>
               <span className="text-xs text-slate-400 truncate max-w-[180px]">
@@ -70,7 +70,7 @@ export const MobileCard = ({ data }: MobileCardProps) => {
             </Link>
           ) : (
             <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
-              <span className="capitalize text-[17px] font-semibold text-slate-800 truncate">
+              <span className="capitalize text-[16px] font-semibold text-slate-800 truncate">
                 {mapped.title}
               </span>
               <span className="text-xs text-slate-400 truncate max-w-[180px]">
@@ -128,9 +128,9 @@ export const MobileCard = ({ data }: MobileCardProps) => {
           </div>
         </div>
       </div>
-
+      <hr />
       {/* Bottom Row: Stats + Date + Copy Link */}
-      <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
           <div className="flex flex-col gap-1 min-w-fit">
             <div className="flex items-center gap-1.5">

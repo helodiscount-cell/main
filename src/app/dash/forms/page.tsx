@@ -117,11 +117,10 @@ export default function FormsPage() {
 
   const newFormAction = (
     <Button
-      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-14 rounded-xl text-lg font-bold"
+      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-11 rounded-lg text-lg font-semibold"
       asChild
     >
       <Link href="/dash/forms/editor" className="flex items-center gap-2">
-        <PlusIcon size={20} />
         New Form
       </Link>
     </Button>
