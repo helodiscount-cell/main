@@ -49,7 +49,7 @@ function DashboardHeader({
                     onChange: (e) => onSearchChange(e.target.value),
                   }
                 : { defaultValue: searchValue })}
-              className="w-full text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400 font-medium"
+              className="w-full text-sm bg-transparent outline-none text-[#1A1D1F] placeholder:text-slate-400 font-semibold"
             />
           </div>
         )}

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Search, PanelLeft } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { ActiveWorkspaceAvatar } from "@/components/ActiveWorkspaceAvatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 
@@ -33,8 +33,8 @@ export const MobileDashboardHeader = ({
             Dmbroo
           </span>
         </div>
-        <div className="rounded-full overflow-hidden scale-110">
-          <UserButton afterSignOutUrl="/" />
+        <div className="scale-125">
+          <ActiveWorkspaceAvatar size={40} />
         </div>
       </div>
 

@@ -28,7 +28,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </span>
           </div>
         </div>
-        <UserSection />
+        <div className="hidden md:block w-full">
+          <UserSection />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup className="h-full">

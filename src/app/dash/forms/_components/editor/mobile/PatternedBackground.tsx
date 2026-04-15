@@ -12,42 +12,21 @@ export const PatternedBackground = ({
   children: React.ReactNode;
 }) => {
   return (
-    <div className="relative flex-1 h-full overflow-hidden bg-[#F1F5F9] rounded-xl border border-slate-200">
+    <div className="-mt-4 relative flex-1 h-full overflow-hidden bg-[#E2E8F0]/30">
       {/*
-          PATTERN OVERLAY
-          Uses a CSS background-image with a tiny cross (plus) shape
+          PLUS PATTERN OVERLAY
+          Using a SVG-based plus pattern for crispness
       */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        className="absolute inset-0 pointer-events-none opacity-[0.1]"
         style={{
-          backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px), radial-gradient(circle, #000 1px, transparent 1px)`,
-          backgroundSize: "24px 24px",
-          backgroundPosition: "0 0, 12px 12px",
-        }}
-      />
-
-      {/* Alternative implementation if the radial gradient doesn't match perfectly:
-          Using a CSS-drawn plus pattern
-      */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #e2e8f0 1px, transparent 1px),
-            linear-gradient(to bottom, #e2e8f0 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 8V16M8 12H16' stroke='%2364748B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,
+          backgroundSize: "32px 32px",
           backgroundPosition: "center center",
-          maskImage:
-            "radial-gradient(circle at center, black, transparent 80%)",
-          opacity: 0.4,
         }}
       />
-
       {/* Content Layer */}
-      <div className="relative z-10 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="max-w-lg mx-auto py-8 px-4 pb-[120px]">{children}</div>
-      </div>
+      <div className="max-w-lg mx-auto">{children}</div>
     </div>
   );
 };

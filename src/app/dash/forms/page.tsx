@@ -166,7 +166,7 @@ export default function FormsPage() {
           <>
             <RefreshInstaDialog />
             <Button
-              className="rounded-sm bg-[#6A06E4] hover:bg-[#5a05c4] h-full"
+              className="rounded-lg bg-[#6A06E4] hover:bg-[#5a05c4] h-full"
               asChild
             >
               <Link

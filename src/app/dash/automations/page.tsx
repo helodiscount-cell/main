@@ -147,7 +147,7 @@ const AutomationPage = () => {
     <div className="w-full">
       <CreateAutomationDialog
         title="New Automation"
-        triggerClassName="w-full h-14 rounded-2xl text-lg font-bold border-purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
+        triggerClassName="w-full h-14 text-lg font-bold border-purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
       />
     </div>
   );

@@ -53,7 +53,7 @@ export default function CreateAutomationDialog({
         <Button
           className={
             triggerClassName ||
-            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none h-full"
+            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white px-6 py-2 transition-all font-medium border-none outline-none h-full"
           }
         >
           <Image src={PlusIconSvg} alt="add" width={15} height={15} />

@@ -68,7 +68,7 @@ export const AddFieldDialog = ({
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-[24px] px-6 pb-12">
+        <SheetContent side="bottom" className="rounded-t-xl px-6 pb-12">
           <SheetHeader className="text-left">
             <SheetTitle>Select a Field</SheetTitle>
             <p className="text-sm text-slate-400 mt-0.5">

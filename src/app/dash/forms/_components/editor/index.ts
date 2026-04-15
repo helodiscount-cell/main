@@ -7,3 +7,4 @@ export { AddFieldDialog } from "./AddFieldDialog";
 export { AddFieldButton } from "./AddFieldButton";
 export { SubmitButton } from "./SubmitButton";
 export { FormEditorCanvas } from "./FormEditorCanvas";
+export { BaseFormLayout } from "./BaseFormLayout";
