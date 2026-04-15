@@ -33,7 +33,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const postsResponse = queryClient.getQueryData<any>(instagramKeys.posts());
-  const selectedPost = postsResponse?.result?.data?.data?.find(
+  const selectedPost = postsResponse?.result?.data?.find(
     (p: any) => p.id === post_id,
   );
 

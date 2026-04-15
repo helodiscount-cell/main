@@ -6,7 +6,7 @@ import { DashboardHeader } from "./_components";
 
 export default async function Page() {
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4">
+    <>
       <DashboardHeader
         childComp={
           <>
@@ -23,7 +23,6 @@ export default async function Page() {
           <BestPerformerWidget />
         </div>
       </div>
-      <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
-    </div>
+    </>
   );
 }

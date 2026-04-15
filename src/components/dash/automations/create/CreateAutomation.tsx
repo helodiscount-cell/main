@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -16,6 +17,7 @@ import {
   TabSelector,
 } from "@/components/dash/automations/create";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 export default function CreateAutomationDialog({
   title,
@@ -51,7 +53,7 @@ export default function CreateAutomationDialog({
         <Button
           className={
             triggerClassName ||
-            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none"
+            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white rounded-sm px-6 py-2 transition-all font-medium border-none outline-none h-full"
           }
         >
           <Image src={PlusIconSvg} alt="add" width={15} height={15} />
@@ -59,13 +61,21 @@ export default function CreateAutomationDialog({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="sm:max-w-3xl overflow-hidden"
+        className="sm:max-w-3xl overflow-hidden rounded-2xl"
         showCloseButton={false}
       >
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold tracking-tight flex flex-1 justify-between">
-            {activeTab ? "Configure Automation" : "Choose a Template"}
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="text-[#212121] text-xl font-semibold tracking-tight flex flex-1 justify-between">
+            {activeTab ? "Configure Automation" : "Templates"}
           </DialogTitle>
+          <DialogClose asChild>
+            <Button
+              variant="ghost"
+              className="rounded-full w-8 h-8 border-2 border-gray-200"
+            >
+              <X className="text-gray-500" size={20} />
+            </Button>
+          </DialogClose>
         </DialogHeader>
         <div className="w-2xl">{renderContent()}</div>
       </DialogContent>

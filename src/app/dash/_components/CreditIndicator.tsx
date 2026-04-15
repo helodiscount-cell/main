@@ -45,7 +45,7 @@ export function CreditIndicator() {
 
   return (
     <div
-      className="flex items-center gap-3 px-3 h-9 bg-white border border-slate-100 rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.05)] select-none"
+      className="flex items-center gap-3 px-3 h-full bg-white border border-slate-100 rounded-sm shadow-2xs select-none"
       role="img"
       aria-label={`${creditsUsed.toLocaleString()} of ${creditLimit === -1 ? "unlimited" : creditLimit.toLocaleString()} credits used`}
     >

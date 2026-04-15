@@ -3,9 +3,7 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { SlidersHorizontal } from "lucide-react";
 import React from "react";
@@ -41,16 +39,14 @@ type Props = AutomationProps | GenericProps;
 
 export const getStatusOptions = (
   variant: TableVariant,
-): { label: string; value: StatusFilter }[] => {
+): { label: string; value: Exclude<StatusFilter, "ALL"> }[] => {
   if (variant === "forms") {
     return [
-      { label: "All Status", value: "ALL" },
       { label: "Live", value: "PUBLISHED" },
       { label: "Draft", value: "DRAFT" },
     ];
   }
   return [
-    { label: "All Status", value: "ALL" },
     { label: "Live", value: "ACTIVE" },
     { label: "Paused", value: "PAUSED" },
   ];
@@ -58,10 +54,9 @@ export const getStatusOptions = (
 
 export const getTriggerOptions = (): {
   label: string;
-  value: TriggerFilter;
+  value: Exclude<TriggerFilter, "ALL">;
 }[] => {
   return [
-    { label: "All Types", value: "ALL" },
     { label: "Comment", value: "COMMENT" },
     { label: "DM", value: "DM" },
     { label: "Story", value: "STORY" },
@@ -133,6 +128,16 @@ const TableHeader = (props: Props) => {
         }
 
         if (col.type === "actions") {
+          const toggleStatus = (val: Exclude<StatusFilter, "ALL">) => {
+            setStatusFilter(statusFilter === val ? "ALL" : val);
+          };
+
+          const toggleTrigger = (val: Exclude<TriggerFilter, "ALL">) => {
+            if (props.variant === "automations") {
+              props.setTriggerFilter(props.triggerFilter === val ? "ALL" : val);
+            }
+          };
+
           return (
             <DropdownMenu key={col.id}>
               <DropdownMenuTrigger asChild>
@@ -144,49 +149,38 @@ const TableHeader = (props: Props) => {
                   <SlidersHorizontal size={14} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[180px] p-2">
-                <DropdownMenuLabel className="px-2 pb-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Status
+              <DropdownMenuContent
+                align="end"
+                className="min-w-[150px] p-1.5 rounded-2xl bg-white border border-slate-100 shadow-xl"
+              >
+                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-sm font-medium text-slate-900 border-b border-slate-50 mb-1">
+                  Filter By
                 </DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={statusFilter}
-                  onValueChange={(val) => setStatusFilter(val as StatusFilter)}
-                >
-                  {getStatusOptions(variant).map((opt) => (
-                    <DropdownMenuRadioItem
+
+                {/* Trigger Filters */}
+                {props.variant === "automations" &&
+                  getTriggerOptions().map((opt) => (
+                    <DropdownMenuCheckboxItem
                       key={opt.value}
-                      value={opt.value}
-                      className="px-2 py-2 cursor-pointer focus:bg-slate-50 transition-colors rounded-md text-sm font-medium text-slate-600 data-[state=checked]:text-slate-900 data-[state=checked]:font-semibold"
+                      checked={props.triggerFilter === opt.value}
+                      onCheckedChange={() => toggleTrigger(opt.value)}
+                      className="cursor-pointer font-medium text-slate-500 data-[state=checked]:text-[#6A06E4]"
                     >
                       {opt.label}
-                    </DropdownMenuRadioItem>
+                    </DropdownMenuCheckboxItem>
                   ))}
-                </DropdownMenuRadioGroup>
 
-                {props.variant === "automations" && (
-                  <>
-                    <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuLabel className="px-2 pb-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      Trigger Type
-                    </DropdownMenuLabel>
-                    <DropdownMenuRadioGroup
-                      value={props.triggerFilter}
-                      onValueChange={(val) =>
-                        props.setTriggerFilter(val as TriggerFilter)
-                      }
-                    >
-                      {getTriggerOptions().map((opt) => (
-                        <DropdownMenuRadioItem
-                          key={opt.value}
-                          value={opt.value}
-                          className="px-2 py-2 cursor-pointer focus:bg-slate-50 transition-colors rounded-md text-sm font-medium text-slate-600 data-[state=checked]:text-slate-900 data-[state=checked]:font-semibold"
-                        >
-                          {opt.label}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </>
-                )}
+                {/* Status Filters */}
+                {getStatusOptions(variant).map((opt) => (
+                  <DropdownMenuCheckboxItem
+                    key={opt.value}
+                    checked={statusFilter === opt.value}
+                    onCheckedChange={() => toggleStatus(opt.value)}
+                    className="cursor-pointer font-medium text-slate-500 data-[state=checked]:text-[#6A06E4]"
+                  >
+                    {opt.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           );

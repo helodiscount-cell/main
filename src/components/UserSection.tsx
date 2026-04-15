@@ -87,15 +87,9 @@ const UserSection = async () => {
 
       {/* Display name with official branding color */}
       <div className="flex flex-col items-center gap-0.5">
-        <span className="text-[14px] font-bold text-[#1A1A1A] tracking-tight">
+        <span className="text-[14px] font-medium text-[#1A1A1A] tracking-tight">
           @{account.username}
         </span>
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-            Active
-          </span>
-        </div>
       </div>
     </div>
   );

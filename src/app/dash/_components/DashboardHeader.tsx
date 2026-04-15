@@ -1,7 +1,5 @@
 "use client";
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
 
@@ -31,24 +29,17 @@ function DashboardHeader({
       : "Dashboard";
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator
-        orientation="vertical"
-        className="mr-2 data-[orientation=vertical]:h-4"
-      />
-
-      <div className="flex w-full gap-4">
-        <div
-          className="flex-1 bg-white rounded-md pl-4 flex items-center"
-          style={{ height: "inherit" }}
-        >
-          <p className="text-sm font-semibold capitalize">{pageTitle}</p>
+    <header className="flex items-center justify-between gap-4">
+      <div className="flex w-full gap-4 items-center h-10">
+        <div className="h-full px-4 flex-1 bg-white rounded-lg flex items-center">
+          <p className="text-sm font-bold text-[#1A1D1F]">
+            {pageTitle === "Dash" ? "Dashboard" : pageTitle}
+          </p>
         </div>
 
         {showSearch && (
-          <div className="flex-1 bg-white rounded-md px-3 flex items-center gap-2 h-9">
-            <Search size={15} className="text-slate-400 shrink-0" />
+          <div className="px-4 bg-white rounded-lg flex items-center gap-2 h-full">
+            <Search size={18} className="text-slate-400 shrink-0" />
             <input
               type="text"
               placeholder={`Search ${pageTitle}`}
@@ -58,12 +49,12 @@ function DashboardHeader({
                     onChange: (e) => onSearchChange(e.target.value),
                   }
                 : { defaultValue: searchValue })}
-              className="w-full text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400"
+              className="w-full text-sm bg-transparent outline-none text-slate-700 placeholder:text-slate-400 font-medium"
             />
           </div>
         )}
 
-        {childComp}
+        <div className="flex items-center gap-3 h-full">{childComp}</div>
       </div>
     </header>
   );
