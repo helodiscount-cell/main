@@ -14,6 +14,7 @@ import { formKeys } from "@/keys/react-query";
 
 // Default empty form state
 const DEFAULT_FORM_VALUES: FormValues = {
+  name: "Untitled Form",
   title: "",
   description: "",
   coverImage: undefined,
@@ -63,6 +64,7 @@ export const FormEditorProvider = ({
   useEffect(() => {
     if (form) {
       methods.reset({
+        name: form.name || "Untitled Form",
         title: form.title,
         description: form.description || "",
         coverImage: form.coverImage || undefined,
@@ -114,7 +116,9 @@ export const FormEditorProvider = ({
 
       const isValid = await methods.trigger();
       if (!isValid) {
-        if (methods.formState.errors.fields) {
+        if (methods.formState.errors.name) {
+          toast.error(methods.formState.errors.name.message as string);
+        } else if (methods.formState.errors.fields) {
           toast.error("Form cannot be empty", {
             description: "Please provide atleast one fields",
           });

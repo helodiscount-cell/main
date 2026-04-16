@@ -46,9 +46,14 @@ export async function getUserPosts(
   }
 
   // Cache by webhookUserId to align with standardized Redis key architecture
-  return getCachedPosts(identifier, async () =>
+  const result = await getCachedPosts(identifier, async () =>
     getUserPostsFromInstagram(account.instagramUserId, accessToken),
   );
+
+  return {
+    data: result.data.data,
+    paging: result.data.paging,
+  };
 }
 
 // Gets Instagram stories for the active workspace

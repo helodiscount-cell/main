@@ -38,7 +38,7 @@ export const MobilePageLayout = ({
   onFilterToggle,
 }: MobilePageLayoutProps) => {
   return (
-    <div className="flex flex-col h-screen bg-[#FAFAFA] pb-[100px] overflow-hidden relative">
+    <div className="flex flex-col gap-4 h-screen overflow-hidden relative">
       <MobileDashboardHeader
         title={title}
         searchValue={searchValue}
@@ -46,10 +46,10 @@ export const MobilePageLayout = ({
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-5 bg-[#f1f1f1]">
+      <div className="flex flex-col gap-4 flex-1 overflow-y-auto bg-[#f1f1f1]">
         {/* Sort/Filter Bar */}
         {(onSortChange || onFilterToggle) && (
-          <div className="flex items-center justify-between mb-4 mt-2">
+          <div className="flex items-center justify-between">
             {onSortChange && (
               <button
                 onClick={() => onSortChange?.("createdAt")}
@@ -86,7 +86,7 @@ export const MobilePageLayout = ({
             <p className="text-sm font-medium">{emptyMessage}</p>
           </div>
         ) : (
-          <div className="flex flex-col pb-6">
+          <div className="flex flex-col gap-4">
             {items.map((item) => (
               <MobileCard key={item.id} data={item} />
             ))}
@@ -95,9 +95,7 @@ export const MobilePageLayout = ({
       </div>
 
       {/* Sticky Bottom Action Button */}
-      <div className="w-full absolute bottom-0 inset-x-0 p-5 z-30">
-        {actionButton}
-      </div>
+      <div className="">{actionButton}</div>
     </div>
   );
 };

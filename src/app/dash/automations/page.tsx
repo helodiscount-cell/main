@@ -147,7 +147,7 @@ const AutomationPage = () => {
     <div className="w-full">
       <CreateAutomationDialog
         title="New Automation"
-        triggerClassName="w-full h-14 rounded-2xl text-lg font-bold border-purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
+        triggerClassName="w-full h-14 text-lg font-bold border-purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
       />
     </div>
   );
@@ -184,7 +184,7 @@ const AutomationPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#F1F1F1]">
+    <>
       <DashboardHeader
         showSearch={true}
         searchValue={search}
@@ -199,50 +199,48 @@ const AutomationPage = () => {
       />
 
       {/* Table */}
-      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
-        <div className="flex-1">
-          {/* Table header */}
-          <TableHeader
-            variant="automations"
-            statusFilter={statusFilter}
-            setStatusFilter={handleStatusChange}
-            triggerFilter={triggerFilter}
-            setTriggerFilter={handleTriggerChange}
-            sortField={sortField}
-            sortOrder={sortOrder}
-            onSort={toggleSort}
-          />
-
-          {/* Rows */}
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-sm text-slate-400">
-              <Spinner className="text-[#6A06E4] size-5" strokeWidth={2.5} />
-              Loading automations…
-            </div>
-          ) : paginatedAutomations.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-sm text-slate-400">
-              {search ? "No matches found." : "No automations found."}
-            </div>
-          ) : (
-            paginatedAutomations.map((automation) => (
-              <TableRow
-                key={automation.id}
-                data={automation}
-                variant="automations"
-              />
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={page}
-          totalItems={filteredAndSorted.length}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
+      <div className="bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
+        {/* Table header */}
+        <TableHeader
+          variant="automations"
+          statusFilter={statusFilter}
+          setStatusFilter={handleStatusChange}
+          triggerFilter={triggerFilter}
+          setTriggerFilter={handleTriggerChange}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
         />
+
+        {/* Rows */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-sm text-slate-400">
+            <Spinner className="text-[#6A06E4] size-5" strokeWidth={2.5} />
+            Loading automations…
+          </div>
+        ) : paginatedAutomations.length === 0 ? (
+          <div className="flex items-center justify-center py-16 text-sm text-slate-400">
+            {search ? "No matches found." : "No automations found."}
+          </div>
+        ) : (
+          paginatedAutomations.map((automation) => (
+            <TableRow
+              key={automation.id}
+              data={automation}
+              variant="automations"
+            />
+          ))
+        )}
       </div>
-    </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={page}
+        totalItems={filteredAndSorted.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
+    </>
   );
 };
 

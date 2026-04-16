@@ -5,8 +5,8 @@ import { useFieldArray, Control } from "react-hook-form";
 import type { FieldType, FormValues } from "@dm-broo/common-types";
 
 /**
- * Shared logic for the form canvas (FormEditorCanvas & MobileFormEditorCanvas).
- * Extracts field array management and submit handlers to maintain DRY across platforms.
+ * Shared logic for the form canvas.
+ * Extracts field array management and submit handlers.
  */
 export const useFormCanvasLogic = (
   control: Control<FormValues>,

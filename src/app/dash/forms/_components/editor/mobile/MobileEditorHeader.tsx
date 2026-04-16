@@ -2,7 +2,7 @@
 
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { UserButton } from "@clerk/nextjs";
+import { ActiveWorkspaceAvatar } from "@/components/ActiveWorkspaceAvatar";
 import {
   RefreshCw,
   Link2,
@@ -54,106 +54,101 @@ export const MobileEditorHeader = ({
   });
 
   return (
-    <div className="flex flex-col bg-[#f1f1f1] px-5 py-6 gap-5 shadow-sm">
+    <div className="flex flex-col bg-[#F3F4F6] gap-6">
       {/* Top Row: Menu + Logo + User */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="-ml-2 text-slate-800 scale-125" />
-          <span className="text-2xl font-semibold text-[#6A06E4] tracking-tight">
+          <SidebarTrigger className="text-[#0F172A] scale-125" />
+          <span className="text-3xl font-semibold text-[#6A06E4] tracking-tight">
             Dmbroo
           </span>
         </div>
-        <div className="rounded-full overflow-hidden scale-110">
-          <UserButton afterSignOutUrl="/" />
-        </div>
+        <ActiveWorkspaceAvatar size={50} />
       </div>
 
       {/* Second Row: Breadcrumb + Action Buttons - Only visible on editor tab */}
       {activeTab === "editor" && (
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-3">
           {/* Breadcrumb box */}
-          <div className="flex items-center h-12 bg-white rounded-xl px-4 flex-1 min-w-0">
-            <span className="text-sm font-medium text-slate-300">Forms</span>
-            <span className="text-sm font-medium text-slate-300 mx-1">/</span>
-            <span className="text-sm font-bold text-[#0F172A] truncate">
+          <div className="flex items-center h-[52px] bg-white rounded-xl px-4 flex-1 min-w-0 shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-slate-50">
+            <span className="text-[15px] font-medium text-slate-300">
+              Forms
+            </span>
+            <span className="text-[15px] font-medium text-slate-300 mx-1.5">
+              /
+            </span>
+            <span className="text-[15px] font-bold text-[#0F172A] truncate">
               Editor
             </span>
           </div>
 
-          {/* Action icons */}
+          {/* Action icons - ALWAYS 4 buttons for unification */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Update / Save Draft */}
+            {/* Stop Button (Red) */}
+            <Button
+              onClick={onUnpublish}
+              disabled={isLoading || !isPublished}
+              size="icon"
+              aria-label="Stop publishing"
+              className={cn(
+                "h-[52px] w-[52px] rounded-xl bg-red-500 hover:bg-red-600 text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-40",
+              )}
+            >
+              <Square size={22} fill="currentColor" />
+            </Button>
+
+            {/* Link (Copy Link) - Black */}
+            <Button
+              size="icon"
+              disabled={!form?.slug}
+              aria-label="Copy form link"
+              className="h-[52px] w-[52px] rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              onClick={async () => {
+                if (!form?.slug) return;
+                try {
+                  await navigator.clipboard.writeText(
+                    `${window.location.origin}/f/${form.slug}`,
+                  );
+                  toast.success("Link copied!");
+                } catch {
+                  toast.error("Failed to copy link");
+                }
+              }}
+            >
+              <Link2 size={22} />
+            </Button>
+
+            {/* Preview (Eye) - Black */}
+            <Button
+              size="icon"
+              disabled={!form?.slug}
+              aria-label="Preview form"
+              className="h-[52px] w-[52px] rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              onClick={() => {
+                if (!form?.slug) return;
+                window.open(
+                  `${window.location.origin}/f/${form.slug}`,
+                  "_blank",
+                );
+              }}
+            >
+              <Eye size={22} />
+            </Button>
+
+            {/* Save / Update (Green) */}
             <Button
               onClick={isPublished ? onUpdate : onSave}
               disabled={isLoading}
               size="icon"
-              aria-label={isPublished ? "Update form" : "Save draft"}
-              className="h-12 w-12 rounded-xl bg-red-500 hover:bg-red-600 text-white shrink-0 border-none shadow-none"
-            >
-              <CircleStopIcon
-                size={24}
-                className={cn(isLoading && "animate-spin")}
-              />
-            </Button>
-
-            {/* Link (Copy Link) */}
-            {form?.slug && (
-              <>
-                <Button
-                  size="icon"
-                  aria-label="Copy form link"
-                  className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none shadow-none"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(
-                        `${window.location.origin}/f/${form.slug}`,
-                      );
-                      toast.success("Link copied to clipboard!");
-                    } catch (err) {
-                      console.error("Failed to copy link:", err);
-                      toast.error("Failed to copy link");
-                    }
-                  }}
-                >
-                  <Link2 size={24} />
-                </Button>
-
-                {/* Preview */}
-                <Button
-                  size="icon"
-                  aria-label="Preview form"
-                  className="h-12 w-12 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none shadow-none"
-                  onClick={() => {
-                    const newWindow = window.open(
-                      `${window.location.origin}/f/${form.slug}`,
-                      "_blank",
-                      "noopener,noreferrer",
-                    );
-                    if (newWindow) newWindow.opener = null;
-                  }}
-                >
-                  <Eye size={24} />
-                </Button>
-              </>
-            )}
-
-            {/* Stop / Publish */}
-            <Button
-              onClick={isPublished ? onUnpublish : onPublish}
-              disabled={isLoading}
-              size="icon"
-              aria-label={isPublished ? "Stop publishing" : "Publish form"}
+              aria-label={isPublished ? "Update form" : "Save form"}
               className={cn(
-                "h-12 w-12 rounded-xl text-white shrink-0 border-none shadow-none",
-                isPublished
-                  ? "bg-red-500 hover:bg-red-600"
-                  : "bg-[#16A34A] hover:bg-[#15803D]",
+                "h-[52px] w-[52px] rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-50",
               )}
             >
-              {isPublished ? (
-                <Square size={24} fill="currentColor" />
+              {isLoading ? (
+                <RefreshCw size={22} className="animate-spin" />
               ) : (
-                <Send size={24} />
+                <Send size={22} className="ml-0.5" />
               )}
             </Button>
           </div>

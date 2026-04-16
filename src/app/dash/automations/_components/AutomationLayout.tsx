@@ -20,7 +20,7 @@ type AutomationLayoutProps = {
 };
 
 const DMPlaceholder = () => (
-  <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-white flex flex-col pt-10 px-4">
+  <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-white flex flex-col pt-10 px-4">
     {/* Mock Header */}
     <div className="flex items-center gap-3 mb-8 px-2">
       <div className="w-10 h-10 rounded-full bg-linear-to-tr from-purple-500 to-pink-500 shrink-0" />
@@ -118,7 +118,7 @@ export function AutomationLayout({
     // Video handles Reels and standard videos
     if (post.mediaType === "VIDEO") {
       return (
-        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+        <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
           <video
             src={post.mediaUrl}
             autoPlay
@@ -134,7 +134,7 @@ export function AutomationLayout({
 
     // Standard static image or carousel (showing first frame)
     return (
-      <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+      <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
         <Image
           src={post.mediaUrl}
           alt="Post preview"
@@ -150,18 +150,11 @@ export function AutomationLayout({
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
-        />
-        {header}
-      </header>
+      <header className="flex h-10 items-center gap-2">{header}</header>
 
       {/* Main canvas */}
       <div
-        className="flex-1 m-4 rounded-xl overflow-hidden"
+        className="flex-1 rounded-xl overflow-hidden"
         style={{
           backgroundColor: "#D4D4D4",
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 8v8M8 12h8' stroke='%23BEBEBE' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,

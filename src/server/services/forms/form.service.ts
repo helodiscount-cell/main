@@ -105,6 +105,7 @@ export async function getUserForms(
 
   return forms.map((f) => ({
     id: f.id,
+    name: f.name,
     title: f.title,
     description: f.description,
     coverImage: f.coverImage,
@@ -313,7 +314,8 @@ export async function duplicateForm(
     throw new ApiRouteError("Form not found", "NOT_FOUND", 404);
   }
 
-  const duplicateInput: CreateFormInput = {
+  const duplicateInput: any = {
+    name: `${existingForm.name ?? "Untitled Form"} (Copy)`,
     title: `${existingForm.title ?? "Untitled Form"}`,
     description: existingForm.description ?? "",
     coverImage: existingForm.coverImage ?? undefined,

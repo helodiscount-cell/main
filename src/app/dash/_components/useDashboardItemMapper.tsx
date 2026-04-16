@@ -105,8 +105,8 @@ export const mapDashboardItem = (
   const form = data as FormListItem;
   return {
     id: form.id,
-    title: form.title || "Untitled Form",
-    subtitle: form.description || "No description",
+    title: form.name || "Untitled Form",
+    subtitle: "",
     href: `/dash/forms/${form.id}`,
     image:
       typeof form.coverImage === "string" &&

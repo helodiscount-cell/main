@@ -25,8 +25,8 @@ export const EDITOR_HEADER_CONFIG = {
   BREADCRUMB_CURRENT: "Editor",
   PUBLISH_LABEL: "Publish",
   STYLES: {
-    PRIMARY: "bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-9 px-4",
-    ICON: "h-9 w-9 bg-slate-900 hover:bg-slate-700 text-white",
+    PRIMARY: "bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-10 px-4",
+    ICON: "h-10 w-10 bg-slate-900 hover:bg-slate-700 text-white",
   },
   ICON_SIZE: 15,
 } as const;

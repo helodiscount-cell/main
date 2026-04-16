@@ -8,8 +8,8 @@ import {
 import type { FormValues, FieldType } from "@dm-broo/common-types";
 
 /**
- * Shared logic for form fields (FieldCard & MobileFieldCard).
- * Extracts form context, watchers, and option management to keep components DRY.
+ * Shared logic for form fields.
+ * Extracts form context, watchers, and option management.
  */
 export const useFieldCardLogic = (index: number) => {
   const {

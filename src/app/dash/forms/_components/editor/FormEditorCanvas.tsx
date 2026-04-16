@@ -26,14 +26,14 @@ export const FormEditorCanvas = () => {
         <FormProvider {...methods}>
           <form
             onSubmit={handleCanvasSubmit}
-            className="max-w-lg mx-auto space-y-4 h-full flex flex-col justify-center p-4"
+            className="max-w-lg mx-auto space-y-4 h-full flex flex-col justify-center py-4"
           >
             {/* Form fixed elements */}
             <CoverImageUpload />
             <FormTitleSection />
 
             {/* Dynamic field list */}
-            <div className="space-y-4 h-[calc(100vh-600px)] overflow-y-auto no-scrollbar">
+            <div className="space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar">
               {fields.map((field, index) => (
                 <FieldCard
                   key={field.id}

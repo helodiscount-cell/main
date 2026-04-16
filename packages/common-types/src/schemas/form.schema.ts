@@ -31,8 +31,18 @@ export const FormFieldSchema = z.object({
   options: z.array(FormFieldOptionSchema).optional(),
 });
 
+// Common name schema for internal use and external API
+export const FormNameSchema = z
+  .string()
+  .min(1, "Form name is required")
+  .refine(
+    (val) => val !== "Untitled Form",
+    "Please provide a custom form name",
+  );
+
 // Top-level form values managed by react-hook-form
 export const FormValuesSchema = z.object({
+  name: FormNameSchema,
   title: z.string().min(1, "Title is required"),
   description: z.string(),
   coverImage: z.string().optional(),
@@ -41,6 +51,7 @@ export const FormValuesSchema = z.object({
 
 // What the frontend POSTs to save a form
 export const CreateFormSchema = z.object({
+  name: FormNameSchema,
   title: z.string().min(1, "Title is required"),
   description: z.string().default(""),
   coverImage: z.string().url().optional(),

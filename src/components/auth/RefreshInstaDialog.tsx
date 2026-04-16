@@ -17,7 +17,10 @@ export function RefreshInstaDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#6A06E4] border-none outline-none rounded-sm hover:bg-[#5a05c4] transition-all">
+        <Button
+          type="button"
+          className="bg-[#6A06E4] border-none outline-none rounded-lg hover:bg-[#5a05c4] transition-all h-full"
+        >
           <Image src={RestartIcon} alt="Restart" width={20} height={20} />
         </Button>
       </DialogTrigger>

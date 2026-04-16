@@ -51,6 +51,7 @@ export default function FormsPage() {
       const s = search.toLowerCase();
       result = result.filter(
         (f) =>
+          f.name?.toLowerCase().includes(s) ||
           f.title?.toLowerCase().includes(s) ||
           f.description?.toLowerCase().includes(s),
       );
@@ -117,11 +118,10 @@ export default function FormsPage() {
 
   const newFormAction = (
     <Button
-      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-14 rounded-xl text-lg font-bold"
+      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-11 rounded-lg text-lg font-semibold"
       asChild
     >
       <Link href="/dash/forms/editor" className="flex items-center gap-2">
-        <PlusIcon size={20} />
         New Form
       </Link>
     </Button>
@@ -157,7 +157,7 @@ export default function FormsPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#F1F1F1]">
+    <>
       {/* Top header */}
       <DashboardHeader
         showSearch={true}
@@ -166,13 +166,10 @@ export default function FormsPage() {
         childComp={
           <>
             <RefreshInstaDialog />
-            <Button
-              className="rounded-sm bg-[#6A06E4] hover:bg-[#5a05c4]"
-              asChild
-            >
+            <Button className="bg-[#6A06E4] hover:bg-[#5a05c4] h-full" asChild>
               <Link
                 href="/dash/forms/editor"
-                className="flex items-center gap-2"
+                className="h-full flex items-center gap-2"
               >
                 <Image src={PlusIconSvg} alt="add" width={15} height={15} />
                 New Form
@@ -183,47 +180,45 @@ export default function FormsPage() {
       />
 
       {/* Table */}
-      <div className="m-4 bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
-        <div className="flex-1">
-          {/* Column headers */}
-          <TableHeader
-            variant="forms"
-            statusFilter={statusFilter}
-            setStatusFilter={handleStatusChange}
-            sortField={sortField}
-            sortOrder={sortOrder}
-            onSort={toggleSort}
-          />
-
-          {/* Rows */}
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16 text-sm text-slate-400">
-              Loading forms…
-            </div>
-          ) : paginatedForms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
-              <span className="text-3xl">📋</span>
-              <p className="text-sm">
-                {search
-                  ? "No matches found."
-                  : "No forms yet. Create your first one!"}
-              </p>
-            </div>
-          ) : (
-            paginatedForms.map((form) => (
-              <TableRow key={form.id} data={form} variant="forms" />
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={page}
-          totalItems={filteredAndSortedForms.length}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
+      <div className="bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
+        {/* Column headers */}
+        <TableHeader
+          variant="forms"
+          statusFilter={statusFilter}
+          setStatusFilter={handleStatusChange}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          onSort={toggleSort}
         />
+
+        {/* Rows */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 text-sm text-slate-400">
+            Loading forms…
+          </div>
+        ) : paginatedForms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
+            <span className="text-3xl">📋</span>
+            <p className="text-sm">
+              {search
+                ? "No matches found."
+                : "No forms yet. Create your first one!"}
+            </p>
+          </div>
+        ) : (
+          paginatedForms.map((form) => (
+            <TableRow key={form.id} data={form} variant="forms" />
+          ))
+        )}
       </div>
-    </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={page}
+        totalItems={filteredAndSortedForms.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
+    </>
   );
 }
