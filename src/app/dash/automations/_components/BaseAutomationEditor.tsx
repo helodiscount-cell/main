@@ -117,12 +117,17 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
     );
 
   return (
-    <AutomationLayout
-      header={header}
-      triggerType={triggerType || triggerType}
-      post={post}
-      leftCol={renderLeftCol(form)}
-      rightCol={renderRightCol(form)}
-    />
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col h-full overflow-hidden gap-4"
+    >
+      <AutomationLayout
+        header={header}
+        triggerType={triggerType || triggerType}
+        post={post}
+        leftCol={renderLeftCol(form)}
+        rightCol={renderRightCol(form)}
+      />
+    </form>
   );
 }

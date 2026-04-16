@@ -13,7 +13,7 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: instagramKeys.posts(),
     queryFn: () => instagramService.profile.getUserPosts(),
   });
@@ -45,50 +45,31 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
       />
-      {isLoading ? (
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-square bg-slate-100 animate-pulse rounded-lg"
-            />
-          ))}
-        </div>
-      ) : !Array.isArray(data?.result?.data) ||
-        data.result.data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-          <p>No posts found on this account.</p>
-          <p className="text-sm italic">
-            Try clicking Refresh or connecting a different account.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-          {data.result.data.map((item) => {
-            const previewUrl = item.thumbnail_url || item.media_url || "";
+      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
+        {data?.result.data.map((item) => {
+          const previewUrl = item.thumbnail_url || item.media_url || "";
 
-            return (
-              <div
-                key={item.id}
-                className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
+          return (
+            <div
+              key={item.id}
+              className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
+            >
+              <Link
+                href={`/dash/automations/dmforcomments/${item.id}`}
+                className="w-full h-full"
               >
-                <Link
-                  href={`/dash/automations/dmforcomments/${item.id}`}
-                  className="w-full h-full"
-                >
-                  <Image
-                    src={previewUrl}
-                    alt={item.caption || "Post preview"}
-                    fill
-                    className="object-cover"
-                    unoptimized={previewUrl?.includes("fbcdn.net")}
-                  />
-                </Link>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                <Image
+                  src={previewUrl}
+                  alt={item.caption || "Post preview"}
+                  fill
+                  className="object-cover"
+                  unoptimized={previewUrl?.includes("fbcdn.net")}
+                />
+              </Link>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

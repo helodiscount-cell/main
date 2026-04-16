@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/server/db";
 import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
+import AccountSwitcher from "./AccountSwitcher";
 
 /**
  * UserSection (Server Component)
@@ -32,18 +33,28 @@ const UserSection = async () => {
 
   // 2. Fetch the specific account details for the sidebar
   let account;
+  let allAccounts: any[] = [];
   try {
-    account = await prisma.instaAccount.findFirst({
-      where: {
-        id: activeIgId,
-        user: { clerkId: userId },
-        isActive: true,
-      },
-      select: {
-        username: true,
-        profilePictureUrl: true,
-      },
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
     });
+
+    if (user) {
+      allAccounts = await prisma.instaAccount.findMany({
+        where: {
+          userId: user.id,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          username: true,
+          profilePictureUrl: true,
+        },
+      });
+
+      account = allAccounts.find((a) => a.id === activeIgId);
+    }
   } catch (error) {
     console.error("[UserSection] Database fetch failed:", error);
     account = null;
@@ -85,12 +96,11 @@ const UserSection = async () => {
         </div>
       </div>
 
-      {/* Display name with official branding color */}
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-[14px] font-medium text-[#1A1A1A] tracking-tight">
-          @{account.username}
-        </span>
-      </div>
+      {/* Account Switcher / Display name */}
+      <AccountSwitcher
+        currentAccount={account}
+        allAccounts={allAccounts.length > 1 ? allAccounts : []}
+      />
     </div>
   );
 };
