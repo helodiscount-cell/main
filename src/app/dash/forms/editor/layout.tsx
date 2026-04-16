@@ -20,7 +20,15 @@ export default function FormEditorLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-slate-50">
+          <div className="animate-pulse text-slate-400 font-medium">
+            Loading editor...
+          </div>
+        </div>
+      }
+    >
       <EditorLayoutContent>{children}</EditorLayoutContent>
     </Suspense>
   );

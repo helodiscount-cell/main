@@ -8,6 +8,7 @@ import { FormTabs } from "./FormTabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "next/navigation";
 import { PatternedBackground } from "./mobile/PatternedBackground";
+import { useFormActions } from "./useFormActions";
 
 interface BaseFormLayoutProps {
   children: React.ReactNode;
@@ -55,16 +56,9 @@ const MobileLayout = ({
   activeTab: "editor" | "submissions";
   children: React.ReactNode;
 }) => {
-  const { save, isLoading, currentStatus } = useFormEditor();
-
-  // Form action handlers
-  const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
-  const handleSave = useCallback(() => save("DRAFT"), [save]);
-  const handleUpdate = useCallback(
-    () => save(currentStatus || "DRAFT"),
-    [save, currentStatus],
-  );
-  const handleUnpublish = useCallback(() => save("DRAFT"), [save]);
+  const { isLoading, currentStatus } = useFormEditor();
+  const { handlePublish, handleSave, handleUpdate, handleUnpublish } =
+    useFormActions();
 
   return (
     <div className="flex flex-col gap-4 bg-[#F3F4F6] min-h-screen">
@@ -95,15 +89,8 @@ const DesktopLayout = ({
   pathname: string;
   children: React.ReactNode;
 }) => {
-  const { save, isLoading, currentStatus } = useFormEditor();
-
-  // Form action handlers
-  const handlePublish = useCallback(() => save("PUBLISHED"), [save]);
-  const handleSave = useCallback(() => save("DRAFT"), [save]);
-  const handleUpdate = useCallback(
-    () => save(currentStatus || "DRAFT"),
-    [save, currentStatus],
-  );
+  const { isLoading, currentStatus } = useFormEditor();
+  const { handlePublish, handleSave, handleUpdate } = useFormActions();
 
   return (
     <div className="flex flex-col h-full min-h-screen gap-4">

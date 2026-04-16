@@ -63,9 +63,7 @@ export const MobileEditorHeader = ({
             Dmbroo
           </span>
         </div>
-        <div className="scale-125">
-          <ActiveWorkspaceAvatar size={40} />
-        </div>
+        <ActiveWorkspaceAvatar size={50} />
       </div>
 
       {/* Second Row: Breadcrumb + Action Buttons - Only visible on editor tab */}
@@ -137,12 +135,12 @@ export const MobileEditorHeader = ({
               <Eye size={22} />
             </Button>
 
-            {/* Publish / Send (Green) */}
+            {/* Save / Update (Green) */}
             <Button
-              onClick={isPublished ? onUpdate : onPublish}
+              onClick={isPublished ? onUpdate : onSave}
               disabled={isLoading}
               size="icon"
-              aria-label={isPublished ? "Update form" : "Publish form"}
+              aria-label={isPublished ? "Update form" : "Save form"}
               className={cn(
                 "h-[52px] w-[52px] rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-50",
               )}

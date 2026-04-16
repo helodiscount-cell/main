@@ -63,8 +63,6 @@ export interface InstagramMediaItem {
 export type PostsResult = {
   data: InstagramMediaItem[];
   paging?: any;
-  status: number;
-  statusText: string;
 };
 
 export interface InstagramStory extends InstagramMediaItem {}

@@ -33,9 +33,7 @@ export const MobileDashboardHeader = ({
             Dmbroo
           </span>
         </div>
-        <div className="scale-125">
-          <ActiveWorkspaceAvatar size={40} />
-        </div>
+        <ActiveWorkspaceAvatar size={50} />
       </div>
 
       {/* Action Row */}

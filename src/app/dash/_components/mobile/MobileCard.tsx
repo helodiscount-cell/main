@@ -70,7 +70,7 @@ export const MobileCard = ({ data }: MobileCardProps) => {
             </Link>
           ) : (
             <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
-              <span className="capitalize text-[16px] font-semibold text-slate-800 truncate">
+              <span className="capitalize text-[15px] font-semibold text-slate-800 truncate">
                 {mapped.title}
               </span>
               <span className="text-xs text-slate-400 truncate max-w-[180px]">

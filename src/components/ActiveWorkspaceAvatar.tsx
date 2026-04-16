@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { workspaceClientService } from "@/api/services/workspace";
+import { cn } from "@/server/utils";
 
 /**
  * ActiveWorkspaceAvatar
@@ -11,19 +12,39 @@ import { workspaceClientService } from "@/api/services/workspace";
  * Optimized for mobile headers.
  */
 export function ActiveWorkspaceAvatar({ size = 32 }: { size?: number }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["workspace", "profile"],
     queryFn: () => workspaceClientService.getProfile(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Log error for debugging
+  React.useEffect(() => {
+    if (isError && error) {
+      console.error(
+        "[ActiveWorkspaceAvatar] Failed to load workspace profile:",
+        error,
+      );
+    }
+  }, [isError, error]);
 
   const profile = data?.success ? data.result : null;
 
-  if (isLoading) {
+  if (isLoading || isError) {
     return (
       <div
-        className="rounded-full bg-slate-100 animate-pulse border-2 border-white ring-1 ring-slate-100"
+        className={cn(
+          "rounded-full border-2 border-white ring-1 ring-slate-100 flex items-center justify-center transition-colors",
+          isLoading ? "bg-slate-100 animate-pulse" : "bg-red-50 border-red-100",
+        )}
         style={{ width: size, height: size }}
-      />
+        aria-label={isLoading ? "Loading profile" : "Failed to load profile"}
+        title={isError ? "Failed to load profile" : undefined}
+      >
+        {isError && (
+          <span className="text-[10px] text-red-500 font-bold">!</span>
+        )}
+      </div>
     );
   }
 
