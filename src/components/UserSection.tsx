@@ -53,7 +53,7 @@ const UserSection = async () => {
         },
       });
 
-      account = allAccounts.find((a) => a.id === activeIgId);
+      account = allAccounts.find((a) => a.id === activeIgId) || allAccounts[0];
     }
   } catch (error) {
     console.error("[UserSection] Database fetch failed:", error);

@@ -123,7 +123,7 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
     >
       <AutomationLayout
         header={header}
-        triggerType={triggerType || triggerType}
+        triggerType={triggerType}
         post={post}
         leftCol={renderLeftCol(form)}
         rightCol={renderRightCol(form)}

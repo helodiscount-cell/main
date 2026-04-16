@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Pencil, X } from "lucide-react";
 import {
   Dialog,
@@ -76,7 +76,7 @@ export function EditableNameDialog({
     setOpen(false);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
     handleSave();
   };

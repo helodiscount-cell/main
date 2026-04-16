@@ -1,7 +1,10 @@
-import React from "react";
+import { cn } from "@/server/utils";
 import { Search, RefreshCw, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CONTACTS_CONFIG } from "./config";
+
+const BUTTON_ACTION_CLASSES =
+  "h-full shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] text-white transition-colors";
 
 export const ContactsHeader = () => {
   return (
@@ -25,12 +28,16 @@ export const ContactsHeader = () => {
         <div className="h-full w-fit flex items-center gap-2">
           <Button
             size="icon"
-            className="h-full w-9 shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] text-white"
+            className={cn(BUTTON_ACTION_CLASSES, "w-9")}
+            type="button"
           >
             <RefreshCw size={15} />
           </Button>
 
-          <Button className="h-full shrink-0 bg-[#7C3AED] hover:bg-[#6D28D9] gap-2 text-white px-4">
+          <Button
+            className={cn(BUTTON_ACTION_CLASSES, "gap-2 px-4")}
+            type="button"
+          >
             <Download size={15} />
             Export List
           </Button>
