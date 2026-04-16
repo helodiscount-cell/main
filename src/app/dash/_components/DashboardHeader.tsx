@@ -8,9 +8,11 @@ interface Props {
   searchValue?: string;
   onSearchChange?: (val: string) => void;
   childComp: React.ReactNode;
+  showTitle?: boolean;
 }
 
 function DashboardHeader({
+  showTitle = true,
   showSearch,
   searchValue = "",
   onSearchChange,
@@ -31,11 +33,13 @@ function DashboardHeader({
   return (
     <header className="flex items-center justify-between gap-4">
       <div className="flex w-full gap-4 items-center h-10">
-        <div className="h-full px-4 flex-1 bg-white rounded-lg flex items-center">
-          <p className="text-sm font-bold text-[#1A1D1F]">
-            {pageTitle === "Dash" ? "Dashboard" : pageTitle}
-          </p>
-        </div>
+        {showTitle && (
+          <div className="h-full px-4 flex-1 bg-white rounded-lg flex items-center">
+            <p className="text-sm font-bold text-[#1A1D1F]">
+              {pageTitle === "Dash" ? "Dashboard" : pageTitle}
+            </p>
+          </div>
+        )}
 
         {showSearch && (
           <div className="px-4 bg-white rounded-lg flex items-center gap-2 h-full">

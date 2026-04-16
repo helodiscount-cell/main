@@ -150,18 +150,11 @@ export function AutomationLayout({
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
-        />
-        {header}
-      </header>
+      <header className="flex h-10 items-center gap-2">{header}</header>
 
       {/* Main canvas */}
       <div
-        className="flex-1 m-4 rounded-xl overflow-hidden"
+        className="flex-1 rounded-xl overflow-hidden"
         style={{
           backgroundColor: "#D4D4D4",
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 8v8M8 12h8' stroke='%23BEBEBE' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,

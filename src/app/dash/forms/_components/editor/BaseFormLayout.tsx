@@ -92,8 +92,6 @@ const DesktopLayout = ({
   const { isLoading } = useFormEditor();
   const { handlePublish, handleSave, handleUpdate } = useFormActions();
 
-  console.log(pathname);
-
   return (
     <div className="flex flex-col h-full min-h-screen gap-4">
       <EditorHeader

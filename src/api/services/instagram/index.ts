@@ -20,22 +20,11 @@ export const instagramService = {
     getUserPosts: async (
       forceRefresh?: boolean,
     ): Promise<ApiResponse<PostsResult>> => {
-      const response = await request(
+      return request(
         api.get<ApiResponse<PostsResult>>("/instagram/profile/posts", {
           params: { forceRefresh },
         }),
       );
-
-      if (response.success && response.result) {
-        return {
-          ...response,
-          result: {
-            data: response.result.data,
-            paging: response.result.paging,
-          },
-        };
-      }
-      return response;
     },
     getUserStories: async (
       forceRefresh?: boolean,

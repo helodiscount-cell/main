@@ -16,8 +16,8 @@ export default function FreshHeader({
   breadcrumb?: string;
 }) {
   return (
-    <div className="flex w-full gap-3 items-center animate-in fade-in duration-300">
-      <div className="grow flex-2 bg-white rounded-md px-4 flex items-center justify-between h-9 min-w-0">
+    <div className="flex h-full w-full gap-3 items-center animate-in fade-in duration-300">
+      <div className="grow flex-2 bg-white rounded-md px-4 flex items-center justify-between h-full min-w-0">
         <p className="text-sm font-semibold flex gap-1 items-center truncate">
           <span className="opacity-50 shrink-0">Automation / </span>
           <span className="opacity-50 shrink-0">{breadcrumb} / </span>
@@ -39,7 +39,7 @@ export default function FreshHeader({
         />
       </div>
 
-      <div className="w-fit flex items-center gap-2 bg-white rounded-md px-3 h-9">
+      <div className="w-fit flex items-center gap-2 bg-white rounded-md px-3 h-full">
         <RefreshCw size={15} className="text-slate-400" />
         <span className="text-sm text-slate-600">
           <span className="font-semibold text-slate-800">{0}</span>
@@ -51,7 +51,7 @@ export default function FreshHeader({
 
       <Button
         type="submit"
-        className="bg-green-500 hover:bg-green-600 transition-all font-bold px-6"
+        className="bg-green-500 hover:bg-green-600 transition-all font-bold px-6 h-full"
         disabled={isPending}
       >
         {isPending ? (
