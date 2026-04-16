@@ -51,7 +51,7 @@ export function AppSidebarNav() {
                   width={20}
                   height={20}
                 />
-                <span className="font-medium text-[14px]">{item.title}</span>
+                <span className="font-medium text-[16px]">{item.title}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -219,6 +219,7 @@ model Form {
   instaAccountId String       @db.ObjectId
   instaAccount   InstaAccount @relation(fields: [instaAccountId], references: [id], onDelete: Cascade)
 
+  name        String           @default("Untitled Form")
   title       String
   description String           @default("")
   coverImage  String?

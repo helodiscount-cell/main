@@ -1,16 +1,15 @@
 "use client";
 
 import React from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { EDITOR_HEADER_CONFIG } from "./config";
 import { useFormEditor } from "../FormEditorProvider";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
-import { Play, Download, Square, RefreshCw, Link2 } from "lucide-react";
+import { Play, Download, Square, RefreshCw, Link2, Eye } from "lucide-react";
 import { downloadSubmissionsCSV } from "./utils/export";
 import { toast } from "sonner";
+import { EditableFormName } from "./EditableFormName";
 
 type EditorHeaderProps = {
   onPublish: () => void;
@@ -35,25 +34,50 @@ export const EditorHeader = ({
   activeTab,
   pathname,
 }: EditorHeaderProps) => {
-  const { currentStatus } = useFormEditor();
+  const { currentStatus, methods, formId: contextFormId } = useFormEditor();
+  const effectiveFormId = formId || contextFormId;
+
+  const queryClient = useQueryClient();
   const [exportStatus, setExportStatus] = React.useState<
     "idle" | "exporting" | "exported"
   >("idle");
 
+  const nameWatch = methods.watch("name");
+
   const { data } = useQuery({
-    queryKey: ["form", formId],
-    queryFn: () => formService.getById(formId!),
-    enabled: !!formId,
+    queryKey: ["form", effectiveFormId],
+    queryFn: () => formService.getById(effectiveFormId!),
+    enabled: !!effectiveFormId,
+  });
+
+  const { mutate: updateFormName } = useMutation({
+    mutationFn: (newName: string) =>
+      formService.update(effectiveFormId!, { name: newName } as any),
+    onSuccess: () => {
+      toast.success("Form name updated.");
+      queryClient.invalidateQueries({ queryKey: ["form", effectiveFormId] });
+      queryClient.invalidateQueries({ queryKey: ["forms"] });
+    },
   });
 
   const isFormMetadataReady = !!data?.fields;
 
+  const handleRename = (newName: string) => {
+    // Always update local form state so it's included in the next save/publish
+    methods.setValue("name", newName, { shouldValidate: true });
+
+    // If already persisted, update it immediately via API too
+    if (effectiveFormId) {
+      updateFormName(newName);
+    }
+  };
+
   const handleExport = async () => {
-    if (!data?.fields) return;
+    if (!data?.fields || !effectiveFormId) return;
 
     try {
       setExportStatus("exporting");
-      const submissions = await formService.getSubmissions(formId!);
+      const submissions = await formService.getSubmissions(effectiveFormId);
 
       if (!submissions?.length) {
         setExportStatus("idle");
@@ -76,22 +100,32 @@ export const EditorHeader = ({
       <div className="flex w-full items-center justify-between gap-4 h-full">
         {/* Breadcrumb pill */}
         <div className="bg-white rounded-lg px-4 flex items-center h-full flex-1 min-w-0">
-          <span
-            className="text-sm text-[#1A1D1F] font-semibold"
-            style={{
-              opacity: pathname === "/dash/forms" ? 1 : 0.5,
-            }}
-          >
-            {EDITOR_HEADER_CONFIG.BREADCRUMB_ROOT}
-          </span>
-          <span className="text-sm text-[#1A1D1F] font-semibold mx-1">/</span>
-          <span className="capitalize text-sm font-bold text-[#1A1D1F] truncate">
-            {data?.title || "Untitled Form"}
-          </span>
+          <p className="text-sm font-semibold flex gap-1 items-center truncate">
+            <span
+              className="opacity-50 shrink-0"
+              style={{
+                opacity: pathname === "/dash/forms" ? 1 : 0.5,
+              }}
+            >
+              {EDITOR_HEADER_CONFIG.BREADCRUMB_ROOT} /{" "}
+            </span>
+            <span
+              className={
+                nameWatch && nameWatch !== "Untitled Form"
+                  ? "text-[#1A1D1F] font-bold"
+                  : "text-[#6A06E4] italic font-medium"
+              }
+            >
+              {nameWatch || "Untitled Form"}
+            </span>
+
+            {/* This triggers the rename dialog */}
+            <EditableFormName value={nameWatch || ""} onChange={handleRename} />
+          </p>
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
           {activeTab === "editor" && data?.slug && (
             <>
               <Button
@@ -130,13 +164,13 @@ export const EditorHeader = ({
                 title="Preview"
                 className="h-10 w-10 bg-slate-900 hover:bg-slate-700 text-white"
               >
-                <Play size={15} />
+                <Eye size={15} />
               </Button>
             </>
           )}
 
           {activeTab === "editor" && (
-            <div className="flex items-center gap-2 h-10 scale-90 sm:scale-100 origin-right">
+            <div className="flex items-center gap-4 h-10 scale-90 sm:scale-100 origin-right">
               {/* Stop Button - Only if Live */}
               {currentStatus === "PUBLISHED" && (
                 <Button
@@ -145,33 +179,17 @@ export const EditorHeader = ({
                   className="bg-red-500 hover:bg-red-600 text-white gap-2 h-10 px-4 transition-all"
                 >
                   {isLoading ? (
-                    <RefreshCw size={13} className="animate-spin" />
+                    <RefreshCw size={15} className="animate-spin" />
                   ) : (
-                    <Square size={13} fill="currentColor" />
+                    <Square size={15} fill="currentColor" />
                   )}
-                  {isLoading ? "Stopping..." : "Stop"}
-                </Button>
-              )}
-
-              {/* Update Button - Only if Live */}
-              {currentStatus === "PUBLISHED" && (
-                <Button
-                  onClick={onUpdate}
-                  disabled={isLoading}
-                  className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-10 px-4 transition-all"
-                >
-                  <RefreshCw
-                    size={13}
-                    className={isLoading ? "animate-spin" : ""}
-                  />
-                  Update
+                  {/* {isLoading ? "Stopping..." : "Stop"} */}
                 </Button>
               )}
 
               {/* Status Indicator / Go Live Button */}
               {currentStatus === "PUBLISHED" ? (
-                <div className="h-10 px-4 rounded-lg border-2 border-green-500 text-green-600 text-sm font-semibold flex items-center gap-1.5 shrink-0 bg-white">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="h-10 px-6 rounded-lg border-[2.5px] border-[#4ADE80] text-[#15803D] text-[15px] font-bold flex items-center justify-center shrink-0 bg-[#CCFFD9]">
                   Live
                 </div>
               ) : (
@@ -186,6 +204,17 @@ export const EditorHeader = ({
                     <span className="w-2 h-2 rounded-full bg-white" />
                   )}
                   {isLoading ? "Starting..." : "Go Live"}
+                </Button>
+              )}
+
+              {/* Update Button - Only if Live */}
+              {currentStatus === "PUBLISHED" && (
+                <Button
+                  onClick={onUpdate}
+                  disabled={isLoading}
+                  className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-10 px-4 transition-all"
+                >
+                  Update
                 </Button>
               )}
             </div>

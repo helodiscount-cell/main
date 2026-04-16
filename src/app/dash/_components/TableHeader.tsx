@@ -81,7 +81,10 @@ const TableHeader = (props: Props) => {
       {config.columns.map((col) => {
         if (col.type === "main") {
           return (
-            <span key={col.id} className="text-sm font-medium text-[#212121]">
+            <span
+              key={col.id}
+              className="text-[16px] font-medium text-[#212121]"
+            >
               {col.label}
             </span>
           );
@@ -93,10 +96,9 @@ const TableHeader = (props: Props) => {
               key={col.id}
               className="flex items-center justify-between gap-2"
             >
-              <span className="text-sm font-medium text-[#212121]">
+              <span className="text-[16px] font-medium text-[#212121]">
                 {col.label}
               </span>
-              <div className="w-px h-4 bg-slate-200 shrink-0" />
             </div>
           );
         }
@@ -120,9 +122,9 @@ const TableHeader = (props: Props) => {
                 sortOrder={sortField === field ? sortOrder : null}
                 onSort={() => onSort?.(field)}
               />
-              {hasSeparator && (
-                <div className="w-px h-4 bg-slate-200 shrink-0" />
-              )}
+              {/* {hasSeparator && (
+                <div className="w-0.5 h-4 bg-slate-400 shrink-0" />
+              )} */}
             </div>
           );
         }

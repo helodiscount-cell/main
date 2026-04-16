@@ -14,7 +14,7 @@ const ColHeader = ({ label, sortable, sortOrder, onSort }: ColHeaderProps) => (
     onClick={onSort}
     disabled={!sortable}
     className={cn(
-      "flex items-center gap-2 text-sm font-medium text-[#212121] transition-colors",
+      "flex items-center gap-2 text-[16px] font-medium text-[#212121] transition-colors",
       sortable && "hover:text-[#6A06E4]",
     )}
   >

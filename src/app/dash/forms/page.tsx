@@ -51,6 +51,7 @@ export default function FormsPage() {
       const s = search.toLowerCase();
       result = result.filter(
         (f) =>
+          f.name?.toLowerCase().includes(s) ||
           f.title?.toLowerCase().includes(s) ||
           f.description?.toLowerCase().includes(s),
       );
@@ -165,10 +166,7 @@ export default function FormsPage() {
         childComp={
           <>
             <RefreshInstaDialog />
-            <Button
-              className="rounded-lg bg-[#6A06E4] hover:bg-[#5a05c4] h-full"
-              asChild
-            >
+            <Button className="bg-[#6A06E4] hover:bg-[#5a05c4] h-full" asChild>
               <Link
                 href="/dash/forms/editor"
                 className="h-full flex items-center gap-2"

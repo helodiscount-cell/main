@@ -20,7 +20,7 @@ type AutomationLayoutProps = {
 };
 
 const DMPlaceholder = () => (
-  <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-white flex flex-col pt-10 px-4">
+  <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-white flex flex-col pt-10 px-4">
     {/* Mock Header */}
     <div className="flex items-center gap-3 mb-8 px-2">
       <div className="w-10 h-10 rounded-full bg-linear-to-tr from-purple-500 to-pink-500 shrink-0" />
@@ -118,7 +118,7 @@ export function AutomationLayout({
     // Video handles Reels and standard videos
     if (post.mediaType === "VIDEO") {
       return (
-        <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+        <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
           <video
             src={post.mediaUrl}
             autoPlay
@@ -134,7 +134,7 @@ export function AutomationLayout({
 
     // Standard static image or carousel (showing first frame)
     return (
-      <div className="relative w-full aspect-[9/16] rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+      <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
         <Image
           src={post.mediaUrl}
           alt="Post preview"

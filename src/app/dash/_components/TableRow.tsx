@@ -63,7 +63,7 @@ const TableRowUI = ({
                   href={href}
                   className="flex flex-col gap-0.5 group min-w-0"
                 >
-                  <span className="text-sm font-medium text-slate-800 group-hover:text-[#6A06E4] transition-colors truncate">
+                  <span className="text-[16px] font-medium text-slate-800 group-hover:text-[#6A06E4] transition-colors truncate">
                     {title}
                   </span>
                   {subtitle && (
@@ -95,7 +95,7 @@ const TableRowUI = ({
               className="flex items-center justify-between gap-2 overflow-hidden"
             >
               {status}
-              <div className="w-px h-4 bg-slate-200 shrink-0" />
+              {/* <div className="w-px h-4 bg-slate-200 shrink-0" /> */}
             </div>
           );
         }
@@ -107,7 +107,7 @@ const TableRowUI = ({
               className="flex items-center justify-between gap-2 overflow-hidden"
             >
               <div className="text-sm text-slate-700 font-medium">{stats}</div>
-              <div className="w-px h-4 bg-slate-200 shrink-0" />
+              {/* <div className="w-px h-4 bg-slate-200 shrink-0" /> */}
             </div>
           );
         }
@@ -121,7 +121,7 @@ const TableRowUI = ({
               <div className="text-sm text-slate-700 font-medium whitespace-nowrap">
                 {newFollowersGained}
               </div>
-              <div className="w-px h-4 bg-slate-200 shrink-0" />
+              {/* <div className="w-px h-4 bg-slate-200 shrink-0" /> */}
             </div>
           );
         }

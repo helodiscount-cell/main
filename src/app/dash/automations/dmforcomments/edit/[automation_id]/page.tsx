@@ -109,8 +109,6 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
     stopMessage: AUTOMATION_CONFIGS.COMMENT_REPLY.stopMessage,
   });
 
-  const automationName = watch("automationName");
-
   const headerContent = {
     loading: null,
     fresh: null,

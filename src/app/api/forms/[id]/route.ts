@@ -28,7 +28,7 @@ export async function PATCH(
       const { id } = await params;
       const body = await request.json();
 
-      const validation = CreateFormSchema.safeParse(body);
+      const validation = CreateFormSchema.partial().safeParse(body);
 
       if (!validation.success) {
         throw new ApiRouteError(

@@ -89,8 +89,10 @@ const DesktopLayout = ({
   pathname: string;
   children: React.ReactNode;
 }) => {
-  const { isLoading, currentStatus } = useFormEditor();
+  const { isLoading } = useFormEditor();
   const { handlePublish, handleSave, handleUpdate } = useFormActions();
+
+  console.log(pathname);
 
   return (
     <div className="flex flex-col h-full min-h-screen gap-4">
@@ -104,7 +106,14 @@ const DesktopLayout = ({
         pathname={pathname}
       />
       <FormTabs formId={formId} activeTab={activeTab} />
-      <div className="flex-1 overflow-hidden rounded-xl bg-[#F1F1F1]">
+      <div
+        className="flex-1 overflow-hidden rounded-xl"
+        style={{
+          backgroundColor: pathname.endsWith("/submissions")
+            ? "white"
+            : "#E0E0E0",
+        }}
+      >
         {children}
       </div>
     </div>

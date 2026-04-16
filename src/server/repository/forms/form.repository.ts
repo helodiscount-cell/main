@@ -24,6 +24,7 @@ export async function createForm(
         data: {
           userId,
           instaAccountId,
+          name: (data as any).name || data.title,
           title: data.title,
           description: data.description ?? "",
           coverImage: data.coverImage ?? null,
@@ -154,6 +155,7 @@ export async function updateForm(
       prisma.form.update({
         where: { id: formId },
         data: {
+          name: (data as any).name,
           title: data.title,
           description: data.description,
           coverImage: data.coverImage,
