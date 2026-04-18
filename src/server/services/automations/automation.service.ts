@@ -3,7 +3,12 @@
  * Workspace-scoped — all operations are isolated to a specific instaAccountId
  */
 
-import { ERROR_MESSAGES } from "@/server/config/instagram.config";
+import {
+  ERROR_MESSAGES,
+  buildGraphApiUrl,
+} from "@/server/config/instagram.config";
+import { fetchWithTimeout } from "../../utils/fetch-with-timeout";
+import { getValidAccessToken } from "@/server/instagram/token-manager";
 import type {
   CreateAutomationInput,
   UpdateAutomationInput,
@@ -307,14 +312,128 @@ export async function getAutomation(userId: string, automationId: string) {
   };
 }
 
+/**
+ * Proactively verifies media existence on Instagram and stops automations for deleted content.
+ * Orchestrated as a background sync during list operations.
+ */
+async function syncAutomationsIGStatus(instaAccountId: string) {
+  try {
+    const account = await prisma.instaAccount.findUnique({
+      where: { id: instaAccountId, isActive: true },
+    });
+
+    if (!account || !account.accessToken) return;
+
+    // Get a valid (refreshed) token
+    const accessToken = await getValidAccessToken(account).catch(() => null);
+    if (!accessToken) return;
+
+    // Only check ACTIVE automations that target specific posts/stories
+    const activeAutomations = await prisma.automation.findMany({
+      where: {
+        instaAccountId,
+        status: "ACTIVE",
+        targetId: { not: null },
+        targetType: { in: ["post", "story"] },
+      },
+      select: { id: true, targetId: true, triggerType: true, targetType: true },
+    });
+
+    if (activeAutomations.length === 0) return;
+
+    // Filter unique target IDs to avoid redundant API calls
+    const automationMap: Record<string, typeof activeAutomations> = {};
+    activeAutomations.forEach((a) => {
+      const tid = a.targetId as string;
+      if (!automationMap[tid]) automationMap[tid] = [];
+      automationMap[tid].push(a);
+    });
+
+    const targetIds = Object.keys(automationMap);
+    const missingTargetIds = new Set<string>();
+
+    // Individual checks for each media ID (concurrency limited by Promise.all)
+    // Instagram Graph API for basic display (graph.instagram.com) is strict about individual lookups
+    await Promise.all(
+      targetIds.map(async (id) => {
+        try {
+          const url = buildGraphApiUrl(id);
+          url.searchParams.set("fields", "id");
+          url.searchParams.set("access_token", accessToken);
+
+          const result = await fetchWithTimeout(url.toString(), {
+            method: "GET",
+            timeout: 5000,
+            instagramUserId: account.instagramUserId,
+          });
+
+          // If the media exists, it returns id. If it returns 200 but no ID (unlikely), something is wrong.
+          if (!result.data?.id) {
+            missingTargetIds.add(id);
+          }
+        } catch (err: any) {
+          const msg = (err.message || "").toLowerCase();
+          // FB/IG Graph API Error message patterns for deleted content
+          if (
+            msg.includes("not found") ||
+            msg.includes("does not exist") ||
+            msg.includes("unsupported get request") ||
+            msg.includes("100") // Error code 100 is often Invalid Parameter / Object missing
+          ) {
+            missingTargetIds.add(id);
+          }
+        }
+      }),
+    );
+
+    if (missingTargetIds.size > 0) {
+      const toStop: typeof activeAutomations = [];
+      missingTargetIds.forEach((tid) => {
+        if (automationMap[tid]) toStop.push(...automationMap[tid]);
+      });
+
+      if (toStop.length > 0) {
+        const stopIds = toStop.map((a) => a.id);
+        await prisma.automation.updateMany({
+          where: { id: { in: stopIds } },
+          data: { status: "STOPPED" },
+        });
+
+        // Atomic invalidation for each stopped automation
+        for (const auto of toStop) {
+          await invalidateAutomationCache(
+            account.webhookUserId || account.instagramUserId || "",
+            auto.targetId as string,
+            getInvalidateType(auto.triggerType as TriggerType),
+            auto.id,
+          ).catch(() => {});
+        }
+
+        logger.info(
+          { instaAccountId, stoppedCount: toStop.length },
+          "Synched status: Proactively stopped automations for missing Instagram media",
+        );
+      }
+    }
+  } catch (error) {
+    logger.error(
+      { error, instaAccountId },
+      "Status sync background task failed",
+    );
+  }
+}
+
 // Lists all automations for a specific workspace
 export async function getUserAutomations(
   instaAccountId: string,
   filters?: { status?: "ACTIVE" | "PAUSED" },
 ) {
+  // Trigger on-demand sync before fetching
+  await syncAutomationsIGStatus(instaAccountId);
+
   const repositoryFilters: AutomationFilters = {
     instaAccountId,
-    status: filters?.status ?? ["ACTIVE", "PAUSED"],
+    status: filters?.status ?? ["ACTIVE", "PAUSED", "STOPPED"],
   };
 
   return findUserAutomations(repositoryFilters);

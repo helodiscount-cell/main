@@ -71,19 +71,21 @@ export default function LiveHeader({
         </Button>
       )}
 
-      {/* Update */}
-      <Button
-        type="submit"
-        disabled={isUpdating}
-        className="bg-indigo-600 hover:bg-indigo-700 h-9 transition-all font-bold px-4"
-      >
-        {isUpdating ? (
-          <RefreshCw size={13} className="animate-spin" />
-        ) : (
-          <RefreshCw size={13} />
-        )}
-        {isUpdating ? "Updating…" : "Update"}
-      </Button>
+      {/* Update - Only visible when Active */}
+      {isActive && (
+        <Button
+          type="submit"
+          disabled={isUpdating}
+          className="bg-indigo-600 hover:bg-indigo-700 h-9 transition-all font-bold px-4"
+        >
+          {isUpdating ? (
+            <RefreshCw size={13} className="animate-spin" />
+          ) : (
+            <RefreshCw size={13} />
+          )}
+          {isUpdating ? "Updating…" : "Update"}
+        </Button>
+      )}
 
       {/* Live Button/Badge */}
       {isActive ? (

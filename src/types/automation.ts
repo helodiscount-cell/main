@@ -1,4 +1,4 @@
-export type AutomationStatus = "ACTIVE" | "PAUSED";
+export type AutomationStatus = "ACTIVE" | "PAUSED" | "POST_DELETED";
 export type TriggerType =
   | "COMMENT_ON_POST"
   | "STORY_REPLY"
