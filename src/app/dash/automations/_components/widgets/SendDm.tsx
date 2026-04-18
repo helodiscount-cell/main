@@ -24,7 +24,8 @@ import {
 
 import { DmLink } from "@dm-broo/common-types";
 
-const MAX_CHARS = 1000;
+const MAX_CHARS_WITHOUT_IMAGE = 1000;
+const MAX_CHARS_WITH_IMAGE = 500;
 const MAX_LINKS = 3;
 
 type Props = {
@@ -58,6 +59,14 @@ const SendDm = ({
       setIsUploading(false);
       if (res?.[0]) {
         onImageChange?.(res[0].url);
+
+        // Clear the message entirely if it exceeds the stricter limit when an image is added
+        if (message.length > MAX_CHARS_WITH_IMAGE) {
+          onMessageChange("");
+          toast.warning(
+            `Message cleared because it exceeded the ${MAX_CHARS_WITH_IMAGE} limit for image DMs.`,
+          );
+        }
         toast.success("Image uploaded successfully");
       }
     },
@@ -248,7 +257,9 @@ const SendDm = ({
           <AutomationInput
             value={message}
             onChange={onMessageChange}
-            maxLength={MAX_CHARS}
+            maxLength={
+              imageUrl ? MAX_CHARS_WITH_IMAGE : MAX_CHARS_WITHOUT_IMAGE
+            }
             placeholder="Enter your message here..."
           />
 

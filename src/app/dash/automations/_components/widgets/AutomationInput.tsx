@@ -58,7 +58,10 @@ export function AutomationInput({
           <textarea
             ref={ref}
             value={value}
-            onChange={(e) => onChange(e.target.value.replace(/[<>]/g, ""))}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[<>]/g, "");
+              onChange(maxLength ? val.slice(0, maxLength) : val);
+            }}
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}
@@ -71,7 +74,10 @@ export function AutomationInput({
             ref={ref}
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value.replace(/[<>]/g, ""))}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[<>]/g, "");
+              onChange(maxLength ? val.slice(0, maxLength) : val);
+            }}
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}

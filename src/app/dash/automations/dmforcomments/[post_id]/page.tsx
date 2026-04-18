@@ -32,14 +32,15 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       schema={commentsAutomationSchema}
       defaultValues={{
         automationName: "",
+        anyKeyword: false,
         keywords: [],
         dmMessage: "",
-        publicReplyEnabled: true,
+        publicReplyEnabled: false,
         publicReplies: [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
         askToFollowEnabled: false,
         askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
         askToFollowLink: "",
-        openingMessageEnabled: true,
+        openingMessageEnabled: false,
         openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
         openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
         dmLinks: [],
@@ -69,6 +70,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         postThumbnailUrl: selectedPost?.thumbnail_url ?? null,
         postPermalink: selectedPost?.permalink ?? null,
         postTimestamp: selectedPost?.timestamp ?? null,
+        anyKeyword: form.anyKeyword,
         triggers: form.keywords,
         matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
         actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
@@ -91,9 +93,20 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
         <div className="flex flex-col gap-6">
           <Controller
             control={form.control}
-            name="keywords"
-            render={({ field }) => (
-              <AddKeywords value={field.value} onChange={field.onChange} />
+            name="anyKeyword"
+            render={({ field: anyField }) => (
+              <Controller
+                control={form.control}
+                name="keywords"
+                render={({ field: keywordsField }) => (
+                  <AddKeywords
+                    anyKeyword={anyField.value}
+                    onAnyKeywordChange={anyField.onChange}
+                    keywords={keywordsField.value}
+                    onKeywordsChange={keywordsField.onChange}
+                  />
+                )}
+              />
             )}
           />
         </div>

@@ -52,6 +52,7 @@ const OpeningMessage = ({
           <AutomationInput
             value={message}
             onChange={onMessageChange}
+            maxLength={500}
             placeholder="Type your opening message..."
             className="mb-3"
           />

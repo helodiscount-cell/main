@@ -396,7 +396,7 @@ async function syncAutomationsIGStatus(instaAccountId: string) {
         const stopIds = toStop.map((a) => a.id);
         await prisma.automation.updateMany({
           where: { id: { in: stopIds } },
-          data: { status: "STOPPED" },
+          data: { status: "POST_DELETED" },
         });
 
         // Atomic invalidation for each stopped automation
@@ -433,7 +433,7 @@ export async function getUserAutomations(
 
   const repositoryFilters: AutomationFilters = {
     instaAccountId,
-    status: filters?.status ?? ["ACTIVE", "PAUSED", "STOPPED"],
+    status: filters?.status ?? ["ACTIVE", "PAUSED", "POST_DELETED"],
   };
 
   return findUserAutomations(repositoryFilters);

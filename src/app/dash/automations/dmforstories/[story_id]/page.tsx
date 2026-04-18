@@ -47,12 +47,13 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       schema={storyAutomationSchema}
       defaultValues={{
         automationName: "",
+        anyKeyword: false,
         keywords: [],
         dmMessage: "",
         askToFollowEnabled: false,
         askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
         askToFollowLink: "",
-        openingMessageEnabled: true,
+        openingMessageEnabled: false,
         openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
         openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
         dmLinks: [],
@@ -89,6 +90,7 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
           triggerType: AUTOMATION_CONFIGS.STORY_REPLY.triggerType,
           automationName: form.automationName,
           story: storyMeta,
+          anyKeyword: form.anyKeyword,
           triggers: form.keywords,
           matchType: AUTOMATION_CONFIGS.STORY_REPLY.matchType,
           actionType: AUTOMATION_CONFIGS.STORY_REPLY.actionType,
@@ -112,9 +114,20 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
         <div className="flex flex-col gap-6">
           <Controller
             control={form.control}
-            name="keywords"
-            render={({ field }) => (
-              <AddKeywords value={field.value} onChange={field.onChange} />
+            name="anyKeyword"
+            render={({ field: anyField }) => (
+              <Controller
+                control={form.control}
+                name="keywords"
+                render={({ field: keywordsField }) => (
+                  <AddKeywords
+                    anyKeyword={anyField.value}
+                    onAnyKeywordChange={anyField.onChange}
+                    keywords={keywordsField.value}
+                    onKeywordsChange={keywordsField.onChange}
+                  />
+                )}
+              />
             )}
           />
         </div>

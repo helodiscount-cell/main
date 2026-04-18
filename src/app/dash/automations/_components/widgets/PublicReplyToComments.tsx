@@ -90,6 +90,8 @@ const PublicReplyToComments = ({
                 value={inputValue}
                 onChange={setInputValue}
                 placeholder="Type a reply..."
+                maxLength={200}
+                showCharCount
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addReply();
                   if (e.key === "Escape") {

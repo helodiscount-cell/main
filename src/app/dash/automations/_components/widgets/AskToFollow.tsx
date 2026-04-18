@@ -19,7 +19,7 @@ const AskToFollow = ({
   message,
   onMessageChange,
 }: AskToFollowProps) => {
-  const maxChars = 1000;
+  const maxChars = 500;
   const { data: gates } = useFeatureGates();
   const isLocked = gates?.access?.hasAskToFollow === false;
 
