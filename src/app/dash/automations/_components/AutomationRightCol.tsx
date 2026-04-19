@@ -11,6 +11,7 @@ import {
 interface AutomationRightColProps {
   control: Control<any>;
   includePublicReply?: boolean;
+  onIsUploadingChange?: (isUploading: boolean) => void;
 }
 
 /**
@@ -20,6 +21,7 @@ interface AutomationRightColProps {
 export function AutomationRightCol({
   control,
   includePublicReply = false,
+  onIsUploadingChange,
 }: AutomationRightColProps) {
   return (
     <div className="space-y-4">
@@ -90,6 +92,7 @@ export function AutomationRightCol({
                     onImageChange={imageField.onChange}
                     links={linksField.value || []}
                     onLinksChange={linksField.onChange}
+                    onIsUploadingChange={onIsUploadingChange}
                   />
                 )}
               />
@@ -115,8 +118,6 @@ export function AutomationRightCol({
                     onEnabledChange={enabledField.onChange}
                     message={messageField.value || ""}
                     onMessageChange={messageField.onChange}
-                    link={linkField.value || ""}
-                    onLinkChange={linkField.onChange}
                   />
                 )}
               />

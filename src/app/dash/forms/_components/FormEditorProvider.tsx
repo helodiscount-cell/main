@@ -19,16 +19,20 @@ const DEFAULT_FORM_VALUES: FormValues = {
   description: "",
   coverImage: undefined,
   fields: [],
+  submitButtonLabel: "Submit",
 };
 
 interface FormEditorContextType {
   methods: UseFormReturn<FormValues>;
   save: (status: "DRAFT" | "PUBLISHED") => Promise<void>;
   isLoading: boolean;
+  isSaving: boolean;
   isMediaUploading: boolean;
   setIsMediaUploading: (uploading: boolean) => void;
   currentStatus?: "DRAFT" | "PUBLISHED";
   formId?: string;
+  isNameDialogOpen: boolean;
+  setIsNameDialogOpen: (open: boolean) => void;
 }
 
 const FormEditorContext = createContext<FormEditorContextType | null>(null);
@@ -69,6 +73,7 @@ export const FormEditorProvider = ({
         description: form.description || "",
         coverImage: form.coverImage || undefined,
         fields: (form.fields || []) as any,
+        submitButtonLabel: form.submitButtonLabel || "Submit",
       });
     }
   }, [form, methods]);
@@ -100,6 +105,7 @@ export const FormEditorProvider = ({
   });
 
   const [isMediaUploading, setIsMediaUploading] = React.useState(false);
+  const [isNameDialogOpen, setIsNameDialogOpen] = React.useState(false);
 
   // Combined loading state for header and canvas
   const isLoading = isFetching || isSaving || isMediaUploading;
@@ -117,7 +123,7 @@ export const FormEditorProvider = ({
       const isValid = await methods.trigger();
       if (!isValid) {
         if (methods.formState.errors.name) {
-          toast.error(methods.formState.errors.name.message as string);
+          setIsNameDialogOpen(true);
         } else if (methods.formState.errors.fields) {
           toast.error("Form cannot be empty", {
             description: "Please provide atleast one fields",
@@ -128,7 +134,11 @@ export const FormEditorProvider = ({
         return;
       }
       const data = methods.getValues();
-      saveForm({ ...data, status });
+      saveForm({
+        ...data,
+        status,
+        submitButtonLabel: data.submitButtonLabel || "Submit",
+      });
     },
     [methods, saveForm, isMediaUploading],
   );
@@ -139,6 +149,7 @@ export const FormEditorProvider = ({
         methods,
         save,
         isLoading,
+        isSaving,
         isMediaUploading,
         setIsMediaUploading,
         currentStatus:
@@ -146,6 +157,8 @@ export const FormEditorProvider = ({
             ? form.status
             : undefined,
         formId,
+        isNameDialogOpen,
+        setIsNameDialogOpen,
       }}
     >
       {children}

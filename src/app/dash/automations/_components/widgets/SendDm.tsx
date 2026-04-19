@@ -9,7 +9,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AutomationInput } from "./AutomationInput";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ type Props = {
   onImageChange?: (url: string) => void;
   links?: DmLink[];
   onLinksChange?: (links: DmLink[]) => void;
+  onIsUploadingChange?: (isUploading: boolean) => void;
 };
 
 const SendDm = ({
@@ -44,11 +45,17 @@ const SendDm = ({
   onImageChange,
   links = [],
   onLinksChange,
+  onIsUploadingChange,
 }: Props) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Keep parent in sync with internal upload state
+  useEffect(() => {
+    onIsUploadingChange?.(isUploading);
+  }, [isUploading, onIsUploadingChange]);
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");

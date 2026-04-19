@@ -16,6 +16,8 @@ type EditorHeaderProps = {
   onSaveDraft: () => void;
   onUpdate: () => void;
   isLoading?: boolean;
+  isSaving?: boolean;
+  isMediaUploading?: boolean;
   formId?: string;
   activeTab: string;
   pathname: string;
@@ -34,7 +36,15 @@ export const EditorHeader = ({
   activeTab,
   pathname,
 }: EditorHeaderProps) => {
-  const { currentStatus, methods, formId: contextFormId } = useFormEditor();
+  const {
+    currentStatus,
+    methods,
+    formId: contextFormId,
+    isNameDialogOpen,
+    setIsNameDialogOpen,
+    isSaving,
+    isMediaUploading,
+  } = useFormEditor();
   const effectiveFormId = formId || contextFormId;
 
   const queryClient = useQueryClient();
@@ -99,7 +109,7 @@ export const EditorHeader = ({
     <header className="flex h-10 shrink-0 items-center gap-4">
       <div className="flex w-full items-center justify-between gap-4 h-full">
         {/* Breadcrumb pill */}
-        <div className="bg-white rounded-lg px-4 flex items-center h-full flex-1 min-w-0">
+        <div className="bg-white justify-between rounded-lg px-4 flex items-center h-full flex-1 min-w-0">
           <p className="text-sm font-semibold flex gap-1 items-center truncate">
             <span
               className="opacity-50 shrink-0"
@@ -118,10 +128,14 @@ export const EditorHeader = ({
             >
               {nameWatch || "Untitled Form"}
             </span>
-
-            {/* This triggers the rename dialog */}
-            <EditableFormName value={nameWatch || ""} onChange={handleRename} />
           </p>
+          {/* This triggers the rename dialog */}
+          <EditableFormName
+            value={nameWatch || ""}
+            onChange={handleRename}
+            open={isNameDialogOpen}
+            onOpenChange={setIsNameDialogOpen}
+          />
         </div>
 
         {/* Action buttons */}
@@ -176,14 +190,13 @@ export const EditorHeader = ({
                 <Button
                   onClick={onSaveDraft}
                   disabled={isLoading}
-                  className="bg-red-500 hover:bg-red-600 text-white gap-2 h-10 px-4 transition-all"
+                  className="bg-red-500 hover:bg-red-600 disabled:bg-slate-300 disabled:text-slate-500 text-white gap-2 h-10 px-4 transition-all"
                 >
-                  {isLoading ? (
+                  {isSaving ? (
                     <RefreshCw size={15} className="animate-spin" />
                   ) : (
                     <Square size={15} fill="currentColor" />
                   )}
-                  {/* {isLoading ? "Stopping..." : "Stop"} */}
                 </Button>
               )}
 
@@ -196,14 +209,16 @@ export const EditorHeader = ({
                 <Button
                   onClick={onPublish}
                   disabled={isLoading}
-                  className="bg-green-500 hover:bg-green-600 text-white gap-2 h-10 px-4 font-semibold transition-all"
+                  className="bg-green-500 hover:bg-green-600 disabled:bg-gray-200 disabled:text-gray-400 text-white gap-2 h-10 px-4 font-semibold transition-all"
                 >
-                  {isLoading ? (
+                  {isSaving ? (
                     <RefreshCw size={13} className="animate-spin" />
+                  ) : isMediaUploading ? (
+                    <span className="w-2 h-2 rounded-full bg-gray-400" />
                   ) : (
                     <span className="w-2 h-2 rounded-full bg-white" />
                   )}
-                  {isLoading ? "Starting..." : "Go Live"}
+                  {isSaving ? "Starting..." : "Go Live"}
                 </Button>
               )}
 

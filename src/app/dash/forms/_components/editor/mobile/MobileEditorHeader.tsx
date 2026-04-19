@@ -24,6 +24,8 @@ interface MobileEditorHeaderProps {
   onUpdate: () => void;
   onUnpublish: () => void;
   isLoading?: boolean;
+  isSaving?: boolean;
+  isMediaUploading?: boolean;
   activeTab: "editor" | "submissions";
   currentStatus?: "DRAFT" | "PUBLISHED";
 }
@@ -39,6 +41,8 @@ export const MobileEditorHeader = ({
   onUpdate,
   onUnpublish,
   isLoading,
+  isSaving,
+  isMediaUploading,
   activeTab,
   currentStatus = "DRAFT",
 }: MobileEditorHeaderProps) => {
@@ -138,14 +142,14 @@ export const MobileEditorHeader = ({
             {/* Save / Update (Green) */}
             <Button
               onClick={isPublished ? onUpdate : onSave}
-              disabled={isLoading}
+              disabled={isLoading || isSaving || isMediaUploading}
               size="icon"
               aria-label={isPublished ? "Update form" : "Save form"}
               className={cn(
                 "h-[52px] w-[52px] rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-50",
               )}
             >
-              {isLoading ? (
+              {isSaving || isMediaUploading ? (
                 <RefreshCw size={22} className="animate-spin" />
               ) : (
                 <Send size={22} className="ml-0.5" />

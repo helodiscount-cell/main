@@ -31,6 +31,7 @@ export async function createForm(
           fields: (data.fields ?? []) as any,
           slug,
           status: data.status ?? "DRAFT",
+          submitButtonLabel: data.submitButtonLabel ?? "Submit",
         },
       });
     } catch (error: any) {
@@ -161,6 +162,7 @@ export async function updateForm(
           coverImage: data.coverImage,
           ...(data.fields !== undefined && { fields: data.fields as any }),
           status: data.status,
+          submitButtonLabel: data.submitButtonLabel,
         },
       }),
     { operation: "updateForm", model: "Form" },

@@ -46,6 +46,7 @@ export const FormValuesSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string(),
   coverImage: z.string().optional(),
+  submitButtonLabel: z.string().default("Submit"),
   fields: z.array(FormFieldSchema).min(1, "Please provide atleast one fields"),
 });
 
@@ -57,6 +58,7 @@ export const CreateFormSchema = z.object({
   coverImage: z.string().url().optional(),
   fields: z.array(FormFieldSchema).min(1, "Please provide atleast one fields"),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
+  submitButtonLabel: z.string().default("Submit"),
 });
 
 // Status values for a form

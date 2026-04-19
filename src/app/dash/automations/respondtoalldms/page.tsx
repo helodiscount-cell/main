@@ -79,7 +79,12 @@ const Page = () => {
           />
         </div>
       )}
-      renderRightCol={(form) => <AutomationRightCol control={form.control} />}
+      renderRightCol={(form: any) => (
+        <AutomationRightCol
+          control={form.control}
+          onIsUploadingChange={form.setIsMediaUploading}
+        />
+      )}
     />
   );
 };

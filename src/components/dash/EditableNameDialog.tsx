@@ -25,6 +25,9 @@ interface EditableNameDialogProps {
   forbiddenNames?: string[];
   allowEmpty?: boolean;
   errorMessage?: string;
+  // Controlled mode
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -40,9 +43,21 @@ export function EditableNameDialog({
   forbiddenNames = [],
   allowEmpty = false,
   errorMessage = "Please provide a valid name",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: EditableNameDialogProps) {
   const [internalName, setInternalName] = useState(value);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const onOpenChange = (newOpen: boolean) => {
+    if (isControlled) {
+      controlledOnOpenChange?.(newOpen);
+    } else {
+      setInternalOpen(newOpen);
+    }
+  };
 
   // Synchronize internal state when the external value prop changes or dialog opens
   useEffect(() => {
@@ -66,30 +81,31 @@ export function EditableNameDialog({
 
     // If unchanged, just close
     if (trimmed === value) {
-      setOpen(false);
+      onOpenChange(false);
       return;
     }
 
     // Success path
     onChange(trimmed);
     onSave?.(trimmed);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     handleSave();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <button
           type="button"
           aria-label={ariaLabel}
           className="text-[#6A06E4] hover:text-[#5a05c4] transition-all p-1 hover:scale-110 active:scale-95 shrink-0"
         >
-          <Pencil size={15} />
+          <Pencil size={12} />
         </button>
       </DialogTrigger>
       <DialogContent

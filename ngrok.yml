@@ -1,6 +1,6 @@
 version: 3
 agent:
-  authtoken: 35HapDNzBl8wUxS5gVyEOaJU52i_7hcB7wMiAnDG9p3BaXujm
+  authtoken: 3CZhYXGiJQPxjxShZfm4OZ2UMYd_5t3VPV9GTr24ok8qsHXNP
 
 tunnels:
   ia:

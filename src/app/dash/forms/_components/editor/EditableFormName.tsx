@@ -6,6 +6,8 @@ interface EditableFormNameProps {
   value: string;
   onChange: (val: string) => void;
   onSave?: (val: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**

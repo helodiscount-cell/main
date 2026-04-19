@@ -225,9 +225,10 @@ model Form {
   coverImage  String?
   fields      FormFieldEntry[]
 
-  slug            String @unique // 8-char public URL slug
-  status          String @default("DRAFT") // DRAFT | PUBLISHED
-  submissionCount Int    @default(0)
+  slug              String @unique // 8-char public URL slug
+  status            String @default("DRAFT") // DRAFT | PUBLISHED
+  submitButtonLabel String @default("Submit")
+  submissionCount   Int    @default(0)
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt

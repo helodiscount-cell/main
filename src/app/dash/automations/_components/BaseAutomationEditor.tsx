@@ -61,6 +61,8 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
     isUpdating,
     isStopping,
     isStarting,
+    isMediaUploading,
+    setIsMediaUploading,
     stopAutomation,
     startAutomation,
     handleSubmit,
@@ -104,12 +106,14 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
         onStart={startAutomation}
         isStarting={isStarting}
         isUpdating={isUpdating}
+        isMediaUploading={isMediaUploading}
         onNameChange={handleNameChange}
         breadcrumb={breadcrumb}
       />
     ) : (
       <FreshHeader
         isPending={isCreating}
+        isMediaUploading={isMediaUploading}
         automationName={automationName}
         onNameChange={handleNameChange}
         breadcrumb={breadcrumb}
@@ -126,7 +130,7 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
         triggerType={triggerType}
         post={post}
         leftCol={renderLeftCol(form)}
-        rightCol={renderRightCol(form)}
+        rightCol={renderRightCol({ ...form, setIsMediaUploading } as any)}
       />
     </form>
   );

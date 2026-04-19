@@ -110,8 +110,12 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
           )}
         />
       )}
-      renderRightCol={(form) => (
-        <AutomationRightCol control={form.control} includePublicReply />
+      renderRightCol={(form: any) => (
+        <AutomationRightCol
+          control={form.control}
+          includePublicReply
+          onIsUploadingChange={form.setIsMediaUploading}
+        />
       )}
     />
   );

@@ -7,11 +7,18 @@ import type {
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
-import { Star, Upload, FileCheck, Loader2 } from "lucide-react";
+import { Star, FileCheck, Calendar, CalendarIcon } from "lucide-react";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { CountryPicker } from "./CountryPicker";
 import { HierarchicalLocationPicker } from "./HierarchicalLocationPicker";
+import { COUNTRIES } from "@/configs/countries";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
 
 type PublicFieldRendererProps = {
   field: FormField;
@@ -27,7 +34,110 @@ const INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
   number: "number",
   email: "email",
   url: "url",
-  date: "date",
+};
+
+// Internal component to manage the revamped shadcn DatePicker
+const DatePickerField = ({
+  field,
+  fullValue,
+  setValue,
+  inputClass,
+}: {
+  field: FormField;
+  fullValue: string;
+  setValue: UseFormSetValue<Record<string, string | string[]>>;
+  inputClass: string;
+}) => {
+  const [open, setOpen] = React.useState(false);
+
+  const formatDisplay = (val: string) => {
+    const digits = val.replace(/\D/g, "");
+    let formatted = "";
+    for (let i = 0; i < digits.length; i++) {
+      if (i === 2 || i === 4) formatted += "/";
+      formatted += digits[i];
+    }
+    return formatted.slice(0, 10);
+  };
+
+  const parseDate = (val: string) => {
+    const [d, m, y] = val.split("/");
+    if (!d || !m || !y || y.length < 4) return null;
+    const iso = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    const date = new Date(iso);
+    return !isNaN(date.getTime()) ? iso : null;
+  };
+
+  const selectedDate = fullValue ? new Date(fullValue) : undefined;
+  const [inputValue, setInputValue] = React.useState(
+    selectedDate && !isNaN(selectedDate.getTime())
+      ? `${selectedDate.getDate().toString().padStart(2, "0")}/${(selectedDate.getMonth() + 1).toString().padStart(2, "0")}/${selectedDate.getFullYear()}`
+      : "",
+  );
+
+  React.useEffect(() => {
+    if (fullValue) {
+      const d = new Date(fullValue);
+      if (!isNaN(d.getTime())) {
+        setInputValue(
+          `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`,
+        );
+      }
+    }
+  }, [fullValue]);
+
+  return (
+    <div className="space-y-1.5 flex flex-col gap-2">
+      <label className="text-sm font-semibold text-slate-700">
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <div className="relative flex items-center">
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="dd/mm/yyyy"
+          value={inputValue}
+          maxLength={10}
+          className={`${inputClass} pr-10`}
+          // Open picker on focus to nudge users, but typing is still allowed
+          onFocus={() => setOpen(true)}
+          onChange={(e) => {
+            const formatted = formatDisplay(e.target.value);
+            setInputValue(formatted);
+            const iso = parseDate(formatted);
+            if (iso) setValue(field.id, iso);
+          }}
+        />
+        <div className="absolute right-0 top-0 bottom-0 flex items-center pr-3">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="text-slate-400 hover:text-[#6A06E4] transition-colors cursor-pointer p-0.5 outline-none"
+                aria-label="Select date"
+              >
+                <CalendarIcon size={18} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
+              <ShadcnCalendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setValue(field.id, date.toISOString().split("T")[0]);
+                    setOpen(false);
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // Renders the correct interactive input for each field type
@@ -60,7 +170,18 @@ export const PublicFieldRenderer = ({
         <input
           {...register(field.id)}
           type={INPUT_TYPE_MAP[field.type as FieldType] ?? "text"}
-          placeholder={field.placeholder ?? ""}
+          placeholder={
+            field.placeholder ||
+            (field.type === "text"
+              ? "Enter your name..."
+              : field.type === "number"
+                ? "Enter a number..."
+                : field.type === "email"
+                  ? "Enter your email address..."
+                  : field.type === "url"
+                    ? "Enter a website URL..."
+                    : "")
+          }
           className={inputClass}
           required={field.required}
         />
@@ -94,16 +215,19 @@ export const PublicFieldRenderer = ({
     const code = parts[0] || "91";
     const number = parts[1] || "";
 
+    // Find selected country for dynamic length meta
+    const selectedCountry = COUNTRIES.find(
+      (c) => c.dialCode.replace(/\D/g, "") === code.replace(/\D/g, ""),
+    );
+    const phoneLimit = selectedCountry?.phoneLength || 15;
+
     // Helper to join code and number
     const handlePhoneChange = (newCode: string, newNum: string) => {
       const cleanCode = newCode.replace(/\D/g, "").slice(0, 4);
-      const cleanNum = newNum.replace(/\D/g, "").slice(0, 10);
+      const cleanNum = newNum.replace(/\D/g, "").slice(0, phoneLimit);
 
-      if (cleanNum) {
-        setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
-      } else {
-        setValue(field.id, "");
-      }
+      // Always set value so the country code selection is preserved
+      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
     };
 
     return (
@@ -116,18 +240,24 @@ export const PublicFieldRenderer = ({
           {/* Country Picker Toggle */}
           <CountryPicker
             value={code}
-            onChange={(newCode) => handlePhoneChange(newCode, number)}
+            onChange={(newCode) => handlePhoneChange(newCode, "")}
             className="w-24 shrink-0"
           />
 
           {/* Main Number */}
           <input
             type="text"
-            placeholder="9998887776"
+            placeholder={
+              selectedCountry?.phoneLength === 10
+                ? "9998887776"
+                : selectedCountry?.phoneLength
+                  ? "0".repeat(selectedCountry.phoneLength)
+                  : "Enter number"
+            }
             value={number}
             onChange={(e) => handlePhoneChange(code, e.target.value)}
             className={inputClass}
-            maxLength={10}
+            maxLength={phoneLimit}
             required={field.required}
           />
         </div>
@@ -196,6 +326,18 @@ export const PublicFieldRenderer = ({
           ))}
         </div>
       </div>
+    );
+  }
+
+  // Date – revamped shadcn with dd/mm/yy format
+  if (field.type === "date") {
+    return (
+      <DatePickerField
+        field={field}
+        fullValue={fullValue}
+        setValue={setValue}
+        inputClass={inputClass}
+      />
     );
   }
 
