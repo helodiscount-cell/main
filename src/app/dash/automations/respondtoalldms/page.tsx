@@ -10,7 +10,10 @@ import {
   RespondToAllDMsFormValues,
 } from "@/configs/automations";
 import { AddKeywords } from "../_components/widgets";
-import { BaseAutomationEditor } from "../_components/BaseAutomationEditor";
+import {
+  BaseAutomationEditor,
+  RightColForm,
+} from "../_components/BaseAutomationEditor";
 import { AutomationRightCol } from "../_components/AutomationRightCol";
 
 const Page = () => {
@@ -79,7 +82,7 @@ const Page = () => {
           />
         </div>
       )}
-      renderRightCol={(form: any) => (
+      renderRightCol={(form: RightColForm<RespondToAllDMsFormValues>) => (
         <AutomationRightCol
           control={form.control}
           onIsUploadingChange={form.setIsMediaUploading}

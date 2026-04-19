@@ -80,7 +80,7 @@ export const FormEditorProvider = ({
   }, [form, methods]);
 
   // Mutation for creating or updating
-  const { mutate: saveForm, isPending: isSaving } = useMutation({
+  const saveForm = useMutation({
     mutationFn: (payload: FormValues & { status: "DRAFT" | "PUBLISHED" }) =>
       formId
         ? formService.update(formId, payload)
@@ -104,6 +104,8 @@ export const FormEditorProvider = ({
       toast.error(message);
     },
   });
+
+  const isSaving = saveForm.isPending;
 
   const [isMediaUploading, setIsMediaUploading] = React.useState(false);
   const [isNameDialogOpen, setIsNameDialogOpen] = React.useState(false);
@@ -155,7 +157,7 @@ export const FormEditorProvider = ({
         return;
       }
 
-      saveForm({
+      await saveForm.mutateAsync({
         ...data,
         status,
         submitButtonLabel: data.submitButtonLabel || "Submit",

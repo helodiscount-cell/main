@@ -75,22 +75,30 @@ const DatePickerField = ({
     return !isNaN(date.getTime()) ? iso : null;
   };
 
-  const selectedDate = fullValue ? new Date(fullValue) : undefined;
-  const [inputValue, setInputValue] = React.useState(
-    selectedDate && !isNaN(selectedDate.getTime())
-      ? `${selectedDate.getDate().toString().padStart(2, "0")}/${(selectedDate.getMonth() + 1).toString().padStart(2, "0")}/${selectedDate.getFullYear()}`
-      : "",
-  );
+  const selectedDate = React.useMemo(() => {
+    if (!fullValue) return undefined;
+    const parts = fullValue.split("-");
+    if (parts.length !== 3) return undefined;
+    const [y, m, d] = parts.map(Number);
+    const date = new Date(y, m - 1, d);
+    return isNaN(date.getTime()) ? undefined : date;
+  }, [fullValue]);
+
+  const [inputValue, setInputValue] = React.useState("");
 
   React.useEffect(() => {
     if (fullValue) {
-      const d = new Date(fullValue);
-      if (!isNaN(d.getTime())) {
-        setInputValue(
-          `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`,
-        );
+      const parts = fullValue.split("-");
+      if (parts.length === 3) {
+        const [y, m, d] = parts;
+        // Ensure parts are valid numbers before setting display
+        if (!isNaN(new Date(Number(y), Number(m) - 1, Number(d)).getTime())) {
+          setInputValue(`${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`);
+          return;
+        }
       }
     }
+    setInputValue("");
   }, [fullValue]);
 
   return (
@@ -113,7 +121,7 @@ const DatePickerField = ({
             const formatted = formatDisplay(e.target.value);
             setInputValue(formatted);
             const iso = parseDate(formatted);
-            if (iso) setValue(field.id, iso);
+            setValue(field.id, iso || "");
           }}
         />
         <div className="absolute right-0 top-0 bottom-0 flex items-center pr-3">

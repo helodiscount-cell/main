@@ -9,7 +9,10 @@ import {
   CommentsFormValues,
 } from "@/configs/automations";
 import { AddKeywords } from "../../_components/widgets";
-import { BaseAutomationEditor } from "../../_components/BaseAutomationEditor";
+import {
+  BaseAutomationEditor,
+  RightColForm,
+} from "../../_components/BaseAutomationEditor";
 import { AutomationRightCol } from "../../_components/AutomationRightCol";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
@@ -111,7 +114,7 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
           />
         </div>
       )}
-      renderRightCol={(form: any) => (
+      renderRightCol={(form: RightColForm<CommentsFormValues>) => (
         <AutomationRightCol
           control={form.control}
           includePublicReply
