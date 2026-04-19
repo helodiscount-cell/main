@@ -64,7 +64,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
         askToFollowMessage:
           automation.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
         askToFollowLink: automation.askToFollowLink || "",
-        openingMessageEnabled: automation.openingMessageEnabled ?? true,
+        openingMessageEnabled: automation.openingMessageEnabled ?? false,
         openingMessage:
           automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
         openingButtonText:

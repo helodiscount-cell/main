@@ -6,8 +6,6 @@ interface AskToFollowProps {
   onEnabledChange: (enabled: boolean) => void;
   message: string;
   onMessageChange: (message: string) => void;
-  link: string;
-  onLinkChange: (link: string) => void;
 }
 
 import { useFeatureGates } from "@/hooks/use-feature-gates";

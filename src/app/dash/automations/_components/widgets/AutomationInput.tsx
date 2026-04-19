@@ -51,6 +51,11 @@ export function AutomationInput({
     ? "relative flex items-center gap-2 transition-all duration-200"
     : "relative bg-[#F8FAFC] rounded-xl p-4 border border-slate-100 focus-within:border-purple-200 focus-within:bg-white transition-all duration-200";
 
+  const sanitizeAndTruncate = (val: string, max?: number) => {
+    const sanitized = val.replace(/[<>]/g, "");
+    return max ? sanitized.slice(0, max) : sanitized;
+  };
+
   return (
     <div className={`${containerStyle} ${className}`}>
       <div className="flex-1 flex items-center gap-2">
@@ -58,10 +63,9 @@ export function AutomationInput({
           <textarea
             ref={ref}
             value={value}
-            onChange={(e) => {
-              const val = e.target.value.replace(/[<>]/g, "");
-              onChange(maxLength ? val.slice(0, maxLength) : val);
-            }}
+            onChange={(e) =>
+              onChange(sanitizeAndTruncate(e.target.value, maxLength))
+            }
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}
@@ -74,10 +78,9 @@ export function AutomationInput({
             ref={ref}
             type="text"
             value={value}
-            onChange={(e) => {
-              const val = e.target.value.replace(/[<>]/g, "");
-              onChange(maxLength ? val.slice(0, maxLength) : val);
-            }}
+            onChange={(e) =>
+              onChange(sanitizeAndTruncate(e.target.value, maxLength))
+            }
             onKeyDown={onKeyDown}
             onBlur={onBlur}
             placeholder={placeholder}

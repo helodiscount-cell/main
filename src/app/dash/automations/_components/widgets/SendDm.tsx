@@ -60,14 +60,14 @@ const SendDm = ({
       if (res?.[0]) {
         onImageChange?.(res[0].url);
 
-        // Clear the message entirely if it exceeds the stricter limit when an image is added
         if (message.length > MAX_CHARS_WITH_IMAGE) {
-          onMessageChange("");
+          onMessageChange(message.slice(0, MAX_CHARS_WITH_IMAGE));
           toast.warning(
-            `Message cleared because it exceeded the ${MAX_CHARS_WITH_IMAGE} limit for image DMs.`,
+            `Message truncated to ${MAX_CHARS_WITH_IMAGE} characters to fit image DM limit.`,
           );
+        } else {
+          toast.success("Image uploaded successfully");
         }
-        toast.success("Image uploaded successfully");
       }
     },
     onUploadError: (error: Error) => {
