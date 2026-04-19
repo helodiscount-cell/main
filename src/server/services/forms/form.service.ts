@@ -112,6 +112,7 @@ export async function getUserForms(
     slug: f.slug,
     status: f.status,
     submissionCount: f.submissionCount,
+    submitButtonLabel: f.submitButtonLabel,
     createdAt: f.createdAt,
     updatedAt: f.updatedAt,
   }));
@@ -158,6 +159,7 @@ export async function getPublicFormBySlug(slug: string) {
     coverImage: form.coverImage,
     fields: form.fields,
     status: form.status,
+    submitButtonLabel: form.submitButtonLabel,
   };
 }
 

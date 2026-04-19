@@ -151,22 +151,34 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
                 ADD OPTION
               </button>
             </div>
-          ) : fieldType === "upload" || fieldType === "location" ? (
-            <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-lg p-4 flex flex-col items-center gap-1 text-slate-300">
-              <span className="text-[10px] font-medium">
-                {fieldType === "upload"
-                  ? "User will upload a file here"
-                  : "Hierarchical location picker (Country, State, City)"}
-              </span>
-            </div>
-          ) : (
+          ) : ["text", "number", "email", "url"].includes(fieldType) ? (
             <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 focus-within:border-[#6A06E4]/20 transition-colors">
               <input
                 {...register(`fields.${index}.placeholder`)}
                 type="text"
-                placeholder="Edit placeholder text..."
+                placeholder={
+                  fieldType === "text"
+                    ? "Enter your name..."
+                    : fieldType === "number"
+                      ? "Enter a number..."
+                      : fieldType === "email"
+                        ? "Enter your email address..."
+                        : "Enter a website URL..."
+                }
                 className="w-full text-xs text-slate-500 bg-transparent outline-none placeholder:text-slate-300"
               />
+            </div>
+          ) : (
+            <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-lg p-4 flex flex-col items-center gap-1 text-slate-300">
+              <span className="text-[10px] font-medium text-center">
+                {fieldType === "phone"
+                  ? "User will enter their phone number here"
+                  : fieldType === "location"
+                    ? "User will select a location here"
+                    : fieldType === "date"
+                      ? "dd/mm/yy"
+                      : "User will upload a file here"}
+              </span>
             </div>
           )}
         </div>

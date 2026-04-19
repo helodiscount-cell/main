@@ -10,6 +10,7 @@ interface LiveHeaderProps {
   onStart: () => void;
   isStarting: boolean;
   isUpdating?: boolean;
+  isMediaUploading?: boolean;
   breadcrumb?: string;
   label?: string;
   onNameChange: (name: string) => void;
@@ -22,6 +23,7 @@ export default function LiveHeader({
   onStart,
   isStarting,
   isUpdating,
+  isMediaUploading,
   breadcrumb = "DM For Comment",
   label,
   onNameChange,
@@ -71,19 +73,21 @@ export default function LiveHeader({
         </Button>
       )}
 
-      {/* Update */}
-      <Button
-        type="submit"
-        disabled={isUpdating}
-        className="bg-indigo-600 hover:bg-indigo-700 h-9 transition-all font-bold px-4"
-      >
-        {isUpdating ? (
-          <RefreshCw size={13} className="animate-spin" />
-        ) : (
-          <RefreshCw size={13} />
-        )}
-        {isUpdating ? "Updating…" : "Update"}
-      </Button>
+      {/* Update - Only visible when Active */}
+      {isActive && (
+        <Button
+          type="submit"
+          disabled={isUpdating || isMediaUploading}
+          className="bg-indigo-600 hover:bg-indigo-700 h-9 transition-all font-bold px-4 disabled:bg-indigo-400 disabled:opacity-50"
+        >
+          {isUpdating && !isMediaUploading ? (
+            <RefreshCw size={13} className="animate-spin" />
+          ) : (
+            <RefreshCw size={13} />
+          )}
+          {isUpdating ? "Updating…" : "Update"}
+        </Button>
+      )}
 
       {/* Live Button/Badge */}
       {isActive ? (
@@ -95,10 +99,10 @@ export default function LiveHeader({
         <Button
           type="button"
           onClick={onStart}
-          disabled={isStarting}
-          className="bg-green-500 hover:bg-green-600 h-9 text-white font-bold transition-all px-4"
+          disabled={isStarting || isMediaUploading}
+          className="bg-green-500 hover:bg-green-600 h-9 text-white font-bold transition-all px-4 disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-100"
         >
-          {isStarting ? (
+          {isStarting && !isMediaUploading ? (
             <RefreshCw size={13} className="animate-spin" />
           ) : (
             <span className="w-2 h-2 rounded-full bg-white mr-1" />

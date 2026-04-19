@@ -6,15 +6,19 @@ import { EditableAutomationName } from "./EditableAutomationName";
 
 export default function FreshHeader({
   isPending,
+  isMediaUploading,
   automationName,
   onNameChange,
   breadcrumb = "DM For Comment",
 }: {
   isPending: boolean;
+  isMediaUploading?: boolean;
   automationName: string;
   onNameChange: (name: string) => void;
   breadcrumb?: string;
 }) {
+  const isActuallyPending = isPending && !isMediaUploading;
+
   return (
     <div className="flex h-full w-full gap-3 items-center animate-in fade-in duration-300">
       <div className="grow flex-2 bg-white rounded-md px-4 flex items-center justify-between h-full min-w-0">
@@ -51,10 +55,10 @@ export default function FreshHeader({
 
       <Button
         type="submit"
-        className="bg-green-500 hover:bg-green-600 transition-all font-bold px-6 h-full"
-        disabled={isPending}
+        className="bg-green-500 hover:bg-green-600 transition-all font-bold px-6 h-full disabled:bg-gray-200 disabled:text-gray-400 disabled:opacity-100"
+        disabled={isPending || isMediaUploading}
       >
-        {isPending ? (
+        {isActuallyPending ? (
           <>
             <RefreshCw size={14} className="animate-spin" />
             Going Live…

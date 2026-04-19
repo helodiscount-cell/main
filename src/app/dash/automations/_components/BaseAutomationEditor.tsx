@@ -8,6 +8,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { FreshHeader, LiveHeader } from "@/components/dash/automations/headers";
 import { AutomationListItem } from "@/types/automation";
 
+export interface RightColForm<
+  TFormValues extends FieldValues,
+> extends UseFormReturn<TFormValues> {
+  setIsMediaUploading: (v: boolean) => void;
+}
+
 interface BaseAutomationEditorProps<TFormValues extends FieldValues> {
   // Config for useAutomationManager
   schema: any;
@@ -30,7 +36,7 @@ interface BaseAutomationEditorProps<TFormValues extends FieldValues> {
 
   // Render props for columns
   renderLeftCol: (form: UseFormReturn<TFormValues>) => React.ReactNode;
-  renderRightCol: (form: UseFormReturn<TFormValues>) => React.ReactNode;
+  renderRightCol: (form: RightColForm<TFormValues>) => React.ReactNode;
 }
 
 /**
@@ -61,6 +67,8 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
     isUpdating,
     isStopping,
     isStarting,
+    isMediaUploading,
+    setIsMediaUploading,
     stopAutomation,
     startAutomation,
     handleSubmit,
@@ -104,12 +112,14 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
         onStart={startAutomation}
         isStarting={isStarting}
         isUpdating={isUpdating}
+        isMediaUploading={isMediaUploading}
         onNameChange={handleNameChange}
         breadcrumb={breadcrumb}
       />
     ) : (
       <FreshHeader
         isPending={isCreating}
+        isMediaUploading={isMediaUploading}
         automationName={automationName}
         onNameChange={handleNameChange}
         breadcrumb={breadcrumb}
@@ -126,7 +136,7 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
         triggerType={triggerType}
         post={post}
         leftCol={renderLeftCol(form)}
-        rightCol={renderRightCol(form)}
+        rightCol={renderRightCol({ ...form, setIsMediaUploading })}
       />
     </form>
   );

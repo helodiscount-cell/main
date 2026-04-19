@@ -3,7 +3,12 @@
  * Workspace-scoped — all operations are isolated to a specific instaAccountId
  */
 
-import { ERROR_MESSAGES } from "@/server/config/instagram.config";
+import {
+  ERROR_MESSAGES,
+  buildGraphApiUrl,
+} from "@/server/config/instagram.config";
+import { fetchWithTimeout } from "../../utils/fetch-with-timeout";
+import { getValidAccessToken } from "@/server/instagram/token-manager";
 import type {
   CreateAutomationInput,
   UpdateAutomationInput,
@@ -21,7 +26,7 @@ import {
 import { invalidateAutomationCache } from "@/server/redis";
 import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import { AutomationFilters } from "@/types/automation";
+import { AutomationFilters, AutomationStatus } from "@/types/automation";
 import { prisma } from "@/server/db";
 import crypto from "crypto";
 import { TriggerType } from "@/types/automation";
@@ -310,11 +315,11 @@ export async function getAutomation(userId: string, automationId: string) {
 // Lists all automations for a specific workspace
 export async function getUserAutomations(
   instaAccountId: string,
-  filters?: { status?: "ACTIVE" | "PAUSED" },
+  filters?: { status?: AutomationStatus | AutomationStatus[] },
 ) {
   const repositoryFilters: AutomationFilters = {
     instaAccountId,
-    status: filters?.status ?? ["ACTIVE", "PAUSED"],
+    status: filters?.status ?? ["ACTIVE", "PAUSED", "STOPPED"],
   };
 
   return findUserAutomations(repositoryFilters);

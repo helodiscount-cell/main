@@ -8,7 +8,10 @@ import {
   CommentsFormValues,
 } from "@/configs/automations";
 import { AddKeywords } from "../../../_components/widgets";
-import { BaseAutomationEditor } from "../../../_components/BaseAutomationEditor";
+import {
+  BaseAutomationEditor,
+  RightColForm,
+} from "../../../_components/BaseAutomationEditor";
 import { AutomationRightCol } from "../../../_components/AutomationRightCol";
 import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
 import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
@@ -25,14 +28,15 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       schema={commentsAutomationSchema}
       defaultValues={{
         automationName: "",
+        anyKeyword: false,
         keywords: [],
         dmMessage: "",
-        publicReplyEnabled: true,
+        publicReplyEnabled: false,
         publicReplies: [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
         askToFollowEnabled: false,
         askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
         askToFollowLink: "",
-        openingMessageEnabled: true,
+        openingMessageEnabled: false,
         openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
         openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
         dmLinks: [],
@@ -43,6 +47,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       stopMessage={AUTOMATION_CONFIGS.COMMENT_REPLY.stopMessage}
       onBuildPayload={(form) => ({
         automationName: form.automationName,
+        anyKeyword: form.anyKeyword,
         triggers: form.keywords,
         replyMessage: form.dmMessage,
         replyImage: form.dmImage || null,
@@ -60,6 +65,8 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       })}
       onPopulateForm={(automation) => ({
         automationName: automation.automationName || "",
+        anyKeyword:
+          (automation as any).anyKeyword ?? automation.triggers?.length === 0,
         keywords: automation.triggers || [],
         dmMessage: automation.replyMessage || "",
         dmImage: automation.replyImage ?? undefined,
@@ -79,7 +86,7 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
         askToFollowMessage:
           automation.askToFollowMessage || ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
         askToFollowLink: automation.askToFollowLink || "",
-        openingMessageEnabled: automation.openingMessageEnabled ?? true,
+        openingMessageEnabled: automation.openingMessageEnabled ?? false,
         openingMessage:
           automation.openingMessage || OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
         openingButtonText:
@@ -89,14 +96,29 @@ const Page = ({ params }: { params: Promise<{ automation_id: string }> }) => {
       renderLeftCol={(form) => (
         <Controller
           control={form.control}
-          name="keywords"
-          render={({ field }) => (
-            <AddKeywords value={field.value} onChange={field.onChange} />
+          name="anyKeyword"
+          render={({ field: anyField }) => (
+            <Controller
+              control={form.control}
+              name="keywords"
+              render={({ field: keywordsField }) => (
+                <AddKeywords
+                  anyKeyword={anyField.value}
+                  onAnyKeywordChange={anyField.onChange}
+                  keywords={keywordsField.value}
+                  onKeywordsChange={keywordsField.onChange}
+                />
+              )}
+            />
           )}
         />
       )}
-      renderRightCol={(form) => (
-        <AutomationRightCol control={form.control} includePublicReply />
+      renderRightCol={(form: RightColForm<CommentsFormValues>) => (
+        <AutomationRightCol
+          control={form.control}
+          includePublicReply
+          onIsUploadingChange={form.setIsMediaUploading}
+        />
       )}
     />
   );

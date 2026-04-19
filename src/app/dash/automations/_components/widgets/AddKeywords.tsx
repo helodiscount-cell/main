@@ -5,29 +5,34 @@ import { useState } from "react";
 import { AutomationInput } from "./AutomationInput";
 
 type Props = {
-  value: string[];
-  onChange: (keywords: string[]) => void;
+  anyKeyword: boolean;
+  onAnyKeywordChange: (any: boolean) => void;
+  keywords: string[];
+  onKeywordsChange: (keywords: string[]) => void;
 };
 
-const AddKeywords = ({ value: keywords, onChange }: Props) => {
+const AddKeywords = ({
+  anyKeyword,
+  onAnyKeywordChange,
+  keywords,
+  onKeywordsChange,
+}: Props) => {
   const [open, setOpen] = useState(true);
   const [input, setInput] = useState("");
   const [removingIndex, setRemovingIndex] = useState<number | null>(null);
 
-  const [isAnyKeyword, setIsAnyKeyword] = useState(keywords.length === 0);
-
   const handleToggleAny = () => {
-    const nextState = !isAnyKeyword;
-    setIsAnyKeyword(nextState);
+    const nextState = !anyKeyword;
+    onAnyKeywordChange(nextState);
     if (nextState) {
-      onChange([]);
+      onKeywordsChange([]);
     }
   };
 
   const addKeyword = () => {
     const trimmed = input.trim();
     if (trimmed && !keywords.includes(trimmed)) {
-      onChange([...keywords, trimmed]);
+      onKeywordsChange([...keywords, trimmed]);
     }
     setInput("");
   };
@@ -44,7 +49,7 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
   const removeKeyword = (index: number) => {
     setRemovingIndex(index);
     setTimeout(() => {
-      onChange(keywords.filter((_, i) => i !== index));
+      onKeywordsChange(keywords.filter((_, i) => i !== index));
       setRemovingIndex(null);
     }, 200);
   };
@@ -76,18 +81,18 @@ const AddKeywords = ({ value: keywords, onChange }: Props) => {
               type="button"
               onClick={handleToggleAny}
               className={`relative w-10 h-5.5 rounded-full transition-colors duration-200 ${
-                isAnyKeyword ? "bg-[#6A06E4]" : "bg-slate-200"
+                anyKeyword ? "bg-[#6A06E4]" : "bg-slate-200"
               }`}
             >
               <div
                 className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-white rounded-full transition-transform duration-200 ${
-                  isAnyKeyword ? "translate-x-4.5" : "translate-x-0"
+                  anyKeyword ? "translate-x-4.5" : "translate-x-0"
                 }`}
               />
             </button>
           </div>
 
-          {!isAnyKeyword && (
+          {!anyKeyword && (
             <div className="space-y-3">
               {keywords.length > 0 && (
                 <div className="flex flex-wrap gap-2">

@@ -10,11 +10,7 @@ export const SETTINGS_CONFIG = {
       label: "Profile",
       Icon: User,
     },
-    {
-      id: "accounts" as SettingsTab,
-      label: "Accounts",
-      Icon: Users,
-    },
+
     {
       id: "billing" as SettingsTab,
       label: "Billing",

@@ -4,12 +4,14 @@ export const StatusBadge = ({ status }: { status: string }) => {
     PAUSED: "text-blue-500",
     DELETED: "text-red-400",
     EXPIRED: "text-orange-500",
+    STOPPED: "text-red-400",
   };
   const labelMap: Record<string, string> = {
     ACTIVE: "Live",
     PAUSED: "Paused",
     DELETED: "Deleted",
     EXPIRED: "Expired",
+    STOPPED: "Stopped",
   };
   return (
     <span

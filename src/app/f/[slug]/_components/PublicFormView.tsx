@@ -92,7 +92,7 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
           ? "Submitting..."
           : isMediaUploading
             ? "Uploading..."
-            : "Submit"}
+            : form.submitButtonLabel || "Submit"}
       </button>
     </form>
   );

@@ -6,6 +6,7 @@ import { isImageUrl, isUrl, getFileNameFromUrl } from "./submission-utils";
 
 interface SubmissionAnswerValueProps {
   value: string | string[];
+  type?: string;
 }
 
 // Triggers a programmatic download without opening a new tab
@@ -97,11 +98,25 @@ const FileAnswer = ({ url, name }: { url: string; name?: string }) => {
 };
 
 // Internal renderer for a single value (string)
-const SingleAnswerValue = ({ val }: { val: string }) => {
+const SingleAnswerValue = ({ val, type }: { val: string; type?: string }) => {
   if (!val || val === "—") {
     return (
       <p className="text-sm font-semibold text-slate-800 leading-relaxed">—</p>
     );
+  }
+
+  // Format date type to dd/mm/yyyy
+  if (type === "date") {
+    const parts = val.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
+      const [y, m, d] = parts;
+      const formatted = `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
+      return (
+        <p className="text-sm font-semibold text-slate-800 break-all leading-relaxed">
+          {formatted}
+        </p>
+      );
+    }
   }
 
   // Attempt to parse JSON to see if it carries metadata (name/url)
@@ -147,16 +162,17 @@ const SingleAnswerValue = ({ val }: { val: string }) => {
 // Decides which renderer to use based on the answer value
 export const SubmissionAnswerValue = ({
   value,
+  type,
 }: SubmissionAnswerValueProps) => {
   if (Array.isArray(value)) {
     return (
       <div className="space-y-2">
         {value.map((v, i) => (
-          <SingleAnswerValue key={i} val={v} />
+          <SingleAnswerValue key={i} val={v} type={type} />
         ))}
       </div>
     );
   }
 
-  return <SingleAnswerValue val={value} />;
+  return <SingleAnswerValue val={value} type={type} />;
 };

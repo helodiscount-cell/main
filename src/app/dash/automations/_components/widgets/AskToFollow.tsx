@@ -6,8 +6,6 @@ interface AskToFollowProps {
   onEnabledChange: (enabled: boolean) => void;
   message: string;
   onMessageChange: (message: string) => void;
-  link: string;
-  onLinkChange: (link: string) => void;
 }
 
 import { useFeatureGates } from "@/hooks/use-feature-gates";
@@ -19,7 +17,7 @@ const AskToFollow = ({
   message,
   onMessageChange,
 }: AskToFollowProps) => {
-  const maxChars = 1000;
+  const maxChars = 500;
   const { data: gates } = useFeatureGates();
   const isLocked = gates?.access?.hasAskToFollow === false;
 

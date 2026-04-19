@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
 import { toast } from "sonner";
@@ -238,6 +238,8 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 
   const handleSubmit = form.handleSubmit(onSubmit, onInvalid);
 
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
+
   return {
     form,
     existingAutomation: automationDetails,
@@ -246,6 +248,8 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     isUpdating,
     isStopping,
     isStarting,
+    isMediaUploading,
+    setIsMediaUploading,
     stopAutomation,
     startAutomation,
     isReRunning,

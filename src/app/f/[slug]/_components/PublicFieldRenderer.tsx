@@ -1,17 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import type { FormField, FieldType } from "@dm-broo/common-types";
 import type {
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
-import { Star, Upload, FileCheck, Loader2 } from "lucide-react";
-import { UploadDropzone } from "@/lib/uploadthing";
+import {
+  Star,
+  FileCheck,
+  Calendar,
+  CalendarIcon,
+  UploadCloud,
+  Loader2,
+} from "lucide-react";
+import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { CountryPicker } from "./CountryPicker";
 import { HierarchicalLocationPicker } from "./HierarchicalLocationPicker";
+import { COUNTRIES } from "@/configs/countries";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
 
 type PublicFieldRendererProps = {
   field: FormField;
@@ -27,7 +41,242 @@ const INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
   number: "number",
   email: "email",
   url: "url",
-  date: "date",
+};
+
+// Internal component to manage the revamped shadcn DatePicker
+const DatePickerField = ({
+  field,
+  fullValue,
+  setValue,
+  inputClass,
+}: {
+  field: FormField;
+  fullValue: string;
+  setValue: UseFormSetValue<Record<string, string | string[]>>;
+  inputClass: string;
+}) => {
+  const [open, setOpen] = React.useState(false);
+
+  const formatDisplay = (val: string) => {
+    const digits = val.replace(/\D/g, "");
+    let formatted = "";
+    for (let i = 0; i < digits.length; i++) {
+      if (i === 2 || i === 4) formatted += "/";
+      formatted += digits[i];
+    }
+    return formatted.slice(0, 10);
+  };
+
+  const parseDate = (val: string) => {
+    const [d, m, y] = val.split("/");
+    if (!d || !m || !y || y.length < 4) return null;
+    const iso = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    const date = new Date(iso);
+    return !isNaN(date.getTime()) ? iso : null;
+  };
+
+  const selectedDate = React.useMemo(() => {
+    if (!fullValue) return undefined;
+    const parts = fullValue.split("-");
+    if (parts.length !== 3) return undefined;
+    const [y, m, d] = parts.map(Number);
+    const date = new Date(y, m - 1, d);
+    return isNaN(date.getTime()) ? undefined : date;
+  }, [fullValue]);
+
+  const [inputValue, setInputValue] = React.useState("");
+
+  React.useEffect(() => {
+    if (fullValue) {
+      const parts = fullValue.split("-");
+      if (parts.length === 3) {
+        const [y, m, d] = parts;
+        // Ensure parts are valid numbers before setting display
+        if (!isNaN(new Date(Number(y), Number(m) - 1, Number(d)).getTime())) {
+          setInputValue(`${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`);
+          return;
+        }
+      }
+    }
+    setInputValue("");
+  }, [fullValue]);
+
+  return (
+    <div className="space-y-1.5 flex flex-col gap-2">
+      <label className="text-sm font-semibold text-slate-700">
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <div className="relative flex items-center">
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="dd/mm/yyyy"
+          value={inputValue}
+          maxLength={10}
+          className={`${inputClass} pr-10`}
+          // Open picker on focus to nudge users, but typing is still allowed
+          onFocus={() => setOpen(true)}
+          onChange={(e) => {
+            const formatted = formatDisplay(e.target.value);
+            setInputValue(formatted);
+            const iso = parseDate(formatted);
+            setValue(field.id, iso || "");
+          }}
+        />
+        <div className="absolute right-0 top-0 bottom-0 flex items-center pr-3">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="text-slate-400 hover:text-[#6A06E4] transition-colors cursor-pointer p-0.5 outline-none"
+                aria-label="Select date"
+              >
+                <CalendarIcon size={18} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
+              <ShadcnCalendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setValue(field.id, date.toISOString().split("T")[0]);
+                    setOpen(false);
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Internal component to manage the manual file upload with custom UI
+const FileUploadField = ({
+  field,
+  fullValue,
+  setValue,
+  onUploadStateChange,
+}: {
+  field: FormField;
+  fullValue: string;
+  setValue: UseFormSetValue<Record<string, string | string[]>>;
+  onUploadStateChange?: (isUploading: boolean) => void;
+}) => {
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { startUpload } = useUploadThing("formAttachment", {
+    onClientUploadComplete: (res) => {
+      setIsUploading(false);
+      onUploadStateChange?.(false);
+      if (res?.[0]) {
+        const uploadValue = JSON.stringify({
+          url: res[0].url,
+          name: res[0].name,
+        });
+        setValue(field.id, uploadValue);
+        toast.success("File uploaded!");
+      }
+    },
+    onUploadError: (error: Error) => {
+      setIsUploading(false);
+      onUploadStateChange?.(false);
+      toast.error(`Upload failed: ${error.message}`);
+    },
+    onUploadBegin: () => {
+      setIsUploading(true);
+      onUploadStateChange?.(true);
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await startUpload([file]);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    await startUpload([file]);
+  };
+
+  const fileUrl = fullValue;
+
+  return (
+    <div className="space-y-1.5 flex flex-col gap-2">
+      <label className="text-sm font-semibold text-slate-700">
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+
+      {fileUrl ? (
+        <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl animate-in fade-in zoom-in duration-300">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+            <FileCheck size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-emerald-900 truncate">
+              {(() => {
+                try {
+                  const data = JSON.parse(fileUrl);
+                  return data.name || "File uploaded";
+                } catch {
+                  return "File uploaded";
+                }
+              })()}
+            </p>
+            <button
+              type="button"
+              onClick={() => setValue(field.id, "")}
+              className="text-xs text-emerald-600 hover:underline"
+            >
+              Remove and re-upload
+            </button>
+          </div>
+        </div>
+      ) : isUploading ? (
+        <div className="flex flex-col items-center justify-center gap-3 border-slate-200 border-2 border-dashed bg-slate-50/50 rounded-xl py-10 animate-pulse">
+          <Loader2 size={32} className="text-[#6A06E4] animate-spin" />
+          <p className="text-sm font-medium text-[#6A06E4]">Loading...</p>
+        </div>
+      ) : (
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          className="group relative flex flex-col items-center justify-center gap-2 border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 hover:border-[#6A06E4]/30 transition-all duration-200 rounded-xl py-10 cursor-pointer"
+        >
+          <div className="p-3 rounded-full bg-white shadow-sm group-hover:scale-110 transition-transform duration-200">
+            <UploadCloud
+              size={24}
+              className="text-slate-400 group-hover:text-[#6A06E4]"
+            />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-slate-600 group-hover:text-[#6A06E4]">
+              Choose a file or drag and drop
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Supports images, docs, and more
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
+      )}
+    </div>
+  );
 };
 
 // Renders the correct interactive input for each field type
@@ -60,7 +309,18 @@ export const PublicFieldRenderer = ({
         <input
           {...register(field.id)}
           type={INPUT_TYPE_MAP[field.type as FieldType] ?? "text"}
-          placeholder={field.placeholder ?? ""}
+          placeholder={
+            field.placeholder ||
+            (field.type === "text"
+              ? "Enter your name..."
+              : field.type === "number"
+                ? "Enter a number..."
+                : field.type === "email"
+                  ? "Enter your email address..."
+                  : field.type === "url"
+                    ? "Enter a website URL..."
+                    : "")
+          }
           className={inputClass}
           required={field.required}
         />
@@ -94,16 +354,19 @@ export const PublicFieldRenderer = ({
     const code = parts[0] || "91";
     const number = parts[1] || "";
 
+    // Find selected country for dynamic length meta
+    const selectedCountry = COUNTRIES.find(
+      (c) => c.dialCode.replace(/\D/g, "") === code.replace(/\D/g, ""),
+    );
+    const phoneLimit = selectedCountry?.phoneLength || 15;
+
     // Helper to join code and number
     const handlePhoneChange = (newCode: string, newNum: string) => {
       const cleanCode = newCode.replace(/\D/g, "").slice(0, 4);
-      const cleanNum = newNum.replace(/\D/g, "").slice(0, 10);
+      const cleanNum = newNum.replace(/\D/g, "").slice(0, phoneLimit);
 
-      if (cleanNum) {
-        setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
-      } else {
-        setValue(field.id, "");
-      }
+      // Always set value so the country code selection is preserved
+      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
     };
 
     return (
@@ -116,18 +379,24 @@ export const PublicFieldRenderer = ({
           {/* Country Picker Toggle */}
           <CountryPicker
             value={code}
-            onChange={(newCode) => handlePhoneChange(newCode, number)}
+            onChange={(newCode) => handlePhoneChange(newCode, "")}
             className="w-24 shrink-0"
           />
 
           {/* Main Number */}
           <input
             type="text"
-            placeholder="9998887776"
+            placeholder={
+              selectedCountry?.phoneLength === 10
+                ? "9998887776"
+                : selectedCountry?.phoneLength
+                  ? "0".repeat(selectedCountry.phoneLength)
+                  : "Enter number"
+            }
             value={number}
             onChange={(e) => handlePhoneChange(code, e.target.value)}
             className={inputClass}
-            maxLength={10}
+            maxLength={phoneLimit}
             required={field.required}
           />
         </div>
@@ -199,6 +468,18 @@ export const PublicFieldRenderer = ({
     );
   }
 
+  // Date – revamped shadcn with dd/mm/yy format
+  if (field.type === "date") {
+    return (
+      <DatePickerField
+        field={field}
+        fullValue={fullValue}
+        setValue={setValue}
+        inputClass={inputClass}
+      />
+    );
+  }
+
   // Star rating
   if (field.type === "rating") {
     return (
@@ -236,74 +517,13 @@ export const PublicFieldRenderer = ({
   }
 
   if (field.type === "upload") {
-    const fileUrl = fullValue;
-
     return (
-      <div className="space-y-1.5 flex flex-col gap-2">
-        {/* File upload - Audio, Video, and GIFs are disallowed for public form submissions */}
-        <label className="text-sm font-semibold text-slate-700">
-          {field.label}
-          {field.required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-
-        {fileUrl ? (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl animate-in fade-in zoom-in duration-300">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-              <FileCheck size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-emerald-900 truncate">
-                {(() => {
-                  try {
-                    const data = JSON.parse(fileUrl);
-                    return data.name || "File uploaded";
-                  } catch {
-                    return "File uploaded";
-                  }
-                })()}
-              </p>
-              <button
-                type="button"
-                onClick={() => setValue(field.id, "")}
-                className="text-xs text-emerald-600 hover:underline"
-              >
-                Remove and re-upload
-              </button>
-            </div>
-          </div>
-        ) : (
-          <UploadDropzone
-            endpoint="formAttachment"
-            onUploadBegin={() => onUploadStateChange?.(true)}
-            onClientUploadComplete={(res) => {
-              onUploadStateChange?.(false);
-              if (res?.[0]) {
-                // Store both URL and original filename as a stringified object
-                const uploadValue = JSON.stringify({
-                  url: res[0].url,
-                  name: res[0].name,
-                });
-                setValue(field.id, uploadValue);
-                toast.success("File uploaded!");
-              }
-            }}
-            onUploadError={(error: Error) => {
-              onUploadStateChange?.(false);
-              toast.error(`Upload failed: ${error.message}`);
-            }}
-            appearance={{
-              container:
-                "border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 transition-colors duration-200 py-8",
-              label: "text-[#6A06E4] hover:text-[#5a05c4]",
-              button:
-                "bg-[#6A06E4] w-[40%] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
-              allowedContent: "text-slate-400 text-[10px]",
-            }}
-          />
-        )}
-        {/* Hidden input to satisfy react-hook-form registry if needed, though setValue works directly */}
-        <input type="hidden" {...register(field.id)} />
-      </div>
+      <FileUploadField
+        field={field}
+        fullValue={fullValue}
+        setValue={setValue}
+        onUploadStateChange={onUploadStateChange}
+      />
     );
   }
 

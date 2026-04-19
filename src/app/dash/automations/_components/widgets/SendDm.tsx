@@ -9,7 +9,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AutomationInput } from "./AutomationInput";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
@@ -24,7 +24,8 @@ import {
 
 import { DmLink } from "@dm-broo/common-types";
 
-const MAX_CHARS = 1000;
+const MAX_CHARS_WITHOUT_IMAGE = 1000;
+const MAX_CHARS_WITH_IMAGE = 500;
 const MAX_LINKS = 3;
 
 type Props = {
@@ -34,6 +35,7 @@ type Props = {
   onImageChange?: (url: string) => void;
   links?: DmLink[];
   onLinksChange?: (links: DmLink[]) => void;
+  onIsUploadingChange?: (isUploading: boolean) => void;
 };
 
 const SendDm = ({
@@ -43,11 +45,17 @@ const SendDm = ({
   onImageChange,
   links = [],
   onLinksChange,
+  onIsUploadingChange,
 }: Props) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Keep parent in sync with internal upload state
+  useEffect(() => {
+    onIsUploadingChange?.(isUploading);
+  }, [isUploading, onIsUploadingChange]);
 
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -58,7 +66,15 @@ const SendDm = ({
       setIsUploading(false);
       if (res?.[0]) {
         onImageChange?.(res[0].url);
-        toast.success("Image uploaded successfully");
+
+        if (message.length > MAX_CHARS_WITH_IMAGE) {
+          onMessageChange(message.slice(0, MAX_CHARS_WITH_IMAGE));
+          toast.warning(
+            `Message truncated to ${MAX_CHARS_WITH_IMAGE} characters to fit image DM limit.`,
+          );
+        } else {
+          toast.success("Image uploaded successfully");
+        }
       }
     },
     onUploadError: (error: Error) => {
@@ -248,7 +264,9 @@ const SendDm = ({
           <AutomationInput
             value={message}
             onChange={onMessageChange}
-            maxLength={MAX_CHARS}
+            maxLength={
+              imageUrl ? MAX_CHARS_WITH_IMAGE : MAX_CHARS_WITHOUT_IMAGE
+            }
             placeholder="Enter your message here..."
           />
 

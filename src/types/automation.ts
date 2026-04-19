@@ -1,4 +1,9 @@
-export type AutomationStatus = "ACTIVE" | "PAUSED";
+export type AutomationStatus =
+  | "ACTIVE"
+  | "PAUSED"
+  | "STOPPED"
+  | "EXPIRED"
+  | "DELETED";
 export type TriggerType =
   | "COMMENT_ON_POST"
   | "STORY_REPLY"
@@ -37,7 +42,7 @@ export interface AutomationListItem {
   openingMessage?: string | null;
   openingButtonText?: string | null;
   dmLinks?: { title: string; url: string }[];
-  status: string;
+  status: AutomationStatus;
   timesTriggered: number;
   lastTriggeredAt: string | null;
   automationName: string | null;
@@ -94,12 +99,12 @@ export interface UpdateAutomationData {
   openingMessage?: string | null;
   openingButtonText?: string | null;
   dmLinks?: { title: string; url: string }[];
-  status?: string;
+  status?: AutomationStatus;
 }
 
 export interface AutomationFilters {
   instaAccountId: string;
-  status?: string | string[];
+  status?: AutomationStatus | AutomationStatus[];
   skip?: number;
   take?: number;
 }
@@ -112,7 +117,7 @@ export interface CreateExecutionData {
   commentUserId: string;
   actionType: string;
   sentMessage: string;
-  status: string;
+  status: string | AutomationStatus; // Keep string as it might contain other execution statuses, but allow AutomationStatus
   errorMessage?: string | null;
   instagramMessageId?: string | null;
 }

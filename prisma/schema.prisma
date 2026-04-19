@@ -225,9 +225,10 @@ model Form {
   coverImage  String?
   fields      FormFieldEntry[]
 
-  slug            String @unique // 8-char public URL slug
-  status          String @default("DRAFT") // DRAFT | PUBLISHED
-  submissionCount Int    @default(0)
+  slug              String @unique // 8-char public URL slug
+  status            String @default("DRAFT") // DRAFT | PUBLISHED
+  submitButtonLabel String @default("Submit")
+  submissionCount   Int    @default(0)
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -270,6 +271,10 @@ model Subscription {
   // Razorpay identifiers (null for FREE plan)
   razorpaySubscriptionId String?
   razorpayPlanId         String?
+
+  // Payment details for UI display
+  paymentMethod String? // upi | card | wallet | netbanking
+  paymentDetail String? // e.g. vpa for upi, last4 for card
 
   // 28-day billing window (period=weekly, interval=4)
   currentPeriodStart DateTime

@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { AutomationInput } from "./AutomationInput";
 
 type Reply = {
@@ -90,6 +90,8 @@ const PublicReplyToComments = ({
                 value={inputValue}
                 onChange={setInputValue}
                 placeholder="Type a reply..."
+                maxLength={200}
+                showCharCount
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addReply();
                   if (e.key === "Escape") {

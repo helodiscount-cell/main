@@ -86,7 +86,7 @@ export const SubmissionDetailDialog = ({
                       {field.label}
                     </label>
                     {/* Smart renderer: image preview, file download, or plain text */}
-                    <SubmissionAnswerValue value={answer} />
+                    <SubmissionAnswerValue value={answer} type={field.type} />
                   </div>
                 );
               })}

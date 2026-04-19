@@ -36,8 +36,8 @@ export function AppSidebarNav() {
               isActive={isActive}
               className={
                 isActive
-                  ? "bg-[#F3E8FF] text-[#8B5CF6] hover:bg-[#F3E8FF] hover:text-[#8B5CF6]"
-                  : "bg-white text-[#1A1D1F] hover:bg-slate-50 border-transparent"
+                  ? "bg-[#F3E8FF] text-[#8B5CF6] hover:bg-[#F3E8FF] hover:text-[#8B5CF6] h-[50px]"
+                  : "bg-[#F9F9F9] text-[#1A1D1F] hover:bg-slate-50 border-transparent h-[50px]"
               }
               size="lg"
             >

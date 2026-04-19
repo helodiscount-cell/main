@@ -10,7 +10,10 @@ import {
   RespondToAllDMsFormValues,
 } from "@/configs/automations";
 import { AddKeywords } from "../_components/widgets";
-import { BaseAutomationEditor } from "../_components/BaseAutomationEditor";
+import {
+  BaseAutomationEditor,
+  RightColForm,
+} from "../_components/BaseAutomationEditor";
 import { AutomationRightCol } from "../_components/AutomationRightCol";
 
 const Page = () => {
@@ -21,12 +24,13 @@ const Page = () => {
       schema={respondToAllDmsSchema}
       defaultValues={{
         automationName: "",
+        anyKeyword: false,
         keywords: [],
         dmMessage: "",
         askToFollowEnabled: false,
         askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
         askToFollowLink: "",
-        openingMessageEnabled: true,
+        openingMessageEnabled: false,
         openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
         openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
         dmLinks: [],
@@ -41,6 +45,7 @@ const Page = () => {
       onBuildPayload={(form) => ({
         triggerType: AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.triggerType,
         automationName: form.automationName,
+        anyKeyword: form.anyKeyword,
         triggers: form.keywords,
         matchType: AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.matchType,
         actionType: AUTOMATION_CONFIGS.RESPOND_TO_ALL_DMS.actionType,
@@ -59,14 +64,30 @@ const Page = () => {
         <div className="flex flex-col gap-6">
           <Controller
             control={form.control}
-            name="keywords"
-            render={({ field }) => (
-              <AddKeywords value={field.value} onChange={field.onChange} />
+            name="anyKeyword"
+            render={({ field: anyField }) => (
+              <Controller
+                control={form.control}
+                name="keywords"
+                render={({ field: keywordsField }) => (
+                  <AddKeywords
+                    anyKeyword={anyField.value}
+                    onAnyKeywordChange={anyField.onChange}
+                    keywords={keywordsField.value}
+                    onKeywordsChange={keywordsField.onChange}
+                  />
+                )}
+              />
             )}
           />
         </div>
       )}
-      renderRightCol={(form) => <AutomationRightCol control={form.control} />}
+      renderRightCol={(form: RightColForm<RespondToAllDMsFormValues>) => (
+        <AutomationRightCol
+          control={form.control}
+          onIsUploadingChange={form.setIsMediaUploading}
+        />
+      )}
     />
   );
 };

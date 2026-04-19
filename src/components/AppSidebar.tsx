@@ -13,6 +13,8 @@ import UserSection from "./UserSection";
 import { LogOut } from "lucide-react";
 import { AppSidebarNav } from "./AppSidebarNav";
 import React from "react";
+import CrownIcon from "@/assets/svgs/Path 54.svg";
+import Image from "next/image";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -23,6 +25,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             Logo
           </span>
           <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-full border border-amber-100">
+            <Image src={CrownIcon} height={10} width={10} alt="" />
             <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
               Upgrade
             </span>
@@ -42,14 +45,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   variant={"destructive"}
                   size="lg"
                   asChild
-                  className="w-full text-black"
+                  className="w-full h-[50px] text-black"
                 >
                   <Link
                     href={"/auth/logout"}
-                    className="flex items-center gap-2 text-black"
+                    className="flex items-center justify-start gap-2 text-black"
                   >
                     <LogOut className="w-4 h-4 text-red-500" />
-                    <span className="text-black">Log out</span>
+                    <span className="text-[16px]">Log out</span>
                   </Link>
                 </Button>
               </div>

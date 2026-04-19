@@ -56,7 +56,8 @@ const MobileLayout = ({
   activeTab: "editor" | "submissions";
   children: React.ReactNode;
 }) => {
-  const { isLoading, currentStatus } = useFormEditor();
+  const { isLoading, isSaving, isMediaUploading, currentStatus } =
+    useFormEditor();
   const { handlePublish, handleSave, handleUpdate, handleUnpublish } =
     useFormActions();
 
@@ -67,6 +68,8 @@ const MobileLayout = ({
         onPublish={handlePublish}
         onSave={handleSave}
         isLoading={isLoading}
+        isSaving={isSaving}
+        isMediaUploading={isMediaUploading}
         activeTab={activeTab}
         onUpdate={handleUpdate}
         onUnpublish={handleUnpublish}
@@ -89,7 +92,7 @@ const DesktopLayout = ({
   pathname: string;
   children: React.ReactNode;
 }) => {
-  const { isLoading } = useFormEditor();
+  const { isLoading, isSaving, isMediaUploading } = useFormEditor();
   const { handlePublish, handleSave, handleUpdate } = useFormActions();
 
   return (
@@ -100,6 +103,8 @@ const DesktopLayout = ({
         onSaveDraft={handleSave}
         onUpdate={handleUpdate}
         isLoading={isLoading}
+        isSaving={isSaving}
+        isMediaUploading={isMediaUploading}
         formId={formId}
         pathname={pathname}
       />

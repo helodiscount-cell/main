@@ -21,14 +21,21 @@ export const VerifyPaymentSchema = z.object({
 
 const PaymentEntitySchema = z.object({
   id: z.string(),
-  order_id: z.string(),
+  order_id: z.string().optional(), // order_id might be missing in some subscription events
   amount: z.number(),
   currency: z.string(),
   status: z.string(),
   method: z.string().optional(),
+  vpa: z.string().optional(),
+  card: z
+    .object({
+      last4: z.string().optional(),
+      network: z.string().optional(),
+    })
+    .optional(),
   email: z.string().optional(),
   contact: z.string().optional(),
-  created_at: z.number(),
+  created_at: z.number().optional(),
 });
 
 const PaymentCapturedSchema = z.object({
@@ -117,12 +124,7 @@ export const WebhookPayloadSchema = z.discriminatedUnion("event", [
         }),
       }),
       payment: z.object({
-        entity: z.object({
-          id: z.string(),
-          amount: z.number(),
-          currency: z.string(),
-          status: z.string().optional(),
-        }),
+        entity: PaymentEntitySchema,
       }),
     }),
   }),

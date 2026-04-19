@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useCallback } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormValuesSchema } from "@dm-broo/common-types";
 import type { FormValues, FieldType } from "@dm-broo/common-types";
@@ -19,16 +19,21 @@ const DEFAULT_FORM_VALUES: FormValues = {
   description: "",
   coverImage: undefined,
   fields: [],
+  submitButtonLabel: "Submit",
 };
 
 interface FormEditorContextType {
-  methods: UseFormReturn<FormValues>;
+  // ReturnType avoids the TS2719 "two types with same name" error from dual module resolution
+  methods: ReturnType<typeof useForm<FormValues>>;
   save: (status: "DRAFT" | "PUBLISHED") => Promise<void>;
   isLoading: boolean;
+  isSaving: boolean;
   isMediaUploading: boolean;
   setIsMediaUploading: (uploading: boolean) => void;
   currentStatus?: "DRAFT" | "PUBLISHED";
   formId?: string;
+  isNameDialogOpen: boolean;
+  setIsNameDialogOpen: (open: boolean) => void;
 }
 
 const FormEditorContext = createContext<FormEditorContextType | null>(null);
@@ -69,12 +74,13 @@ export const FormEditorProvider = ({
         description: form.description || "",
         coverImage: form.coverImage || undefined,
         fields: (form.fields || []) as any,
+        submitButtonLabel: form.submitButtonLabel || "Submit",
       });
     }
   }, [form, methods]);
 
   // Mutation for creating or updating
-  const { mutate: saveForm, isPending: isSaving } = useMutation({
+  const saveForm = useMutation({
     mutationFn: (payload: FormValues & { status: "DRAFT" | "PUBLISHED" }) =>
       formId
         ? formService.update(formId, payload)
@@ -99,7 +105,10 @@ export const FormEditorProvider = ({
     },
   });
 
+  const isSaving = saveForm.isPending;
+
   const [isMediaUploading, setIsMediaUploading] = React.useState(false);
+  const [isNameDialogOpen, setIsNameDialogOpen] = React.useState(false);
 
   // Combined loading state for header and canvas
   const isLoading = isFetching || isSaving || isMediaUploading;
@@ -117,7 +126,7 @@ export const FormEditorProvider = ({
       const isValid = await methods.trigger();
       if (!isValid) {
         if (methods.formState.errors.name) {
-          toast.error(methods.formState.errors.name.message as string);
+          setIsNameDialogOpen(true);
         } else if (methods.formState.errors.fields) {
           toast.error("Form cannot be empty", {
             description: "Please provide atleast one fields",
@@ -127,8 +136,32 @@ export const FormEditorProvider = ({
         }
         return;
       }
+
       const data = methods.getValues();
-      saveForm({ ...data, status });
+
+      // Guard: dropdown and checkbox fields must have at least one non-empty option
+      const OPTION_FIELDS = ["dropdown", "checkbox"] as const;
+      const emptyOptionField = data.fields.find(
+        (f) =>
+          OPTION_FIELDS.includes(f.type as (typeof OPTION_FIELDS)[number]) &&
+          (f.options ?? []).filter((o) => o.label.trim() !== "").length === 0,
+      );
+
+      if (emptyOptionField) {
+        toast.error(
+          `"${emptyOptionField.label || emptyOptionField.type}" has no options`,
+          {
+            description: "Add at least one option before saving.",
+          },
+        );
+        return;
+      }
+
+      await saveForm.mutateAsync({
+        ...data,
+        status,
+        submitButtonLabel: data.submitButtonLabel || "Submit",
+      });
     },
     [methods, saveForm, isMediaUploading],
   );
@@ -139,6 +172,7 @@ export const FormEditorProvider = ({
         methods,
         save,
         isLoading,
+        isSaving,
         isMediaUploading,
         setIsMediaUploading,
         currentStatus:
@@ -146,6 +180,8 @@ export const FormEditorProvider = ({
             ? form.status
             : undefined,
         formId,
+        isNameDialogOpen,
+        setIsNameDialogOpen,
       }}
     >
       {children}

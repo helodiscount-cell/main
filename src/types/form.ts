@@ -10,6 +10,7 @@ export type FormListItem = {
   status: "DRAFT" | "PUBLISHED";
   slug: string;
   submissionCount: number;
+  submitButtonLabel: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,6 +27,7 @@ export type FormPublic = {
   description: string;
   coverImage?: string | null;
   fields: FormField[];
+  submitButtonLabel: string;
 };
 
 // One entry in the submissions table

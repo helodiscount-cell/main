@@ -2,6 +2,7 @@ export type Country = {
   name: string;
   code: string;
   dialCode: string;
+  phoneLength?: number;
 };
 
 export const COUNTRIES: Country[] = [
@@ -35,7 +36,7 @@ export const COUNTRIES: Country[] = [
   { name: "Burundi", code: "BI", dialCode: "257" },
   { name: "Cambodia", code: "KH", dialCode: "855" },
   { name: "Cameroon", code: "CM", dialCode: "237" },
-  { name: "Canada", code: "CA", dialCode: "1" },
+  { name: "Canada", code: "CA", dialCode: "1", phoneLength: 10 },
   { name: "Cape Verde", code: "CV", dialCode: "238" },
   { name: "Central African Republic", code: "CF", dialCode: "236" },
   { name: "Chad", code: "TD", dialCode: "235" },
@@ -56,7 +57,7 @@ export const COUNTRIES: Country[] = [
   { name: "Dominican Republic", code: "DO", dialCode: "1-809" },
   { name: "East Timor", code: "TL", dialCode: "670" },
   { name: "Ecuador", code: "EC", dialCode: "593" },
-  { name: "Egypt", code: "EG", dialCode: "20" },
+  { name: "Egypt", code: "EG", dialCode: "20", phoneLength: 10 },
   { name: "El Salvador", code: "SV", dialCode: "503" },
   { name: "Equatorial Guinea", code: "GQ", dialCode: "240" },
   { name: "Eritrea", code: "ER", dialCode: "291" },
@@ -64,11 +65,11 @@ export const COUNTRIES: Country[] = [
   { name: "Ethiopia", code: "ET", dialCode: "251" },
   { name: "Fiji", code: "FJ", dialCode: "679" },
   { name: "Finland", code: "FI", dialCode: "358" },
-  { name: "France", code: "FR", dialCode: "33" },
+  { name: "France", code: "FR", dialCode: "33", phoneLength: 9 },
   { name: "Gabon", code: "GA", dialCode: "241" },
   { name: "Gambia", code: "GM", dialCode: "220" },
   { name: "Georgia", code: "GE", dialCode: "995" },
-  { name: "Germany", code: "DE", dialCode: "49" },
+  { name: "Germany", code: "DE", dialCode: "49", phoneLength: 11 },
   { name: "Ghana", code: "GH", dialCode: "233" },
   { name: "Greece", code: "GR", dialCode: "30" },
   { name: "Grenada", code: "GD", dialCode: "1-473" },
@@ -80,7 +81,7 @@ export const COUNTRIES: Country[] = [
   { name: "Honduras", code: "HN", dialCode: "504" },
   { name: "Hungary", code: "HU", dialCode: "36" },
   { name: "Iceland", code: "IS", dialCode: "354" },
-  { name: "India", code: "IN", dialCode: "91" },
+  { name: "India", code: "IN", dialCode: "91", phoneLength: 10 },
   { name: "Indonesia", code: "ID", dialCode: "62" },
   { name: "Iran", code: "IR", dialCode: "98" },
   { name: "Iraq", code: "IQ", dialCode: "964" },
@@ -189,9 +190,9 @@ export const COUNTRIES: Country[] = [
   { name: "Tuvalu", code: "TV", dialCode: "688" },
   { name: "Uganda", code: "UG", dialCode: "256" },
   { name: "Ukraine", code: "UA", dialCode: "380" },
-  { name: "United Arab Emirates", code: "AE", dialCode: "971" },
-  { name: "United Kingdom", code: "GB", dialCode: "44" },
-  { name: "United States", code: "US", dialCode: "1" },
+  { name: "United Arab Emirates", code: "AE", dialCode: "971", phoneLength: 9 },
+  { name: "United Kingdom", code: "GB", dialCode: "44", phoneLength: 10 },
+  { name: "United States", code: "US", dialCode: "1", phoneLength: 10 },
   { name: "Uruguay", code: "UY", dialCode: "598" },
   { name: "Uzbekistan", code: "UZ", dialCode: "998" },
   { name: "Vanuatu", code: "VU", dialCode: "678" },
