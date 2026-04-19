@@ -272,6 +272,10 @@ model Subscription {
   razorpaySubscriptionId String?
   razorpayPlanId         String?
 
+  // Payment details for UI display
+  paymentMethod String? // upi | card | wallet | netbanking
+  paymentDetail String? // e.g. vpa for upi, last4 for card
+
   // 28-day billing window (period=weekly, interval=4)
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime

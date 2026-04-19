@@ -79,9 +79,22 @@ async function onSubscriptionCharged(
     );
   }
 
+  const method = payment.method;
+  let detail: string | undefined;
+
+  if (method === "upi") {
+    detail = payment.vpa;
+  } else if (method === "card") {
+    detail = payment.card?.last4
+      ? `**** **** **** ${payment.card.last4}`
+      : undefined;
+  }
+
   await renewSubscription(userId, planId, {
     paymentId: payment.id,
     amount: payment.amount,
+    method,
+    detail,
   });
 }
 

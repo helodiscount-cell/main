@@ -46,7 +46,8 @@ export const FormValuesSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string(),
   coverImage: z.string().optional(),
-  submitButtonLabel: z.string().default("Submit"),
+  // No .default() here — keeps input/output types both `string` so zodResolver stays compatible
+  submitButtonLabel: z.string(),
   fields: z.array(FormFieldSchema).min(1, "Please provide atleast one fields"),
 });
 

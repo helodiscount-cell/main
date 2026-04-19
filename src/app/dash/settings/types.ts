@@ -1,4 +1,4 @@
-export type SettingsTab = "profile" | "accounts" | "billing";
+export type SettingsTab = "profile" | "billing";
 
 export interface ProfileData {
   email: string;
@@ -16,8 +16,25 @@ export interface ConnectedAccount {
   isActive: boolean;
 }
 
+export interface BillingData {
+  subscription: {
+    plan: string;
+    status: string;
+    currentPeriodStart: Date;
+    currentPeriodEnd: Date;
+    paymentMethod: string | null;
+    paymentDetail: string | null;
+  } | null;
+  ledger: {
+    creditsUsed: number;
+    creditLimit: number;
+    periodStart: Date;
+    periodEnd: Date;
+  } | null;
+}
+
 export interface SettingsPageData {
   activeTab: SettingsTab;
   profile: ProfileData;
-  accounts: ConnectedAccount[];
+  billing: BillingData;
 }

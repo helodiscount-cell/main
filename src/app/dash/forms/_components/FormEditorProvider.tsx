@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useCallback } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormValuesSchema } from "@dm-broo/common-types";
 import type { FormValues, FieldType } from "@dm-broo/common-types";
@@ -23,7 +23,8 @@ const DEFAULT_FORM_VALUES: FormValues = {
 };
 
 interface FormEditorContextType {
-  methods: UseFormReturn<FormValues>;
+  // ReturnType avoids the TS2719 "two types with same name" error from dual module resolution
+  methods: ReturnType<typeof useForm<FormValues>>;
   save: (status: "DRAFT" | "PUBLISHED") => Promise<void>;
   isLoading: boolean;
   isSaving: boolean;
@@ -133,7 +134,27 @@ export const FormEditorProvider = ({
         }
         return;
       }
+
       const data = methods.getValues();
+
+      // Guard: dropdown and checkbox fields must have at least one non-empty option
+      const OPTION_FIELDS = ["dropdown", "checkbox"] as const;
+      const emptyOptionField = data.fields.find(
+        (f) =>
+          OPTION_FIELDS.includes(f.type as (typeof OPTION_FIELDS)[number]) &&
+          (f.options ?? []).filter((o) => o.label.trim() !== "").length === 0,
+      );
+
+      if (emptyOptionField) {
+        toast.error(
+          `"${emptyOptionField.label || emptyOptionField.type}" has no options`,
+          {
+            description: "Add at least one option before saving.",
+          },
+        );
+        return;
+      }
+
       saveForm({
         ...data,
         status,

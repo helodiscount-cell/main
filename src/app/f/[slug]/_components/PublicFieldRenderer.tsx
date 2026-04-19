@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import type { FormField, FieldType } from "@dm-broo/common-types";
 import type {
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
-import { Star, FileCheck, Calendar, CalendarIcon } from "lucide-react";
-import { UploadDropzone } from "@/lib/uploadthing";
+import {
+  Star,
+  FileCheck,
+  Calendar,
+  CalendarIcon,
+  UploadCloud,
+  Loader2,
+} from "lucide-react";
+import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { CountryPicker } from "./CountryPicker";
 import { HierarchicalLocationPicker } from "./HierarchicalLocationPicker";
@@ -136,6 +143,130 @@ const DatePickerField = ({
           </Popover>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Internal component to manage the manual file upload with custom UI
+const FileUploadField = ({
+  field,
+  fullValue,
+  setValue,
+  onUploadStateChange,
+}: {
+  field: FormField;
+  fullValue: string;
+  setValue: UseFormSetValue<Record<string, string | string[]>>;
+  onUploadStateChange?: (isUploading: boolean) => void;
+}) => {
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { startUpload } = useUploadThing("formAttachment", {
+    onClientUploadComplete: (res) => {
+      setIsUploading(false);
+      onUploadStateChange?.(false);
+      if (res?.[0]) {
+        const uploadValue = JSON.stringify({
+          url: res[0].url,
+          name: res[0].name,
+        });
+        setValue(field.id, uploadValue);
+        toast.success("File uploaded!");
+      }
+    },
+    onUploadError: (error: Error) => {
+      setIsUploading(false);
+      onUploadStateChange?.(false);
+      toast.error(`Upload failed: ${error.message}`);
+    },
+    onUploadBegin: () => {
+      setIsUploading(true);
+      onUploadStateChange?.(true);
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await startUpload([file]);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    await startUpload([file]);
+  };
+
+  const fileUrl = fullValue;
+
+  return (
+    <div className="space-y-1.5 flex flex-col gap-2">
+      <label className="text-sm font-semibold text-slate-700">
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+
+      {fileUrl ? (
+        <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl animate-in fade-in zoom-in duration-300">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+            <FileCheck size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-emerald-900 truncate">
+              {(() => {
+                try {
+                  const data = JSON.parse(fileUrl);
+                  return data.name || "File uploaded";
+                } catch {
+                  return "File uploaded";
+                }
+              })()}
+            </p>
+            <button
+              type="button"
+              onClick={() => setValue(field.id, "")}
+              className="text-xs text-emerald-600 hover:underline"
+            >
+              Remove and re-upload
+            </button>
+          </div>
+        </div>
+      ) : isUploading ? (
+        <div className="flex flex-col items-center justify-center gap-3 border-slate-200 border-2 border-dashed bg-slate-50/50 rounded-xl py-10 animate-pulse">
+          <Loader2 size={32} className="text-[#6A06E4] animate-spin" />
+          <p className="text-sm font-medium text-[#6A06E4]">Loading...</p>
+        </div>
+      ) : (
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          className="group relative flex flex-col items-center justify-center gap-2 border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 hover:border-[#6A06E4]/30 transition-all duration-200 rounded-xl py-10 cursor-pointer"
+        >
+          <div className="p-3 rounded-full bg-white shadow-sm group-hover:scale-110 transition-transform duration-200">
+            <UploadCloud
+              size={24}
+              className="text-slate-400 group-hover:text-[#6A06E4]"
+            />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-slate-600 group-hover:text-[#6A06E4]">
+              Choose a file or drag and drop
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Supports images, docs, and more
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -378,74 +509,13 @@ export const PublicFieldRenderer = ({
   }
 
   if (field.type === "upload") {
-    const fileUrl = fullValue;
-
     return (
-      <div className="space-y-1.5 flex flex-col gap-2">
-        {/* File upload - Audio, Video, and GIFs are disallowed for public form submissions */}
-        <label className="text-sm font-semibold text-slate-700">
-          {field.label}
-          {field.required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-
-        {fileUrl ? (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl animate-in fade-in zoom-in duration-300">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-              <FileCheck size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-emerald-900 truncate">
-                {(() => {
-                  try {
-                    const data = JSON.parse(fileUrl);
-                    return data.name || "File uploaded";
-                  } catch {
-                    return "File uploaded";
-                  }
-                })()}
-              </p>
-              <button
-                type="button"
-                onClick={() => setValue(field.id, "")}
-                className="text-xs text-emerald-600 hover:underline"
-              >
-                Remove and re-upload
-              </button>
-            </div>
-          </div>
-        ) : (
-          <UploadDropzone
-            endpoint="formAttachment"
-            onUploadBegin={() => onUploadStateChange?.(true)}
-            onClientUploadComplete={(res) => {
-              onUploadStateChange?.(false);
-              if (res?.[0]) {
-                // Store both URL and original filename as a stringified object
-                const uploadValue = JSON.stringify({
-                  url: res[0].url,
-                  name: res[0].name,
-                });
-                setValue(field.id, uploadValue);
-                toast.success("File uploaded!");
-              }
-            }}
-            onUploadError={(error: Error) => {
-              onUploadStateChange?.(false);
-              toast.error(`Upload failed: ${error.message}`);
-            }}
-            appearance={{
-              container:
-                "border-slate-200 border-2 border-dashed bg-slate-50/50 hover:bg-slate-50 transition-colors duration-200 py-8",
-              label: "text-[#6A06E4] hover:text-[#5a05c4]",
-              button:
-                "bg-[#6A06E4] w-[40%] ut-ready:bg-[#6A06E4] ut-uploading:bg-[#6A06E4]/50 after:bg-[#6A06E4]",
-              allowedContent: "text-slate-400 text-[10px]",
-            }}
-          />
-        )}
-        {/* Hidden input to satisfy react-hook-form registry if needed, though setValue works directly */}
-        <input type="hidden" {...register(field.id)} />
-      </div>
+      <FileUploadField
+        field={field}
+        fullValue={fullValue}
+        setValue={setValue}
+        onUploadStateChange={onUploadStateChange}
+      />
     );
   }
 

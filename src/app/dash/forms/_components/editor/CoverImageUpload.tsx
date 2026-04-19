@@ -144,7 +144,7 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
         >
           {/* Upload trigger */}
           <label
-            className={`flex items-center gap-1.5 bg-white/90 rounded-full px-4 py-2 text-xs font-semibold text-slate-700 transition-all transform ${
+            className={`flex items-center text-[#6A06E4] gap-1.5 bg-white/90 rounded-full px-4 py-2 text-xs font-semibold transition-all transform ${
               isUploading
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-white cursor-pointer hover:scale-105 active:scale-95"
@@ -154,7 +154,7 @@ const CoverImageArea = ({ value, onChange }: CoverImageAreaProps) => {
             {isUploading
               ? "Uploading…"
               : value
-                ? "Change Image"
+                ? "Select/Drop an image"
                 : EDITOR_CANVAS_CONFIG.COVER_OVERLAY_LABEL}
             <input
               type="file"

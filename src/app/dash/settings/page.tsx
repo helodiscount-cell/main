@@ -4,11 +4,11 @@ import {
   SettingsLayout,
   SettingsTabNav,
   ProfileTab,
-  AccountsTab,
   BillingTab,
 } from "./_components";
-import { SettingsTab, ProfileData, ConnectedAccount } from "./types";
+import { SettingsTab, ProfileData, BillingData } from "./types";
 import { SETTINGS_CONFIG } from "./config";
+import { getUserBillingData } from "@/server/services/billing/subscription.service";
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
@@ -26,37 +26,20 @@ export default async function SettingsPage({ searchParams }: PageProps) {
   const activeTab =
     (queryParams.tab as SettingsTab) || SETTINGS_CONFIG.DEFAULT_TAB;
 
-  // Map to internal ConnectedAccount type
-  const connectedAccounts: ConnectedAccount[] = workspace.allAccounts.map(
-    (acc) => ({
-      ...acc,
-      followersCount: 0, // Default for type compatibility if not fetched
-      accountType: "BUSINESS",
-      connectedAt: new Date(),
-      isActive: true,
-      tokenExpiresAt: new Date(),
-    }),
-  );
-
   const profileData: ProfileData = {
     email: user.emailAddresses[0]?.emailAddress || "",
     isEmailVerified:
       user.emailAddresses[0]?.verification?.status === "verified",
   };
 
+  const billingData: BillingData = await getUserBillingData(user.id);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "profile":
         return <ProfileTab data={profileData} />;
-      case "accounts":
-        return (
-          <AccountsTab
-            accounts={connectedAccounts}
-            activeAccountId={workspace.id}
-          />
-        );
       case "billing":
-        return <BillingTab />;
+        return <BillingTab data={billingData} />;
       default:
         return <ProfileTab data={profileData} />;
     }

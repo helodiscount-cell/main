@@ -126,7 +126,12 @@ export async function activateSubscription(
 export async function renewSubscription(
   clerkUserId: string,
   planId: PlanId,
-  paymentData?: { paymentId: string; amount: number },
+  paymentData?: {
+    paymentId: string;
+    amount: number;
+    method?: string;
+    detail?: string;
+  },
 ): Promise<void> {
   const userId = await resolveInternalUserId(clerkUserId);
   const plan = PLANS[planId];
@@ -141,6 +146,8 @@ export async function renewSubscription(
         status: "ACTIVE",
         currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
+        paymentMethod: paymentData?.method,
+        paymentDetail: paymentData?.detail,
       },
     }),
     prisma.creditLedger.update({
@@ -292,4 +299,39 @@ export async function createCheckoutSession(
     );
     throw new Error("Failed to initialize payment session. Please try again.");
   }
+}
+
+/**
+ * Fetches the user's current subscription and credit details.
+ */
+export async function getUserBillingData(clerkUserId: string) {
+  const userId = await resolveInternalUserId(clerkUserId);
+
+  const [subscription, ledger] = await prisma.$transaction([
+    prisma.subscription.findUnique({
+      where: { userId },
+      select: {
+        plan: true,
+        status: true,
+        currentPeriodStart: true,
+        currentPeriodEnd: true,
+        paymentMethod: true,
+        paymentDetail: true,
+      },
+    }),
+    prisma.creditLedger.findUnique({
+      where: { userId },
+      select: {
+        creditsUsed: true,
+        creditLimit: true,
+        periodStart: true,
+        periodEnd: true,
+      },
+    }),
+  ]);
+
+  return {
+    subscription,
+    ledger,
+  };
 }
