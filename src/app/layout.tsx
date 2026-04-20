@@ -11,7 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
 import { Suspense } from "react";
-import { OAuthErrorListener } from "@/components/auth/OAuthErrorListener";
+import { OAuthErrorListener } from "./auth/_components/OAuthErrorListener";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],

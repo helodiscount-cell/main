@@ -1,14 +1,14 @@
 import React from "react";
-import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
-import { CreditIndicator } from "@/app/dash/_components/CreditIndicator";
 import { CreateAutomationDialog } from "@/components/dash/automations/create";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import Image from "next/image";
 
-import { RefreshCw, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { cn } from "@/server/utils";
+import { CreditIndicator } from "@/app/dash/_components";
+import { RefreshInstaDialog } from "@/app/auth/_components/RefreshInstaDialog";
 
 export interface HeaderConfig {
   showSearch: boolean;
@@ -59,23 +59,18 @@ export const DASHBOARD_HEADER_CONFIG: Record<string, HeaderConfig> = {
   "/dash/contacts": {
     showSearch: true,
     childComp: (
-      <>
-        <Button
-          size="icon"
-          className={cn(CONTACTS_BUTTON_CLASSES, "w-9")}
-          type="button"
-        >
-          <RefreshCw size={15} />
-        </Button>
-
-        <Button
-          className={cn(CONTACTS_BUTTON_CLASSES, "gap-2 px-4")}
-          type="button"
-        >
-          <Download size={15} />
-          Export List
-        </Button>
-      </>
+      <Button
+        className={cn(
+          CONTACTS_BUTTON_CLASSES,
+          "gap-2 px-4 opacity-70 cursor-not-allowed",
+        )}
+        type="button"
+        disabled
+        title="Export feature coming soon"
+      >
+        <Download size={15} />
+        Export List
+      </Button>
     ),
   },
 };

@@ -19,7 +19,7 @@ import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
 import { CountryPicker } from "./CountryPicker";
 import { HierarchicalLocationPicker } from "./HierarchicalLocationPicker";
-import { COUNTRIES } from "@/configs/countries";
+import { COUNTRIES } from "@/configs/location.config";
 import {
   Popover,
   PopoverContent,

@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import { TableHeader, Pagination } from ".";
 import { Spinner } from "@/components/ui/spinner";
 import { TableVariant } from "@/configs/table.config";
-import {
+import TableHeader, {
   StatusFilter,
   TriggerFilter,
   SortField,
   SortOrder,
 } from "./TableHeader";
+import Pagination from "./Pagination";
 
 interface TablePageLayoutProps<T> {
   variant: TableVariant;
@@ -39,7 +39,7 @@ interface TablePageLayoutProps<T> {
  * Premium Unified Table Skeleton
  * Combines TableHeader, Rows, Loading states, and Pagination into a single cohesive layout.
  */
-export function TablePageLayout<T extends { id: string }>({
+export default function TablePageLayout<T extends { id: string }>({
   variant,
   isLoading,
   totalItems,
@@ -61,22 +61,27 @@ export function TablePageLayout<T extends { id: string }>({
     <div className="flex flex-col flex-1 gap-4 overflow-hidden">
       <div className="bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col shadow-sm">
         {/* Unified Header */}
-        <TableHeader
-          {...({
-            variant,
-            statusFilter,
-            setStatusFilter: handleStatusChange,
-            sortField,
-            sortOrder,
-            onSort: handleSort,
-            ...(variant === "automations"
-              ? {
-                  triggerFilter: triggerFilter!,
-                  setTriggerFilter: handleTriggerChange!,
-                }
-              : {}),
-          } as any)}
-        />
+        {variant === "automations" ? (
+          <TableHeader
+            variant="automations"
+            statusFilter={statusFilter}
+            setStatusFilter={handleStatusChange}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            triggerFilter={triggerFilter!}
+            setTriggerFilter={handleTriggerChange!}
+          />
+        ) : (
+          <TableHeader
+            variant={variant as Exclude<TableVariant, "automations">}
+            statusFilter={statusFilter}
+            setStatusFilter={handleStatusChange}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+          />
+        )}
 
         {/* Dynamic Content Area */}
         <div className="flex-1 overflow-auto">
@@ -95,7 +100,11 @@ export function TablePageLayout<T extends { id: string }>({
               <p className="text-sm font-medium">{emptyState.message}</p>
             </div>
           ) : (
-            <div className="flex flex-col">{items.map(renderRow)}</div>
+            <div className="flex flex-col">
+              {items.map((item) => (
+                <React.Fragment key={item.id}>{renderRow(item)}</React.Fragment>
+              ))}
+            </div>
           )}
         </div>
 

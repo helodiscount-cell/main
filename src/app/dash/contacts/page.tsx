@@ -15,10 +15,10 @@ const ContactsPage = () => {
   const isMobile = useIsMobile();
   const { sync: syncSearch } = useSearchSync();
 
-  // Fetch contacts - Using a reasonable limit for client-side sorting/filtering of results
+  // Fetch contacts - Fetching a larger batch to support full client-side paging/filtering
   const { data, isLoading } = useQuery({
-    queryKey: [...contactKeys.list(), "list"],
-    queryFn: () => contactsService.list(100),
+    queryKey: [...contactKeys.list({ limit: 1000 })],
+    queryFn: () => contactsService.list({ limit: 1000 }),
   });
 
   const contacts = data?.contacts ?? [];

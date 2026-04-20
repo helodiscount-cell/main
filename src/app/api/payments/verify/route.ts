@@ -1,6 +1,8 @@
-import { verifyPayment } from "@/server/services/razorpay";
-import { VerifyPaymentSchema } from "@/server/services/razorpay/schemas";
-import { PaymentVerificationError } from "@/server/services/razorpay";
+import {
+  verifyPayment,
+  VerifyPaymentSchema,
+  PaymentVerificationError,
+} from "@/server/services/razorpay";
 import { auth } from "@clerk/nextjs/server";
 
 /**

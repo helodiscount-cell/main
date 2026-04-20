@@ -1,49 +1,19 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { getHeaderConfig } from "@/configs/dashboard-header.config";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { getHeaderConfig } from "@/configs/dash-header.config";
 import { Search } from "lucide-react";
+import { useSearchSync } from "@/hooks/use-search-sync";
 
 /**
  * Dashboard Header
- * Completely config-driven and synced with the URL search parameters.
+ * Completely config-driven and synced with the URL search parameters via useSearchSync.
  */
 function DashboardHeader() {
   const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { sync, value: searchValue } = useSearchSync();
   const config = getHeaderConfig(pathname);
-
-  // Hooks must be called unconditionally at the top
-  const urlSearchVal = searchParams.get("q") ?? "";
-  const [localSearchValue, setLocalSearchValue] = useState(urlSearchVal);
-
-  // Sync search value to URL with a native debounce to avoid library overhead
-  useEffect(() => {
-    if (!config || config.hideHeader) return;
-
-    // Skip sync if the value hasn't changed from the URL to avoid redundant triggers
-    if (localSearchValue === urlSearchVal) return;
-
-    const timeoutId = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (localSearchValue) {
-        params.set("q", localSearchValue);
-      } else {
-        params.delete("q");
-      }
-      // Use replace during active typing to avoid bloating the history stack
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    }, 350);
-
-    return () => clearTimeout(timeoutId);
-  }, [localSearchValue, pathname, router, searchParams, config, urlSearchVal]);
-
-  // Handle URL change (e.g. back button)
-  useEffect(() => {
-    setLocalSearchValue(urlSearchVal);
-  }, [urlSearchVal]);
 
   // Early return for rendering ONLY (after all hooks are called)
   if (!config || config.hideHeader) return null;
@@ -76,8 +46,8 @@ function DashboardHeader() {
             <input
               type="text"
               placeholder={`Search ${pageTitle}`}
-              value={localSearchValue}
-              onChange={(e) => setLocalSearchValue(e.target.value)}
+              value={searchValue}
+              onChange={(e) => sync(e.target.value)}
               className="w-full text-sm bg-transparent outline-none text-[#1A1D1F] placeholder:text-slate-400 font-semibold"
             />
           </div>

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
-import GoogleIcon from "../icons/GoogleIcon";
+import { GoogleIcon } from "@/components/icons";
 
 const GoogleButton = () => {
   const { signIn } = useSignIn();

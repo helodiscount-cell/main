@@ -42,7 +42,7 @@ export default function FormTitleSection() {
             registerTitleRef(e);
             (titleInputRef as any).current = e;
           }}
-          placeholder={"Select/Drop an image"}
+          placeholder="Add a title"
           className="flex-1 text-lg font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
         />
         <div onMouseDown={(e) => e.preventDefault()}>

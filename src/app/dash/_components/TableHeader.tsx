@@ -105,7 +105,7 @@ const TableHeader = (props: Props) => {
           );
         }
 
-        if (col.type === "info") {
+        if (col.type === "info" && !(col as { sortable?: boolean }).sortable) {
           return (
             <span
               key={col.id}
@@ -127,8 +127,7 @@ const TableHeader = (props: Props) => {
           );
         }
 
-        const colType = col.type as string;
-        if (colType === "info" || colType === "date") {
+        if (col.type === "info" || col.type === "date") {
           const field =
             (col.id as string) === "followers"
               ? "newFollowers"

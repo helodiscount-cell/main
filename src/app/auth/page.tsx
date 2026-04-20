@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import GirlImage from "@/assets/stock-images/Group 248@2x.png";
-import GoogleButton from "@/components/auth/GoogleButton";
+import GoogleButton from "./_components/GoogleButton";
 
 const AuthPage = async () => {
   return (

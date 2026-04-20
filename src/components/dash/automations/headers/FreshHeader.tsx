@@ -1,8 +1,7 @@
 import { RefreshCw, Play } from "lucide-react";
-import { RefreshInstaDialog } from "../../../auth/RefreshInstaDialog";
 import { Button } from "@/components/ui/button";
-
-import { EditableAutomationName } from "./EditableAutomationName";
+import { RefreshInstaDialog } from "@/app/auth/_components/RefreshInstaDialog";
+import EditableAutomationName from "./EditableAutomationName";
 
 export default function FreshHeader({
   isPending,

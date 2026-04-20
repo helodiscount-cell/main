@@ -48,10 +48,14 @@ export default function FormsPage() {
     data: forms,
     defaultSortField: "date" as SortField,
     defaultSortOrder: "desc",
-    filterFn: (f, s) =>
-      f.name?.toLowerCase().includes(s.toLowerCase()) ||
-      f.title?.toLowerCase().includes(s.toLowerCase()) ||
-      f.description?.toLowerCase().includes(s.toLowerCase()),
+    filterFn: (f, s) => {
+      const q = s.toLowerCase();
+      return (
+        (f.name ?? "").toLowerCase().includes(q) ||
+        (f.title ?? "").toLowerCase().includes(q) ||
+        (f.description ?? "").toLowerCase().includes(q)
+      );
+    },
     sortFn: (a, b, field, order) => {
       const fieldA =
         field === "count" ? a.submissionCount : new Date(a.updatedAt).getTime();

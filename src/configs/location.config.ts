@@ -1,11 +1,11 @@
-export type Country = {
+type Country = {
   name: string;
   code: string;
   dialCode: string;
   phoneLength?: number;
 };
 
-export const COUNTRIES: Country[] = [
+const COUNTRIES: Country[] = [
   { name: "Afghanistan", code: "AF", dialCode: "93" },
   { name: "Albania", code: "AL", dialCode: "355" },
   { name: "Algeria", code: "DZ", dialCode: "213" },
@@ -203,3 +203,44 @@ export const COUNTRIES: Country[] = [
   { name: "Zambia", code: "ZM", dialCode: "260" },
   { name: "Zimbabwe", code: "ZW", dialCode: "263" },
 ];
+
+const INDIAN_STATES = [
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
+
+export { COUNTRIES, INDIAN_STATES, type Country };

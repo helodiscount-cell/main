@@ -15,14 +15,15 @@ export async function getUniqueContactsForWorkspace(
 ) {
   return executeWithErrorHandling(
     async () => {
+      const normalizedQuery = query?.trim();
       // Fetch unique contacts using Prisma's distinct feature for efficient pagination
       const executions = await prisma.automationExecution.findMany({
         where: {
           automation: { instaAccountId },
-          ...(query
+          ...(normalizedQuery
             ? {
                 senderUsername: {
-                  contains: query,
+                  contains: normalizedQuery,
                   mode: "insensitive",
                 },
               }

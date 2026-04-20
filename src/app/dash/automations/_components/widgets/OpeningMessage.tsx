@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
-import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import { OPENING_MESSAGE_CONFIG } from "@/configs/widgets.config";
 import { useState } from "react";
 import { AutomationInput } from "./AutomationInput";
 

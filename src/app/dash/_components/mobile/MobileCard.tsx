@@ -6,6 +6,7 @@ import { MoreVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationListItem } from "@/types/automation";
 import { FormListItem } from "@/types/form";
+import { Contact } from "@/types/contact";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../../forms/_components/FormActionsMenu";
 import mapDashboardItem, { DashboardItem } from "../mapDashboardItem";
@@ -22,6 +23,8 @@ export const MobileCard = ({ data }: MobileCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
   const isAutomation = "triggerType" in data;
+  const isForm = "submissionCount" in data;
+  const isContact = "lastInteractedAt" in data;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,9 +36,13 @@ export const MobileCard = ({ data }: MobileCardProps) => {
       const automation = data as AutomationListItem;
       textToCopy =
         automation.triggers.join(", ") || automation.automationName || "";
-    } else {
+    } else if (isForm) {
       // Form: copy public link
       textToCopy = `${window.location.origin}/f/${(data as FormListItem).slug}`;
+    } else if (isContact) {
+      // Contact: copy email or username
+      const contact = data as Contact;
+      textToCopy = contact.email || contact.username;
     }
 
     if (textToCopy) {
@@ -118,13 +125,13 @@ export const MobileCard = ({ data }: MobileCardProps) => {
                   onClose={() => setMenuOpen(false)}
                   fullAutomation={data as AutomationListItem}
                 />
-              ) : (
+              ) : isForm ? (
                 <FormActionsMenu
                   formId={data.id}
                   onClose={() => setMenuOpen(false)}
                   slug={(data as FormListItem).slug}
                 />
-              ))}
+              ) : null)}
           </div>
         </div>
       </div>
@@ -173,7 +180,7 @@ export const MobileCard = ({ data }: MobileCardProps) => {
           </div>
         </div>
 
-        {!isAutomation && (
+        {isForm && (
           <button
             onClick={handleCopy}
             className="ml-4 flex items-center gap-1.5 text-[#6A06E4] font-semibold text-sm hover:opacity-80 transition-opacity"

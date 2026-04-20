@@ -2,13 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { Controller } from "react-hook-form";
-import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
-import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
+import {
+  OPENING_MESSAGE_CONFIG,
+  ASK_TO_FOLLOW_CONFIG,
+} from "@/configs/widgets.config";
 import {
   AUTOMATION_CONFIGS,
   respondToAllDmsSchema,
   RespondToAllDMsFormValues,
-} from "@/configs/automations";
+} from "@/configs/automations.config";
 import { AddKeywords } from "../_components/widgets";
 import {
   BaseAutomationEditor,

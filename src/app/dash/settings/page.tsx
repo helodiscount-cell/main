@@ -15,7 +15,7 @@ interface PageProps {
 }
 
 export default async function SettingsPage({ searchParams }: PageProps) {
-  const { clerkId } = await workspaceService.getVerifiedContext();
+  await workspaceService.getVerifiedContext();
   const user = await currentUser();
   if (!user) return null; // Should not happen after verifiedContext but needed for type safety (email addresses)
 

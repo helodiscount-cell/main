@@ -12,7 +12,7 @@ interface TemplateHeaderProps {
  * Reusable header for automation template configuration views.
  * Includes a back button, title, and optional refresh button.
  */
-export function TemplateHeader({
+export default function TemplateHeader({
   title,
   onBack,
   onRefresh,

@@ -119,7 +119,7 @@ const mapDashboardItem = (data: DashboardItem): MappedDashboardItem => {
               className="h-full w-full object-cover"
               height={100}
               width={100}
-              alt={form.title || "Untitled Form"}
+              alt={form.name || "Untitled Form"}
             />
           </div>
         ) : (

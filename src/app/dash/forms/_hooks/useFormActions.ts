@@ -65,6 +65,7 @@ export function useFormActions() {
     } catch (err) {
       console.error("CSV Export Error:", err);
       setExportStatus("idle");
+      toast.error("Failed to export submissions.");
     }
   }, [form, formId]);
 

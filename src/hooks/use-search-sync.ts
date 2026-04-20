@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 /**
@@ -11,31 +11,55 @@ export function useSearchSync() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const urlSearchVal = searchParams.get("q") ?? "";
+  const [value, setValue] = useState(urlSearchVal);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Sync internal state when URL changes (e.g. back button)
+  useEffect(() => {
+    setValue(urlSearchVal);
+  }, [urlSearchVal]);
 
   const sync = useCallback(
-    (val: string) => {
+    (newVal: string) => {
+      setValue(newVal); // Immediate UI update
+
       // Clear existing timeout to reset the debounce timer
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
       timeoutRef.current = setTimeout(() => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (val) {
-          params.set("q", val);
+        // Recreate params from the current state to avoid stale closures
+        const params = new URLSearchParams(window.location.search);
+        if (newVal) {
+          params.set("q", newVal);
         } else {
           params.delete("q");
         }
+
         // Use replace for smoother URL synchronization during typing
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        const next = params.toString();
+        router.replace(next ? `${pathname}?${next}` : pathname, {
+          scroll: false,
+        });
       }, 400);
     },
-    [router, searchParams, pathname],
+    [router, pathname],
   );
 
   return {
     sync,
+    value,
     params: searchParams,
   };
 }

@@ -1,7 +1,7 @@
 import { AutomationListItem } from "@/types/automation";
 import { Button } from "../../../ui/button";
 import { RefreshCw, Square } from "lucide-react";
-import { EditableAutomationName } from "./EditableAutomationName";
+import EditableAutomationName from "./EditableAutomationName";
 
 interface LiveHeaderProps {
   automation: AutomationListItem;

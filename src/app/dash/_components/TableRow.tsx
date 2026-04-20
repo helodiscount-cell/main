@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import type { AutomationListItem } from "@/types/automation";
 import type { FormListItem } from "@/types/form";
+import type { Contact } from "@/types/contact";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
 import { MoreVertical, Copy } from "lucide-react";
@@ -89,7 +90,7 @@ const TableRowUI = ({
           );
         }
 
-        if (col.type === "info") {
+        if (col.type === "info" && !(col as { sortable?: boolean }).sortable) {
           let content: React.ReactNode = stats;
           if (colId === "type") content = status;
           if (colId === "followers") content = newFollowersGained;
@@ -147,23 +148,25 @@ const TableRowUI = ({
  * Main component that decides what to render based on input data.
  * Refactored to use a shared mapper for consistency with mobile views.
  */
-const TableRow = ({
-  data,
-  variant,
-}: {
-  data: DashboardItem;
-  variant: TableVariant;
-}) => {
+type TableRowProps =
+  | { variant: "forms"; data: FormListItem }
+  | { variant: "automations"; data: AutomationListItem }
+  | { variant: "contacts"; data: Contact };
+
+const TableRow = ({ data, variant }: TableRowProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
+
+  const isForm = variant === "forms";
+  const isAutomation = variant === "automations";
 
   const copyToClipboard = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (variant !== "forms") return;
-    const form = data as FormListItem;
-    if (!form.slug) return;
+    const slug = data.slug;
+    if (!slug) return;
 
-    const url = `${window.location.origin}/f/${form.slug}`;
+    const url = `${window.location.origin}/f/${slug}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
@@ -172,11 +175,7 @@ const TableRow = ({
     }
   };
 
-  // Desktop-specific actions
-  const isForm = variant === "forms";
-  const isAutomation = variant === "automations";
-  const isContact = variant === "contacts";
-  const slug = isForm ? (data as FormListItem).slug : undefined;
+  const slug = isForm ? data.slug : undefined;
 
   const actions = (
     <div className="relative flex items-center gap-2 justify-end">
@@ -201,18 +200,18 @@ const TableRow = ({
             <MoreVertical size={16} />
           </button>
           {menuOpen &&
-            (isAutomation ? (
+            (variant === "automations" ? (
               <AutomationActionsMenu
                 onClose={() => setMenuOpen(false)}
-                fullAutomation={data as AutomationListItem}
+                fullAutomation={data}
               />
-            ) : (
+            ) : variant === "forms" ? (
               <FormActionsMenu
                 formId={data.id}
                 onClose={() => setMenuOpen(false)}
-                slug={(data as FormListItem).slug}
+                slug={data.slug}
               />
-            ))}
+            ) : null)}
         </div>
       )}
     </div>
