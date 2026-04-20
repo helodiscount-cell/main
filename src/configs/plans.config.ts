@@ -87,7 +87,7 @@ export const PLANS: Record<
   }
 > = {
   FREE: {
-    creditLimit: 1000,
+    creditLimit: 10,
     maxAccounts: 1,
     hasLeadGen: true,
     hasAskToFollow: true,
@@ -96,7 +96,7 @@ export const PLANS: Record<
     razorpayPlanId: null,
   },
   BASIC: {
-    creditLimit: 10000,
+    creditLimit: 20,
     maxAccounts: 1,
     hasLeadGen: true,
     hasAskToFollow: false,
@@ -105,7 +105,7 @@ export const PLANS: Record<
     razorpayPlanId: process.env.RAZORPAY_PLAN_ID_BASIC ?? null,
   },
   PREMIUM: {
-    creditLimit: 25000,
+    creditLimit: 30,
     maxAccounts: 1,
     hasLeadGen: true,
     hasAskToFollow: false,
