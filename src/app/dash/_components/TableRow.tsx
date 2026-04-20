@@ -6,10 +6,9 @@ import type { AutomationListItem } from "@/types/automation";
 import type { FormListItem } from "@/types/form";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
-import { mapDashboardItem } from "./useDashboardItemMapper";
 import { MoreVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
-
+import mapDashboardItem, { DashboardItem } from "./mapDashboardItem";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
 /**
@@ -22,7 +21,7 @@ export interface TableRowUIProps {
   subtitle?: string | React.ReactNode;
   href: string | null;
   status: React.ReactNode;
-  stats: React.ReactNode;
+  stats: string | number;
   date: React.ReactNode;
   actions: React.ReactNode;
   className?: string;
@@ -52,6 +51,8 @@ const TableRowUI = ({
       className={`grid ${config.gridClass} items-center px-8 py-4 gap-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors group/row ${className}`}
     >
       {config.columns.map((col) => {
+        const colId = col.id as string;
+
         if (col.type === "main") {
           return (
             <div key={col.id} className="flex items-center gap-3 min-w-0">
@@ -73,8 +74,8 @@ const TableRowUI = ({
                   )}
                 </Link>
               ) : (
-                <div className="flex flex-col gap-0.5 min-w-0 opacity-70">
-                  <span className="text-sm font-medium text-slate-800 truncate">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-[16px] font-medium text-slate-800 truncate">
                     {title}
                   </span>
                   {subtitle && (
@@ -88,52 +89,40 @@ const TableRowUI = ({
           );
         }
 
+        if (col.type === "info") {
+          let content: React.ReactNode = stats;
+          if (colId === "type") content = status;
+          if (colId === "followers") content = newFollowersGained;
+
+          return (
+            <span
+              key={colId}
+              className="text-center text-[16px] font-medium text-[#212121] truncate"
+            >
+              {content}
+            </span>
+          );
+        }
+
         if (col.type === "status") {
           return (
             <div
               key={col.id}
-              className="flex items-center justify-between gap-2 overflow-hidden"
+              className="flex items-center justify-center gap-2 overflow-hidden"
             >
               {status}
-              {/* <div className="w-px h-4 bg-slate-200 shrink-0" /> */}
-            </div>
-          );
-        }
-
-        if (col.id === "count") {
-          return (
-            <div
-              key={col.id}
-              className="flex items-center justify-between gap-2 overflow-hidden"
-            >
-              <div className="text-sm text-slate-700 font-medium">{stats}</div>
-              {/* <div className="w-px h-4 bg-slate-200 shrink-0" /> */}
-            </div>
-          );
-        }
-
-        if (col.id === "followers") {
-          return (
-            <div
-              key={col.id}
-              className="flex items-center justify-between gap-2 overflow-hidden"
-            >
-              <div className="text-sm text-slate-700 font-medium whitespace-nowrap">
-                {newFollowersGained}
-              </div>
-              {/* <div className="w-px h-4 bg-slate-200 shrink-0" /> */}
             </div>
           );
         }
 
         if (col.type === "date") {
           return (
-            <div
+            <span
               key={col.id}
-              className="text-sm text-slate-500 whitespace-nowrap"
+              className="text-center text-sm text-slate-500 whitespace-nowrap"
             >
               {date}
-            </div>
+            </span>
           );
         }
 
@@ -162,7 +151,7 @@ const TableRow = ({
   data,
   variant,
 }: {
-  data: AutomationListItem | FormListItem;
+  data: DashboardItem;
   variant: TableVariant;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -185,10 +174,12 @@ const TableRow = ({
 
   // Desktop-specific actions
   const isForm = variant === "forms";
+  const isAutomation = variant === "automations";
+  const isContact = variant === "contacts";
   const slug = isForm ? (data as FormListItem).slug : undefined;
 
   const actions = (
-    <div className="relative flex items-center gap-2">
+    <div className="relative flex items-center gap-2 justify-end">
       {isForm && (
         <button
           onClick={copyToClipboard}
@@ -199,26 +190,31 @@ const TableRow = ({
           Copy
         </button>
       )}
-      <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
-        title="More actions"
-      >
-        <MoreVertical size={16} />
-      </button>
-      {menuOpen &&
-        ("triggerType" in data ? (
-          <AutomationActionsMenu
-            onClose={() => setMenuOpen(false)}
-            fullAutomation={data as AutomationListItem}
-          />
-        ) : (
-          <FormActionsMenu
-            formId={data.id}
-            onClose={() => setMenuOpen(false)}
-            slug={(data as FormListItem).slug}
-          />
-        ))}
+
+      {(isForm || isAutomation) && (
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none"
+            title="More actions"
+          >
+            <MoreVertical size={16} />
+          </button>
+          {menuOpen &&
+            (isAutomation ? (
+              <AutomationActionsMenu
+                onClose={() => setMenuOpen(false)}
+                fullAutomation={data as AutomationListItem}
+              />
+            ) : (
+              <FormActionsMenu
+                formId={data.id}
+                onClose={() => setMenuOpen(false)}
+                slug={(data as FormListItem).slug}
+              />
+            ))}
+        </div>
+      )}
     </div>
   );
 

@@ -1,13 +1,12 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import { EDITOR_CANVAS_CONFIG } from "./config";
 import type { FormValues } from "@dm-broo/common-types";
 import { useEmojiInsertion } from "@/hooks/use-emoji-insertion";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
 
 // Editable title and description bound to react-hook-form
-export const FormTitleSection = () => {
+export default function FormTitleSection() {
   const {
     register,
     watch,
@@ -43,7 +42,7 @@ export const FormTitleSection = () => {
             registerTitleRef(e);
             (titleInputRef as any).current = e;
           }}
-          placeholder={EDITOR_CANVAS_CONFIG.TITLE_PLACEHOLDER}
+          placeholder={"Select/Drop an image"}
           className="flex-1 text-lg font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
         />
         <div onMouseDown={(e) => e.preventDefault()}>
@@ -62,7 +61,7 @@ export const FormTitleSection = () => {
             registerDescRef(e);
             (descInputRef as any).current = e;
           }}
-          placeholder={EDITOR_CANVAS_CONFIG.DESCRIPTION_PLACEHOLDER}
+          placeholder={"Add short description"}
           className="flex-1 text-sm text-slate-500 bg-transparent outline-none placeholder:text-slate-500"
         />
         <div onMouseDown={(e) => e.preventDefault()}>
@@ -71,4 +70,4 @@ export const FormTitleSection = () => {
       </div>
     </div>
   );
-};
+}

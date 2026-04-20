@@ -1,6 +1,6 @@
 import { api, request } from "@/api/client";
 import { ApiResponse } from "@/types/api";
-import { Contact } from "@/components/dash/contacts/types";
+import { Contact } from "@/types/contact";
 
 export interface ContactsListResponse {
   contacts: Contact[];
@@ -11,12 +11,16 @@ export const contactsService = {
   list: async (
     limit: number = 20,
     cursor?: string,
+    query?: string,
   ): Promise<ContactsListResponse> => {
     // Construct query parameters
     const params = new URLSearchParams();
     params.set("limit", limit.toString());
     if (cursor) {
       params.set("cursor", cursor);
+    }
+    if (query) {
+      params.set("q", query);
     }
 
     const envelope = await request(

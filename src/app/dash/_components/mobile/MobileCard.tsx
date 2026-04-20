@@ -6,12 +6,12 @@ import { MoreVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationListItem } from "@/types/automation";
 import { FormListItem } from "@/types/form";
-import { mapDashboardItem } from "../useDashboardItemMapper";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../../forms/_components/FormActionsMenu";
+import mapDashboardItem, { DashboardItem } from "../mapDashboardItem";
 
 interface MobileCardProps {
-  data: AutomationListItem | FormListItem;
+  data: DashboardItem;
 }
 
 /**

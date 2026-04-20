@@ -10,48 +10,9 @@ import {
   CheckSquare,
   Star,
   Upload,
-  RefreshCw,
-  Link2,
-  Play,
-  Send,
 } from "lucide-react";
 import type { FieldType } from "@dm-broo/common-types";
 import type { LucideIcon } from "lucide-react";
-
-// ------- Header -------
-
-export const EDITOR_HEADER_CONFIG = {
-  BREADCRUMB_ROOT: "Forms",
-  BREADCRUMB_CURRENT: "Editor",
-  PUBLISH_LABEL: "Publish",
-  STYLES: {
-    PRIMARY: "bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-10 px-4",
-    ICON: "h-10 w-10 bg-slate-900 hover:bg-slate-700 text-white",
-  },
-  ICON_SIZE: 15,
-} as const;
-
-export type HeaderAction = {
-  id: string;
-  icon: LucideIcon;
-  label: string;
-  variant: "icon" | "primary" | "custom";
-};
-
-export const HEADER_ACTIONS: HeaderAction[] = [
-  { id: "copy-link", icon: Link2, label: "Copy Link", variant: "icon" },
-  { id: "preview", icon: Play, label: "Preview", variant: "icon" },
-  { id: "publish", icon: Send, label: "Publish", variant: "primary" },
-];
-
-// ------- Canvas -------
-
-export const EDITOR_CANVAS_CONFIG = {
-  COVER_OVERLAY_LABEL: "Select/Drop an image",
-  TITLE_PLACEHOLDER: "Add a form title",
-  DESCRIPTION_PLACEHOLDER: "Add short description",
-  SUBMIT_LABEL: "Submit",
-} as const;
 
 // ------- Field picker dialog -------
 

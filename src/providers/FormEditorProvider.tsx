@@ -4,13 +4,14 @@ import React, { createContext, useContext, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormValuesSchema } from "@dm-broo/common-types";
-import type { FormValues, FieldType } from "@dm-broo/common-types";
+import type { FormValues } from "@dm-broo/common-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { formService } from "@/api/services/forms";
 import { formKeys } from "@/keys/react-query";
+import type { FormDetail } from "@/types/form";
 
 // Default empty form state
 const DEFAULT_FORM_VALUES: FormValues = {
@@ -23,7 +24,6 @@ const DEFAULT_FORM_VALUES: FormValues = {
 };
 
 interface FormEditorContextType {
-  // ReturnType avoids the TS2719 "two types with same name" error from dual module resolution
   methods: ReturnType<typeof useForm<FormValues>>;
   save: (status: "DRAFT" | "PUBLISHED") => Promise<void>;
   isLoading: boolean;
@@ -32,6 +32,7 @@ interface FormEditorContextType {
   setIsMediaUploading: (uploading: boolean) => void;
   currentStatus?: "DRAFT" | "PUBLISHED";
   formId?: string;
+  form?: FormDetail;
   isNameDialogOpen: boolean;
   setIsNameDialogOpen: (open: boolean) => void;
 }
@@ -58,11 +59,12 @@ export const FormEditorProvider = ({
     defaultValues: DEFAULT_FORM_VALUES,
   });
 
-  // Fetch form data if in "edit" mode
+  // Fetch form data if in "edit" mode (excluding "new" slug)
+  const isExisting = !!formId && formId !== "new";
   const { data: form, isLoading: isFetching } = useQuery({
     queryKey: formKeys.detail(formId!),
     queryFn: () => formService.getById(formId!),
-    enabled: !!formId,
+    enabled: isExisting,
   });
 
   // Pre-fill the form once data is loaded
@@ -82,8 +84,8 @@ export const FormEditorProvider = ({
   // Mutation for creating or updating
   const saveForm = useMutation({
     mutationFn: (payload: FormValues & { status: "DRAFT" | "PUBLISHED" }) =>
-      formId
-        ? formService.update(formId, payload)
+      isExisting
+        ? formService.update(formId!, payload)
         : formService.create(payload),
     onSuccess: (result, variables) => {
       toast.success(
@@ -92,10 +94,16 @@ export const FormEditorProvider = ({
           : "Saved successfully.",
       );
       queryClient.invalidateQueries({ queryKey: formKeys.all });
-      if (formId) {
-        queryClient.invalidateQueries({ queryKey: formKeys.detail(formId) });
+      if (isExisting) {
+        queryClient.invalidateQueries({ queryKey: formKeys.detail(formId!) });
       }
-      router.push("/dash/forms");
+
+      // If it was a new form, redirect to its editor page
+      if (!isExisting && result.id) {
+        router.replace(`/dash/forms/${result.id}`);
+      } else {
+        router.refresh();
+      }
     },
     onError: (err: unknown) => {
       const message =
@@ -179,7 +187,8 @@ export const FormEditorProvider = ({
           form?.status === "DRAFT" || form?.status === "PUBLISHED"
             ? form.status
             : undefined,
-        formId,
+        formId: isExisting ? formId : undefined,
+        form, // Expose raw form data
         isNameDialogOpen,
         setIsNameDialogOpen,
       }}

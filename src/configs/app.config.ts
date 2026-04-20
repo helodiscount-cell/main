@@ -42,4 +42,7 @@ export const APP_CONFIG = {
   ENV: process.env.NODE_ENV || "development",
   IS_PRODUCTION: process.env.NODE_ENV === "production",
   IS_DEVELOPMENT: process.env.NODE_ENV === "development",
+  PAGINATION: {
+    DEFAULT_PAGE_SIZE: 10,
+  },
 } as const;

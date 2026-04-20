@@ -11,6 +11,7 @@ export async function getUniqueContactsForWorkspace(
   instaAccountId: string,
   limit: number = 20,
   cursor?: string,
+  query?: string,
 ) {
   return executeWithErrorHandling(
     async () => {
@@ -18,6 +19,14 @@ export async function getUniqueContactsForWorkspace(
       const executions = await prisma.automationExecution.findMany({
         where: {
           automation: { instaAccountId },
+          ...(query
+            ? {
+                senderUsername: {
+                  contains: query,
+                  mode: "insensitive",
+                },
+              }
+            : {}),
         },
         // We use distinct on senderId to ensure each contact appears once
         distinct: ["senderId"],

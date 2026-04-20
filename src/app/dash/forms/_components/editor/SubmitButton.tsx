@@ -8,7 +8,8 @@ type SubmitButtonProps = {
   disabled?: boolean;
 };
 
-export const SubmitButton = ({ disabled }: SubmitButtonProps) => {
+// User facing customizable button
+export default function SubmitButton({ disabled }: SubmitButtonProps) {
   const { watch, setValue } = useFormContext<FormValues>();
   const label = watch("submitButtonLabel") || "Submit";
 
@@ -35,4 +36,4 @@ export const SubmitButton = ({ disabled }: SubmitButtonProps) => {
       </button>
     </div>
   );
-};
+}

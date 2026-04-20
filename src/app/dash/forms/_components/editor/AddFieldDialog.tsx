@@ -25,11 +25,11 @@ type AddFieldDialogProps = {
 
 // Modal picker — shows grouped field types, closes on selection
 // On mobile, it slides from bottom using Sheet; on desktop, it's a centered Dialog.
-export const AddFieldDialog = ({
+export default function AddFieldDialog({
   open,
   onOpenChange,
   onAddField,
-}: AddFieldDialogProps) => {
+}: AddFieldDialogProps) {
   const isMobile = useIsMobile();
 
   const handleSelect = (type: FieldType) => {
@@ -95,4 +95,4 @@ export const AddFieldDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+}

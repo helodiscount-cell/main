@@ -16,12 +16,14 @@ export async function getUserContacts(
   instaAccountId: string,
   limit: number = 20,
   cursor?: string,
+  query?: string,
 ) {
   // Fetch paginated contacts from repository
   const { contacts, nextCursor } = await getUniqueContactsForWorkspace(
     instaAccountId,
     limit,
     cursor,
+    query,
   );
 
   // Format dates for UI consistency

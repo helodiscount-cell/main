@@ -1,35 +1,27 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { RefreshInstaDialog } from "@/components/auth/RefreshInstaDialog";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { formService } from "@/api/services/forms";
 import { formKeys } from "@/keys/react-query";
 import { type FormStatus } from "@dm-broo/common-types";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  DashboardHeader,
-  TableHeader,
-  TableRow,
-  MobilePageLayout,
-  Pagination,
-} from "../_components";
-import { StatusFilter, SortOrder, SortField } from "../_components/TableHeader";
-import PlusIconSvg from "@/assets/svgs/addthis.svg";
-import Image from "next/image";
+import { useTableState } from "@/hooks/use-table-state";
+import { useSearchSync } from "@/hooks/use-search-sync";
+import { APP_CONFIG } from "@/configs/app.config";
+import { TableRow, MobilePageLayout, TablePageLayout } from "../_components";
+import { StatusFilter, SortField } from "../_components/TableHeader";
 
 export default function FormsPage() {
   const isMobile = useIsMobile();
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [sortField, setSortField] = useState<SortField>("date");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 10;
 
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+
+  const { sync: syncSearch } = useSearchSync();
+
+  // query to fetch forms list
   const { data: forms = [], isLoading } = useQuery({
     queryKey: formKeys.list(
       statusFilter !== "ALL" ? { status: statusFilter } : undefined,
@@ -42,43 +34,39 @@ export default function FormsPage() {
       ),
   });
 
-  // Filter and Sort forms
-  const filteredAndSortedForms = useMemo(() => {
-    let result = [...forms];
-
-    // Real-time Search Filter
-    if (search) {
-      const s = search.toLowerCase();
-      result = result.filter(
-        (f) =>
-          f.name?.toLowerCase().includes(s) ||
-          f.title?.toLowerCase().includes(s) ||
-          f.description?.toLowerCase().includes(s),
-      );
-    }
-
-    // Existing Sort Logic
-    return result.sort((a, b) => {
+  const {
+    search,
+    sortField,
+    sortOrder,
+    page,
+    setPage,
+    toggleSort,
+    paginatedItems: paginatedForms,
+    totalItems,
+    filteredAndSorted,
+  } = useTableState({
+    data: forms,
+    defaultSortField: "date" as SortField,
+    defaultSortOrder: "desc",
+    filterFn: (f, s) =>
+      f.name?.toLowerCase().includes(s.toLowerCase()) ||
+      f.title?.toLowerCase().includes(s.toLowerCase()) ||
+      f.description?.toLowerCase().includes(s.toLowerCase()),
+    sortFn: (a, b, field, order) => {
       const fieldA =
-        sortField === "count"
-          ? a.submissionCount
-          : new Date(a.updatedAt).getTime();
+        field === "count" ? a.submissionCount : new Date(a.updatedAt).getTime();
       const fieldB =
-        sortField === "count"
-          ? b.submissionCount
-          : new Date(b.updatedAt).getTime();
+        field === "count" ? b.submissionCount : new Date(b.updatedAt).getTime();
 
       if (fieldA !== fieldB) {
-        if (sortOrder === "asc") return fieldA - fieldB;
-        return fieldB - fieldA;
+        return order === "asc" ? fieldA - fieldB : fieldB - fieldA;
       }
-      // Deterministic tie-breaker
       return a.id.localeCompare(b.id);
-    });
-  }, [forms, search, sortField, sortOrder]);
+    },
+  });
 
   const handleSearchChange = (val: string) => {
-    setSearch(val);
+    syncSearch(val);
     setPage(1);
   };
 
@@ -87,56 +75,25 @@ export default function FormsPage() {
     setPage(1);
   };
 
-  // Pagination Slice
-  const paginatedForms = useMemo(() => {
-    // Clamp page before slicing
-    const total = filteredAndSortedForms.length;
-    const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    const normalizedPage = page > maxPage ? maxPage : page;
-
-    const start = (normalizedPage - 1) * PAGE_SIZE;
-    return filteredAndSortedForms.slice(start, start + PAGE_SIZE);
-  }, [filteredAndSortedForms, page]);
-
-  // Sync page state if it was invalid (outside render)
-  React.useEffect(() => {
-    const total = filteredAndSortedForms.length;
-    const maxPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    if (page > maxPage) {
-      setPage(maxPage);
-    }
-  }, [filteredAndSortedForms.length, page]);
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortField(field);
-      setSortOrder("desc");
-    }
-  };
-
-  const newFormAction = (
-    <Button
-      className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-11 rounded-lg text-lg font-semibold"
-      asChild
-    >
-      <Link href="/dash/forms/editor" className="flex items-center gap-2">
-        New Form
-      </Link>
-    </Button>
-  );
-
   if (isMobile) {
     return (
       <MobilePageLayout
         title="Forms"
-        items={filteredAndSortedForms}
+        items={filteredAndSorted}
         isLoading={isLoading}
         emptyMessage={
           search ? "No matches found." : "No forms yet. Create your first one!"
         }
-        actionButton={newFormAction}
+        actionButton={
+          <Button
+            className="bg-[#6A06E4] hover:bg-[#5a05c4] w-full h-11 rounded-lg text-lg font-semibold"
+            asChild
+          >
+            <Link href="/dash/forms/new" className="flex items-center gap-2">
+              New Form
+            </Link>
+          </Button>
+        }
         searchValue={search}
         onSearchChange={handleSearchChange}
         sortOrder={sortOrder}
@@ -157,68 +114,28 @@ export default function FormsPage() {
   }
 
   return (
-    <>
-      {/* Top header */}
-      <DashboardHeader
-        showSearch={true}
-        searchValue={search}
-        onSearchChange={handleSearchChange}
-        childComp={
-          <>
-            <RefreshInstaDialog />
-            <Button className="bg-[#6A06E4] hover:bg-[#5a05c4] h-full" asChild>
-              <Link
-                href="/dash/forms/editor"
-                className="h-full flex items-center gap-2"
-              >
-                <Image src={PlusIconSvg} alt="add" width={15} height={15} />
-                New Form
-              </Link>
-            </Button>
-          </>
-        }
-      />
-
-      {/* Table */}
-      <div className="bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col">
-        {/* Column headers */}
-        <TableHeader
-          variant="forms"
-          statusFilter={statusFilter}
-          setStatusFilter={handleStatusChange}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          onSort={toggleSort}
-        />
-
-        {/* Rows */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16 text-sm text-slate-400">
-            Loading forms…
-          </div>
-        ) : paginatedForms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400">
-            <span className="text-3xl">📋</span>
-            <p className="text-sm">
-              {search
-                ? "No matches found."
-                : "No forms yet. Create your first one!"}
-            </p>
-          </div>
-        ) : (
-          paginatedForms.map((form) => (
-            <TableRow key={form.id} data={form} variant="forms" />
-          ))
-        )}
-      </div>
-
-      {/* Pagination */}
-      <Pagination
-        currentPage={page}
-        totalItems={filteredAndSortedForms.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setPage}
-      />
-    </>
+    <TablePageLayout
+      variant="forms"
+      isLoading={isLoading}
+      totalItems={totalItems}
+      currentPage={page}
+      pageSize={APP_CONFIG.PAGINATION.DEFAULT_PAGE_SIZE}
+      onPageChange={setPage}
+      items={paginatedForms}
+      renderRow={(form) => (
+        <TableRow key={form.id} data={form} variant="forms" />
+      )}
+      emptyState={{
+        message: search
+          ? "No matches found."
+          : "No forms yet. Create your first one!",
+        icon: <span className="text-4xl text-slate-300">📋</span>,
+      }}
+      statusFilter={statusFilter}
+      handleStatusChange={handleStatusChange}
+      sortField={sortField}
+      sortOrder={sortOrder}
+      handleSort={toggleSort}
+    />
   );
 }

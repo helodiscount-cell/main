@@ -87,7 +87,7 @@ export function FormActionsMenu({
       isDeleting={isDeleting}
       isDuplicating={isDuplicating}
       onDelete={() => deleteForm()}
-      onEdit={() => navigate.push(`/dash/forms/editor?id=${formId}`)}
+      onEdit={() => navigate.push(`/dash/forms/${formId}`)}
       onDuplicate={() => duplicateForm()}
       onCustom={copyToClipboard}
     />

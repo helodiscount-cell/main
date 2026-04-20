@@ -2,15 +2,15 @@
 
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import { AddFieldDialog } from "./AddFieldDialog";
 import type { FieldType } from "@dm-broo/common-types";
+import AddFieldDialog from "./AddFieldDialog";
 
 type AddFieldButtonProps = {
   onAddField: (type: FieldType) => void;
 };
 
 // Circular + button that opens the field picker dialog
-export const AddFieldButton = ({ onAddField }: AddFieldButtonProps) => {
+export default function AddFieldButton({ onAddField }: AddFieldButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -33,4 +33,4 @@ export const AddFieldButton = ({ onAddField }: AddFieldButtonProps) => {
       />
     </>
   );
-};
+}
