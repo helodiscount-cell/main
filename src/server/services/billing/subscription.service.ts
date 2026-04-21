@@ -5,6 +5,7 @@ import { syncCreditStateToRedis } from "@/server/redis/operations/billing";
 import { logger } from "@/server/utils/pino";
 import { getRazorpayClient } from "../razorpay/client";
 import { sendEmail } from "@/lib/email";
+import { Prisma } from "@prisma/client";
 
 // 28-day billing cycle (BullMQ week × 4 in Razorpay)
 const BILLING_CYCLE_DAYS = 28;
@@ -138,7 +139,7 @@ export async function renewSubscription(
   const periodStart = new Date();
   const periodEnd = getPeriodEnd(periodStart);
 
-  await prisma.$transaction([
+  const operations: Prisma.PrismaPromise<unknown>[] = [
     prisma.subscription.update({
       where: { userId },
       data: {
@@ -160,7 +161,32 @@ export async function renewSubscription(
         quotaEmailSentAt: null,
       },
     }),
-  ]);
+  ];
+
+  if (paymentData) {
+    // Use upsert to handle webhook retries gracefully (idempotency)
+    operations.push(
+      prisma.invoice.upsert({
+        where: { invoiceId: paymentData.paymentId },
+        create: {
+          userId,
+          invoiceId: paymentData.paymentId,
+          amount: paymentData.amount,
+          status: "paid",
+          method: paymentData.method,
+          detail: paymentData.detail,
+        },
+        update: {
+          status: "paid",
+          amount: paymentData.amount,
+          method: paymentData.method,
+          detail: paymentData.detail,
+        },
+      }),
+    );
+  }
+
+  await prisma.$transaction(operations);
 
   await syncCreditStateToRedis(clerkUserId, 0, plan.creditLimit, "ACTIVE");
 
@@ -307,7 +333,7 @@ export async function createCheckoutSession(
 export async function getUserBillingData(clerkUserId: string) {
   const userId = await resolveInternalUserId(clerkUserId);
 
-  const [subscription, ledger] = await prisma.$transaction([
+  const [subscription, ledger, invoices] = await prisma.$transaction([
     prisma.subscription.findUnique({
       where: { userId },
       select: {
@@ -328,10 +354,34 @@ export async function getUserBillingData(clerkUserId: string) {
         periodEnd: true,
       },
     }),
+    prisma.invoice.findMany({
+      where: { userId },
+      select: {
+        invoiceId: true,
+        status: true,
+        amount: true,
+        date: true,
+      },
+      orderBy: { date: "desc" },
+      take: 5,
+    }),
   ]);
 
   return {
     subscription,
     ledger,
+    invoices: invoices.map((inv) => {
+      const validStatuses = ["paid", "failed", "pending"];
+      const status = validStatuses.includes(inv.status)
+        ? (inv.status as "paid" | "failed" | "pending")
+        : "pending";
+
+      return {
+        id: inv.invoiceId,
+        status,
+        amount: inv.amount,
+        date: inv.date,
+      };
+    }),
   };
 }

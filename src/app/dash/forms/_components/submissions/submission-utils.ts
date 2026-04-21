@@ -1,5 +1,5 @@
 import type { FormField } from "@dm-broo/common-types";
-import type { FormSubmission } from "@/types/form";
+import type { FormSubmission } from "@/api/services/forms/form";
 
 const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|svg|bmp)/i;
 

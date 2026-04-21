@@ -3,12 +3,7 @@
  * Workspace-scoped — all operations are isolated to a specific instaAccountId
  */
 
-import {
-  ERROR_MESSAGES,
-  buildGraphApiUrl,
-} from "@/server/config/instagram.config";
-import { fetchWithTimeout } from "../../utils/fetch-with-timeout";
-import { getValidAccessToken } from "@/server/instagram/token-manager";
+import { ERROR_MESSAGES } from "@/server/config/instagram.config";
 import type {
   CreateAutomationInput,
   UpdateAutomationInput,
@@ -26,10 +21,13 @@ import {
 import { invalidateAutomationCache } from "@/server/redis";
 import { logger } from "@/server/utils/pino";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
-import { AutomationFilters, AutomationStatus } from "@/types/automation";
+import {
+  AutomationFilters,
+  AutomationStatus,
+} from "@/api/services/automations/types";
 import { prisma } from "@/server/db";
 import crypto from "crypto";
-import { TriggerType } from "@/types/automation";
+import { TriggerType } from "@/api/services/automations/types";
 import { getFeatureGates } from "@/server/services/billing/feature-gates";
 
 /**

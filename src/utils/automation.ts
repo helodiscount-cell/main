@@ -1,4 +1,4 @@
-import { TriggerType } from "@/types/automation";
+import { TriggerType } from "@/api/services/automations/types";
 
 /**
  * Gets the canonical edit route for a given automation type.

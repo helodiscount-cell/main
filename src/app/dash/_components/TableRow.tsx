@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import type { AutomationListItem } from "@/types/automation";
-import type { FormListItem } from "@/types/form";
-import type { Contact } from "@/types/contact";
+import type { AutomationListItem } from "@/api/services/automations/types";
+import type { FormListItem } from "@/api/services/forms/form";
+import type { Contact } from "@/api/services/contacts/types";
 import { AutomationActionsMenu } from "@/components/dash/automations/AutomationActionsMenu";
 import { FormActionsMenu } from "../forms/_components/FormActionsMenu";
 import { MoreVertical, Copy } from "lucide-react";
 import { toast } from "sonner";
-import mapDashboardItem, { DashboardItem } from "./mapDashboardItem";
+import mapDashboardItem from "./mapDashboardItem";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
 /**
@@ -90,7 +90,7 @@ const TableRowUI = ({
           );
         }
 
-        if (col.type === "info" && !(col as { sortable?: boolean }).sortable) {
+        if (col.type === "info") {
           let content: React.ReactNode = stats;
           if (colId === "type") content = status;
           if (colId === "followers") content = newFollowersGained;

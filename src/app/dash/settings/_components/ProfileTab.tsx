@@ -1,7 +1,6 @@
-"use client";
-
 import React from "react";
-import { Check } from "lucide-react";
+import { Check, Crown } from "lucide-react";
+import Link from "next/link";
 import { ProfileData } from "../types";
 
 interface ProfileTabProps {
@@ -9,33 +8,94 @@ interface ProfileTabProps {
 }
 
 export function ProfileTab({ data }: ProfileTabProps) {
-  return (
-    <div className="flex flex-col items-center text-center gap-8">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold text-[#1A202C]">Profile</h2>
-        <p className="text-[#718096] text-sm max-w-md mx-auto">
-          View and manage your account email and verification status.
-        </p>
-      </div>
+  const isBlackTier = data.planId === "BLACK";
+  const accountsCount = data.accounts.length;
+  // Black tier allows 2 accounts total
+  const canAddAccount = isBlackTier && accountsCount < 2;
 
-      <div className="w-full max-w-md flex flex-col gap-6">
-        <div className="flex flex-col gap-2 text-left">
-          <label className="text-[12px] font-semibold text-[#A0AEC0] uppercase tracking-wider text-center">
-            Email
-          </label>
-          <div className="bg-[#F7FAFC] rounded-xl p-4 flex items-center justify-between text-[#1A202C] font-medium border border-transparent focus-within:border-[#6A06E4]">
-            <span>{data.email}</span>
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 text-left">
+      {/* Left Column: Email */}
+      <div className="flex flex-col gap-6">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-[#111827]">Connected Email</h2>
+          <p className="text-[#6B7280] text-[14px]">
+            Change the settings for your current workspace
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="bg-[#F9FAFB] rounded-xl p-5 flex items-center justify-between border border-[#F3F4F6]">
+            <span className="text-[16px] font-medium text-[#111827]">
+              {data.email}
+            </span>
             {data.isEmailVerified && (
-              <div
-                className="bg-[#00FF66] rounded-full p-1"
-                role="img"
-                aria-label="Email verified"
-              >
-                <Check size={14} className="text-white" strokeWidth={4} />
-                <span className="sr-only">Email verified</span>
+              <div className="bg-[#22C55E] rounded-full p-1.5 shadow-sm">
+                <Check size={12} className="text-white" strokeWidth={4} />
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Right Column: Accounts */}
+      <div className="flex flex-col gap-6">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-[#111827]">
+            Connected Accounts
+          </h2>
+          <p className="text-[#6B7280] text-[14px]">
+            Change the settings for your current workspace
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {data.accounts.map((account) => (
+            <div key={account.id} className="space-y-2">
+              <div className="bg-[#F9FAFB] rounded-sm p-3 flex items-center justify-between border border-[#F3F4F6]">
+                <span className="text-sm font-medium text-[#111827]">
+                  @{account.username}
+                </span>
+                {/* Remove button ignored as per request */}
+              </div>
+              <p className="text-[#9CA3AF] text-xs font-normal px-2">
+                User Since: {formatDate(account.connectedAt)}
+              </p>
+            </div>
+          ))}
+
+          {/* Action Button */}
+          {!isBlackTier ? (
+            <Link
+              href="/dash/billing"
+              className="w-full bg-[#6A06E4] hover:bg-[#5B05C2] text-white p-3 rounded-sm flex items-center justify-center gap-2 font-semibold text-sm transition-all active:scale-[0.98] mt-2"
+            >
+              Add New Account
+              <Crown size={18} className="fill-white/10" />
+            </Link>
+          ) : canAddAccount ? (
+            <Link
+              href="/api/instagram/oauth/authorize?returnUrl=/dash/settings?tab=profile"
+              className="w-full h-[54px] bg-[#6A06E4] hover:bg-[#5B05C2] text-white rounded-sm flex items-center justify-center gap-2 font-bold text-[16px] transition-all active:scale-[0.98] mt-2"
+            >
+              Add New Account
+            </Link>
+          ) : (
+            <button
+              disabled
+              className="w-full h-[54px] bg-[#F3F4F6] text-[#9CA3AF] rounded-sm flex items-center justify-center gap-2 font-bold text-[16px] transition-all cursor-not-allowed mt-2"
+            >
+              Account Limit Reached
+            </button>
+          )}
         </div>
       </div>
     </div>

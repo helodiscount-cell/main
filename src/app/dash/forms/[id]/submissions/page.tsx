@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getFormById, getFormSubmissions } from "@/server/services/forms";
 import { workspaceService } from "@/server/workspace/service";
 import type { FormField } from "@dm-broo/common-types";
-import type { FormSubmission } from "@/types/form";
+import type { FormSubmission } from "@/api/services/forms/form";
 import { SubmissionsList } from "../../_components/SubmissionsList";
 
 type SubmissionsPageProps = {

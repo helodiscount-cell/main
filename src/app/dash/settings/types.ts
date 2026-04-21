@@ -1,8 +1,12 @@
+import { PlanId, SubscriptionStatus } from "@/configs/plans.config";
+
 export type SettingsTab = "profile" | "billing";
 
 export interface ProfileData {
   email: string;
   isEmailVerified: boolean;
+  accounts: ConnectedAccount[];
+  planId: PlanId;
 }
 
 export interface ConnectedAccount {
@@ -16,10 +20,17 @@ export interface ConnectedAccount {
   isActive: boolean;
 }
 
+export interface Invoice {
+  id: string;
+  status: "paid" | "failed" | "pending";
+  amount: number;
+  date: Date | string;
+}
+
 export interface BillingData {
   subscription: {
-    plan: string;
-    status: string;
+    plan: PlanId;
+    status: SubscriptionStatus;
     currentPeriodStart: Date;
     currentPeriodEnd: Date;
     paymentMethod: string | null;
@@ -31,6 +42,7 @@ export interface BillingData {
     periodStart: Date;
     periodEnd: Date;
   } | null;
+  invoices: Invoice[];
 }
 
 export interface SettingsPageData {

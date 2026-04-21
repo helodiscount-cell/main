@@ -5,7 +5,7 @@ import {
   BestPerformerStats,
   BestTimeStats,
   BestPerformerWidgetConfig,
-} from "@/types/stats";
+} from "@/api/services/stats/types";
 
 export async function getBestPerformerStats(
   instaAccountId: string,

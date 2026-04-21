@@ -1,4 +1,4 @@
-import { FormSubmission } from "@/types/form";
+import { FormSubmission } from "@/api/services/forms/form";
 import type { FormField } from "@dm-broo/common-types";
 
 /**

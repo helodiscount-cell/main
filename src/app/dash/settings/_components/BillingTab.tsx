@@ -1,52 +1,58 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { BillingData } from "../types";
 import { PLANS, type PlanId } from "@/configs/plans.config";
-import { CreditCard, Wallet, Landmark } from "lucide-react";
+import { getUserBillingData } from "@/server/services/billing/subscription.service";
+import { PaymentMethod, BillingHistory } from "./index";
 
-export function BillingTab({ data }: { data: BillingData }) {
-  const { subscription, ledger } = data;
+import {
+  calculateProgress,
+  formatBillingDate,
+  getPlanLabel,
+} from "@/lib/billing";
+
+export async function BillingTab({ userId }: { userId: string }) {
+  let data: Awaited<ReturnType<typeof getUserBillingData>> | null = null;
+  try {
+    data = await getUserBillingData(userId);
+  } catch (error) {
+    console.error("Failed to fetch billing data:", error);
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+        <div className="bg-red-50 p-4 rounded-2xl border border-red-100 max-w-md">
+          <h3 className="text-red-800 font-bold mb-1">
+            Unable to load billing
+          </h3>
+          <p className="text-red-600 text-sm leading-relaxed">
+            We ran into an issue retrieving your subscription details. Please
+            try refreshing the page or contact support if this persists.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || !data.subscription) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <p className="text-slate-400">No billing information found.</p>
+      </div>
+    );
+  }
+
+  const { subscription, ledger, invoices } = data;
 
   // Fallback to FREE plan details if no subscription exists
   const currentPlanId = (subscription?.plan as PlanId) || "FREE";
   const planInfo = PLANS[currentPlanId];
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "--";
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
   const creditsUsed = ledger?.creditsUsed ?? 0;
   const creditLimit = ledger?.creditLimit ?? planInfo.creditLimit;
   const isUnlimited = creditLimit === -1;
-  const progress = isUnlimited
-    ? 0
-    : Math.min(Math.max((creditsUsed / creditLimit) * 100, 0), 100);
+  const progress = calculateProgress(creditsUsed, creditLimit);
 
-  const getPlanLabel = (id: string) => {
-    return id.charAt(0).toUpperCase() + id.slice(1).toLowerCase();
-  };
-
-  // Helper to render payment method icon
-  const PaymentIcon = ({ method }: { method: string | null | undefined }) => {
-    if (method === "upi") {
-      return (
-        <div className="flex flex-col -gap-1">
-          <div className="w-5 h-2.5 bg-[#E66624] rounded-t-[2px] transform -skew-x-12" />
-          <div className="w-5 h-2.5 bg-[#008945] rounded-b-[2px] transform skew-x-12" />
-        </div>
-      );
-    }
-    if (method === "card")
-      return <CreditCard size={20} className="text-[#6A06E4]" />;
-    if (method === "netbanking")
-      return <Landmark size={20} className="text-[#6A06E4]" />;
-    return <Wallet size={20} className="text-[#6A06E4]" />;
-  };
+  const hasPayment = !!subscription?.paymentMethod;
+  const hasHistory = invoices.length > 0;
+  const hasBottomRow = hasPayment || hasHistory;
 
   return (
     <div className="flex flex-col items-center max-w-4xl mx-auto w-full py-6 gap-6">
@@ -56,12 +62,12 @@ export function BillingTab({ data }: { data: BillingData }) {
         </h2>
         <p className="text-[#4B5563] text-[15px] max-w-lg mx-auto leading-relaxed">
           Update your payment information or switch plans according to your
-          needs
+          needs.
         </p>
       </div>
 
       {/* Main Plan Card */}
-      <div className="w-full bg-white border border-[#E5E7EB] rounded-[22px] p-8">
+      <div className="w-full bg-white border border-[#E5E7EB] rounded-xl p-8">
         <div className="flex flex-col gap-6">
           {/* Plan Header */}
           <div className="flex items-start justify-between">
@@ -75,12 +81,12 @@ export function BillingTab({ data }: { data: BillingData }) {
                 </span>
               </div>
               <p className="text-[15px] text-[#6B7280] font-medium">
-                {formatDate(subscription?.currentPeriodStart)} -{" "}
-                {formatDate(subscription?.currentPeriodEnd)}
+                {formatBillingDate(subscription?.currentPeriodStart)} -{" "}
+                {formatBillingDate(subscription?.currentPeriodEnd)}
               </p>
             </div>
 
-            <Button className="bg-[#0D0D15] hover:bg-[#1A1A24] text-white rounded-xl px-8 h-[46px] text-sm font-semibold transition-all duration-300 shadow-lg shadow-black/10 active:scale-95">
+            <Button className="bg-[#0D0D15] hover:opacity-90 text-white text-xs font-normal transition-all duration-300 active:scale-95 border-none">
               Upgrade
             </Button>
           </div>
@@ -109,24 +115,18 @@ export function BillingTab({ data }: { data: BillingData }) {
         </div>
       </div>
 
-      {/* Payment Method Card */}
-      {subscription?.paymentMethod && (
-        <div className="w-full bg-white border border-[#E5E7EB] rounded-[22px] p-8">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-4">
-              <h3 className="text-[18px] font-bold text-[#111827]">
-                Payment Method
-              </h3>
-              <div className="flex items-center gap-3">
-                <PaymentIcon method={subscription.paymentMethod} />
-                <span className="text-[15px] font-semibold text-[#111827]">
-                  {subscription.paymentDetail}
-                </span>
-              </div>
-            </div>
-            {/* The "Change" button was requested to be ignored for functionality,
-                but I'll keep the UI element if it was in the design screenshot provided by user */}
-          </div>
+      {/* Bottom Grid: Payment Method & History */}
+      {hasBottomRow && (
+        <div
+          className={`grid grid-cols-1 ${hasPayment && hasHistory ? "md:grid-cols-2" : ""} gap-6 w-full`}
+        >
+          {hasPayment && (
+            <PaymentMethod
+              method={subscription.paymentMethod}
+              detail={subscription.paymentDetail}
+            />
+          )}
+          {hasHistory && <BillingHistory invoices={invoices} />}
         </div>
       )}
     </div>

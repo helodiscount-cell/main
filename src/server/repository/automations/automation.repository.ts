@@ -13,7 +13,7 @@ import {
   CreateAutomationData,
   UpdateAutomationData,
   AutomationFilters,
-} from "@/types/automation";
+} from "@/api/services/automations/types";
 
 /**
  * Payload interface for post media metadata

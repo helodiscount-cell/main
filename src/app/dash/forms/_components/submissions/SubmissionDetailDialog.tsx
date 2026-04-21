@@ -3,7 +3,7 @@
 import React from "react";
 import { Mail } from "lucide-react";
 import type { FormField } from "@dm-broo/common-types";
-import type { FormSubmission } from "@/types/form";
+import type { FormSubmission } from "@/api/services/forms/form";
 import {
   Dialog,
   DialogContent,

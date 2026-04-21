@@ -19,6 +19,7 @@ model User {
   forms         Form[]
   subscription  Subscription?
   creditLedger  CreditLedger?
+  invoices      Invoice[]
 
   @@map("users")
 }
@@ -313,4 +314,19 @@ model ProcessedWebhookEvent {
   processedAt     DateTime @default(now())
 
   @@map("processed_webhook_events")
+}
+
+model Invoice {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId String   @unique // e.g. #INV/2026/1164 or Razorpay Payment ID
+  amount    Int // In paise
+  status    String // paid | failed | pending
+  method    String?
+  detail    String?
+  date      DateTime @default(now())
+
+  @@index([userId, date(sort: Desc)])
+  @@map("invoices")
 }

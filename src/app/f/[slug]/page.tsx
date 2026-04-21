@@ -1,7 +1,7 @@
 import React from "react";
 import { getPublicFormBySlug } from "@/server/services/forms";
 import { PublicFormView } from "./_components/PublicFormView";
-import type { FormPublic } from "@/types/form";
+import type { FormPublic } from "@/api/services/forms/form";
 
 type PublicFormPageProps = {
   params: Promise<{ slug: string }>;
@@ -39,9 +39,8 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
-      <div className="max-w-xl mx-auto space-y-8">
-        {/* Cover image if present */}
+    <div className="min-h-screen bg-[#F1F1F1] flex justify-center items-center p-4">
+      <div className="w-[95%] lg:w-1/3 mx-auto space-y-8 bg-white p-6 rounded-xl">
         {form.coverImage && (
           <img
             src={form.coverImage}
@@ -51,7 +50,7 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
         )}
 
         {/* Form header */}
-        <div className="space-y-1">
+        <div className="space-y-1 pb-12 border-b-2 border-slate-300 border-dashed">
           <h1 className="text-2xl font-bold text-slate-900">{form.title}</h1>
           {form.description && (
             <p className="text-sm text-slate-500">{form.description}</p>
@@ -62,6 +61,9 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
         <div className="bg-white rounded-2xl p-6 border border-slate-100">
           <PublicFormView form={form as unknown as FormPublic} slug={slug} />
         </div>
+        <p className="text-center text-sm text-slate-500">
+          Made with ❤️ Dmbroo
+        </p>
       </div>
     </div>
   );

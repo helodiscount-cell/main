@@ -6,4 +6,4 @@ export {
   createCheckoutSession,
 } from "./subscription.service";
 export { getFeatureGates } from "./feature-gates";
-export type { FeatureGates } from "./feature-gates";
+export { type FeatureGates } from "./types";

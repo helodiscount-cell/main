@@ -1,18 +1,9 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "@/types/api";
-import { Contact } from "@/types/contact";
-
-export interface ContactsListResponse {
-  contacts: Contact[];
-  nextCursor?: string;
-}
-
-export interface ContactsListParams {
-  limit?: number;
-  page?: number;
-  cursor?: string;
-  q?: string;
-}
+import { ApiResponse } from "@/api/types";
+import {
+  ContactsListParams,
+  ContactsListResponse,
+} from "@/api/services/contacts/types";
 
 export const contactsService = {
   list: async (

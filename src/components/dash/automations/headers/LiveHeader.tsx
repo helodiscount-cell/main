@@ -1,4 +1,4 @@
-import { AutomationListItem } from "@/types/automation";
+import { AutomationListItem } from "@/api/services/automations/types";
 import { Button } from "../../../ui/button";
 import { RefreshCw, Square } from "lucide-react";
 import EditableAutomationName from "./EditableAutomationName";

@@ -11,7 +11,7 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AutomationListItem } from "@/types/automation";
+import { AutomationListItem } from "@/api/services/automations/types";
 
 export type PageState = "loading" | "fresh" | "live" | "not-found";
 

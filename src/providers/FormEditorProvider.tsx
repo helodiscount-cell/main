@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { formService } from "@/api/services/forms";
 import { formKeys } from "@/keys/react-query";
-import type { FormDetail } from "@/types/form";
+import type { FormDetail } from "@/api/services/forms/form";
 
 // Default empty form state
 const DEFAULT_FORM_VALUES: FormValues = {

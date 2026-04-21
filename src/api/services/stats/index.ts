@@ -1,10 +1,9 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "@/types/api";
+import { ApiResponse } from "@/api/types";
 import {
   OutreachImpactResponse,
   FollowerGrowthResponse,
-  BestPerformerWidgetConfig,
-} from "@/types/stats";
+} from "@/api/services/stats/types";
 
 export const statsService = {
   getOutreachImpact: async (range: string): Promise<OutreachImpactResponse> => {
