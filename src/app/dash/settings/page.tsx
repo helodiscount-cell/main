@@ -1,25 +1,30 @@
+import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
-import { workspaceService } from "@/server/workspace";
-import {
-  SettingsLayout,
-  SettingsTabNav,
-  ProfileTab,
-  BillingTab,
-} from "./_components";
-import { SettingsTab, ProfileData, BillingData } from "./types";
+import { SettingsTabNav, ProfileTab, BillingTab } from "./_components";
+import { SettingsTab, ProfileData } from "./types";
 import { SETTINGS_CONFIG } from "./config";
-import { getUserBillingData } from "@/server/services/billing/subscription.service";
+import { prisma } from "@/server/db";
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
 }
 
 export default async function SettingsPage({ searchParams }: PageProps) {
-  await workspaceService.getVerifiedContext();
-  const user = await currentUser();
-  if (!user) return null; // Should not happen after verifiedContext but needed for type safety (email addresses)
+  const [user, queryParams] = await Promise.all([currentUser(), searchParams]);
 
-  const queryParams = await searchParams;
+  if (!user) return null;
+
+  // Fetch internal user with accounts and subscription
+  const internalUser = await prisma.user.findUnique({
+    where: { clerkId: user.id },
+    include: {
+      instaAccounts: true,
+      subscription: true,
+    },
+  });
+
+  if (!internalUser) return null;
+
   const activeTab =
     (queryParams.tab as SettingsTab) || SETTINGS_CONFIG.DEFAULT_TAB;
 
@@ -27,24 +32,59 @@ export default async function SettingsPage({ searchParams }: PageProps) {
     email: user.emailAddresses[0]?.emailAddress || "",
     isEmailVerified:
       user.emailAddresses[0]?.verification?.status === "verified",
+    accounts: internalUser.instaAccounts.map((acc: any) => ({
+      id: acc.id,
+      username: acc.username,
+      connectedAt: acc.connectedAt,
+      followersCount: acc.followersCount || 0,
+      isActive: acc.isActive,
+      tokenExpiresAt: acc.tokenExpiresAt,
+    })),
+    planId: internalUser.subscription?.plan || "FREE",
   };
-
-  const billingData: BillingData = await getUserBillingData(user.id);
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "profile":
         return <ProfileTab data={profileData} />;
       case "billing":
-        return <BillingTab data={billingData} />;
+        return (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-48">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-4 border-[#6A06E4] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-slate-400 text-sm font-medium animate-pulse">
+                    Loading billing...
+                  </p>
+                </div>
+              </div>
+            }
+          >
+            <BillingTab userId={user.id} />
+          </Suspense>
+        );
       default:
         return <ProfileTab data={profileData} />;
     }
   };
 
   return (
-    <SettingsLayout header={<SettingsTabNav />}>
-      {renderTabContent()}
-    </SettingsLayout>
+    <div
+      className="h-full w-full flex flex-col items-center justify-center rounded-2xl"
+      // style={{ backgroundColor: SETTINGS_CONFIG.BACKGROUND_COLOR }}
+    >
+      <div className="max-w-4xl flex flex-col gap-4 w-1/2">
+        {/* Navigation/Header Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center justify-between">
+          <SettingsTabNav />
+        </div>
+
+        {/* Content Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-10">
+          {renderTabContent()}
+        </div>
+      </div>
+    </div>
   );
 }

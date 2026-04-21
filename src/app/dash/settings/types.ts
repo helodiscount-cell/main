@@ -3,6 +3,8 @@ export type SettingsTab = "profile" | "billing";
 export interface ProfileData {
   email: string;
   isEmailVerified: boolean;
+  accounts: ConnectedAccount[];
+  planId: string;
 }
 
 export interface ConnectedAccount {
@@ -14,6 +16,13 @@ export interface ConnectedAccount {
   tokenExpiresAt: Date | string;
   connectedAt: Date | string;
   isActive: boolean;
+}
+
+export interface Invoice {
+  id: string;
+  status: "paid" | "failed" | "pending";
+  amount: number;
+  date: Date | string;
 }
 
 export interface BillingData {
@@ -31,6 +40,7 @@ export interface BillingData {
     periodStart: Date;
     periodEnd: Date;
   } | null;
+  invoices: Invoice[];
 }
 
 export interface SettingsPageData {

@@ -1,5 +1,5 @@
 import { SettingsTab } from "./types";
-import { User, CreditCard, Users } from "lucide-react";
+import { User, CreditCard } from "lucide-react";
 
 export const SETTINGS_CONFIG = {
   BACKGROUND_COLOR: "#878787",

@@ -138,7 +138,7 @@ export async function renewSubscription(
   const periodStart = new Date();
   const periodEnd = getPeriodEnd(periodStart);
 
-  await prisma.$transaction([
+  const operations: any[] = [
     prisma.subscription.update({
       where: { userId },
       data: {
@@ -160,7 +160,24 @@ export async function renewSubscription(
         quotaEmailSentAt: null,
       },
     }),
-  ]);
+  ];
+
+  if (paymentData) {
+    operations.push(
+      prisma.invoice.create({
+        data: {
+          userId,
+          invoiceId: paymentData.paymentId,
+          amount: paymentData.amount,
+          status: "paid",
+          method: paymentData.method,
+          detail: paymentData.detail,
+        },
+      }),
+    );
+  }
+
+  await prisma.$transaction(operations);
 
   await syncCreditStateToRedis(clerkUserId, 0, plan.creditLimit, "ACTIVE");
 
@@ -307,7 +324,7 @@ export async function createCheckoutSession(
 export async function getUserBillingData(clerkUserId: string) {
   const userId = await resolveInternalUserId(clerkUserId);
 
-  const [subscription, ledger] = await prisma.$transaction([
+  const [subscription, ledger, invoices] = await prisma.$transaction([
     prisma.subscription.findUnique({
       where: { userId },
       select: {
@@ -328,10 +345,27 @@ export async function getUserBillingData(clerkUserId: string) {
         periodEnd: true,
       },
     }),
+    prisma.invoice.findMany({
+      where: { userId },
+      select: {
+        invoiceId: true,
+        status: true,
+        amount: true,
+        date: true,
+      },
+      orderBy: { date: "desc" },
+      take: 5,
+    }),
   ]);
 
   return {
     subscription,
     ledger,
+    invoices: invoices.map((inv) => ({
+      id: inv.invoiceId,
+      status: inv.status as "paid" | "failed" | "pending",
+      amount: inv.amount,
+      date: inv.date,
+    })),
   };
 }
