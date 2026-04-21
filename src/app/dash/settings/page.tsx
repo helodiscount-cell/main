@@ -4,6 +4,7 @@ import { SettingsTabNav, ProfileTab, BillingTab } from "./_components";
 import { SettingsTab, ProfileData } from "./types";
 import { SETTINGS_CONFIG } from "./config";
 import { prisma } from "@/server/db";
+import { PlanId } from "@/configs/plans.config";
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
@@ -32,15 +33,17 @@ export default async function SettingsPage({ searchParams }: PageProps) {
     email: user.emailAddresses[0]?.emailAddress || "",
     isEmailVerified:
       user.emailAddresses[0]?.verification?.status === "verified",
-    accounts: internalUser.instaAccounts.map((acc: any) => ({
+    accounts: internalUser.instaAccounts.map((acc) => ({
       id: acc.id,
       username: acc.username,
+      profilePictureUrl: acc.profilePictureUrl,
+      accountType: acc.accountType,
       connectedAt: acc.connectedAt,
       followersCount: acc.followersCount || 0,
       isActive: acc.isActive,
       tokenExpiresAt: acc.tokenExpiresAt,
     })),
-    planId: internalUser.subscription?.plan || "FREE",
+    planId: (internalUser.subscription?.plan as PlanId) || "FREE",
   };
 
   const renderTabContent = () => {

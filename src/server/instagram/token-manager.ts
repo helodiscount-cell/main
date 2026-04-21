@@ -6,9 +6,7 @@
 import { prisma } from "@/server/db";
 import {
   INSTAGRAM_OAUTH,
-  GRAPH_API,
   ERROR_MESSAGES,
-  buildGraphApiUrl,
   getOAuthCredentials,
 } from "@/server/config/instagram.config";
 import {
@@ -18,8 +16,7 @@ import {
 import { fetchWithTimeout } from "@/server/utils/fetch-with-timeout";
 import { executeWithErrorHandling } from "@/server/repository/repository-utils";
 import { InstaAccount } from "@prisma/client";
-
-import { RefreshTokenResponse } from "@/types/instagram";
+import type { RefreshTokenResponse } from "@/api/services/instagram/types";
 
 /**
  * Refreshes an Instagram access token

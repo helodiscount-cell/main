@@ -7,7 +7,7 @@ import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TableRow, MobilePageLayout, TablePageLayout } from "../_components";
-import { AutomationStatus } from "@/types/automation";
+import { AutomationStatus } from "@/api/services/automations/types";
 import {
   StatusFilter,
   TriggerFilter,

@@ -1,5 +1,5 @@
 import { api, request } from "@/api/client";
-import type { ApiResponse } from "@/types/api";
+import type { ApiResponse } from "@/api/types";
 import type { CreateFormInput, FormStatus } from "@dm-broo/common-types";
 import type {
   FormListItem,
@@ -7,7 +7,7 @@ import type {
   FormPublic,
   FormSubmission,
   FormSaveResult,
-} from "@/types/form";
+} from "@/api/services/forms/form";
 
 export const formService = {
   // Saves a form — returns id + public slug

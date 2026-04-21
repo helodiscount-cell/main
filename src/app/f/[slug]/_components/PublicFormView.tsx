@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { formService } from "@/api/services/forms";
 import { PublicFieldRenderer } from "./PublicFieldRenderer";
-import type { FormPublic } from "@/types/form";
+import type { FormPublic } from "@/api/services/forms/form";
 import type { FormField } from "@dm-broo/common-types";
 import { useRouter } from "next/navigation";
 

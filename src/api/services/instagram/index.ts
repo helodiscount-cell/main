@@ -1,10 +1,6 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "@/types/api";
-import {
-  UserProfileResult,
-  PostsResult,
-  StoriesResult,
-} from "@/types/instagram";
+import { ApiResponse } from "@/api/types";
+import { PostsResult, StoriesResult } from "@/api/services/instagram/types";
 
 export const instagramService = {
   oauth: {

@@ -1,10 +1,12 @@
+import { PlanId, SubscriptionStatus } from "@/configs/plans.config";
+
 export type SettingsTab = "profile" | "billing";
 
 export interface ProfileData {
   email: string;
   isEmailVerified: boolean;
   accounts: ConnectedAccount[];
-  planId: string;
+  planId: PlanId;
 }
 
 export interface ConnectedAccount {
@@ -27,8 +29,8 @@ export interface Invoice {
 
 export interface BillingData {
   subscription: {
-    plan: string;
-    status: string;
+    plan: PlanId;
+    status: SubscriptionStatus;
     currentPeriodStart: Date;
     currentPeriodEnd: Date;
     paymentMethod: string | null;

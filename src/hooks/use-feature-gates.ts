@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { billingKeys } from "@/keys/react-query";
-import type { FeatureGates } from "@/types/billing";
+import type { FeatureGates } from "@/server/services/billing/types";
 
 /**
  * useFeatureGates Hook

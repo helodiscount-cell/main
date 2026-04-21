@@ -14,7 +14,6 @@ import {
   ERROR_MESSAGES,
   validateOAuthConfig,
 } from "@/server/config/instagram.config";
-import { WORKSPACE_CONFIG } from "@/configs/workspace.config";
 import {
   subscribeToWebhooks,
   markWebhooksEnabled,
@@ -31,7 +30,6 @@ import { syncCreditStateToRedis } from "@/server/redis/operations/billing";
 
 import { refreshAccessToken as refreshToken } from "@/server/instagram/token-manager";
 import { clogger } from "@/server/utils/consola";
-import { findUserByClerkId } from "@/server/repository/user/user.repository";
 import { deactivateInstaAccount } from "@/server/repository/instagram/insta-account.repository";
 import { validateSecureState } from "@/server/instagram/oauth/oauth-state";
 import {

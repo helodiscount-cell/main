@@ -30,6 +30,8 @@ export async function SettingsTabNav() {
             <Link
               key={tab.id}
               href={`?tab=${tab.id}`}
+              role="tab"
+              aria-selected={isActive}
               className={cn(
                 "flex flex-1 items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 font-medium",
                 isActive

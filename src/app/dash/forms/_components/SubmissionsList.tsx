@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import type { FormField } from "@dm-broo/common-types";
-import type { FormSubmission } from "@/types/form";
+import type { FormSubmission } from "@/api/services/forms/form";
 import { ArrowDown, ArrowUp, Layers } from "lucide-react";
 import { SubmissionRow } from "./submissions/SubmissionRow";
 import { SubmissionDetailDialog } from "./submissions/SubmissionDetailDialog";

@@ -4,14 +4,9 @@ import {
   type PlanId,
   getEffectiveMaxAccounts,
 } from "@/configs/plans.config";
-import {
-  getCreditStateR,
-  syncCreditStateToRedis,
-} from "@/server/redis/operations/billing";
-import { logger } from "@/server/utils/pino";
+import { syncCreditStateToRedis } from "@/server/redis/operations/billing";
 
-import { type FeatureGates } from "@/types/billing";
-export type { FeatureGates };
+import { type FeatureGates } from "@/server/services/billing/types";
 
 /**
  * Returns the current feature access and credit state for a user.

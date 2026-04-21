@@ -1,5 +1,5 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "@/types/api";
+import { ApiResponse } from "@/api/types";
 
 export interface WorkspaceProfile {
   username: string;

@@ -6,7 +6,7 @@ import { useAutomationManager } from "@/hooks/use-automations";
 import { AutomationLayout } from "./AutomationLayout";
 import { Spinner } from "@/components/ui/spinner";
 import { FreshHeader, LiveHeader } from "@/components/dash/automations/headers";
-import { AutomationListItem } from "@/types/automation";
+import { AutomationListItem } from "@/api/services/automations/types";
 
 export interface RightColForm<
   TFormValues extends FieldValues,

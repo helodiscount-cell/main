@@ -4,11 +4,18 @@ import { PLANS, type PlanId } from "@/configs/plans.config";
 import { getUserBillingData } from "@/server/services/billing/subscription.service";
 import { PaymentMethod, BillingHistory } from "./index";
 
+import {
+  calculateProgress,
+  formatBillingDate,
+  getPlanLabel,
+} from "@/lib/billing";
+
 export async function BillingTab({ userId }: { userId: string }) {
-  let data: any;
+  let data: Awaited<ReturnType<typeof getUserBillingData>> | null = null;
   try {
     data = await getUserBillingData(userId);
   } catch (error) {
+    console.error("Failed to fetch billing data:", error);
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
         <div className="bg-red-50 p-4 rounded-2xl border border-red-100 max-w-md">
@@ -38,25 +45,10 @@ export async function BillingTab({ userId }: { userId: string }) {
   const currentPlanId = (subscription?.plan as PlanId) || "FREE";
   const planInfo = PLANS[currentPlanId];
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "--";
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
   const creditsUsed = ledger?.creditsUsed ?? 0;
   const creditLimit = ledger?.creditLimit ?? planInfo.creditLimit;
   const isUnlimited = creditLimit === -1;
-  const progress = isUnlimited
-    ? 0
-    : Math.min(Math.max((creditsUsed / creditLimit) * 100, 0), 100);
-
-  const getPlanLabel = (id: string) => {
-    return id.charAt(0).toUpperCase() + id.slice(1).toLowerCase();
-  };
+  const progress = calculateProgress(creditsUsed, creditLimit);
 
   const hasPayment = !!subscription?.paymentMethod;
   const hasHistory = invoices.length > 0;
@@ -89,8 +81,8 @@ export async function BillingTab({ userId }: { userId: string }) {
                 </span>
               </div>
               <p className="text-[15px] text-[#6B7280] font-medium">
-                {formatDate(subscription?.currentPeriodStart)} -{" "}
-                {formatDate(subscription?.currentPeriodEnd)}
+                {formatBillingDate(subscription?.currentPeriodStart)} -{" "}
+                {formatBillingDate(subscription?.currentPeriodEnd)}
               </p>
             </div>
 
@@ -125,7 +117,9 @@ export async function BillingTab({ userId }: { userId: string }) {
 
       {/* Bottom Grid: Payment Method & History */}
       {hasBottomRow && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+        <div
+          className={`grid grid-cols-1 ${hasPayment && hasHistory ? "md:grid-cols-2" : ""} gap-6 w-full`}
+        >
           {hasPayment && (
             <PaymentMethod
               method={subscription.paymentMethod}

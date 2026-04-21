@@ -3,9 +3,9 @@
 import React from "react";
 import Image from "next/image";
 import { FileText, User } from "lucide-react";
-import { AutomationListItem } from "@/types/automation";
-import { FormListItem } from "@/types/form";
-import { Contact } from "@/types/contact";
+import { AutomationListItem } from "@/api/services/automations/types";
+import { FormListItem } from "@/api/services/forms/form";
+import { Contact } from "@/api/services/contacts/types";
 import { getAutomationRoute, getAutomationLabel } from "@/utils/automation";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 

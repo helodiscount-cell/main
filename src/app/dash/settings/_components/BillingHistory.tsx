@@ -1,10 +1,16 @@
 import React from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Invoice } from "../types";
 
 interface BillingHistoryProps {
   invoices: Invoice[];
 }
+
+const statusConfig = {
+  paid: { icon: CheckCircle2, bg: "bg-[#DCFCE7]", text: "text-[#16A34A]" },
+  failed: { icon: XCircle, bg: "bg-[#FEE2E2]", text: "text-[#DC2626]" },
+  pending: { icon: Clock, bg: "bg-[#FEF3C7]", text: "text-[#D97706]" },
+};
 
 /**
  * BillingHistory Component - Displays a list of recent transactions/invoices.
@@ -22,29 +28,36 @@ export function BillingHistory({ invoices }: BillingHistoryProps) {
             No transaction history found.
           </p>
         ) : (
-          invoices.map((invoice, index) => (
-            <div key={invoice.id}>
-              <div className="flex items-center justify-between py-4">
-                <span className="text-[15px] font-medium text-[#111827] font-mono">
-                  {invoice.id}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="bg-[#DCFCE7] p-0.5 rounded-full">
-                    <CheckCircle2
-                      size={16}
-                      className="text-[#16A34A] fill-[#16A34A]/10"
-                    />
-                  </div>
-                  <span className="text-[14px] font-bold text-[#16A34A] capitalize">
-                    {invoice.status}
+          invoices.map((invoice, index) => {
+            const config = statusConfig[invoice.status] ?? statusConfig.pending;
+            const StatusIcon = config.icon;
+
+            return (
+              <div key={invoice.id}>
+                <div className="flex items-center justify-between py-4">
+                  <span className="text-[15px] font-medium text-[#111827] font-mono">
+                    {invoice.id}
                   </span>
+                  <div className="flex items-center gap-2">
+                    <div className={`${config.bg} p-0.5 rounded-full`}>
+                      <StatusIcon
+                        size={16}
+                        className={`${config.text} fill-current/10`}
+                      />
+                    </div>
+                    <span
+                      className={`text-[14px] font-bold ${config.text} capitalize`}
+                    >
+                      {invoice.status}
+                    </span>
+                  </div>
                 </div>
+                {index < invoices.length - 1 && (
+                  <div className="h-px w-full bg-[#F3F4F6]" />
+                )}
               </div>
-              {index < invoices.length - 1 && (
-                <div className="h-px w-full bg-[#F3F4F6]" />
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

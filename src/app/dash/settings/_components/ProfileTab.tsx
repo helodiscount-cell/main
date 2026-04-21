@@ -81,16 +81,19 @@ export function ProfileTab({ data }: ProfileTabProps) {
               Add New Account
               <Crown size={18} className="fill-white/10" />
             </Link>
+          ) : canAddAccount ? (
+            <Link
+              href="/api/instagram/oauth/authorize?returnUrl=/dash/settings?tab=profile"
+              className="w-full h-[54px] bg-[#6A06E4] hover:bg-[#5B05C2] text-white rounded-sm flex items-center justify-center gap-2 font-bold text-[16px] transition-all active:scale-[0.98] mt-2"
+            >
+              Add New Account
+            </Link>
           ) : (
             <button
-              disabled={!canAddAccount}
-              className={`w-full h-[54px] rounded-sm flex items-center justify-center gap-2 font-bold text-[16px] transition-all mt-2 ${
-                canAddAccount
-                  ? "bg-[#6A06E4] hover:bg-[#5B05C2] text-white active:scale-[0.98]"
-                  : "bg-[#F3F4F6] text-[#9CA3AF] cursor-not-allowed"
-              }`}
+              disabled
+              className="w-full h-[54px] bg-[#F3F4F6] text-[#9CA3AF] rounded-sm flex items-center justify-center gap-2 font-bold text-[16px] transition-all cursor-not-allowed mt-2"
             >
-              {accountsCount >= 2 ? "Account Limit Reached" : "Add New Account"}
+              Account Limit Reached
             </button>
           )}
         </div>

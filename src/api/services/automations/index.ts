@@ -1,10 +1,10 @@
 import { api, request } from "@/api/client";
-import { ApiResponse } from "@/types/api";
+import { ApiResponse } from "@/api/types";
 import {
   AutomationStatus,
   AutomationListItem,
   AutomationListResponse,
-} from "@/types/automation";
+} from "@/api/services/automations/types";
 
 export const automationService = {
   list: async (filters?: {
