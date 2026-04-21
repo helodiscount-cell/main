@@ -89,6 +89,26 @@ export const workspaceService = {
   },
 
   /**
+   * Resolves the verified dashboard context (auth + workspace).
+   * Returns { clerkId, instaAccountId, workspace }
+   * Use this in server pages to avoid scattered guard logic.
+   */
+  async getVerifiedContext() {
+    const { userId } = await auth();
+    if (!userId) {
+      redirect("/auth");
+    }
+
+    const workspace = await this.getVerifiedActiveWorkspace();
+
+    return {
+      clerkId: userId,
+      instaAccountId: workspace.id,
+      workspace,
+    };
+  },
+
+  /**
    * Sets the active workspace cookie and revalidates
    */
   async setActive(id: string) {

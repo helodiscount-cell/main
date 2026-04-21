@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import GirlImage from "@/assets/stock-images/Group 248@2x.png";
-import GoogleButton from "@/components/auth/GoogleButton";
+import GoogleButton from "./_components/GoogleButton";
 
 const AuthPage = async () => {
   return (
@@ -20,7 +20,7 @@ const AuthPage = async () => {
             {/* Header */}
             <div className="text-center space-y-2 animation-delay-200 animate-fade-in">
               <h2 className="text-lg font-bold text-gray-900">Log In</h2>
-              <p className="text-gray-600">Welcome to Brand Name!</p>
+              <p className="text-gray-600">Welcome to DmBroo!</p>
             </div>
 
             {/* Google Sign In Button */}

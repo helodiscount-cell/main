@@ -322,7 +322,8 @@ export async function getUserAutomations(
     status: filters?.status ?? ["ACTIVE", "PAUSED", "STOPPED"],
   };
 
-  return findUserAutomations(repositoryFilters);
+  const automations = await findUserAutomations(repositoryFilters);
+  return automations.map((a) => ({ ...a, type: "automation" as const }));
 }
 
 // Updates an automation (ownership enforced in the query)

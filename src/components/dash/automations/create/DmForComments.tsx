@@ -5,8 +5,8 @@ import { instagramKeys } from "@/keys/react-query";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import { TemplateHeader } from "./TemplateHeader";
 import { useState, useRef } from "react";
+import TemplateHeader from "./TemplateHeader";
 
 export default function DMForComments({ onBack }: { onBack: () => void }) {
   const queryClient = useQueryClient();

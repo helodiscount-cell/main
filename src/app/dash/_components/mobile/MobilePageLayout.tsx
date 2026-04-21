@@ -4,16 +4,15 @@ import React from "react";
 import { SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import { MobileDashboardHeader } from "./MobileDashboardHeader";
 import { MobileCard } from "./MobileCard";
-import { AutomationListItem } from "@/types/automation";
-import { FormListItem } from "@/types/form";
+import { DashboardItem } from "../mapDashboardItem";
 import { Spinner } from "@/components/ui/spinner";
 
 interface MobilePageLayoutProps {
   title: string;
-  items: (AutomationListItem | FormListItem)[];
+  items: DashboardItem[];
   isLoading: boolean;
   emptyMessage: string;
-  actionButton: React.ReactNode;
+  actionButton?: React.ReactNode;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   onSortChange?: (sortKey: string) => void;
@@ -95,7 +94,7 @@ export const MobilePageLayout = ({
       </div>
 
       {/* Sticky Bottom Action Button */}
-      <div className="">{actionButton}</div>
+      {actionButton && <div>{actionButton}</div>}
     </div>
   );
 };

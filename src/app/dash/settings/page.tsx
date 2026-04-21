@@ -15,12 +15,9 @@ interface PageProps {
 }
 
 export default async function SettingsPage({ searchParams }: PageProps) {
+  await workspaceService.getVerifiedContext();
   const user = await currentUser();
-  if (!user) return null;
-
-  // Centralized verification: handles auth, account existence, and session validity.
-  const workspace = await workspaceService.getVerifiedActiveWorkspace();
-  if (!workspace) return null;
+  if (!user) return null; // Should not happen after verifiedContext but needed for type safety (email addresses)
 
   const queryParams = await searchParams;
   const activeTab =

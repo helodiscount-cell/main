@@ -1,8 +1,6 @@
-import { Prisma } from "@prisma/client";
 import { WebhookPayloadSchema } from "./schemas";
 
 import type {
-  WebhookPayload,
   PaymentCapturedEvent,
   PaymentFailedEvent,
   OrderPaidEvent,
@@ -20,7 +18,7 @@ import {
   renewSubscription,
   expireSubscription,
 } from "../billing";
-import { PlanId, getInternalPlanIdByRazorpayId } from "@/configs/plans.config";
+import { getInternalPlanIdByRazorpayId } from "@/configs/plans.config";
 
 // --- Per-event handlers (Stub implementations) ---
 

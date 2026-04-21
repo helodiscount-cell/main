@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * CreditIndicator: Displays monthly credit usage with a circular progress gauge.
  * Typically used in the dashboard header to show quota status.
  */
-export function CreditIndicator() {
+export default function CreditIndicator() {
   const { data, isLoading, error } = useFeatureGates();
 
   if (isLoading) {

@@ -36,6 +36,7 @@ export interface ContactFilters {
   status?: string;
   search?: string;
   limit?: number;
+  page?: number;
   cursor?: string;
 }
 

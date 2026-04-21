@@ -4,15 +4,15 @@
 export const TABLE_CONFIGS = {
   automations: {
     title: "Automations",
-    gridClass: "grid-cols-[4fr_1fr_1fr_1fr_1fr_auto]",
+    gridClass: "grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]",
     columns: [
       { id: "title", label: "Automations", type: "main" },
       { id: "status", label: "Status", type: "status" },
-      { id: "count", label: "Runs", type: "stats", sortable: true },
+      { id: "count", label: "Runs", type: "info", sortable: true },
       {
         id: "followers",
         label: "New Followers",
-        type: "stats",
+        type: "info",
         sortable: true,
       },
       { id: "date", label: "Last Triggered", type: "date", sortable: true },
@@ -21,13 +21,23 @@ export const TABLE_CONFIGS = {
   },
   forms: {
     title: "Forms",
-    gridClass: "grid-cols-[4fr_1fr_1fr_1fr_1fr_auto]",
+    gridClass: "grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]",
     columns: [
       { id: "title", label: "Forms", type: "main" },
       { id: "status", label: "Status", type: "status" },
-      { id: "count", label: "Submissions", type: "stats", sortable: true },
+      { id: "count", label: "Submissions", type: "info", sortable: true },
       { id: "date", label: "Last Updated", type: "date", sortable: true },
       { id: "actions", label: "", type: "actions" },
+    ],
+  },
+  contacts: {
+    title: "Contacts",
+    gridClass: "grid-cols-[1fr_1fr_1fr_0.4fr]",
+    columns: [
+      { id: "username", label: "Username", type: "main" },
+      { id: "type", label: "Type", type: "info" },
+      { id: "email", label: "Email ID", type: "info" },
+      { id: "date", label: "Last Interacted", type: "date", sortable: true },
     ],
   },
 } as const;

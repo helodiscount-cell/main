@@ -16,13 +16,13 @@ interface PaginationProps {
 /**
  * Common pagination component for dashboard tables.
  */
-export const Pagination = ({
+export default function Pagination({
   currentPage,
   totalItems,
   pageSize,
   onPageChange,
   className,
-}: PaginationProps) => {
+}: PaginationProps) {
   const safePageSize = pageSize > 0 ? pageSize : 1;
   const totalPages = Math.ceil(totalItems / safePageSize);
 
@@ -154,4 +154,4 @@ export const Pagination = ({
       </div>
     </div>
   );
-};
+}

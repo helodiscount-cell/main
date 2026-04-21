@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   verifyWebhook,
   processWebhookEvent,
-} from "@/server/services/webhooks/instagram.webhook";
+} from "@/server/instagram/webhook/verify";
 import { clogger } from "@/server/utils/consola";
 
 /**

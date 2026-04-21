@@ -5,7 +5,7 @@ import {
   useFieldArray,
   type FieldArrayPath,
 } from "react-hook-form";
-import type { FormValues, FieldType } from "@dm-broo/common-types";
+import type { FormValues } from "@dm-broo/common-types";
 
 /**
  * Shared logic for form fields.
@@ -51,14 +51,4 @@ export const useFieldCardLogic = (index: number) => {
     errors,
     showOptions,
   };
-};
-
-// Shared constants for field rendering
-export const FIELD_INPUT_TYPE_MAP: Partial<Record<FieldType, string>> = {
-  text: "text",
-  number: "number",
-  email: "email",
-  url: "url",
-  phone: "tel",
-  date: "date",
 };

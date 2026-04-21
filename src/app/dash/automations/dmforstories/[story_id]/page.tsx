@@ -11,15 +11,17 @@ import {
   AUTOMATION_CONFIGS,
   storyAutomationSchema,
   StoryFormValues,
-} from "@/configs/automations";
+} from "@/configs/automations.config";
 import { AddKeywords } from "../../_components/widgets";
 import {
   BaseAutomationEditor,
   RightColForm,
 } from "../../_components/BaseAutomationEditor";
 import { AutomationRightCol } from "../../_components/AutomationRightCol";
-import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
-import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import {
+  OPENING_MESSAGE_CONFIG,
+  ASK_TO_FOLLOW_CONFIG,
+} from "@/configs/widgets.config";
 
 type StoryMeta = {
   id: string;

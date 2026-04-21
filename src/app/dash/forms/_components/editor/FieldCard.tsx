@@ -3,7 +3,7 @@
 import React from "react";
 import { Trash2, Plus, X, Star } from "lucide-react";
 import { FIELD_TYPE_LABELS } from "./config";
-import { useFieldCardLogic } from "./useFieldCardLogic";
+import { useFieldCardLogic } from "../../_hooks/useFieldCardLogic";
 
 type FieldCardProps = {
   index: number;
@@ -14,7 +14,7 @@ type FieldCardProps = {
  * Single field card — dynamically renders its configuration inputs based on type.
  * Optimized for clean code and performance using the useFieldCardLogic hook.
  */
-export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
+export default function FieldCard({ index, onRemove }: FieldCardProps) {
   const {
     register,
     fieldType,
@@ -185,4 +185,4 @@ export const FieldCard = ({ index, onRemove }: FieldCardProps) => {
       </div>
     </div>
   );
-};
+}

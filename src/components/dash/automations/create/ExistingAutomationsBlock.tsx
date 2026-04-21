@@ -12,7 +12,7 @@ interface ExistingAutomationsBlockProps {
   type: "post" | "story" | "account";
 }
 
-export function ExistingAutomationsBlock({
+export default function ExistingAutomationsBlock({
   targetId,
   type,
 }: ExistingAutomationsBlockProps) {

@@ -104,6 +104,7 @@ export async function getUserForms(
   const forms = await findFormsByInstaAccountId(instaAccountId, status);
 
   return forms.map((f) => ({
+    type: "form" as const,
     id: f.id,
     name: f.name,
     title: f.title,

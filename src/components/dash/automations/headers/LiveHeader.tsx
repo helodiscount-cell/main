@@ -1,7 +1,7 @@
 import { AutomationListItem } from "@/types/automation";
 import { Button } from "../../../ui/button";
 import { RefreshCw, Square } from "lucide-react";
-import { EditableAutomationName } from "./EditableAutomationName";
+import EditableAutomationName from "./EditableAutomationName";
 
 interface LiveHeaderProps {
   automation: AutomationListItem;
@@ -92,7 +92,7 @@ export default function LiveHeader({
       {/* Live Button/Badge */}
       {isActive ? (
         <div className="h-9 px-4 rounded-md border-2 border-green-500 text-green-600 text-sm font-bold flex items-center gap-1.5 shrink-0 bg-white">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="w-2 h-2 rounded-sm bg-green-500 animate-pulse" />
           Live
         </div>
       ) : (

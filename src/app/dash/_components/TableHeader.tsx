@@ -10,7 +10,15 @@ import React from "react";
 import ColHeader from "./ColHeader";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
-export type StatusFilter = "ACTIVE" | "PAUSED" | "PUBLISHED" | "DRAFT" | "ALL";
+export type StatusFilter =
+  | "ACTIVE"
+  | "PAUSED"
+  | "PUBLISHED"
+  | "DRAFT"
+  | "POST"
+  | "REEL"
+  | "STORY"
+  | "ALL";
 export type TriggerFilter = "COMMENT" | "DM" | "STORY" | "ALL";
 export type SortField = "count" | "date" | "newFollowers";
 export type SortOrder = "asc" | "desc" | null;
@@ -44,6 +52,13 @@ export const getStatusOptions = (
     return [
       { label: "Live", value: "PUBLISHED" },
       { label: "Draft", value: "DRAFT" },
+    ];
+  }
+  if (variant === "contacts") {
+    return [
+      { label: "Post", value: "POST" },
+      { label: "Reel", value: "REEL" },
+      { label: "Story", value: "STORY" },
     ];
   }
   return [
@@ -90,42 +105,42 @@ const TableHeader = (props: Props) => {
           );
         }
 
-        if (col.type === "status") {
+        if (col.type === "info" && !(col as { sortable?: boolean }).sortable) {
           return (
-            <div
+            <span
               key={col.id}
-              className="flex items-center justify-between gap-2"
+              className="text-center text-[16px] font-medium text-[#212121]"
             >
-              <span className="text-[16px] font-medium text-[#212121]">
-                {col.label}
-              </span>
-            </div>
+              {col.label}
+            </span>
           );
         }
 
-        if (col.type === "stats" || col.type === "date") {
+        if (col.type === "status") {
+          return (
+            <span
+              key={col.id}
+              className="text-center text-[16px] font-medium text-[#212121]"
+            >
+              {col.label}
+            </span>
+          );
+        }
+
+        if (col.type === "info" || col.type === "date") {
           const field =
-            col.id === "followers"
+            (col.id as string) === "followers"
               ? "newFollowers"
               : (col.id as "count" | "date");
 
-          const hasSeparator = col.id !== "date";
-
           return (
-            <div
+            <ColHeader
               key={col.id}
-              className="flex items-center justify-between gap-2"
-            >
-              <ColHeader
-                label={col.label}
-                sortable={col.sortable}
-                sortOrder={sortField === field ? sortOrder : null}
-                onSort={() => onSort?.(field)}
-              />
-              {/* {hasSeparator && (
-                <div className="w-0.5 h-4 bg-slate-400 shrink-0" />
-              )} */}
-            </div>
+              label={col.label}
+              sortable={(col as any).sortable}
+              sortOrder={sortField === field ? sortOrder : null}
+              onSort={() => onSort?.(field)}
+            />
           );
         }
 

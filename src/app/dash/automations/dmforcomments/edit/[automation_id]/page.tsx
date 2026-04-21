@@ -6,15 +6,17 @@ import {
   AUTOMATION_CONFIGS,
   commentsAutomationSchema,
   CommentsFormValues,
-} from "@/configs/automations";
+} from "@/configs/automations.config";
 import { AddKeywords } from "../../../_components/widgets";
 import {
   BaseAutomationEditor,
   RightColForm,
 } from "../../../_components/BaseAutomationEditor";
 import { AutomationRightCol } from "../../../_components/AutomationRightCol";
-import { ASK_TO_FOLLOW_CONFIG } from "@/configs/ask-to-follow";
-import { OPENING_MESSAGE_CONFIG } from "@/configs/opening-message";
+import {
+  ASK_TO_FOLLOW_CONFIG,
+  OPENING_MESSAGE_CONFIG,
+} from "@/configs/widgets.config";
 
 const DEFAULT_REPLY_ID = "default-reply-1";
 const DEFAULT_REPLY_TEXT = "Open your DMs, it's there!";

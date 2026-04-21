@@ -2,8 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useId } from "react";
 import { Search, ChevronDown, Check } from "lucide-react";
-import { COUNTRIES } from "@/configs/countries";
-import { INDIAN_STATES } from "@/configs/india-regions";
+import { COUNTRIES, INDIAN_STATES } from "@/configs/location.config";
 import { cn } from "@/server/utils";
 
 interface HierarchicalLocationPickerProps {

@@ -2,20 +2,23 @@
 
 import React from "react";
 import Image from "next/image";
-import { FileText } from "lucide-react";
+import { FileText, User } from "lucide-react";
 import { AutomationListItem } from "@/types/automation";
 import { FormListItem } from "@/types/form";
+import { Contact } from "@/types/contact";
 import { getAutomationRoute, getAutomationLabel } from "@/utils/automation";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
-export interface MappedDashboardItem {
+export type DashboardItem = AutomationListItem | FormListItem | Contact;
+
+interface MappedDashboardItem {
   id: string;
   title: string;
   subtitle: string;
   image: React.ReactNode;
   status: React.ReactNode;
   statusText: string;
-  stats: number;
+  stats: string | number;
   statsLabel: string;
   secondaryStats?: number;
   secondaryStatsLabel?: string;
@@ -23,17 +26,17 @@ export interface MappedDashboardItem {
   date: string;
   dateLabel: string;
   href: string | null;
-  raw: AutomationListItem | FormListItem;
+  raw: DashboardItem;
 }
 
 /**
- * Shared hook to map raw dashboard data (Forms or Automations) into a unified UI structure.
+ * Shared hook to map raw dashboard data (Forms, Automations, or Contacts) into a unified UI structure.
  * This ensures consistency between desktop TableRow and mobile MobileCard.
  */
-export const mapDashboardItem = (
-  data: AutomationListItem | FormListItem,
-): MappedDashboardItem => {
-  const isAutomation = "triggerType" in data;
+const mapDashboardItem = (data: DashboardItem): MappedDashboardItem => {
+  const isAutomation = data.type === "automation";
+  const isForm = data.type === "form";
+  const isContact = data.type === "contact";
 
   const safeFormatDate = (date: string | Date | null | undefined) => {
     if (!date) return "—";
@@ -50,7 +53,6 @@ export const mapDashboardItem = (
 
   if (isAutomation) {
     const automation = data as AutomationListItem;
-    const newFollowersGained = data.newFollowersGained;
     const imageUrl =
       automation.post?.thumbnailUrl ||
       automation.post?.mediaUrl ||
@@ -101,46 +103,80 @@ export const mapDashboardItem = (
     };
   }
 
-  // Handle Forms
-  const form = data as FormListItem;
-  return {
-    id: form.id,
-    title: form.name || "Untitled Form",
-    subtitle: "",
-    href: `/dash/forms/${form.id}`,
-    image:
-      typeof form.coverImage === "string" &&
-      form.coverImage.trim().length > 0 ? (
-        <div className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden border border-slate-100">
-          <Image
-            src={form.coverImage}
-            className="h-full w-full object-cover"
-            height={100}
-            width={100}
-            alt={form.title || "Untitled Form"}
-          />
-        </div>
-      ) : (
-        <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg text-slate-300">
-          <FileText size={20} />
-        </div>
+  if (isForm) {
+    const form = data as FormListItem;
+    return {
+      id: form.id,
+      title: form.name || "Untitled Form",
+      subtitle: "",
+      href: `/dash/forms/${form.id}`,
+      image:
+        typeof form.coverImage === "string" &&
+        form.coverImage.trim().length > 0 ? (
+          <div className="w-full h-full flex items-center justify-center bg-white rounded-lg overflow-hidden border border-slate-100">
+            <Image
+              src={form.coverImage}
+              className="h-full w-full object-cover"
+              height={100}
+              width={100}
+              alt={form.name || "Untitled Form"}
+            />
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-lg text-slate-300">
+            <FileText size={20} />
+          </div>
+        ),
+      status: (
+        <span
+          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+            form.status === "PUBLISHED"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-slate-100 text-slate-500"
+          }`}
+        >
+          {form.status === "PUBLISHED" ? "Live" : "Draft"}
+        </span>
       ),
+      statusText: form.status,
+      stats: form.submissionCount,
+      statsLabel: "Submissions",
+      date: safeFormatDate(form.updatedAt),
+      dateLabel: "Last Updated",
+      raw: data,
+    };
+  }
+
+  // Handle Contacts
+  const contact = data as Contact;
+  return {
+    id: contact.id,
+    title: contact.username,
+    subtitle: "",
+    href: null,
+    image: contact.avatarUrl ? (
+      <Image
+        src={contact.avatarUrl}
+        alt={contact.username}
+        width={40}
+        height={40}
+        className="h-full w-full object-cover"
+      />
+    ) : (
+      <User className="w-4 h-4 text-slate-300" strokeWidth={2.5} />
+    ),
     status: (
-      <span
-        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-          form.status === "PUBLISHED"
-            ? "bg-emerald-50 text-emerald-700"
-            : "bg-slate-100 text-slate-500"
-        }`}
-      >
-        {form.status === "PUBLISHED" ? "Live" : "Draft"}
+      <span className="text-[16px] text-center font-semibold text-purple-600">
+        {contact.kind}
       </span>
     ),
-    statusText: form.status,
-    stats: form.submissionCount,
-    statsLabel: "Submissions",
-    date: safeFormatDate(form.updatedAt),
-    dateLabel: "Last Updated",
+    statusText: contact.kind,
+    stats: contact.email || "Not Found",
+    statsLabel: "Email",
+    date: safeFormatDate(contact.lastInteractedAt),
+    dateLabel: "Last Interacted",
     raw: data,
   };
 };
+
+export default mapDashboardItem;

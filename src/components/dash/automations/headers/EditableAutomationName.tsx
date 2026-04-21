@@ -12,7 +12,9 @@ interface EditableAutomationNameProps {
  * Component that renders a trigger button (Pencil) to open a name-editing dialog.
  * Uses the unified EditableNameDialog.
  */
-export function EditableAutomationName(props: EditableAutomationNameProps) {
+export default function EditableAutomationName(
+  props: EditableAutomationNameProps,
+) {
   return (
     <EditableNameDialog
       {...props}

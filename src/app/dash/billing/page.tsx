@@ -10,12 +10,10 @@ import { BillingCard } from "./_components/billing-card";
 import { redirect } from "next/navigation";
 import { UsageBar } from "./_components/usage-bar";
 
-export default async function BillingPage() {
-  const { userId: clerkUserId } = await auth();
+import { workspaceService } from "@/server/workspace/service";
 
-  if (!clerkUserId) {
-    redirect("/login");
-  }
+export default async function BillingPage() {
+  const { clerkId: clerkUserId } = await workspaceService.getVerifiedContext();
 
   // Fetch current state using the unified billing governor
   const { state } = await getFeatureGates(clerkUserId);

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Search, ChevronDown, Check } from "lucide-react";
-import { COUNTRIES, type Country } from "@/configs/countries";
+import { COUNTRIES, type Country } from "@/configs/location.config";
 import { cn } from "@/server/utils";
 
 interface CountryPickerProps {

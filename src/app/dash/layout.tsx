@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { workspaceService } from "@/server/workspace";
+import { DashboardHeader } from "./_components";
 
 export default async function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar variant="inset" />
       <SidebarInset className="bg-[#F1F1F1] flex flex-col gap-4 p-4">
+        <DashboardHeader />
         {children}
       </SidebarInset>
     </SidebarProvider>

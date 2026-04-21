@@ -2,6 +2,7 @@ import type { FormField } from "@dm-broo/common-types";
 
 // Lightweight item used in the dashboard forms list
 export type FormListItem = {
+  type: "form";
   id: string;
   name: string;
   title: string;
