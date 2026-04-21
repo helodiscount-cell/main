@@ -61,24 +61,23 @@ export async function getUniqueContactsForWorkspace(
       }
 
       // Map the executions to the normalized contact format
-      const contacts: RepositoryContact[] = executions
-        .slice(0, limit)
-        .map((execution) => {
-          let type: "Post" | "Reel" | "Story" = "Post";
-          if (execution.automation.triggerType === "STORY_REPLY") {
-            type = "Story";
-          }
+      const contacts: any[] = executions.slice(0, limit).map((execution) => {
+        let kind: "Post" | "Reel" | "Story" = "Post";
+        if (execution.automation.triggerType === "STORY_REPLY") {
+          kind = "Story";
+        }
 
-          return {
-            id: execution.senderId,
-            username: execution.senderUsername,
-            avatarUrl: "",
-            type: type,
-            email: null,
-            lastInteractedAt: execution.executedAt,
-            lastExecutionId: execution.id,
-          };
-        });
+        return {
+          type: "contact",
+          id: execution.senderId,
+          username: execution.senderUsername,
+          avatarUrl: "",
+          kind: kind,
+          email: null,
+          lastInteractedAt: execution.executedAt,
+          lastExecutionId: execution.id,
+        };
+      });
 
       // Determine the cursor for the next page
       const nextCursor =

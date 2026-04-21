@@ -22,9 +22,9 @@ interface MobileCardProps {
 export const MobileCard = ({ data }: MobileCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
-  const isAutomation = "triggerType" in data;
-  const isForm = "submissionCount" in data;
-  const isContact = "lastInteractedAt" in data;
+  const isAutomation = data.type === "automation";
+  const isForm = data.type === "form";
+  const isContact = data.type === "contact";
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -10,6 +10,7 @@ export type TriggerType =
   | "RESPOND_TO_ALL_DMS";
 
 export interface AutomationListItem {
+  type: "automation";
   id: string;
   triggerType: TriggerType;
   newFollowersGained: number;

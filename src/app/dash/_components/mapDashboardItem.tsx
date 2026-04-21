@@ -34,9 +34,9 @@ interface MappedDashboardItem {
  * This ensures consistency between desktop TableRow and mobile MobileCard.
  */
 const mapDashboardItem = (data: DashboardItem): MappedDashboardItem => {
-  const isAutomation = "triggerType" in data;
-  const isForm = !isAutomation && "submissionCount" in data;
-  const isContact = !isAutomation && !isForm && "lastInteractedAt" in data;
+  const isAutomation = data.type === "automation";
+  const isForm = data.type === "form";
+  const isContact = data.type === "contact";
 
   const safeFormatDate = (date: string | Date | null | undefined) => {
     if (!date) return "—";
@@ -167,10 +167,10 @@ const mapDashboardItem = (data: DashboardItem): MappedDashboardItem => {
     ),
     status: (
       <span className="text-[16px] text-center font-semibold text-purple-600">
-        {contact.type}
+        {contact.kind}
       </span>
     ),
-    statusText: contact.type,
+    statusText: contact.kind,
     stats: contact.email || "Not Found",
     statsLabel: "Email",
     date: safeFormatDate(contact.lastInteractedAt),

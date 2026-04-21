@@ -11,8 +11,7 @@ import TableHeader, {
 } from "./TableHeader";
 import Pagination from "./Pagination";
 
-interface TablePageLayoutProps<T> {
-  variant: TableVariant;
+interface TablePageLayoutBaseProps<T extends { id: string }> {
   isLoading: boolean;
   totalItems: number;
   currentPage: number;
@@ -30,38 +29,57 @@ interface TablePageLayoutProps<T> {
   sortField: SortField;
   sortOrder: SortOrder;
   handleSort: (field: SortField) => void;
-  // Automation specific
-  triggerFilter?: TriggerFilter;
-  handleTriggerChange?: (val: TriggerFilter) => void;
 }
+
+interface AutomationTableLayoutProps<
+  T extends { id: string },
+> extends TablePageLayoutBaseProps<T> {
+  variant: "automations";
+  triggerFilter: TriggerFilter;
+  handleTriggerChange: (val: TriggerFilter) => void;
+}
+
+interface GenericTableLayoutProps<
+  T extends { id: string },
+> extends TablePageLayoutBaseProps<T> {
+  variant: Exclude<TableVariant, "automations">;
+  triggerFilter?: never;
+  handleTriggerChange?: never;
+}
+
+type TablePageLayoutProps<T extends { id: string }> =
+  | AutomationTableLayoutProps<T>
+  | GenericTableLayoutProps<T>;
 
 /**
  * Premium Unified Table Skeleton
  * Combines TableHeader, Rows, Loading states, and Pagination into a single cohesive layout.
  */
-export default function TablePageLayout<T extends { id: string }>({
-  variant,
-  isLoading,
-  totalItems,
-  currentPage,
-  pageSize,
-  onPageChange,
-  items,
-  renderRow,
-  emptyState,
-  statusFilter,
-  handleStatusChange,
-  sortField,
-  sortOrder,
-  handleSort,
-  triggerFilter,
-  handleTriggerChange,
-}: TablePageLayoutProps<T>) {
+export default function TablePageLayout<T extends { id: string }>(
+  props: TablePageLayoutProps<T>,
+) {
+  const {
+    variant,
+    isLoading,
+    totalItems,
+    currentPage,
+    pageSize,
+    onPageChange,
+    items,
+    renderRow,
+    emptyState,
+    statusFilter,
+    handleStatusChange,
+    sortField,
+    sortOrder,
+    handleSort,
+  } = props;
+
   return (
     <div className="flex flex-col flex-1 gap-4 overflow-hidden">
       <div className="bg-white rounded-xl overflow-hidden flex-1 border border-slate-50 flex flex-col shadow-sm">
         {/* Unified Header */}
-        {variant === "automations" ? (
+        {props.variant === "automations" ? (
           <TableHeader
             variant="automations"
             statusFilter={statusFilter}
@@ -69,12 +87,12 @@ export default function TablePageLayout<T extends { id: string }>({
             sortField={sortField}
             sortOrder={sortOrder}
             onSort={handleSort}
-            triggerFilter={triggerFilter!}
-            setTriggerFilter={handleTriggerChange!}
+            triggerFilter={props.triggerFilter}
+            setTriggerFilter={props.handleTriggerChange}
           />
         ) : (
           <TableHeader
-            variant={variant as Exclude<TableVariant, "automations">}
+            variant={props.variant}
             statusFilter={statusFilter}
             setStatusFilter={handleStatusChange}
             sortField={sortField}
