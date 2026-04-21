@@ -27,7 +27,9 @@ const AutomationPage = () => {
 
   // Maps UI filters to server-supported status filters to avoid query key fragmentation
   const serverStatus =
-    statusFilter === "ACTIVE" || statusFilter === "PAUSED"
+    statusFilter === "ACTIVE" ||
+    statusFilter === "STOPPED" ||
+    statusFilter === "EXPIRED"
       ? (statusFilter as AutomationStatus)
       : undefined;
 
@@ -137,8 +139,10 @@ const AutomationPage = () => {
             statusFilter === "ALL"
               ? "ACTIVE"
               : statusFilter === "ACTIVE"
-                ? "PAUSED"
-                : "ALL";
+                ? "STOPPED"
+                : statusFilter === "STOPPED"
+                  ? "EXPIRED"
+                  : "ALL";
           handleStatusChange(nextStatus);
         }}
       />
@@ -159,7 +163,6 @@ const AutomationPage = () => {
       )}
       emptyState={{
         message: search ? "No matches found." : "No automations found.",
-        icon: <span className="text-4xl text-slate-300">🤖</span>,
       }}
       statusFilter={statusFilter}
       handleStatusChange={handleStatusChange}

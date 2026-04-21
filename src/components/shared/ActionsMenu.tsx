@@ -9,10 +9,15 @@ type ActionsMenuProps = {
     bg?: string;
   }[];
   onClose: () => void;
+  isStopping?: boolean;
   isDeleting?: boolean;
+  isToggling?: boolean;
+  toggleLabel?: string;
   isDuplicating?: boolean;
   // Each action is optional — omitting one keeps the button but shows "coming soon"
+  onStop?: () => void;
   onDelete?: () => void;
+  onActivate?: () => void;
   onEdit?: () => void;
   onCustom?: () => void;
   onToggle?: () => void;
@@ -22,9 +27,14 @@ type ActionsMenuProps = {
 export function ActionsMenu({
   menuItems,
   onClose,
+  isStopping = false,
   isDeleting = false,
+  isToggling = false,
+  toggleLabel = "Processing...",
   isDuplicating = false,
+  onStop,
   onDelete,
+  onActivate,
   onEdit,
   onCustom,
   onToggle,
@@ -47,6 +57,12 @@ export function ActionsMenu({
 
   const handleAction = (key: MenuKey) => {
     switch (key) {
+      case "stop":
+        if (onStop) onStop();
+        break;
+      case "activate":
+        if (onActivate) onActivate();
+        break;
       case "delete":
         if (onDelete) onDelete();
         break;
@@ -85,17 +101,25 @@ export function ActionsMenu({
         <button
           key={key}
           disabled={
+            (key === "stop" && isStopping) ||
             (key === "delete" && isDeleting) ||
+            (key === "activate" && isToggling) ||
             (key === "duplicate" && isDuplicating)
           }
           onClick={() => handleAction(key)}
           className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium ${className} ${bg} transition-colors disabled:opacity-50`}
         >
-          {key === "delete" && isDeleting
-            ? "Deleting…"
-            : key === "duplicate" && isDuplicating
-              ? "Duplicating…"
-              : label}
+          {key === "stop" && isStopping ? (
+            "Stopping…"
+          ) : key === "delete" && isDeleting ? (
+            "Deleting…"
+          ) : key === "activate" && isToggling ? (
+            toggleLabel
+          ) : key === "duplicate" && isDuplicating ? (
+            "Duplicating…"
+          ) : (
+            <>{label}</>
+          )}
         </button>
       ))}
     </div>

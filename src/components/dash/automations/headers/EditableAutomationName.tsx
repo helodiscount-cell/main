@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableNameDialog } from "../../EditableNameDialog";
+import { EditableNameDialog } from "../../../shared/EditableNameDialog";
 
 interface EditableAutomationNameProps {
   value: string;

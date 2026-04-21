@@ -22,7 +22,7 @@ import {
   AutomationListResponseSchema,
   CreateAutomationResponseSchema,
   UpdateAutomationResponseSchema,
-  DeleteAutomationResponseSchema,
+  StopAutomationResponseSchema,
   ExecutionRecordSchema,
   DmLinkSchema,
 } from "./schemas/automation.schema";
@@ -99,8 +99,8 @@ export type CreateAutomationResponse = z.infer<
 export type UpdateAutomationResponse = z.infer<
   typeof UpdateAutomationResponseSchema
 >;
-export type DeleteAutomationResponse = z.infer<
-  typeof DeleteAutomationResponseSchema
+export type StopAutomationResponse = z.infer<
+  typeof StopAutomationResponseSchema
 >;
 export type ExecutionRecord = z.infer<typeof ExecutionRecordSchema>;
 export type DmLink = z.infer<typeof DmLinkSchema>;

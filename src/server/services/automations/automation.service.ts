@@ -15,7 +15,7 @@ import {
   findAutomationByIdAndUserIdForUpdate,
   findUserAutomations,
   updateAutomation as updateAutomationRecord,
-  softDeleteAutomation,
+  stopAutomation as stopAutomationRecord,
   findAutomationsByTargetAndKeywords,
 } from "@/server/repository/automations/automation.repository";
 import { invalidateAutomationCache } from "@/server/redis";
@@ -134,7 +134,7 @@ async function validateAutomationName(
     where: {
       instaAccountId,
       automationName: name,
-      status: { in: ["ACTIVE", "PAUSED"] },
+      status: { in: ["ACTIVE", "STOPPED"] },
       ...(automationId ? { id: { not: automationId } } : {}),
     },
     select: { id: true },
@@ -317,7 +317,7 @@ export async function getUserAutomations(
 ) {
   const repositoryFilters: AutomationFilters = {
     instaAccountId,
-    status: filters?.status ?? ["ACTIVE", "PAUSED", "STOPPED"],
+    status: filters?.status ?? ["ACTIVE", "STOPPED"],
   };
 
   const automations = await findUserAutomations(repositoryFilters);
@@ -510,8 +510,8 @@ export async function updateAutomation(
   };
 }
 
-// Soft-deletes an automation (ownership enforced in the query)
-export async function deleteAutomation(userId: string, automationId: string) {
+// Stops an automation (marks as STOPPED)
+export async function stopAutomation(userId: string, automationId: string) {
   const existingAutomation = await findAutomationByIdAndUserIdForUpdate(
     automationId,
     userId,
@@ -521,7 +521,7 @@ export async function deleteAutomation(userId: string, automationId: string) {
     throw new Error("Automation not found or access denied");
   }
 
-  await softDeleteAutomation(automationId);
+  await stopAutomationRecord(automationId);
 
   const invalidateType = getInvalidateType(
     existingAutomation.triggerType as TriggerType,
@@ -540,10 +540,10 @@ export async function deleteAutomation(userId: string, automationId: string) {
         targetId,
         automationId,
       },
-      "Failed to invalidate automation cache after deletion",
+      "Failed to invalidate automation cache after stop",
       error instanceof Error ? error : new Error(String(error)),
     );
   });
 
-  return { message: "Automation deleted successfully" };
+  return { message: "Automation stopped successfully" };
 }

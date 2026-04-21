@@ -109,7 +109,7 @@ export async function invalidateUser(
     pipeline.del(KEYS.ACCOUNT_BY_IG(webhookUserId));
     pipeline.del(KEYS.ACCESS_TOKEN(clerkId, webhookUserId));
 
-    // SCAN and delete all automation cache keys scoped to this IG account
+    // SCAN and clear all automation cache keys scoped to this IG account
     let cursor = "0";
     do {
       const [nextCursor, keys] = await redis.scan(
@@ -125,7 +125,7 @@ export async function invalidateUser(
       }
     } while (cursor !== "0");
 
-    // Also delete the DM automation key (not pattern-matched above)
+    // Also clear the DM automation key (not pattern-matched above)
     pipeline.del(KEYS.AUTOMATIONS_FOR_ACCOUNT_DM(webhookUserId));
 
     await pipeline.exec();

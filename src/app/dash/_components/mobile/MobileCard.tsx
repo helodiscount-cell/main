@@ -104,7 +104,7 @@ export const MobileCard = ({ data }: MobileCardProps) => {
                   ? "Live"
                   : (data as AutomationListItem).status === "EXPIRED"
                     ? "Expired"
-                    : "Paused"}
+                    : "Stopped"}
               </div>
             ) : (
               mapped.status

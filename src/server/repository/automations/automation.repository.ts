@@ -10,6 +10,15 @@ import { invalidateAutomations } from "@/server/redis";
 import { logger } from "@/server/utils/pino";
 
 import {
+  Prisma,
+  TriggerType,
+  AutomationStatus,
+  MatchType,
+  ActionType,
+  MediaType,
+} from "@prisma/client";
+
+import {
   CreateAutomationData,
   UpdateAutomationData,
   AutomationFilters,
@@ -19,7 +28,7 @@ import {
  * Payload interface for post media metadata
  */
 interface PostMediaPayload {
-  postMediaType?: string | null;
+  postMediaType?: MediaType | null;
   postThumbnailUrl?: string | null;
 }
 
@@ -214,7 +223,7 @@ export async function findAutomationByIdAndUserId(
 }
 
 /**
- * Finds an automation by ID and userId (for update/delete operations)
+ * Finds an automation by ID and userId (for update/stop operations)
  * Returns null if automation doesn't exist or user doesn't own it
  */
 export async function findAutomationByIdAndUserIdForUpdate(
@@ -244,10 +253,7 @@ export async function findAutomationByIdAndUserIdForUpdate(
 export async function findUserAutomations(filters: AutomationFilters) {
   return executeWithErrorHandling(
     () => {
-      const where: {
-        instaAccountId: string;
-        status?: string | { in: string[] };
-      } = {
+      const where: Prisma.AutomationWhereInput = {
         instaAccountId: filters.instaAccountId,
       };
 
@@ -292,10 +298,7 @@ export async function countAutomations(
 ): Promise<number> {
   return executeWithErrorHandling(
     () => {
-      const where: {
-        instaAccountId: string;
-        status?: string | { in: string[] };
-      } = {
+      const where: Prisma.AutomationWhereInput = {
         instaAccountId: filters.instaAccountId,
       };
 
@@ -385,7 +388,7 @@ export async function findAutomationsByTargetAndKeywords(
       prisma.automation.findMany({
         where: {
           instaAccountId,
-          status: { in: ["ACTIVE", "PAUSED"] },
+          status: { in: ["ACTIVE", "STOPPED"] },
           targetId,
           targetType: type,
           // Conflict logic:
@@ -462,50 +465,27 @@ export async function updateAutomationStats(automationId: string) {
 }
 
 /**
- * Soft deletes an automation (marks as DELETED)
- * Releases name and trigger keywords for future use
+ * Stops an automation (marks as STOPPED)
  */
-export async function softDeleteAutomation(automationId: string) {
+export async function stopAutomation(automationId: string) {
   const result = await executeWithErrorHandling(
     async () => {
-      // Find current name to prefix it
-      const existing = await prisma.automation.findUnique({
-        where: { id: automationId },
-        select: { automationName: true, instaAccountId: true },
-      });
-
       return prisma.automation.update({
         where: { id: automationId },
         data: {
-          status: "DELETED",
-          // Unique prefix to release the name so another can use it
-          automationName: `deleted_${Date.now()}_${
-            existing?.automationName || "unnamed"
-          }`,
-          // Clear triggers by setting a unique tombstone array so they don't block future keyword automations
-          // while avoiding duplicate unique constraints on multiple deleted records
-          triggers: {
-            set: [`deleted_${automationId}_${Date.now()}`],
-          },
-          triggersSignature: `deleted_${automationId}_${Date.now()}`,
-          // Release indexing target so others can use it
-          targetId: null,
-          targetType: null,
-          // Explicitly clear embedded target metadata (Trigger Boxes)
-          post: { unset: true },
-          story: { unset: true },
+          status: "STOPPED",
         },
       });
     },
     {
-      operation: "softDeleteAutomation",
+      operation: "stopAutomation",
       model: "Automation",
       retries: 1,
     },
   );
 
   if (result) {
-    await invalidateAutomationsForAccount(result.instaAccountId, "delete");
+    await invalidateAutomationsForAccount(result.instaAccountId, "update");
   }
   return result;
 }
@@ -516,7 +496,7 @@ export async function softDeleteAutomation(automationId: string) {
  */
 async function invalidateAutomationsForAccount(
   instaAccountId: string,
-  action: "create" | "update" | "delete",
+  action: "create" | "update" | "stop",
 ) {
   try {
     const account = await prisma.instaAccount.findUnique({

@@ -18,7 +18,7 @@ import { sanitizeQueryParam } from "../lib/utils/validation";
 const StoryTargetInputSchema = z.object({
   id: z.string().min(1).max(100),
   mediaUrl: z.string().min(1).max(2048),
-  mediaType: z.enum(["IMAGE", "VIDEO"]),
+  mediaType: z.enum(["IMAGE", "VIDEO", "CAROUSEL_ALBUM"]),
   thumbnailUrl: z.string().url().max(2048).optional().nullable(),
   caption: z.string().max(MAX_LENGTHS.POST_CAPTION).nullable().optional(),
   permalink: z.string().min(1).max(2048),
@@ -83,7 +83,10 @@ export const CreateAutomationSchema = z
       .optional()
       .transform((val) => (val ? sanitizePostCaption(val) : null)),
     postMediaUrl: z.string().url().max(2048).optional().nullable(),
-    postMediaType: z.string().max(100).optional().nullable(),
+    postMediaType: z
+      .enum(["IMAGE", "VIDEO", "CAROUSEL_ALBUM"])
+      .optional()
+      .nullable(),
     postThumbnailUrl: z.string().url().max(2048).optional().nullable(),
     postPermalink: z.string().url().max(2048).optional().nullable(),
     postTimestamp: z.string().max(100).optional().nullable(),
@@ -275,13 +278,13 @@ export const UpdateAutomationSchema = z.object({
       val === undefined ? undefined : val ? sanitizeText(val) || null : null,
     ),
   dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
-  status: z.enum(["ACTIVE", "PAUSED", "DELETED"]).optional(),
+  status: z.enum(["ACTIVE", "STOPPED", "EXPIRED"]).optional(),
 });
 
 // Query parameters for listing automations
 export const AutomationListQuerySchema = z.object({
   status: z
-    .enum(["ACTIVE", "PAUSED", "DELETED"])
+    .enum(["ACTIVE", "STOPPED", "EXPIRED"])
     .optional()
     .transform((val) => (val ? sanitizeQueryParam(val, 20) : undefined)),
   postId: z
@@ -325,7 +328,7 @@ export const AutomationResponseSchema = z.object({
   openingMessage: z.string().nullable().optional(),
   openingButtonText: z.string().nullable().optional(),
   dmLinks: z.array(DmLinkSchema).optional(),
-  status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
+  status: z.enum(["ACTIVE", "STOPPED", "EXPIRED"]),
   timesTriggered: z.number(),
   lastTriggeredAt: z.date().nullable(),
   createdAt: z.date(),
@@ -400,13 +403,13 @@ export const UpdateAutomationResponseSchema = z.object({
     openingMessage: z.string().nullable().optional(),
     openingButtonText: z.string().nullable().optional(),
     dmLinks: z.array(DmLinkSchema).optional(),
-    status: z.enum(["ACTIVE", "PAUSED", "DELETED"]),
+    status: z.enum(["ACTIVE", "STOPPED", "EXPIRED"]),
     updatedAt: z.date(),
   }),
 });
 
-// Delete automation success response
-export const DeleteAutomationResponseSchema = z.object({
+// Stop automation success response
+export const StopAutomationResponseSchema = z.object({
   success: z.literal(true),
   message: z.string(),
 });

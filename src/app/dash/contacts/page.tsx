@@ -104,7 +104,6 @@ const ContactsPage = () => {
         message: search
           ? "No matches found."
           : "No contacts yet. They'll appear here once they interact!",
-        icon: <span className="text-4xl text-slate-300">👥</span>,
       }}
       statusFilter="ALL"
       handleStatusChange={() => {}}

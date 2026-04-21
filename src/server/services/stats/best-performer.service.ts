@@ -38,18 +38,18 @@ export async function getBestPerformerStats(
   );
 
   // Find automations triggered within the time window — scoped to this workspace
-  const automations = await prisma.automation.findMany({
+  const automations = (await prisma.automation.findMany({
     where: {
       instaAccountId,
       triggerType: "COMMENT_ON_POST",
       post: { isSet: true },
-      status: { not: "DELETED" },
+      status: "ACTIVE",
       executions: { some: { executedAt: { gte: startDate } } },
     },
     include: {
       executions: { where: { executedAt: { gte: startDate } } },
     },
-  });
+  })) as any[];
 
   // Calculate performance per post
   // Performance metric = number of executions in the date range
@@ -57,7 +57,7 @@ export async function getBestPerformerStats(
     .map((auto) => {
       return {
         automation: auto,
-        score: auto.executions.length,
+        score: auto.executions?.length || 0,
       };
     })
     .filter((item) => item.score > 0)
@@ -107,8 +107,8 @@ export async function getBestPerformerStats(
 
   if (top3.length > 0) {
     // Collect all execution hours from top 3 performing posts
-    const allExecutionHours = top3.flatMap((item) =>
-      item.automation.executions.map((ex) =>
+    const allExecutionHours = top3.flatMap((item: any) =>
+      (item.automation.executions as any[]).map((ex: any) =>
         new Date(ex.executedAt).getUTCHours(),
       ),
     );

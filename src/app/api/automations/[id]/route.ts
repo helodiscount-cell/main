@@ -3,7 +3,7 @@ import { UpdateAutomationSchema } from "@dm-broo/common-types";
 import {
   getAutomation,
   updateAutomation,
-  deleteAutomation,
+  stopAutomation,
 } from "@/server/services/automations/automation.service";
 import { findUserByClerkId } from "@/server/repository/user/user.repository";
 import { isValidObjectId, sanitizeQueryParam } from "@/server/utils/validation";
@@ -69,7 +69,7 @@ export async function PATCH(
 }
 
 /**
- * DELETE - Deletes an automation
+ * DELETE - Stops an automation
  */
 export async function DELETE(
   request: NextRequest,
@@ -82,7 +82,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const result = await deleteAutomation(user.id, id);
+    const result = await stopAutomation(user.id, id);
     return { message: result.message };
   });
 }
