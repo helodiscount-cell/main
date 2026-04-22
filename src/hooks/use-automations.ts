@@ -135,7 +135,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
           return Promise.reject(new Error("No automation to stop."));
         }
         return automationService.update(automationDetails.id, {
-          status: "PAUSED",
+          status: "STOPPED",
         });
       },
       onSuccess: () => {

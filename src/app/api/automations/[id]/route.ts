@@ -82,7 +82,16 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const result = await stopAutomation(user.id, id);
+    const automationId = sanitizeQueryParam(id, 24);
+    if (!isValidObjectId(automationId)) {
+      throw new ApiRouteError(
+        "Invalid automation ID format",
+        "INVALID_INPUT",
+        400,
+      );
+    }
+
+    const result = await stopAutomation(user.id, automationId);
     return { message: result.message };
   });
 }

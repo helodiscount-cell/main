@@ -278,7 +278,7 @@ export const UpdateAutomationSchema = z.object({
       val === undefined ? undefined : val ? sanitizeText(val) || null : null,
     ),
   dmLinks: z.array(DmLinkSchema).max(3, "Maximum 3 links allowed").optional(),
-  status: z.enum(["ACTIVE", "STOPPED", "EXPIRED"]).optional(),
+  status: z.enum(["ACTIVE", "STOPPED"]).optional(),
 });
 
 // Query parameters for listing automations

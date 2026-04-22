@@ -101,9 +101,9 @@ export function ActionsMenu({
         <button
           key={key}
           disabled={
-            (key === "stop" && isStopping) ||
+            (key === "stop" && (isStopping || !onStop)) ||
             (key === "delete" && isDeleting) ||
-            (key === "activate" && isToggling) ||
+            (key === "activate" && (isToggling || !onActivate)) ||
             (key === "duplicate" && isDuplicating)
           }
           onClick={() => handleAction(key)}
@@ -111,10 +111,14 @@ export function ActionsMenu({
         >
           {key === "stop" && isStopping ? (
             "Stopping…"
+          ) : key === "stop" && !onStop ? (
+            <span className="opacity-70">{label} (Coming soon)</span>
           ) : key === "delete" && isDeleting ? (
             "Deleting…"
           ) : key === "activate" && isToggling ? (
             toggleLabel
+          ) : key === "activate" && !onActivate ? (
+            <span className="opacity-70">{label} (Coming soon)</span>
           ) : key === "duplicate" && isDuplicating ? (
             "Duplicating…"
           ) : (

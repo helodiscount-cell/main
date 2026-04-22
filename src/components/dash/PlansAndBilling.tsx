@@ -103,7 +103,7 @@ const PlansAndBilling = async () => {
           <h4 className="text-lg font-medium text-[#1E293B] tracking-tight">
             History
           </h4>
-          <div className="flex flex-col overflow-y-auto">
+          <div className="flex flex-col overflow-y-auto max-h-48">
             {invoices.slice(0, 3).map((invoice, i) => {
               const config =
                 statusConfig[invoice.status] || statusConfig.pending;

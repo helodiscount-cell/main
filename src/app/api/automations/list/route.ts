@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
       if (!validation.success) {
         throw new ApiRouteError(
-          "Invalid status filter. Recommended: ACTIVE, STOPPED",
+          "Invalid status filter. Recommended: ACTIVE, STOPPED, EXPIRED",
           "INVALID_INPUT",
           400,
         );
