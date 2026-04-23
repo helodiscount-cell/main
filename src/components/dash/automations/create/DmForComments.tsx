@@ -55,7 +55,7 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
               className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer flex items-center justify-center group overflow-hidden relative"
             >
               <Link
-                href={`/dash/automations/dmforcomments/${item.id}`}
+                href={`/dash/automations/new/comments/${item.id}`}
                 className="w-full h-full"
               >
                 <Image

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { ASK_TO_FOLLOW_CONFIG, OPENING_MESSAGE_CONFIG } from "./widgets.config";
+import { AutomationListItem } from "@/api/services/automations/types";
 
 export const AUTOMATION_CONFIGS = {
   COMMENT_REPLY: {
@@ -25,6 +27,19 @@ export const AUTOMATION_CONFIGS = {
     successMessage: "Account DM automation is now live! 🚀",
     stopMessage: "Account DM automation stopped.",
   },
+} as const;
+
+export const UPDATE_SUCCESS_MESSAGE = "Automation updated successfully!";
+
+// Default reply seed used in comments automation, shared across create + edit
+export const DEFAULT_REPLY_ID = "default-reply-1";
+export const DEFAULT_REPLY_TEXT = "Open your DMs, it's there!";
+
+// Send DM widget limits
+export const SEND_DM_CONFIG = {
+  MAX_CHARS_WITHOUT_IMAGE: 1000,
+  MAX_CHARS_WITH_IMAGE: 500,
+  MAX_LINKS: 3,
 } as const;
 
 export const FORM_VALIDATION_MESSAGES = {
@@ -99,12 +114,23 @@ export const respondToAllDmsSchema = applyAutomationRefinements(
  * Common refinements for automation schemas to ensure consistency across different triggers.
  * Blocks submission if enabled features have empty content.
  */
+// Minimal type covering the shared fields validated across all automation schemas
+interface BaseRefinementData {
+  anyKeyword?: boolean;
+  keywords?: string[];
+  openingMessageEnabled?: boolean;
+  openingMessage?: string;
+  openingButtonText?: string;
+  askToFollowEnabled?: boolean;
+  askToFollowMessage?: string;
+}
+
 function applyAutomationRefinements<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>,
 ) {
   return schema
     .refine(
-      (data: any) => {
+      (data: BaseRefinementData) => {
         if (!data.anyKeyword) {
           return data.keywords && data.keywords.length > 0;
         }
@@ -116,7 +142,7 @@ function applyAutomationRefinements<T extends z.ZodRawShape>(
       },
     )
     .refine(
-      (data: any) => {
+      (data: BaseRefinementData) => {
         if (data.openingMessageEnabled) {
           return !!data.openingMessage?.trim();
         }
@@ -128,7 +154,7 @@ function applyAutomationRefinements<T extends z.ZodRawShape>(
       },
     )
     .refine(
-      (data: any) => {
+      (data: BaseRefinementData) => {
         if (data.openingMessageEnabled) {
           return !!data.openingButtonText?.trim();
         }
@@ -140,7 +166,7 @@ function applyAutomationRefinements<T extends z.ZodRawShape>(
       },
     )
     .refine(
-      (data: any) => {
+      (data: BaseRefinementData) => {
         if (data.askToFollowEnabled) {
           return !!data.askToFollowMessage?.trim();
         }
@@ -156,3 +182,78 @@ function applyAutomationRefinements<T extends z.ZodRawShape>(
 export type CommentsFormValues = z.infer<typeof commentsAutomationSchema>;
 export type StoryFormValues = z.infer<typeof storyAutomationSchema>;
 export type RespondToAllDMsFormValues = z.infer<typeof respondToAllDmsSchema>;
+
+// Base default values shared by all automation types
+const BASE_DEFAULT_VALUES = {
+  automationName: "",
+  anyKeyword: false,
+  keywords: [] as string[],
+  dmMessage: "",
+  askToFollowEnabled: false,
+  askToFollowMessage: ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
+  askToFollowLink: "",
+  openingMessageEnabled: false,
+  openingMessage: OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+  openingButtonText: OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
+  dmLinks: [] as { title: string; url: string }[],
+};
+
+export const COMMENTS_DEFAULT_VALUES: CommentsFormValues = {
+  ...BASE_DEFAULT_VALUES,
+  publicReplyEnabled: false,
+  publicReplies: [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
+};
+
+export const STORY_DEFAULT_VALUES: StoryFormValues = { ...BASE_DEFAULT_VALUES };
+
+export const DMS_DEFAULT_VALUES: RespondToAllDMsFormValues = {
+  ...BASE_DEFAULT_VALUES,
+};
+
+// Populates base form fields from a fetched automation (shared across story + DMs edit)
+export function populateBaseForm(
+  automation: AutomationListItem,
+): Omit<RespondToAllDMsFormValues, never> {
+  return {
+    automationName: automation.automationName ?? "",
+    anyKeyword:
+      ((automation as unknown as Record<string, unknown>)
+        .anyKeyword as boolean) ?? automation.triggers?.length === 0,
+    keywords: automation.triggers ?? [],
+    dmMessage: automation.replyMessage ?? "",
+    dmImage: automation.replyImage ?? undefined,
+    dmLinks:
+      ((automation as unknown as Record<string, unknown>).dmLinks as {
+        title: string;
+        url: string;
+      }[]) ?? [],
+    askToFollowEnabled: automation.askToFollowEnabled ?? false,
+    askToFollowMessage:
+      automation.askToFollowMessage ?? ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
+    askToFollowLink: automation.askToFollowLink ?? "",
+    openingMessageEnabled: automation.openingMessageEnabled ?? false,
+    openingMessage:
+      automation.openingMessage ?? OPENING_MESSAGE_CONFIG.DEFAULT_MESSAGE,
+    openingButtonText:
+      automation.openingButtonText ??
+      OPENING_MESSAGE_CONFIG.DEFAULT_BUTTON_TEXT,
+  };
+}
+
+// Extends base populate with comments-specific publicReplies fields
+export function populateCommentsForm(
+  automation: AutomationListItem,
+): CommentsFormValues {
+  const hasPublicReplies =
+    !!automation.commentReplyWhenDm && automation.commentReplyWhenDm.length > 0;
+  return {
+    ...populateBaseForm(automation),
+    publicReplyEnabled: hasPublicReplies,
+    publicReplies: hasPublicReplies
+      ? (automation.commentReplyWhenDm as string[]).map((text) => ({
+          id: crypto.randomUUID(),
+          text,
+        }))
+      : [{ id: DEFAULT_REPLY_ID, text: DEFAULT_REPLY_TEXT }],
+  };
+}

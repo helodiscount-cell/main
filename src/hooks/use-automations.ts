@@ -37,9 +37,9 @@ export function derivePageState(
 }
 
 interface UseAutomationManagerProps<TFormValues extends FieldValues> {
-  schema: z.ZodType<any, any, any>;
+  schema: z.ZodType<TFormValues>;
   defaultValues: DefaultValues<TFormValues>;
-  automationId?: string; // New prop for specific automation editing
+  automationId?: string;
   onBuildPayload: (data: TFormValues) => Record<string, unknown> | null;
   onPopulateForm?: (
     automation: AutomationListItem,
@@ -47,7 +47,7 @@ interface UseAutomationManagerProps<TFormValues extends FieldValues> {
   onPayloadInvalid?: () => void;
   successMessage: string;
   stopMessage: string;
-  onCreateSuccess?: (result: any) => void;
+  onCreateSuccess?: (result: { id: string; triggerType: string }) => void;
 }
 
 export function useAutomationManager<TFormValues extends FieldValues>({
@@ -81,7 +81,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 
   // Form setup
   const form = useForm<TFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema as never),
     defaultValues,
   });
 
@@ -97,7 +97,9 @@ export function useAutomationManager<TFormValues extends FieldValues>({
       lastResetId.current !== automationDetails.id &&
       !form.formState.isDirty
     ) {
-      form.reset(onPopulateForm(automationDetails) as any);
+      form.reset(
+        onPopulateForm(automationDetails) as DefaultValues<TFormValues>,
+      );
       lastResetId.current = automationDetails.id;
     }
   }, [automationDetails, onPopulateForm, form]);
@@ -219,13 +221,14 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     }
   };
 
-  const onInvalid = (errs: any) => {
-    // Extract the first available error message dynamically
-    const getFirstErrorMessage = (obj: any): string | null => {
+  const onInvalid = (errs: Record<string, unknown>) => {
+    const getFirstErrorMessage = (
+      obj: Record<string, unknown> | null | undefined,
+    ): string | null => {
       if (!obj) return null;
       if (typeof obj.message === "string") return obj.message;
       for (const key in obj) {
-        const msg = getFirstErrorMessage(obj[key]);
+        const msg = getFirstErrorMessage(obj[key] as Record<string, unknown>);
         if (msg) return msg;
       }
       return null;
@@ -236,7 +239,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     toast.error(firstError);
   };
 
-  const handleSubmit = form.handleSubmit(onSubmit, onInvalid);
+  const handleSubmit = form.handleSubmit(onSubmit as never, onInvalid as never);
 
   const [isMediaUploading, setIsMediaUploading] = useState(false);
 
@@ -256,7 +259,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     handleReRun,
     handleSubmit,
     handleNameChange: (name: string) => {
-      form.setValue("automationName" as any, name as any);
+      form.setValue("automationName" as never, name as never);
       if (pageState === "live" && automationDetails?.id) {
         updateAutomation({ automationName: name });
       }

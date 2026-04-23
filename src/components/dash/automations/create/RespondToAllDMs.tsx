@@ -51,7 +51,7 @@ export default function RespondToAllDMs({
           {stories.map((story) => (
             <Link
               key={story.id}
-              href={`/dash/automations/dmforstories/${story.id}`}
+              href={`/dash/automations/new/stories/${story.id}`}
             >
               <div className="aspect-square bg-gray-50 rounded-lg border-2 border-transparent hover:border-purple-600 transition-all cursor-pointer overflow-hidden relative group">
                 {story.media_type === "IMAGE" ? (

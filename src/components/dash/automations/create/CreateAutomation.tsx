@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   DMForComments,
   DmForStories,
@@ -18,6 +18,9 @@ import {
 } from "@/components/dash/automations/create";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { automationKeys } from "@/keys/react-query";
+import { automationService } from "@/api/services/automations";
 
 export default function CreateAutomationDialog({
   title,
@@ -27,6 +30,15 @@ export default function CreateAutomationDialog({
   triggerClassName?: string;
 }) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
+
+  // Reuses the same query key as page.tsx when status is undefined (ALL)
+  const { data } = useQuery({
+    queryKey: [...automationKeys.all, "list", { status: undefined }],
+    queryFn: () => automationService.list(),
+  });
+
+  const automations = data?.automations ?? [];
+  const hasAutomations = automations.length > 0;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -41,12 +53,6 @@ export default function CreateAutomationDialog({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      setActiveTab(null);
-    };
-  }, []);
-
   return (
     <Dialog onOpenChange={(open) => !open && setActiveTab(null)}>
       <DialogTrigger asChild>
@@ -57,7 +63,7 @@ export default function CreateAutomationDialog({
           }
         >
           <Image src={PlusIconSvg} alt="add" width={15} height={15} />
-          {title}
+          {hasAutomations ? title : "Create your first automation."}
         </Button>
       </DialogTrigger>
       <DialogContent

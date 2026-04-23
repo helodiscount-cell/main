@@ -1,25 +1,26 @@
 import { TriggerType } from "@/api/services/automations/types";
 
 /**
- * Gets the canonical edit route for a given automation type.
+ * Gets the canonical edit route for any automation — universally /dash/automations/[id].
+ * The editor resolves the correct widgets from triggerType on the fetched data.
  */
 export function getAutomationRoute(
   triggerType: TriggerType,
   id: string,
 ): string | null {
-  switch (triggerType) {
-    case "RESPOND_TO_ALL_DMS":
-      return `/dash/automations/respondtoalldms/edit/${id}`;
-    case "STORY_REPLY":
-      return `/dash/automations/dmforstories/edit/${id}`;
-    case "COMMENT_ON_POST":
-      return `/dash/automations/dmforcomments/edit/${id}`;
-    default:
-      console.error(
-        `[Automation] Unknown triggerType encountered: ${triggerType}`,
-      );
-      return null;
+  // All types share one editor route; triggerType is kept for the null guard below
+  const validTypes: TriggerType[] = [
+    "RESPOND_TO_ALL_DMS",
+    "STORY_REPLY",
+    "COMMENT_ON_POST",
+  ];
+  if (!validTypes.includes(triggerType)) {
+    console.error(
+      `[Automation] Unknown triggerType encountered: ${triggerType}`,
+    );
+    return null;
   }
+  return `/dash/automations/${id}`;
 }
 
 /**
