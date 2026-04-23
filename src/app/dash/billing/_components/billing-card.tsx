@@ -40,7 +40,26 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
         throw new Error(data.error || "Failed to start checkout");
 
       if (data.checkoutUrl) {
-        window.location.assign(data.checkoutUrl);
+        const width = 600;
+        const height = 800;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+
+        const popup = window.open(
+          data.checkoutUrl,
+          "Checkout",
+          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no`,
+        );
+
+        // Refresh the main window when the popup is closed to show updated plan status
+        if (popup) {
+          const timer = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(timer);
+              window.location.reload();
+            }
+          }, 1000);
+        }
       } else {
         console.error("[Checkout] Response missing checkoutUrl:", data);
         throw new Error("Unable to start checkout. Please try again.");

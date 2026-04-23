@@ -1,7 +1,10 @@
 import React from "react";
-import { Check, Crown } from "lucide-react";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { ProfileData } from "../types";
+import { UpgradeTooltip } from "@/components/shared/UpgradeTooltip";
+import CrownIcon from "@/assets/svgs/CrownIcon.svg";
+import Image from "next/image";
 
 interface ProfileTabProps {
   data: ProfileData;
@@ -74,13 +77,15 @@ export function ProfileTab({ data }: ProfileTabProps) {
 
           {/* Action Button */}
           {!isBlackTier ? (
-            <Link
-              href="/dash/billing"
-              className="w-full bg-[#6A06E4] hover:bg-[#5B05C2] text-white p-3 rounded-sm flex items-center justify-center gap-2 font-semibold text-sm transition-all active:scale-[0.98] mt-2"
-            >
-              Add New Account
-              <Crown size={18} className="fill-white/10" />
-            </Link>
+            <UpgradeTooltip>
+              <Link
+                href="/dash/billing"
+                className="w-full bg-[#6A06E4] hover:bg-[#5B05C2] text-white p-3 rounded-sm flex items-center justify-center gap-2 font-semibold text-sm transition-all active:scale-[0.98] mt-2"
+              >
+                Add New Account
+                <Image src={CrownIcon} width={20} height={20} alt="" />
+              </Link>
+            </UpgradeTooltip>
           ) : canAddAccount ? (
             <Link
               href="/api/instagram/oauth/authorize?returnUrl=/dash/settings?tab=profile"

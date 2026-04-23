@@ -1,5 +1,6 @@
 import { Link as LinkIcon } from "lucide-react";
 import { AutomationInput } from "./AutomationInput";
+import CrownIcon from "@/assets/svgs/CrownIcon.svg";
 
 interface AskToFollowProps {
   enabled: boolean;
@@ -10,6 +11,7 @@ interface AskToFollowProps {
 
 import { useFeatureGates } from "@/hooks/use-feature-gates";
 import { LockedOverlay } from "@/components/dash/LockedOverlay";
+import Image from "next/image";
 
 const AskToFollow = ({
   enabled,
@@ -22,19 +24,18 @@ const AskToFollow = ({
   const isLocked = gates?.access?.hasAskToFollow === false;
 
   return (
-    <LockedOverlay
-      isLocked={isLocked}
-      title="Ask to Follow"
-      description="Available on Black & Free plans"
-      className="w-full"
-      borderRadius="1rem"
-    >
+    <LockedOverlay isLocked={isLocked} className="w-full">
       <div className="bg-white rounded-2xl border border-purple-200 w-full overflow-hidden transition-all duration-200">
         {/* Header section with title and toggle */}
         <div className="flex items-center justify-between px-5 py-4">
-          <h3 className="text-sm font-semibold text-slate-800">
-            Ask to Follow
-          </h3>
+          <div className="flex gap-4">
+            <h3 className="text-sm font-semibold text-slate-800">
+              Ask to Follow
+            </h3>
+            {isLocked && (
+              <Image src={CrownIcon} alt="Crown Icon" width={20} height={20} />
+            )}
+          </div>
           <button
             onClick={() => onEnabledChange(!enabled)}
             className={`relative w-12 h-6.5 rounded-full transition-all duration-300 ease-in-out ${

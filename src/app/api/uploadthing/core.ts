@@ -1,6 +1,8 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { auth } from "@clerk/nextjs/server";
 
+import { FORMS_CONFIG } from "@/configs/forms.config";
+
 const f = createUploadthing();
 
 // FileRouter for our app, can contain multiple FileRoutes
@@ -34,29 +36,56 @@ export const ourFileRouter = {
 
   // Add a route for public form attachments — anonymous users allowed
   formAttachment: f({
-    // Permitted image types (excludes GIF)
-    "image/jpeg": { maxFileSize: "4MB", maxFileCount: 1 },
-    "image/png": { maxFileSize: "4MB", maxFileCount: 1 },
-    "image/webp": { maxFileSize: "4MB", maxFileCount: 1 },
-    pdf: { maxFileSize: "4MB", maxFileCount: 1 },
-    text: { maxFileSize: "4MB", maxFileCount: 1 },
-    "application/msword": { maxFileSize: "4MB", maxFileCount: 1 },
+    // Permitted file types capped at configuration limit
+    "image/jpeg": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
+    "image/png": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
+    "image/webp": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
+    pdf: {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
+    text: {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
+    "application/msword": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
-      maxFileSize: "4MB",
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
       maxFileCount: 1,
     },
-    "application/vnd.ms-excel": { maxFileSize: "4MB", maxFileCount: 1 },
+    "application/vnd.ms-excel": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-      maxFileSize: "4MB",
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
       maxFileCount: 1,
     },
-    "application/vnd.ms-powerpoint": { maxFileSize: "4MB", maxFileCount: 1 },
+    "application/vnd.ms-powerpoint": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
     "application/vnd.openxmlformats-officedocument.presentationml.presentation":
       {
-        maxFileSize: "4MB",
+        maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
         maxFileCount: 1,
       },
-    "application/zip": { maxFileSize: "8MB", maxFileCount: 1 },
+    "application/zip": {
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileCount: 1,
+    },
   })
     .middleware(async () => {
       // No auth requirement for public form submissions

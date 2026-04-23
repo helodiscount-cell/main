@@ -35,17 +35,17 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
   return (
     <div className="relative flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-200">
       {/* FIELD CONTAINER */}
-      <div className="flex-1 bg-white rounded-xl border border-slate-100 px-4 py-3 space-y-3 shadow-sm hover:border-[#6A06E4]/20 transition-colors">
+      <div className="flex-1 bg-white rounded-xl border border-slate-100 px-4 py-3 space-y-3 hover:border-[#6A06E4]/20 transition-colors">
         {/* HEADER SECTION: Displays field type, Required toggle and Delete button */}
         <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-          <span className="text-[10px] font-bold text-[#6A06E4] uppercase tracking-wider">
+          <span className="text-[16px] font-bold text-[#6A06E4] uppercase tracking-wider">
             {FIELD_TYPE_LABELS[fieldType]}
           </span>
 
           <div className="flex items-center gap-2">
             <span
               id={`required-label-${index}`}
-              className="text-[10px] font-medium text-slate-400"
+              className="text-sm font-medium text-[#212121]"
             >
               Required
             </span>
@@ -69,7 +69,7 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
             <button
               type="button"
               onClick={onRemove}
-              className="text-slate-200 hover:text-red-500 shrink-0 transition-colors h-fit p-1.5 cursor-pointer ml-1"
+              className="text-red-400 hover:text-red-500 shrink-0 transition-colors h-fit p-1.5 cursor-pointer ml-1"
               aria-label="Remove field"
             >
               <Trash2 size={15} />
@@ -88,7 +88,7 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
                 ? `field-${index}-label-error`
                 : undefined
             }
-            className="w-full text-sm font-semibold text-slate-900 bg-transparent outline-none placeholder:text-slate-300"
+            className="w-full text-sm font-medium text-slate-900 bg-transparent outline-none placeholder:text-black/70"
           />
           {fieldError?.label?.message && (
             <p
@@ -165,7 +165,7 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
                         ? "Enter your email address..."
                         : "Enter a website URL..."
                 }
-                className="w-full text-xs text-slate-500 bg-transparent outline-none placeholder:text-slate-300"
+                className="w-full text-xs font-medium text-slate-500 bg-transparent outline-none placeholder:text-slate-500"
               />
             </div>
           ) : (

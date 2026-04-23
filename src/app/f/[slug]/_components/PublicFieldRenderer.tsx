@@ -6,6 +6,7 @@ import type {
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
+  FieldErrors,
 } from "react-hook-form";
 import {
   Star,
@@ -14,6 +15,7 @@ import {
   CalendarIcon,
   UploadCloud,
   Loader2,
+  TriangleAlert,
 } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "sonner";
@@ -26,12 +28,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
+import { FORMS_CONFIG } from "@/configs/forms.config";
 
 type PublicFieldRendererProps = {
   field: FormField;
   register: UseFormRegister<Record<string, string | string[]>>;
   setValue: UseFormSetValue<Record<string, string | string[]>>;
   watch: UseFormWatch<Record<string, string | string[]>>;
+  errors?: FieldErrors<Record<string, string | string[]>>;
   onUploadStateChange?: (isUploading: boolean) => void;
 };
 
@@ -197,6 +201,14 @@ const FileUploadField = ({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE) {
+      toast.error(
+        `File is too big. Max size is ${FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY}`,
+      );
+      return;
+    }
+
     await startUpload([file]);
   };
 
@@ -204,6 +216,14 @@ const FileUploadField = ({
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
+
+    if (file.size > FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE) {
+      toast.error(
+        `File is too big. Max size is ${FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY}`,
+      );
+      return;
+    }
+
     await startUpload([file]);
   };
 
@@ -264,7 +284,8 @@ const FileUploadField = ({
               Choose a file or drag and drop
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              Supports images, docs, and more
+              Max {FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY} • Supports
+              images, docs, and more
             </p>
           </div>
           <input
@@ -285,10 +306,13 @@ export const PublicFieldRenderer = ({
   register,
   setValue,
   watch,
+  errors,
   onUploadStateChange,
 }: PublicFieldRendererProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  // Controls phone error visibility — hidden while field is active
+  const [isPhoneFocused, setIsPhoneFocused] = useState(false);
 
   // Watch field value at top level to avoid rule of hook violations in branches
   const rawValue = watch(field.id);
@@ -307,7 +331,9 @@ export const PublicFieldRenderer = ({
           {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>
         <input
-          {...register(field.id)}
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+          })}
           type={INPUT_TYPE_MAP[field.type as FieldType] ?? "text"}
           placeholder={
             field.placeholder ||
@@ -321,9 +347,14 @@ export const PublicFieldRenderer = ({
                     ? "Enter a website URL..."
                     : "")
           }
-          className={inputClass}
-          required={field.required}
+          className={`${inputClass} ${errors?.[field.id] ? "border-red-500 focus:ring-red-500" : ""}`}
         />
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
       </div>
     );
   }
@@ -342,7 +373,18 @@ export const PublicFieldRenderer = ({
           required={field.required}
         />
         {/* Hidden input to hold the joined value for react-hook-form */}
-        <input type="hidden" {...register(field.id)} />
+        <input
+          type="hidden"
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+          })}
+        />
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
       </div>
     );
   }
@@ -366,7 +408,9 @@ export const PublicFieldRenderer = ({
       const cleanNum = newNum.replace(/\D/g, "").slice(0, phoneLimit);
 
       // Always set value so the country code selection is preserved
-      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`);
+      setValue(field.id, `+${cleanCode}|phone|${cleanNum}`, {
+        shouldValidate: true,
+      });
     };
 
     return (
@@ -395,13 +439,43 @@ export const PublicFieldRenderer = ({
             }
             value={number}
             onChange={(e) => handlePhoneChange(code, e.target.value)}
+            onFocus={() => setIsPhoneFocused(true)}
+            onBlur={() => setIsPhoneFocused(false)}
             className={inputClass}
             maxLength={phoneLimit}
             required={field.required}
           />
         </div>
         {/* Hidden input to hold the joined E.164-like value for react-hook-form */}
-        <input type="hidden" {...register(field.id)} />
+        <input
+          type="hidden"
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+            validate: (val) => {
+              if (!field.required && !val) return true;
+              if (!val) return `${field.label} is required`;
+              const parts = (val as string).split("|phone|");
+              const code = parts[0]?.replace("+", "") || "";
+              const number = parts[1] || "";
+              const selectedCountry = COUNTRIES.find(
+                (c) =>
+                  c.dialCode.replace(/\D/g, "") === code.replace(/\D/g, ""),
+              );
+              const limit = selectedCountry?.phoneLength || 15;
+              if (number.length !== limit) {
+                return `${field.label} must be exactly ${limit} digits`;
+              }
+              return true;
+            },
+          })}
+        />
+        {/* Only show error when field is not focused */}
+        {!isPhoneFocused && errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
       </div>
     );
   }
@@ -415,10 +489,11 @@ export const PublicFieldRenderer = ({
           {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>
         <select
-          {...register(field.id)}
-          className={inputClass}
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+          })}
+          className={`${inputClass} ${errors?.[field.id] ? "border-red-500 focus:ring-red-500" : ""}`}
           defaultValue=""
-          required={field.required}
         >
           <option value="" disabled>
             Select an option
@@ -429,6 +504,12 @@ export const PublicFieldRenderer = ({
             </option>
           ))}
         </select>
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
       </div>
     );
   }
@@ -464,6 +545,23 @@ export const PublicFieldRenderer = ({
             </label>
           ))}
         </div>
+        <input
+          type="hidden"
+          {...register(field.id, {
+            validate: (val) => {
+              if (field.required && (!val || val.length === 0)) {
+                return `${field.label} is required`;
+              }
+              return true;
+            },
+          })}
+        />
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
       </div>
     );
   }
@@ -471,12 +569,26 @@ export const PublicFieldRenderer = ({
   // Date – revamped shadcn with dd/mm/yy format
   if (field.type === "date") {
     return (
-      <DatePickerField
-        field={field}
-        fullValue={fullValue}
-        setValue={setValue}
-        inputClass={inputClass}
-      />
+      <div className="space-y-1.5 flex flex-col gap-2">
+        <DatePickerField
+          field={field}
+          fullValue={fullValue}
+          setValue={setValue}
+          inputClass={inputClass}
+        />
+        <input
+          type="hidden"
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+          })}
+        />
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
+      </div>
     );
   }
 
@@ -512,18 +624,44 @@ export const PublicFieldRenderer = ({
             </button>
           ))}
         </div>
+        <input
+          type="hidden"
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+          })}
+        />
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
       </div>
     );
   }
 
   if (field.type === "upload") {
     return (
-      <FileUploadField
-        field={field}
-        fullValue={fullValue}
-        setValue={setValue}
-        onUploadStateChange={onUploadStateChange}
-      />
+      <div className="space-y-1.5 flex flex-col gap-2">
+        <FileUploadField
+          field={field}
+          fullValue={fullValue}
+          setValue={setValue}
+          onUploadStateChange={onUploadStateChange}
+        />
+        <input
+          type="hidden"
+          {...register(field.id, {
+            required: field.required ? `${field.label} is required` : false,
+          })}
+        />
+        {errors?.[field.id] && (
+          <p className="text-xs text-red-500 flex items-center gap-1.5">
+            <TriangleAlert size={12} />
+            {errors[field.id]?.message as string}
+          </p>
+        )}
+      </div>
     );
   }
 

@@ -22,9 +22,13 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
   const [activeUploads, setActiveUploads] = useState(0);
   const isMediaUploading = activeUploads > 0;
   const [submitted, setSubmitted] = useState(false);
-  const { register, handleSubmit, setValue, watch } = useForm<
-    Record<string, string | string[]>
-  >({ defaultValues: {} });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<Record<string, string | string[]>>({ defaultValues: {} });
 
   const handleUploadStateChange = (uploading: boolean) => {
     setActiveUploads((prev) => (uploading ? prev + 1 : Math.max(0, prev - 1)));
@@ -56,6 +60,13 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
     }
   };
 
+  const onInvalid = () => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      toast.error(firstError.message as string);
+    }
+  };
+
   // Replace the form with a thank-you screen after successful submission
   if (submitted) router.push(`/f/${slug}/submitted`);
 
@@ -68,7 +79,7 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
       onKeyDown={handleKeyDown}
       className="space-y-6"
     >
@@ -79,6 +90,7 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
           register={register}
           setValue={setValue}
           watch={watch}
+          errors={errors}
           onUploadStateChange={handleUploadStateChange}
         />
       ))}
