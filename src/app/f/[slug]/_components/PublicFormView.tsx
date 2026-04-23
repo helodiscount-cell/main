@@ -60,8 +60,8 @@ export const PublicFormView = ({ form, slug }: PublicFormViewProps) => {
     }
   };
 
-  const onInvalid = () => {
-    const firstError = Object.values(errors)[0];
+  const onInvalid = (formErrors: typeof errors) => {
+    const firstError = Object.values(formErrors)[0];
     if (firstError?.message) {
       toast.error(firstError.message as string);
     }

@@ -30,7 +30,9 @@ export const LockedOverlay = ({
       */}
       <div className={`relative cursor-not-allowed ${className}`}>
         {/* Disable all interactions on the actual children */}
-        <div className="pointer-events-none select-none">{children}</div>
+        <div className="pointer-events-none select-none" inert>
+          {children}
+        </div>
 
         {/* Intercepts any clicks that reach through */}
         <div className="absolute inset-0 z-10" />

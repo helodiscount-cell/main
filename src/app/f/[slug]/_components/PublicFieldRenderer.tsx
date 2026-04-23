@@ -125,7 +125,10 @@ const DatePickerField = ({
             const formatted = formatDisplay(e.target.value);
             setInputValue(formatted);
             const iso = parseDate(formatted);
-            setValue(field.id, iso || "");
+            setValue(field.id, iso || "", {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
           }}
         />
         <div className="absolute right-0 top-0 bottom-0 flex items-center pr-3">
@@ -145,7 +148,13 @@ const DatePickerField = ({
                 selected={selectedDate}
                 onSelect={(date) => {
                   if (date) {
-                    setValue(field.id, date.toISOString().split("T")[0]);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const day = String(date.getDate()).padStart(2, "0");
+                    setValue(field.id, `${year}-${month}-${day}`, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
                     setOpen(false);
                   }
                 }}
@@ -183,8 +192,12 @@ const FileUploadField = ({
           url: res[0].url,
           name: res[0].name,
         });
-        setValue(field.id, uploadValue);
+        setValue(field.id, uploadValue, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
         toast.success("File uploaded!");
+        if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
     onUploadError: (error: Error) => {
@@ -206,6 +219,7 @@ const FileUploadField = ({
       toast.error(
         `File is too big. Max size is ${FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY}`,
       );
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -221,6 +235,7 @@ const FileUploadField = ({
       toast.error(
         `File is too big. Max size is ${FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY}`,
       );
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -254,7 +269,13 @@ const FileUploadField = ({
             </p>
             <button
               type="button"
-              onClick={() => setValue(field.id, "")}
+              onClick={() => {
+                setValue(field.id, "", {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
               className="text-xs text-emerald-600 hover:underline"
             >
               Remove and re-upload
@@ -369,7 +390,12 @@ export const PublicFieldRenderer = ({
         </label>
         <HierarchicalLocationPicker
           value={fullValue}
-          onChange={(val) => setValue(field.id, val)}
+          onChange={(val) =>
+            setValue(field.id, val, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
           required={field.required}
         />
         {/* Hidden input to hold the joined value for react-hook-form */}
@@ -520,7 +546,10 @@ export const PublicFieldRenderer = ({
       const current = checkedValues.includes(label)
         ? checkedValues.filter((v) => v !== label)
         : [...checkedValues, label];
-      setValue(field.id, current);
+      setValue(field.id, current, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     };
 
     return (
@@ -607,7 +636,10 @@ export const PublicFieldRenderer = ({
               type="button"
               onClick={() => {
                 setRating(star);
-                setValue(field.id, String(star));
+                setValue(field.id, String(star), {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
               }}
               onMouseEnter={() => setHoverRating(star)}
               onMouseLeave={() => setHoverRating(0)}

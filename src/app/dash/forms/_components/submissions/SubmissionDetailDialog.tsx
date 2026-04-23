@@ -52,8 +52,9 @@ export const SubmissionDetailDialog = ({
               variant="ghost"
               className="w-8 h-8 border-gray-200"
               onClick={onClose}
+              aria-label="Close submission details"
             >
-              <X className="text-gray-500" size={20} />
+              <X className="text-gray-500" size={20} aria-hidden="true" />
             </Button>
           </div>
           <Separator />
@@ -93,9 +94,9 @@ export const SubmissionDetailDialog = ({
                     key={field.id}
                     className="bg-[#F9F9F9] p-5 rounded-2xl border border-slate-100/50 space-y-1.5 transition-all hover:bg-slate-100/50"
                   >
-                    <label className="text-[12px] font-medium text-[#6D6D6D] uppercase tracking-widest block">
+                    <p className="text-[12px] font-medium text-[#6D6D6D] uppercase tracking-widest block">
                       {field.label}
-                    </label>
+                    </p>
                     {/* Smart renderer: image preview, file download, or plain text */}
                     <SubmissionAnswerValue value={answer} type={field.type} />
                   </div>

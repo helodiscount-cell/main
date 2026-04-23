@@ -38,52 +38,52 @@ export const ourFileRouter = {
   formAttachment: f({
     // Permitted file types capped at configuration limit
     "image/jpeg": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "image/png": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "image/webp": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     pdf: {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     text: {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "application/msword": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "application/vnd.ms-excel": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "application/vnd.ms-powerpoint": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
     "application/vnd.openxmlformats-officedocument.presentationml.presentation":
       {
-        maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+        maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
         maxFileCount: 1,
       },
     "application/zip": {
-      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_LABEL,
+      maxFileSize: FORMS_CONFIG.UPLOAD.MAX_FILE_SIZE_FRIENDLY as any,
       maxFileCount: 1,
     },
   })

@@ -33,7 +33,12 @@ const AskToFollow = ({
               Ask to Follow
             </h3>
             {isLocked && (
-              <Image src={CrownIcon} alt="Crown Icon" width={20} height={20} />
+              <Image
+                src={CrownIcon}
+                alt="Locked feature"
+                width={20}
+                height={20}
+              />
             )}
           </div>
           <button

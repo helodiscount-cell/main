@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { type PlanId } from "@/configs/plans.config";
 
@@ -21,12 +21,20 @@ interface BillingCardProps {
 
 export function BillingCard({ plan, isCurrent }: BillingCardProps) {
   const [loading, setLoading] = useState(false);
-  const isCreatingCheckoutRef = useState(() => ({ value: false }))[0];
+  const isCreatingCheckoutRef = useRef(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, []);
 
   const handleCheckout = async () => {
-    if (isCurrent || isCreatingCheckoutRef.value) return;
+    if (isCurrent || isCreatingCheckoutRef.current) return;
 
-    isCreatingCheckoutRef.value = true;
+    isCreatingCheckoutRef.current = true;
     setLoading(true);
     try {
       const response = await fetch("/api/billing/checkout", {
@@ -48,18 +56,46 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
         const popup = window.open(
           data.checkoutUrl,
           "Checkout",
-          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no`,
+          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no,noopener,noreferrer`,
         );
 
-        // Refresh the main window when the popup is closed to show updated plan status
-        if (popup) {
-          const timer = setInterval(() => {
-            if (popup.closed) {
-              clearInterval(timer);
-              window.location.reload();
-            }
-          }, 1000);
+        // Fallback if popup was blocked
+        if (!popup) {
+          window.location.assign(data.checkoutUrl);
+          return;
         }
+
+        // Poll for subscription status change to avoid race conditions with webhook
+        const startTime = Date.now();
+        const MAX_POLL_TIME = 120000; // 2 minutes
+        pollTimerRef.current = setInterval(async () => {
+          try {
+            const res = await fetch("/api/billing/feature-gates");
+            const gateData = await res.json();
+
+            // Success: Webhook processed and plan updated
+            if (gateData?.state?.currentPlan === plan.id) {
+              if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+              pollTimerRef.current = null;
+              setLoading(false);
+              isCreatingCheckoutRef.current = false;
+              window.location.reload();
+              return;
+            }
+          } catch (e) {
+            console.error("[Polling] Error checking status:", e);
+          }
+
+          const elapsed = Date.now() - startTime;
+          // If popup is closed and we've waited at least 15s for the webhook to land
+          if ((popup.closed && elapsed > 15000) || elapsed > MAX_POLL_TIME) {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+            setLoading(false);
+            isCreatingCheckoutRef.current = false;
+            window.location.reload();
+          }
+        }, 2000);
       } else {
         console.error("[Checkout] Response missing checkoutUrl:", data);
         throw new Error("Unable to start checkout. Please try again.");
@@ -68,9 +104,8 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred";
       toast.error(message);
-    } finally {
       setLoading(false);
-      isCreatingCheckoutRef.value = false;
+      isCreatingCheckoutRef.current = false;
     }
   };
 
@@ -133,7 +168,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
 
         <button
           onClick={handleCheckout}
-          disabled={loading || isCurrent || isCreatingCheckoutRef.value}
+          disabled={loading || isCurrent || isCreatingCheckoutRef.current}
           className={`w-full py-4 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 ${
             isCurrent
               ? "bg-emerald-500/10 text-emerald-600 cursor-default"
