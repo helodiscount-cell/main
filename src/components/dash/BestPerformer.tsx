@@ -71,13 +71,7 @@ export function BestPerformerWidget({
       : 10;
 
   return (
-    <LockedOverlay
-      isLocked={isLocked}
-      title="Best Performer"
-      description="Available on Black & Free plans"
-      className={className}
-      borderRadius="32px"
-    >
+    <LockedOverlay isLocked={isLocked} className={className}>
       <div
         className={`bg-white rounded-[32px] p-7 border border-gray-100 flex flex-col gap-6 w-full min-h-[380px]`}
       >

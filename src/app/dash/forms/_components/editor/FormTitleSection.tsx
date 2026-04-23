@@ -20,12 +20,12 @@ export default function FormTitleSection() {
   // Emoji insertion logic
   const { ref: titleInputRef, handleEmojiSelect: handleTitleEmoji } =
     useEmojiInsertion<HTMLInputElement>(title, (val) =>
-      setValue("title", val, { shouldDirty: true }),
+      setValue("title", val, { shouldDirty: true, shouldValidate: true }),
     );
 
   const { ref: descInputRef, handleEmojiSelect: handleDescEmoji } =
     useEmojiInsertion<HTMLInputElement>(description, (val) =>
-      setValue("description", val, { shouldDirty: true }),
+      setValue("description", val, { shouldDirty: true, shouldValidate: true }),
     );
 
   // Hook form registrations with ref merging

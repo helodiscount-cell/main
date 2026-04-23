@@ -2,7 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import { FormValues } from "@dm-broo/common-types";
-import { EditableNameDialog } from "@/components/dash/EditableNameDialog";
+import { EditableNameDialog } from "@/components/shared/EditableNameDialog";
 
 type SubmitButtonProps = {
   disabled?: boolean;

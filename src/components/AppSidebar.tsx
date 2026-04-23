@@ -13,7 +13,7 @@ import UserSection from "./UserSection";
 import { LogOut } from "lucide-react";
 import { AppSidebarNav } from "./AppSidebarNav";
 import React from "react";
-import CrownIcon from "@/assets/svgs/Path 54.svg";
+import CrownIcon from "@/assets/svgs/CrownIcon.svg";
 import Image from "next/image";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

@@ -43,7 +43,7 @@ export async function getBestPerformerStats(
       instaAccountId,
       triggerType: "COMMENT_ON_POST",
       post: { isSet: true },
-      status: { not: "DELETED" },
+      status: "ACTIVE",
       executions: { some: { executedAt: { gte: startDate } } },
     },
     include: {
@@ -57,7 +57,7 @@ export async function getBestPerformerStats(
     .map((auto) => {
       return {
         automation: auto,
-        score: auto.executions.length,
+        score: auto.executions?.length || 0,
       };
     })
     .filter((item) => item.score > 0)

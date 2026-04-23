@@ -1,13 +1,18 @@
-export type AutomationStatus =
-  | "ACTIVE"
-  | "PAUSED"
-  | "STOPPED"
-  | "EXPIRED"
-  | "DELETED";
-export type TriggerType =
-  | "COMMENT_ON_POST"
-  | "STORY_REPLY"
-  | "RESPOND_TO_ALL_DMS";
+import {
+  TriggerType,
+  AutomationStatus,
+  MatchType,
+  ActionType,
+  ExecutionStatus,
+} from "@prisma/client";
+
+export type {
+  TriggerType,
+  AutomationStatus,
+  MatchType,
+  ActionType,
+  ExecutionStatus,
+};
 
 export interface AutomationListItem {
   type: "automation";
@@ -31,8 +36,8 @@ export interface AutomationListItem {
     timestamp: string;
   } | null;
   triggers: string[];
-  matchType: string;
-  actionType: string;
+  matchType: MatchType;
+  actionType: ActionType;
   replyMessage: string;
   replyImage: string | null;
   commentReplyWhenDm?: string[];
@@ -68,8 +73,8 @@ export interface CreateAutomationData {
   postPermalink?: string | null;
   postTimestamp?: string | null;
   triggers: string[];
-  matchType: string;
-  actionType: string;
+  matchType: MatchType;
+  actionType: ActionType;
   replyMessage: string;
   replyImage?: string | null;
   useVariables: boolean;
@@ -87,8 +92,8 @@ export interface UpdateAutomationData {
   automationName?: string;
   postCaption?: string | null;
   triggers?: string[];
-  matchType?: string;
-  actionType?: string;
+  matchType?: MatchType;
+  actionType?: ActionType;
   replyMessage?: string;
   replyImage?: string | null;
   commentReplyWhenDm?: string[];
@@ -116,9 +121,9 @@ export interface CreateExecutionData {
   commentText: string;
   commentUsername: string;
   commentUserId: string;
-  actionType: string;
+  actionType: ActionType;
   sentMessage: string;
-  status: string | AutomationStatus; // Keep string as it might contain other execution statuses, but allow AutomationStatus
+  status: ExecutionStatus;
   errorMessage?: string | null;
   instagramMessageId?: string | null;
 }

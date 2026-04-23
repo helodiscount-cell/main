@@ -1,4 +1,5 @@
 import type { PlanId } from "@/configs/plans.config";
+import { SubscriptionStatus } from "@prisma/client";
 
 /**
  * FeatureGates type definition
@@ -9,7 +10,7 @@ export type FeatureGates = {
     currentPlan: PlanId;
     creditsUsed: number;
     creditLimit: number;
-    subStatus: string;
+    subStatus: SubscriptionStatus;
   };
   access: {
     canAddAccount: boolean;

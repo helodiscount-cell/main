@@ -67,7 +67,7 @@ const PlansAndBilling = async () => {
 
       {/* Plan Details */}
       <div className="space-y-4 flex flex-col justify-center">
-        <div className="">
+        <div className="flex flex-col gap-1">
           <h3 className="text-lg font-medium bg-clip-text text-transparent bg-[linear-gradient(90deg,#6A06E4_0%,#E6007A_100%)]">
             {getPlanLabel(currentPlanId)}
           </h3>
@@ -77,7 +77,7 @@ const PlansAndBilling = async () => {
           </p>
         </div>
 
-        <div className="">
+        <div className="flex flex-col gap-2">
           <div className="h-3 w-full bg-[#F3E8FF] rounded-full overflow-hidden p-[3px]">
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out ${
@@ -103,8 +103,8 @@ const PlansAndBilling = async () => {
           <h4 className="text-lg font-medium text-[#1E293B] tracking-tight">
             History
           </h4>
-          <div className="flex flex-col">
-            {invoices.slice(0, 2).map((invoice, i) => {
+          <div className="flex flex-col overflow-y-auto max-h-48">
+            {invoices.slice(0, 3).map((invoice, i) => {
               const config =
                 statusConfig[invoice.status] || statusConfig.pending;
               const StatusIcon = config.icon;
@@ -123,7 +123,7 @@ const PlansAndBilling = async () => {
                         />
                       </div>
                       <span
-                        className={`text-sm font-normal ${config.text} capitalize`}
+                        className={`text-sm font-medium ${config.text} capitalize`}
                       >
                         {invoice.status}
                       </span>

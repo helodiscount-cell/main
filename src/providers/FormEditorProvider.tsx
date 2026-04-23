@@ -57,6 +57,7 @@ export const FormEditorProvider = ({
   const methods = useForm<FormValues>({
     resolver: zodResolver(FormValuesSchema),
     defaultValues: DEFAULT_FORM_VALUES,
+    mode: "onChange",
   });
 
   // Fetch form data if in "edit" mode (excluding "new" slug)
