@@ -5,33 +5,8 @@ import { ActionsMenu } from "@/components/shared/ActionsMenu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Octagon, Play } from "lucide-react";
 import { getAutomationRoute } from "@/utils/automation";
-
-// Shared row actions menu — consumed by automations, forms, etc.
-const MENU_ITEMS = [
-  {
-    key: "copy",
-    label: "Duplicate",
-    icon: Copy,
-    className: "text-purple-500",
-    bg: "hover:bg-purple-50",
-  },
-  {
-    key: "edit",
-    label: "Edit",
-    icon: Pencil,
-    className: "text-amber-500",
-    bg: "hover:bg-amber-50",
-  },
-  {
-    key: "delete",
-    label: "Delete",
-    icon: Trash2,
-    className: "text-red-500",
-    bg: "hover:bg-red-50",
-  },
-] as const;
 
 // Automation-specific wrapper around the shared ActionsMenu
 export function AutomationActionsMenu({
@@ -44,17 +19,70 @@ export function AutomationActionsMenu({
   const navigate = useRouter();
   const queryClient = useQueryClient();
 
-  const { mutate: deleteAutomation, isPending: isDeleting } = useMutation({
-    mutationFn: () => automationService.delete(fullAutomation.id),
+  const isStopped = fullAutomation.status === "STOPPED";
+
+  // Shared items
+  const menuItems = [
+    {
+      key: "duplicate",
+      label: "Duplicate",
+      icon: Copy,
+      className: "text-purple-500",
+      bg: "hover:bg-purple-50",
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      icon: Pencil,
+      className: "text-amber-500",
+      bg: "hover:bg-amber-50",
+    },
+    isStopped
+      ? {
+          key: "activate",
+          label: "Go Live",
+          icon: Play,
+          className: "text-emerald-500",
+          bg: "hover:bg-emerald-50",
+        }
+      : {
+          key: "stop",
+          label: "Stop",
+          icon: Octagon,
+          className: "text-red-500",
+          bg: "hover:bg-red-50",
+        },
+  ] as const;
+
+  // Mutation to stop
+  const { mutate: stopAutomation, isPending: isStopping } = useMutation({
+    mutationFn: () => automationService.stop(fullAutomation.id),
     onSuccess: () => {
-      toast.success("Automation deleted.");
+      toast.success("Automation stopped.");
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
       onClose();
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error ?? "Failed to delete automation.";
+          ?.error ?? "Failed to stop automation.";
+      toast.error(msg);
+    },
+  });
+
+  // Mutation to activate (Go Live)
+  const { mutate: activateAutomation, isPending: isActivating } = useMutation({
+    mutationFn: () =>
+      automationService.update(fullAutomation.id, { status: "ACTIVE" }),
+    onSuccess: () => {
+      toast.success("Automation is now Live!");
+      queryClient.invalidateQueries({ queryKey: automationKeys.all });
+      onClose();
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to activate automation.";
       toast.error(msg);
     },
   });
@@ -78,10 +106,13 @@ export function AutomationActionsMenu({
 
   return (
     <ActionsMenu
-      menuItems={MENU_ITEMS}
+      menuItems={menuItems}
       onClose={onClose}
-      isDeleting={isDeleting}
-      onDelete={() => deleteAutomation()}
+      isStopping={isStopping}
+      onStop={() => stopAutomation()}
+      isToggling={isActivating}
+      toggleLabel="Activating..."
+      onActivate={() => activateAutomation()}
       onEdit={handleEdit}
     />
   );

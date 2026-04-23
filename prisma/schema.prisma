@@ -30,15 +30,15 @@ model InstaAccount {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Instagram account details
-  instagramUserId   String  @unique //  // Instagram User ID (for API calls)
-  webhookUserId     String? @unique // Instagram Business Account ID (for webhooks)
+  instagramUserId   String            @unique //  // Instagram User ID (for API calls)
+  webhookUserId     String?           @unique // Instagram Business Account ID (for webhooks)
   username          String
   profilePictureUrl String?
   biography         String?
   followersCount    Int?
   followsCount      Int?
   mediaCount        Int?
-  accountType       String? // BUSINESS, CREATOR, PERSONAL
+  accountType       InstaAccountType?
 
   // OAuth tokens (encrypted in production)
   accessToken    String   @default("")
@@ -84,7 +84,7 @@ type PostTarget {
   id           String
   caption      String?
   mediaUrl     String?
-  mediaType    String? // IMAGE | VIDEO
+  mediaType    MediaType?
   thumbnailUrl String? // Only for VIDEO
   permalink    String?
   timestamp    String? // ISO timestamp
@@ -95,7 +95,7 @@ type PostTarget {
 type StoryTarget {
   id           String
   mediaUrl     String
-  mediaType    String // IMAGE | VIDEO
+  mediaType    MediaType
   thumbnailUrl String? // Only for VIDEO
   caption      String?
   permalink    String
@@ -109,7 +109,7 @@ model Automation {
   instaAccountId String       @db.ObjectId
   instaAccount   InstaAccount @relation(fields: [instaAccountId], references: [id], onDelete: Cascade)
 
-  triggerType    String       @default("COMMENT_ON_POST") // COMMENT_ON_POST | STORY_REPLY
+  triggerType    TriggerType  @default(COMMENT_ON_POST)
   automationName String
   post           PostTarget?
   story          StoryTarget?
@@ -118,13 +118,13 @@ model Automation {
 
   // Trigger configuration
   triggers           String[] // Keywords/phrases to match
-  matchType          String   @default("CONTAINS") // CONTAINS, EXACT, REGEX
+  matchType          MatchType  @default(CONTAINS)
   // Action configuration
-  actionType         String // DM | COMMENT_REPLY
+  actionType         ActionType
   replyMessage       String // Fixed DM message
   replyImage         String? // Uploaded image URL for DM
   dmLinks            DmLink[] // Multiple links for DM
-  commentReplyWhenDm String[] @default([]) // Multiple public replies — worker picks one randomly
+  commentReplyWhenDm String[]   @default([]) // Multiple public replies — worker picks one randomly
 
   // Ask to Follow — gate applied before DM delivery
   askToFollowEnabled Boolean @default(false)
@@ -138,10 +138,10 @@ model Automation {
 
   useVariables Boolean @default(true)
 
-  status             String @default("ACTIVE") // ACTIVE, PAUSED, DELETED
-  timesTriggered     Int    @default(0)
-  newFollowersGained Int    @default(0)
-  triggersSignature  String @default("")
+  status             AutomationStatus @default(ACTIVE)
+  timesTriggered     Int              @default(0)
+  newFollowersGained Int              @default(0)
+  triggersSignature  String           @default("")
 
   lastTriggeredAt DateTime?
 
@@ -169,13 +169,13 @@ model AutomationExecution {
   senderUsername String
 
   // Execution details
-  actionType         String // DM or COMMENT_REPLY
+  actionType         ActionType
   sentMessage        String
   instagramMessageId String? // For tracking
-  status             String // SUCCESS, FAILED, PENDING
+  status             ExecutionStatus
   errorMessage       String?
-  executedAt         DateTime @default(now())
-  billed             Boolean  @default(false)
+  executedAt         DateTime        @default(now())
+  billed             Boolean         @default(false)
 
   @@unique([eventId, automationId])
   @@index([automationId, status])
@@ -226,10 +226,10 @@ model Form {
   coverImage  String?
   fields      FormFieldEntry[]
 
-  slug              String @unique // 8-char public URL slug
-  status            String @default("DRAFT") // DRAFT | PUBLISHED
-  submitButtonLabel String @default("Submit")
-  submissionCount   Int    @default(0)
+  slug              String     @unique // 8-char public URL slug
+  status            FormStatus @default(DRAFT)
+  submitButtonLabel String     @default("Submit")
+  submissionCount   Int        @default(0)
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -266,8 +266,8 @@ model Subscription {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Plan & status
-  plan   String // FREE | BASIC | PREMIUM | BLACK
-  status String // ACTIVE | EXPIRED | SOFT_PAUSED
+  plan   PlanId
+  status SubscriptionStatus
 
   // Razorpay identifiers (null for FREE plan)
   razorpaySubscriptionId String?
@@ -317,16 +317,81 @@ model ProcessedWebhookEvent {
 }
 
 model Invoice {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invoiceId String   @unique // e.g. #INV/2026/1164 or Razorpay Payment ID
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String        @db.ObjectId
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId String        @unique // e.g. #INV/2026/1164 or Razorpay Payment ID
   amount    Int // In paise
-  status    String // paid | failed | pending
+  status    InvoiceStatus
   method    String?
   detail    String?
-  date      DateTime @default(now())
+  date      DateTime      @default(now())
 
   @@index([userId, date(sort: Desc)])
   @@map("invoices")
+}
+
+enum TriggerType {
+  COMMENT_ON_POST
+  STORY_REPLY
+  RESPOND_TO_ALL_DMS
+}
+
+enum MatchType {
+  CONTAINS
+  EXACT
+  REGEX
+}
+
+enum ActionType {
+  DM
+  COMMENT_REPLY
+}
+
+enum AutomationStatus {
+  ACTIVE
+  STOPPED
+  EXPIRED
+}
+
+enum ExecutionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+enum FormStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PlanId {
+  FREE
+  BASIC
+  PREMIUM
+  BLACK
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  SOFT_PAUSED
+}
+
+enum InvoiceStatus {
+  paid
+  failed
+  pending
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  CAROUSEL_ALBUM
+}
+
+enum InstaAccountType {
+  BUSINESS
+  CREATOR
+  PERSONAL
 }

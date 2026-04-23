@@ -156,7 +156,7 @@ const EditorHeader = ({ activeTab }: EditorHeaderProps) => {
                 !isFormMetadataReady || isLoading || exportStatus !== "idle"
               }
               onClick={handleExport}
-              className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-10 px-6 rounded-lg shadow-md"
+              className="bg-[#6A06E4] hover:bg-[#5a05c4] text-white gap-2 h-10 px-6 rounded-sm"
             >
               <Download size={15} />
               {exportStatus === "exporting"

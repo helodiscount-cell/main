@@ -19,7 +19,7 @@ export default function AddFieldButton({ onAddField }: AddFieldButtonProps) {
         <button
           type="button"
           onClick={() => setDialogOpen(true)}
-          className="w-8 h-8 rounded-full border-2 border-slate-300 hover:border-[#6A06E4] hover:text-[#6A06E4] flex items-center justify-center text-slate-400 transition-colors"
+          className="w-8 h-8 rounded-full border-2 bg-white text-[#6A06E4] hover:border-[#6A06E4] hover:text-[#6A06E4] flex items-center justify-center transition-colors"
           aria-label="Add field"
         >
           <Plus size={16} />

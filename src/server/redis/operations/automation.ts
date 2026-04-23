@@ -10,7 +10,7 @@ import { KEYS, TTL } from "../keys";
 
 /**
  * Clears all automation caches for a specific Instagram workspace.
- * Invoked by Next.js when automations are created, updated, or deleted.
+ * Invoked by Next.js when automations are created, updated, or stopped.
  */
 export async function invalidateAutomations(
   webhookUserId: string,

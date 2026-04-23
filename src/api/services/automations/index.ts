@@ -40,7 +40,7 @@ export const automationService = {
     return envelope.result;
   },
 
-  delete: async (id: string): Promise<{ message: string }> => {
+  stop: async (id: string): Promise<{ message: string }> => {
     const envelope = await request(
       api.delete<ApiResponse<{ message: string }>>(`/automations/${id}`),
     );

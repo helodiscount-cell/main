@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableNameDialog } from "@/components/dash/EditableNameDialog";
+import { EditableNameDialog } from "@/components/shared/EditableNameDialog";
 
 interface EditableFormNameProps {
   value: string;

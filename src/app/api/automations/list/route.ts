@@ -10,7 +10,7 @@ import { runWithErrorHandling } from "@/server/middleware/errors";
 import { ApiRouteError } from "@/server/middleware/errors/classes";
 
 const AutomationListQuerySchema = z.object({
-  status: z.enum(["ACTIVE", "PAUSED"]).optional(),
+  status: z.enum(["ACTIVE", "STOPPED", "EXPIRED"]).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
       if (!validation.success) {
         throw new ApiRouteError(
-          "Invalid status filter. Recommended: ACTIVE, PAUSED",
+          "Invalid status filter. Recommended: ACTIVE, STOPPED, EXPIRED",
           "INVALID_INPUT",
           400,
         );

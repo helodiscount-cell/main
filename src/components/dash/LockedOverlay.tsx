@@ -1,70 +1,42 @@
 "use client";
 
 import React from "react";
-import { Lock } from "lucide-react";
-import Link from "next/link";
+import { UpgradeTooltip } from "@/components/shared/UpgradeTooltip";
 
 interface LockedOverlayProps {
   children: React.ReactNode;
   isLocked: boolean;
-  title?: string;
-  description?: string;
   className?: string;
-  borderRadius?: string;
 }
 
 /**
  * LockedOverlay Component
- * Renders a subtle greyed-out overlay for gated features.
- * Optimized for both large widgets (Dashboard) and small widgets (Automation Builder).
+ * When locked, the outer div receives pointer events (so hover works),
+ * children are blocked via an inner pointer-events-none layer,
+ * and an absolute overlay intercepts any residual clicks.
  */
 export const LockedOverlay = ({
   children,
   isLocked,
-  title = "Premium Feature",
-  description = "Available on Black & Free plans",
   className = "",
-  borderRadius = "1rem",
 }: LockedOverlayProps) => {
   if (!isLocked) return <>{children}</>;
 
   return (
-    <div
-      className={`relative group ${className} overflow-hidden transition-all duration-300 ${isLocked ? "min-h-[140px]" : ""}`}
-      style={{ borderRadius }}
-    >
-      {/* Greyed Out Content Layer */}
-      <div className="filter grayscale blur-[0.5px] pointer-events-none select-none opacity-20 transition-all duration-500 h-full">
-        {children}
-      </div>
-
-      {/* Modern Integrated Discovery Layer */}
-      <div className="absolute inset-0 z-40 bg-slate-900/[0.01] flex items-center justify-center p-3 text-center">
-        <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-300 scale-90 sm:scale-100">
-          {/* Badge */}
-          <div className="bg-white/95 backdrop-blur-md border border-slate-200    -[0_15px_40px_rgba(0,0,0,0.08)] rounded-xl px-4 py-2.5 flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center  ">
-              <Lock className="text-white w-3.5 h-3.5" />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-slate-900 font-bold text-[13px] leading-tight">
-                {title}
-              </span>
-              <span className="text-slate-500 text-[9px] font-bold uppercase tracking-tight mt-0.5">
-                {description}
-              </span>
-            </div>
-          </div>
-
-          {/* Action Button */}
-          <Link
-            href="/dash/billing"
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-xs      -purple-200 transition-all active:scale-95"
-          >
-            Upgrade Now
-          </Link>
+    <UpgradeTooltip>
+      {/*
+        Must NOT have pointer-events-none at this level —
+        Radix fires the tooltip via onPointerEnter/Leave on this element.
+      */}
+      <div className={`relative cursor-not-allowed ${className}`}>
+        {/* Disable all interactions on the actual children */}
+        <div className="pointer-events-none select-none" inert>
+          {children}
         </div>
+
+        {/* Intercepts any clicks that reach through */}
+        <div className="absolute inset-0 z-10" />
       </div>
-    </div>
+    </UpgradeTooltip>
   );
 };

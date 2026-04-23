@@ -25,12 +25,12 @@ export default function ExistingAutomationsBlock({
   const existingOnThisTarget =
     data?.automations.filter((a) => {
       if (type === "post")
-        return a.post?.id === targetId && a.status !== "DELETED";
+        return a.post?.id === targetId && a.status === "ACTIVE";
       if (type === "story")
-        return a.story?.id === targetId && a.status !== "DELETED";
+        return a.story?.id === targetId && a.status === "ACTIVE";
       return (
         a.triggerType === "RESPOND_TO_ALL_DMS" &&
-        a.status !== "DELETED" &&
+        a.status === "ACTIVE" &&
         targetId === "account"
       );
     }) || [];

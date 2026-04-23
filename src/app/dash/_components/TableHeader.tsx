@@ -12,7 +12,8 @@ import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
 export type StatusFilter =
   | "ACTIVE"
-  | "PAUSED"
+  | "STOPPED"
+  | "EXPIRED"
   | "PUBLISHED"
   | "DRAFT"
   | "POST"
@@ -63,7 +64,8 @@ export const getStatusOptions = (
   }
   return [
     { label: "Live", value: "ACTIVE" },
-    { label: "Paused", value: "PAUSED" },
+    { label: "Stopped", value: "STOPPED" },
+    { label: "Expired", value: "EXPIRED" },
   ];
 };
 
