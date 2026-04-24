@@ -32,12 +32,14 @@ const AskToFollow = ({
             <h3 className="text-sm font-semibold text-slate-800">
               {ASK_TO_FOLLOW_CONFIG.TITLE}
             </h3>
-            <Image
-              src={CrownIcon}
-              width={16}
-              height={16}
-              alt={isLocked ? "Feature locked" : "Premium feature"}
-            />
+            {isLocked && (
+              <Image
+                src={CrownIcon}
+                width={16}
+                height={16}
+                alt={"Feature locked"}
+              />
+            )}
           </div>
           <ToggleSwitch
             enabled={enabled}
