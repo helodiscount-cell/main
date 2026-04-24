@@ -3,11 +3,9 @@
  * Displays current subscription plan, credit usage, and upgrade options.
  */
 
-import { auth } from "@clerk/nextjs/server";
 import { getFeatureGates } from "@/server/services/billing/feature-gates";
 import { PLANS, PlanId } from "@/configs/plans.config";
 import { BillingCard } from "./_components/billing-card";
-import { redirect } from "next/navigation";
 import { UsageBar } from "./_components/usage-bar";
 
 import { workspaceService } from "@/server/workspace/service";

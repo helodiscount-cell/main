@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { type PlanId } from "@/configs/plans.config";
+import { billingService } from "@/api/services/billing";
 
 interface BillingCardProps {
   plan: {
@@ -37,15 +38,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
     isCreatingCheckoutRef.current = true;
     setLoading(true);
     try {
-      const response = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: plan.id }),
-      });
-
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to start checkout");
+      const data = await billingService.checkout(plan.id);
 
       if (data.checkoutUrl) {
         const width = 600;
@@ -56,7 +49,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
         const popup = window.open(
           data.checkoutUrl,
           "Checkout",
-          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no,noopener,noreferrer`,
+          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no`,
         );
 
         // Fallback if popup was blocked
@@ -70,8 +63,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
         const MAX_POLL_TIME = 120000; // 2 minutes
         pollTimerRef.current = setInterval(async () => {
           try {
-            const res = await fetch("/api/billing/feature-gates");
-            const gateData = await res.json();
+            const gateData = await billingService.getFeatureGates();
 
             // Success: Webhook processed and plan updated
             if (gateData?.state?.currentPlan === plan.id) {
