@@ -44,7 +44,7 @@ export default function TabSelector({
           }`}
           onClick={() => {
             if (tab.id === "respond-to-all-dms") {
-              router.push("/dash/automations/respondtoalldms");
+              router.push("/dash/automations/new/dms");
             } else {
               setActiveTab(tab.id);
             }

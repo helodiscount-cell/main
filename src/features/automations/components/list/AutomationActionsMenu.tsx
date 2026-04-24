@@ -8,6 +8,14 @@ import { toast } from "sonner";
 import { Copy, Pencil, Octagon, Play } from "lucide-react";
 import { getAutomationRoute } from "@/utils/automation";
 
+// Extracts the backend error message from the axios error response
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  return (
+    (err as { response?: { data?: { error?: string } } })?.response?.data
+      ?.error ?? fallback
+  );
+}
+
 // Automation-specific wrapper around the shared ActionsMenu
 export function AutomationActionsMenu({
   onClose,
@@ -18,10 +26,8 @@ export function AutomationActionsMenu({
 }) {
   const navigate = useRouter();
   const queryClient = useQueryClient();
-
   const isStopped = fullAutomation.status === "STOPPED";
 
-  // Shared items
   const menuItems = [
     {
       key: "duplicate",
@@ -54,7 +60,6 @@ export function AutomationActionsMenu({
         },
   ] as const;
 
-  // Mutation to stop
   const { mutate: stopAutomation, isPending: isStopping } = useMutation({
     mutationFn: () => automationService.stop(fullAutomation.id),
     onSuccess: () => {
@@ -62,15 +67,10 @@ export function AutomationActionsMenu({
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
       onClose();
     },
-    onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error ?? "Failed to stop automation.";
-      toast.error(msg);
-    },
+    onError: (err: unknown) =>
+      toast.error(getApiErrorMessage(err, "Failed to stop automation.")),
   });
 
-  // Mutation to activate (Go Live)
   const { mutate: activateAutomation, isPending: isActivating } = useMutation({
     mutationFn: () =>
       automationService.update(fullAutomation.id, { status: "ACTIVE" }),
@@ -79,15 +79,11 @@ export function AutomationActionsMenu({
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
       onClose();
     },
-    onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error ?? "Failed to activate automation.";
-      toast.error(msg);
-    },
+    onError: (err: unknown) =>
+      toast.error(getApiErrorMessage(err, "Failed to activate automation.")),
   });
 
-  // Navigate to the correct editor route based on trigger type
+  // Navigate to the universal edit route
   const handleEdit = () => {
     navigate.push(
       getAutomationRoute(fullAutomation.triggerType, fullAutomation.id),

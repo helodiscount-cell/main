@@ -48,6 +48,7 @@ export interface AutomationListItem {
   openingMessage?: string | null;
   openingButtonText?: string | null;
   dmLinks?: { title: string; url: string }[];
+  anyKeyword?: boolean;
   status: AutomationStatus;
   timesTriggered: number;
   lastTriggeredAt: string | null;
