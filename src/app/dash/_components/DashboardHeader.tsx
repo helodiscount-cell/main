@@ -2,9 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import React from "react";
-import { getHeaderConfig } from "@/configs/dash-header.config";
 import { Search } from "lucide-react";
 import { useSearchSync } from "@/hooks/use-search-sync";
+import { getHeaderConfig } from "@/configs/dash-header.config";
 
 /**
  * Dashboard Header

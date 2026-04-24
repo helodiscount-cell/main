@@ -36,10 +36,12 @@ export function derivePageState(
   return "fresh";
 }
 
-interface UseAutomationManagerProps<TFormValues extends FieldValues> {
-  schema: z.ZodType<any, any, any>;
+interface UseAutomationManagerProps<
+  TFormValues extends FieldValues & { automationName: string },
+> {
+  schema: z.ZodType<TFormValues>;
   defaultValues: DefaultValues<TFormValues>;
-  automationId?: string; // New prop for specific automation editing
+  automationId?: string;
   onBuildPayload: (data: TFormValues) => Record<string, unknown> | null;
   onPopulateForm?: (
     automation: AutomationListItem,
@@ -47,10 +49,12 @@ interface UseAutomationManagerProps<TFormValues extends FieldValues> {
   onPayloadInvalid?: () => void;
   successMessage: string;
   stopMessage: string;
-  onCreateSuccess?: (result: any) => void;
+  onCreateSuccess?: (result: { id: string; triggerType: string }) => void;
 }
 
-export function useAutomationManager<TFormValues extends FieldValues>({
+export function useAutomationManager<
+  TFormValues extends FieldValues & { automationName: string },
+>({
   schema,
   defaultValues,
   automationId,
@@ -81,7 +85,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 
   // Form setup
   const form = useForm<TFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema as never), // Cast to 'never' satisfies RHF/Zod generic typing; no runtime effect
     defaultValues,
   });
 
@@ -97,7 +101,9 @@ export function useAutomationManager<TFormValues extends FieldValues>({
       lastResetId.current !== automationDetails.id &&
       !form.formState.isDirty
     ) {
-      form.reset(onPopulateForm(automationDetails) as any);
+      form.reset(
+        onPopulateForm(automationDetails) as DefaultValues<TFormValues>,
+      );
       lastResetId.current = automationDetails.id;
     }
   }, [automationDetails, onPopulateForm, form]);
@@ -156,7 +162,9 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     onSuccess: (result) => {
       toast.success("Automation updated successfully!");
       if (onPopulateForm) {
-        form.reset(onPopulateForm(result.automation) as any);
+        form.reset(
+          onPopulateForm(result.automation) as DefaultValues<TFormValues>,
+        );
       }
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
     },
@@ -219,14 +227,33 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     }
   };
 
-  const onInvalid = (errs: any) => {
-    // Extract the first available error message dynamically
-    const getFirstErrorMessage = (obj: any): string | null => {
-      if (!obj) return null;
-      if (typeof obj.message === "string") return obj.message;
-      for (const key in obj) {
-        const msg = getFirstErrorMessage(obj[key]);
-        if (msg) return msg;
+  const onInvalid = (errs: Record<string, unknown>) => {
+    const getFirstErrorMessage = (obj: unknown): string | null => {
+      // Return bare strings or guard against null/non-objects
+      if (typeof obj === "string") return obj;
+      if (typeof obj !== "object" || obj === null) return null;
+
+      // Handle arrays by iterating elements
+      if (Array.isArray(obj)) {
+        for (const item of obj) {
+          const msg = getFirstErrorMessage(item);
+          if (msg) return msg;
+        }
+        return null;
+      }
+
+      const errorObj = obj as Record<string, unknown>;
+
+      // If we found a message property that is a string, we found our error
+      if (typeof errorObj.message === "string") return errorObj.message;
+
+      // Otherwise, iterate through keys and recurse into nested objects
+      for (const key in errorObj) {
+        const value = errorObj[key];
+        if (typeof value === "object" && value !== null) {
+          const msg = getFirstErrorMessage(value);
+          if (msg) return msg;
+        }
       }
       return null;
     };
@@ -236,7 +263,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     toast.error(firstError);
   };
 
-  const handleSubmit = form.handleSubmit(onSubmit, onInvalid);
+  const handleSubmit = form.handleSubmit(onSubmit as never, onInvalid as never);
 
   const [isMediaUploading, setIsMediaUploading] = useState(false);
 
@@ -256,7 +283,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     handleReRun,
     handleSubmit,
     handleNameChange: (name: string) => {
-      form.setValue("automationName" as any, name as any);
+      form.setValue("automationName" as never, name as never);
       if (pageState === "live" && automationDetails?.id) {
         updateAutomation({ automationName: name });
       }
