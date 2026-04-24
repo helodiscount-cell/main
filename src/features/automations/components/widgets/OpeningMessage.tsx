@@ -32,7 +32,13 @@ const OpeningMessage = ({
         <span className="text-sm font-bold text-slate-800">
           {OPENING_MESSAGE_CONFIG.TITLE}
         </span>
-        <ToggleSwitch enabled={enabled} onChange={onEnabledChange} />
+        <ToggleSwitch
+          enabled={enabled}
+          onChange={onEnabledChange}
+          ariaLabel={
+            enabled ? "Disable opening message" : "Enable opening message"
+          }
+        />
       </div>
 
       {enabled && (

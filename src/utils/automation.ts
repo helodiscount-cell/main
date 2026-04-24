@@ -5,21 +5,10 @@ import { TriggerType } from "@/api/services/automations/types";
  * The editor resolves the correct widgets from triggerType on the fetched data.
  */
 export function getAutomationRoute(
-  triggerType: TriggerType,
+  _triggerType: TriggerType,
   id: string,
-): string | null {
-  // All types share one editor route; triggerType is kept for the null guard below
-  const validTypes: TriggerType[] = [
-    "RESPOND_TO_ALL_DMS",
-    "STORY_REPLY",
-    "COMMENT_ON_POST",
-  ];
-  if (!validTypes.includes(triggerType)) {
-    console.error(
-      `[Automation] Unknown triggerType encountered: ${triggerType}`,
-    );
-    return null;
-  }
+): string {
+  // All types now share a single unified editor route
   return `/dash/automations/${id}`;
 }
 

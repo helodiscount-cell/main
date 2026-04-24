@@ -43,7 +43,11 @@ const PublicReplyToComments = ({
         <span className="text-sm font-semibold text-slate-800">
           Public Reply to Comment
         </span>
-        <ToggleSwitch enabled={enabled} onChange={onEnabledChange} />
+        <ToggleSwitch
+          enabled={enabled}
+          onChange={onEnabledChange}
+          ariaLabel={enabled ? "Disable public reply" : "Enable public reply"}
+        />
       </div>
 
       {enabled && (

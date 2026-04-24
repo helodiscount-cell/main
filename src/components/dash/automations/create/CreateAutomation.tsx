@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import PlusIconSvg from "@/assets/svgs/addthis.svg";
 import { useState } from "react";
@@ -21,6 +20,9 @@ import { X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { automationKeys } from "@/keys/react-query";
 import { automationService } from "@/api/services/automations";
+import { useRouter } from "next/navigation";
+import { cn } from "@/server/utils";
+import Link from "next/link";
 
 export default function CreateAutomationDialog({
   title,
@@ -30,61 +32,83 @@ export default function CreateAutomationDialog({
   triggerClassName?: string;
 }) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Reuses the same query key as page.tsx when status is undefined (ALL)
-  const { data } = useQuery({
-    queryKey: [...automationKeys.all, "list", { status: undefined }],
-    queryFn: () => automationService.list(),
+  // Match exactly how it's queried on the index page
+  const { data, isPending } = useQuery({
+    queryKey: automationKeys.list({ status: undefined }),
+    queryFn: () => automationService.list(undefined),
   });
 
-  const automations = data?.automations ?? [];
+  const automations = data?.automations || [];
   const hasAutomations = automations.length > 0;
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dm-from-comments":
-        return <DMForComments onBack={() => setActiveTab(null)} />;
-      case "dm-from-stories":
-        return <DmForStories onSetActiveTab={setActiveTab} />;
-      default:
-        return (
-          <TabSelector setActiveTab={setActiveTab} activeTab={activeTab} />
-        );
+  // Handles clicking the main action button
+  const handleAction = (e: React.MouseEvent) => {
+    // If we have automations, the Link will handle navigation natively
+    if (hasAutomations) {
+      return;
     }
+
+    // Otherwise, block the link and open the modal
+    e.preventDefault();
+    setIsOpen(true);
   };
 
+  const buttonClass = cn(
+    "bg-[#6A06E4] hover:bg-[#5a05c4] text-white px-6 py-2 transition-all font-medium border-none outline-none h-full flex items-center gap-2",
+    triggerClassName,
+    isPending && !data && "opacity-70 cursor-wait",
+  );
+
   return (
-    <Dialog onOpenChange={(open) => !open && setActiveTab(null)}>
-      <DialogTrigger asChild>
-        <Button
-          className={
-            triggerClassName ||
-            "bg-[#6A06E4] hover:bg-[#5a05c4] text-white px-6 py-2 transition-all font-medium border-none outline-none h-full"
-          }
-        >
+    <>
+      <Link
+        href="/dash/automations/new"
+        onClick={handleAction}
+        className="contents"
+      >
+        <Button className={buttonClass} disabled={isPending && !data}>
           <Image src={PlusIconSvg} alt="add" width={15} height={15} />
           {hasAutomations ? title : "Create your first automation."}
         </Button>
-      </DialogTrigger>
-      <DialogContent
-        className="sm:max-w-3xl overflow-hidden rounded-2xl"
-        showCloseButton={false}
+      </Link>
+
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) setActiveTab(null);
+        }}
       >
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-[#212121] text-xl font-semibold tracking-tight flex flex-1 justify-between">
-            {activeTab ? "Configure Automation" : "Templates"}
-          </DialogTitle>
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              className="rounded-full w-8 h-8 border-2 border-gray-200"
-            >
-              <X className="text-gray-500" size={20} />
-            </Button>
-          </DialogClose>
-        </DialogHeader>
-        <div className="w-2xl">{renderContent()}</div>
-      </DialogContent>
-    </Dialog>
+        <DialogContent
+          className="sm:max-w-3xl overflow-hidden rounded-2xl"
+          showCloseButton={false}
+        >
+          <DialogHeader className="flex flex-row items-center justify-between">
+            <DialogTitle className="text-[#212121] text-xl font-semibold tracking-tight flex flex-1 justify-between">
+              {activeTab ? "Configure Automation" : "Templates"}
+            </DialogTitle>
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="rounded-full w-8 h-8 border-2 border-gray-200"
+              >
+                <X className="text-gray-500" size={20} />
+              </Button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="w-2xl">
+            {activeTab === "dm-from-comments" ? (
+              <DMForComments onBack={() => setActiveTab(null)} />
+            ) : activeTab === "dm-from-stories" ? (
+              <DmForStories onSetActiveTab={setActiveTab} />
+            ) : (
+              <TabSelector setActiveTab={setActiveTab} activeTab={activeTab} />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

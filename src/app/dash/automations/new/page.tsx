@@ -32,16 +32,16 @@ const NewAutomationPage = () => {
       </div>
 
       {/* ── Layer 3: Right-side text content ── */}
-      <div className="relative z-10 flex flex-col gap-5">
-        <h1 className="text-[2.4rem] font-bold text-gray-900 leading-tight tracking-tight">
+      <div className="relative z-10 flex flex-col gap-5 items-center">
+        <h1 className="text-2xl font-bold text-[#071329] leading-tight tracking-tight">
           Launch your first automation
         </h1>
-        <p className="text-[1rem] text-gray-500 leading-relaxed">
+        <p className="text-sm text-[#3A3A3A] font-medium leading-relaxed text-center">
           Automate conversations and watch your
           <br />
           DMs do the work for you
         </p>
-        <button className="mt-1 w-fit flex items-center gap-3 bg-[#7c3aed] hover:bg-[#6d28d9] active:bg-[#5b21b6] text-white font-semibold text-[0.95rem] px-6 py-3.5 rounded-xl shadow-[0_4px_20px_rgba(124,58,237,0.4)] transition-all duration-200 cursor-pointer">
+        <button className="mt-1 w-fit flex items-center gap-3 bg-[#7c3aed] hover:bg-[#6d28d9] active:bg-[#5b21b6] text-white font-semibold text-[0.95rem] px-6 py-3.5 rounded-md transition-all duration-200 cursor-pointer">
           <span className="flex items-center justify-center w-[22px] h-[22px] rounded-md border-2 border-white/50">
             <svg
               width="12"

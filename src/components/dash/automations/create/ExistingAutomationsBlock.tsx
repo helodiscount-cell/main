@@ -6,6 +6,7 @@ import { automationService } from "@/api/services/automations";
 import Link from "next/link";
 import { ExternalLink, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { getAutomationRoute } from "@/utils/automation";
 
 interface ExistingAutomationsBlockProps {
   targetId: string;
@@ -76,11 +77,7 @@ export default function ExistingAutomationsBlock({
                   </span>
                 </div>
                 <Link
-                  href={
-                    auto.triggerType === "RESPOND_TO_ALL_DMS"
-                      ? `/dash/automations/respondtoalldms/edit/${auto.id}`
-                      : `/dash/automations/dmfor${type === "post" ? "comments" : "stories"}/edit/${auto.id}`
-                  }
+                  href={getAutomationRoute(auto.triggerType, auto.id)}
                   className="text-xs text-[#6A06E4] hover:underline flex items-center gap-1 font-medium"
                 >
                   Edit <ExternalLink size={12} />

@@ -36,7 +36,9 @@ export function derivePageState(
   return "fresh";
 }
 
-interface UseAutomationManagerProps<TFormValues extends FieldValues> {
+interface UseAutomationManagerProps<
+  TFormValues extends FieldValues & { automationName: string },
+> {
   schema: z.ZodType<TFormValues>;
   defaultValues: DefaultValues<TFormValues>;
   automationId?: string;
@@ -50,7 +52,9 @@ interface UseAutomationManagerProps<TFormValues extends FieldValues> {
   onCreateSuccess?: (result: { id: string; triggerType: string }) => void;
 }
 
-export function useAutomationManager<TFormValues extends FieldValues>({
+export function useAutomationManager<
+  TFormValues extends FieldValues & { automationName: string },
+>({
   schema,
   defaultValues,
   automationId,
@@ -81,7 +85,7 @@ export function useAutomationManager<TFormValues extends FieldValues>({
 
   // Form setup
   const form = useForm<TFormValues>({
-    resolver: zodResolver(schema as never),
+    resolver: zodResolver(schema as never), // Cast to 'never' satisfies RHF/Zod generic typing; no runtime effect
     defaultValues,
   });
 
@@ -158,7 +162,9 @@ export function useAutomationManager<TFormValues extends FieldValues>({
     onSuccess: (result) => {
       toast.success("Automation updated successfully!");
       if (onPopulateForm) {
-        form.reset(onPopulateForm(result.automation) as any);
+        form.reset(
+          onPopulateForm(result.automation) as DefaultValues<TFormValues>,
+        );
       }
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
     },
@@ -222,14 +228,32 @@ export function useAutomationManager<TFormValues extends FieldValues>({
   };
 
   const onInvalid = (errs: Record<string, unknown>) => {
-    const getFirstErrorMessage = (
-      obj: Record<string, unknown> | null | undefined,
-    ): string | null => {
-      if (!obj) return null;
-      if (typeof obj.message === "string") return obj.message;
-      for (const key in obj) {
-        const msg = getFirstErrorMessage(obj[key] as Record<string, unknown>);
-        if (msg) return msg;
+    const getFirstErrorMessage = (obj: unknown): string | null => {
+      // Return bare strings or guard against null/non-objects
+      if (typeof obj === "string") return obj;
+      if (typeof obj !== "object" || obj === null) return null;
+
+      // Handle arrays by iterating elements
+      if (Array.isArray(obj)) {
+        for (const item of obj) {
+          const msg = getFirstErrorMessage(item);
+          if (msg) return msg;
+        }
+        return null;
+      }
+
+      const errorObj = obj as Record<string, unknown>;
+
+      // If we found a message property that is a string, we found our error
+      if (typeof errorObj.message === "string") return errorObj.message;
+
+      // Otherwise, iterate through keys and recurse into nested objects
+      for (const key in errorObj) {
+        const value = errorObj[key];
+        if (typeof value === "object" && value !== null) {
+          const msg = getFirstErrorMessage(value);
+          if (msg) return msg;
+        }
       }
       return null;
     };

@@ -69,7 +69,7 @@ const Page = () => {
       )}
       renderRightCol={(form: RightColForm<RespondToAllDMsFormValues>) => (
         <AutomationRightCol
-          control={form.control as never}
+          control={form.control}
           onIsUploadingChange={form.setIsMediaUploading}
         />
       )}

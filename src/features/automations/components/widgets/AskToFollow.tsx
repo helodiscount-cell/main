@@ -30,16 +30,22 @@ const AskToFollow = ({
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex items-center justify-center gap-2">
             <h3 className="text-sm font-semibold text-slate-800">
-              Ask to Follow
+              {ASK_TO_FOLLOW_CONFIG.TITLE}
             </h3>
             <Image
               src={CrownIcon}
               width={16}
               height={16}
-              alt="Feature locked"
+              alt={isLocked ? "Feature locked" : "Premium feature"}
             />
           </div>
-          <ToggleSwitch enabled={enabled} onChange={onEnabledChange} />
+          <ToggleSwitch
+            enabled={enabled}
+            onChange={onEnabledChange}
+            ariaLabel={
+              enabled ? "Disable ask to follow" : "Enable ask to follow"
+            }
+          />
         </div>
 
         {enabled && (

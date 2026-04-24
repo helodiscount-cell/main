@@ -74,11 +74,11 @@ export function AutomationLayout({
     const isNoMedia = !post || !post.mediaUrl;
 
     if (isNoMedia || mediaError) {
-      // Account-wide DM trigger gets a special placeholder
-      if (triggerType === "RESPOND_TO_ALL_DMS" && !mediaError)
+      // Account-wide DM trigger gets a special rich placeholder
+      if (triggerType === "RESPOND_TO_ALL_DMS" && isNoMedia) {
         return <DMPlaceholder />;
+      }
 
-      const isPostMissing = !mediaError && isNoMedia;
       return (
         <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center text-zinc-400">
@@ -90,12 +90,10 @@ export function AutomationLayout({
           </div>
           <div className="space-y-1">
             <p className="text-xs font-bold text-zinc-800">
-              {isPostMissing ? "Account Wide" : "Preview unavailable"}
+              Preview unavailable
             </p>
             <p className="text-[10px] text-zinc-500 leading-tight">
-              {isPostMissing
-                ? "This automation responds to all incoming messages."
-                : "Could not load the Instagram media preview."}
+              Could not load the Instagram media preview.
             </p>
           </div>
           <div className="absolute inset-0 -z-10 opacity-20 grayscale pointer-events-none">

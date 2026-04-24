@@ -2,13 +2,19 @@
 interface ToggleSwitchProps {
   enabled: boolean;
   onChange: (enabled: boolean) => void;
+  ariaLabel?: string;
 }
 
-export function ToggleSwitch({ enabled, onChange }: ToggleSwitchProps) {
+export function ToggleSwitch({
+  enabled,
+  onChange,
+  ariaLabel,
+}: ToggleSwitchProps) {
   return (
     <button
       type="button"
       onClick={() => onChange(!enabled)}
+      aria-label={ariaLabel}
       className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
         enabled ? "bg-[#6A06E4]" : "bg-slate-200"
       }`}

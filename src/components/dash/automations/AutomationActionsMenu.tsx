@@ -89,19 +89,9 @@ export function AutomationActionsMenu({
 
   // Navigate to the correct editor route based on trigger type
   const handleEdit = () => {
-    const route = getAutomationRoute(
-      fullAutomation.triggerType,
-      fullAutomation.id,
+    navigate.push(
+      getAutomationRoute(fullAutomation.triggerType, fullAutomation.id),
     );
-
-    if (route) {
-      navigate.push(route);
-    } else {
-      console.error(
-        `[AutomationActionsMenu] Cannot edit: Unknown triggerType ${fullAutomation.triggerType}`,
-      );
-      toast.error("Cannot edit: Unknown automation type.");
-    }
   };
 
   return (

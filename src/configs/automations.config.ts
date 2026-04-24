@@ -213,20 +213,14 @@ export const DMS_DEFAULT_VALUES: RespondToAllDMsFormValues = {
 // Populates base form fields from a fetched automation (shared across story + DMs edit)
 export function populateBaseForm(
   automation: AutomationListItem,
-): Omit<RespondToAllDMsFormValues, never> {
+): RespondToAllDMsFormValues {
   return {
     automationName: automation.automationName ?? "",
-    anyKeyword:
-      ((automation as unknown as Record<string, unknown>)
-        .anyKeyword as boolean) ?? automation.triggers?.length === 0,
+    anyKeyword: automation.anyKeyword ?? automation.triggers.length === 0,
     keywords: automation.triggers ?? [],
     dmMessage: automation.replyMessage ?? "",
     dmImage: automation.replyImage ?? undefined,
-    dmLinks:
-      ((automation as unknown as Record<string, unknown>).dmLinks as {
-        title: string;
-        url: string;
-      }[]) ?? [],
+    dmLinks: automation.dmLinks ?? [],
     askToFollowEnabled: automation.askToFollowEnabled ?? false,
     askToFollowMessage:
       automation.askToFollowMessage ?? ASK_TO_FOLLOW_CONFIG.DEFAULT_MESSAGE,
@@ -244,13 +238,13 @@ export function populateBaseForm(
 export function populateCommentsForm(
   automation: AutomationListItem,
 ): CommentsFormValues {
-  const hasPublicReplies =
-    !!automation.commentReplyWhenDm && automation.commentReplyWhenDm.length > 0;
+  const hasPublicReplies = (automation.commentReplyWhenDm?.length ?? 0) > 0;
+
   return {
     ...populateBaseForm(automation),
     publicReplyEnabled: hasPublicReplies,
-    publicReplies: hasPublicReplies
-      ? (automation.commentReplyWhenDm as string[]).map((text) => ({
+    publicReplies: automation.commentReplyWhenDm?.length
+      ? automation.commentReplyWhenDm.map((text) => ({
           id: crypto.randomUUID(),
           text,
         }))

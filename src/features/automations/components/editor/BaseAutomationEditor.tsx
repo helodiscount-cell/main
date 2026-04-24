@@ -7,6 +7,7 @@ import {
   UseFormReturn,
   DefaultValues,
   FormProvider,
+  Path,
 } from "react-hook-form";
 import { useAutomationManager } from "@/hooks/use-automations";
 import { AutomationLayout } from "./AutomationLayout";
@@ -21,7 +22,13 @@ export interface RightColForm<
   setIsMediaUploading: (v: boolean) => void;
 }
 
-interface BaseAutomationEditorProps<TFormValues extends FieldValues> {
+export interface BaseAutomationFormValues extends FieldValues {
+  automationName: string;
+}
+
+interface BaseAutomationEditorProps<
+  TFormValues extends BaseAutomationFormValues,
+> {
   schema: z.ZodType<TFormValues>;
   defaultValues: DefaultValues<TFormValues>;
   automationId?: string;
@@ -48,7 +55,9 @@ interface BaseAutomationEditorProps<TFormValues extends FieldValues> {
  * Unified skeleton for all automation editor pages.
  * Handles create vs edit mode, loading/not-found states, and the shared layout.
  */
-export function BaseAutomationEditor<TFormValues extends FieldValues>({
+export function BaseAutomationEditor<
+  TFormValues extends BaseAutomationFormValues,
+>({
   schema,
   defaultValues,
   automationId,
@@ -91,7 +100,9 @@ export function BaseAutomationEditor<TFormValues extends FieldValues>({
   });
 
   // Watch name separately to avoid re-rendering the whole form on every keystroke
-  const automationName = form.watch("automationName" as any) as string;
+  const automationName = form.watch(
+    "automationName" as Path<TFormValues>,
+  ) as string;
 
   if (pageState === "loading") {
     return (

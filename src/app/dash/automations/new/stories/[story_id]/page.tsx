@@ -4,7 +4,6 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Controller } from "react-hook-form";
 import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
 import {
@@ -18,7 +17,8 @@ import {
   RightColForm,
 } from "@/features/automations/components/editor/BaseAutomationEditor";
 import { AutomationRightCol } from "@/features/automations/components/editor/AutomationRightCol";
-import { AddKeywords } from "@/features/automations/components/widgets";
+import { KeywordsLeftCol } from "@/features/automations/components/editor/KeywordsLeftCol";
+import { buildAutomationPayload } from "@/features/automations/utils/automation-payload";
 
 const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
   const { story_id } = use(params);
@@ -56,8 +56,8 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
       onBuildPayload={(form) => {
         if (!currentStory?.media_url) return null;
         return {
+          ...buildAutomationPayload(form),
           triggerType: AUTOMATION_CONFIGS.STORY_REPLY.triggerType,
-          automationName: form.automationName,
           story: {
             id: currentStory.id,
             mediaUrl: currentStory.media_url,
@@ -69,49 +69,17 @@ const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
             permalink: currentStory.permalink,
             timestamp: currentStory.timestamp,
           },
-          anyKeyword: form.anyKeyword,
-          triggers: form.keywords,
           matchType: AUTOMATION_CONFIGS.STORY_REPLY.matchType,
           actionType: AUTOMATION_CONFIGS.STORY_REPLY.actionType,
-          replyMessage: form.dmMessage,
-          replyImage: form.dmImage || null,
-          useVariables: true,
-          askToFollowEnabled: form.askToFollowEnabled,
-          askToFollowMessage: form.askToFollowMessage || null,
-          askToFollowLink: form.askToFollowLink || null,
-          openingMessageEnabled: form.openingMessageEnabled,
-          openingMessage: form.openingMessage || null,
-          openingButtonText: form.openingButtonText || null,
-          dmLinks: form.dmLinks || [],
-          commentReplyWhenDm: [],
         };
       }}
       onPayloadInvalid={() =>
         toast.error("Story data not available. Please try again.")
       }
-      renderLeftCol={(form) => (
-        <Controller
-          control={form.control}
-          name="anyKeyword"
-          render={({ field: anyField }) => (
-            <Controller
-              control={form.control}
-              name="keywords"
-              render={({ field: keywordsField }) => (
-                <AddKeywords
-                  anyKeyword={anyField.value}
-                  onAnyKeywordChange={anyField.onChange}
-                  keywords={keywordsField.value}
-                  onKeywordsChange={keywordsField.onChange}
-                />
-              )}
-            />
-          )}
-        />
-      )}
+      renderLeftCol={(form) => <KeywordsLeftCol control={form.control} />}
       renderRightCol={(form: RightColForm<StoryFormValues>) => (
         <AutomationRightCol
-          control={form.control as never}
+          control={form.control}
           onIsUploadingChange={form.setIsMediaUploading}
         />
       )}

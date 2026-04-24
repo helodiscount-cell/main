@@ -2,9 +2,12 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Controller } from "react-hook-form";
+import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
+import { Spinner } from "@/components/ui/spinner";
 import {
   AUTOMATION_CONFIGS,
   COMMENTS_DEFAULT_VALUES,
@@ -16,30 +19,38 @@ import {
   RightColForm,
 } from "@/features/automations/components/editor/BaseAutomationEditor";
 import { AutomationRightCol } from "@/features/automations/components/editor/AutomationRightCol";
-import { AddKeywords } from "@/features/automations/components/widgets";
+import { KeywordsLeftCol } from "@/features/automations/components/editor/KeywordsLeftCol";
+
+import { buildAutomationPayload } from "@/features/automations/utils/automation-payload";
 
 const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   const { post_id } = use(params);
   const router = useRouter();
-  const queryClient = useQueryClient();
+  // Fetch posts to obtain metadata for the selected post
+  const { data: postsResponse, isLoading } = useQuery({
+    queryKey: instagramKeys.posts(),
+    queryFn: () => instagramService.profile.getUserPosts(),
+  });
 
-  // Grab the post from the already-cached posts query
-  const postsResponse = queryClient.getQueryData<{
-    result: {
-      data: Array<{
-        id: string;
-        media_url?: string;
-        media_type?: string;
-        thumbnail_url?: string;
-        permalink?: string;
-        timestamp?: string;
-        caption?: string;
-      }>;
-    };
-  }>(instagramKeys.posts());
   const selectedPost = postsResponse?.result?.data?.find(
     (p) => p.id === post_id,
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-[#09090B]">
+        <Spinner className="text-[#6A06E4] size-6" strokeWidth={2.5} />
+      </div>
+    );
+  }
+
+  if (!selectedPost) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+        <p className="text-lg">Post not found</p>
+      </div>
+    );
+  }
 
   return (
     <BaseAutomationEditor<CommentsFormValues>
@@ -52,66 +63,30 @@ const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
       onCreateSuccess={(result) =>
         router.push(`/dash/automations/${result.id}`)
       }
-      post={
-        selectedPost
-          ? {
-              mediaUrl: selectedPost.media_url ?? null,
-              mediaType: selectedPost.media_type ?? null,
-            }
-          : null
-      }
+      post={{
+        mediaUrl: selectedPost.media_url ?? null,
+        mediaType: selectedPost.media_type ?? null,
+      }}
       onBuildPayload={(form) => ({
+        ...buildAutomationPayload(form),
         triggerType: AUTOMATION_CONFIGS.COMMENT_REPLY.triggerType,
         postId: post_id,
-        automationName: form.automationName,
-        postCaption: selectedPost?.caption ?? form.keywords[0] ?? "",
-        postMediaUrl: selectedPost?.media_url ?? null,
-        postMediaType: selectedPost?.media_type ?? null,
-        postThumbnailUrl: selectedPost?.thumbnail_url ?? null,
-        postPermalink: selectedPost?.permalink ?? null,
-        postTimestamp: selectedPost?.timestamp ?? null,
-        anyKeyword: form.anyKeyword,
-        triggers: form.keywords,
+        postCaption: selectedPost.caption ?? form.keywords[0] ?? "",
+        postMediaUrl: selectedPost.media_url ?? null,
+        postMediaType: selectedPost.media_type ?? null,
+        postThumbnailUrl: selectedPost.thumbnail_url ?? null,
+        postPermalink: selectedPost.permalink ?? null,
+        postTimestamp: selectedPost.timestamp ?? null,
         matchType: AUTOMATION_CONFIGS.COMMENT_REPLY.matchType,
         actionType: AUTOMATION_CONFIGS.COMMENT_REPLY.actionType,
-        replyMessage: form.dmMessage,
-        replyImage: form.dmImage || null,
-        dmLinks: form.dmLinks || [],
-        useVariables: true,
-        commentReplyWhenDm:
-          form.publicReplyEnabled && form.publicReplies.length > 0
-            ? form.publicReplies.map((r) => r.text)
-            : [],
-        askToFollowEnabled: form.askToFollowEnabled,
-        askToFollowMessage: form.askToFollowMessage || null,
-        askToFollowLink: form.askToFollowLink || null,
-        openingMessageEnabled: form.openingMessageEnabled,
-        openingMessage: form.openingMessage || null,
-        openingButtonText: form.openingButtonText || null,
       })}
-      renderLeftCol={(form) => (
-        <Controller
-          control={form.control}
-          name="anyKeyword"
-          render={({ field: anyField }) => (
-            <Controller
-              control={form.control}
-              name="keywords"
-              render={({ field: keywordsField }) => (
-                <AddKeywords
-                  anyKeyword={anyField.value}
-                  onAnyKeywordChange={anyField.onChange}
-                  keywords={keywordsField.value}
-                  onKeywordsChange={keywordsField.onChange}
-                />
-              )}
-            />
-          )}
-        />
-      )}
+      onPayloadInvalid={() =>
+        toast.error("Post data not available. Please try again.")
+      }
+      renderLeftCol={(form) => <KeywordsLeftCol control={form.control} />}
       renderRightCol={(form: RightColForm<CommentsFormValues>) => (
         <AutomationRightCol
-          control={form.control as never}
+          control={form.control}
           includePublicReply
           onIsUploadingChange={form.setIsMediaUploading}
         />
