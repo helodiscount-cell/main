@@ -99,7 +99,7 @@ export const InstagramStatusConnectedSchema = z.object({
   connected: z.literal(true),
   username: z.string(),
   profilePictureUrl: z.string().nullable(),
-  accountType: z.enum(["BUSINESS", "CREATOR", "PERSONAL"]),
+  accountType: z.enum(["BUSINESS", "MEDIA_CREATOR", "CREATOR", "PERSONAL"]),
   connectedAt: z.date(),
   lastSyncedAt: z.date().nullable(),
 });
@@ -148,7 +148,7 @@ export const InstagramUserDataSchema = z.object({
   id: z.string(),
   username: z.string(),
   user_id: z.string(),
-  account_type: z.enum(["BUSINESS", "CREATOR", "PERSONAL"]),
+  account_type: z.enum(["BUSINESS", "MEDIA_CREATOR", "CREATOR", "PERSONAL"]),
   media_count: z.number().optional(),
   name: z.string().optional(),
   profile_picture_url: z.string().optional(),
