@@ -13,12 +13,12 @@ import {
   storyAutomationSchema,
 } from "@/configs/automations.config";
 import {
+  AutomationRightCol,
   BaseAutomationEditor,
+  KeywordsLeftCol,
   RightColForm,
-} from "@/features/automations/components/editor/BaseAutomationEditor";
-import { AutomationRightCol } from "@/features/automations/components/editor/AutomationRightCol";
-import { KeywordsLeftCol } from "@/features/automations/components/editor/KeywordsLeftCol";
-import { buildAutomationPayload } from "@/features/automations/utils/automation-payload";
+} from "@/app/dash/automations/_components";
+import { buildAutomationPayload } from "@/app/dash/automations/_components/automation-payload";
 
 const Page = ({ params }: { params: Promise<{ story_id: string }> }) => {
   const { story_id } = use(params);

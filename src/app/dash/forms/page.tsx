@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +12,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTableState } from "@/hooks/use-table-state";
 import { useSearchSync } from "@/hooks/use-search-sync";
 import { APP_CONFIG } from "@/configs/app.config";
-import { TableRow, MobilePageLayout, TablePageLayout } from "../_components";
+import {
+  TableRow,
+  MobilePageLayout,
+  TablePageLayout,
+  TableFilterMenu,
+} from "../_components";
 import { StatusFilter, SortField } from "../_components/TableHeader";
 
 export default function FormsPage() {
@@ -104,15 +110,20 @@ export default function FormsPage() {
         onSortChange={(sortKey) =>
           toggleSort(sortKey === "createdAt" ? "date" : (sortKey as SortField))
         }
-        onFilterToggle={() => {
-          const nextStatus: StatusFilter =
-            statusFilter === "ALL"
-              ? "PUBLISHED"
-              : statusFilter === "PUBLISHED"
-                ? "DRAFT"
-                : "ALL";
-          handleStatusChange(nextStatus);
-        }}
+        filterMenu={
+          <TableFilterMenu
+            variant="forms"
+            statusFilter={statusFilter}
+            onStatusChange={handleStatusChange}
+          >
+            <button
+              className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal size={16} />
+            </button>
+          </TableFilterMenu>
+        }
       />
     );
   }

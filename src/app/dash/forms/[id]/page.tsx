@@ -1,8 +1,9 @@
 "use client";
 
 import { useFormEditor } from "@/providers/FormEditorProvider";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useFormCanvasLogic } from "../_hooks/useFormCanvasLogic";
 import {
   CoverImageUpload,
@@ -14,11 +15,23 @@ import {
 
 /**
  * Edit Form Page — Fetches form data via the layout's provider and renders the editor.
+ * Now supports Drag and Drop reordering of fields.
  */
 export default function EditFormPage() {
   const { methods, save, isLoading } = useFormEditor();
-  const { fields, remove, handleAddField, handleCanvasSubmit } =
+  const { fields, remove, move, handleAddField, handleCanvasSubmit } =
     useFormCanvasLogic(methods.control, save);
+
+  // Avoid hydration mismatch with dnd-kit/@hello-pangea/dnd
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    setEnabled(true);
+  }, []);
+
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+    move(result.source.index, result.destination.index);
+  };
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden rounded-xl">
@@ -33,16 +46,52 @@ export default function EditFormPage() {
             <CoverImageUpload />
             <FormTitleSection />
 
-            {/* Dynamic field list */}
-            <div className="space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar">
-              {fields.map((field, index) => (
-                <FieldCard
-                  key={field.id}
-                  index={index}
-                  onRemove={() => remove(index)}
-                />
-              ))}
-            </div>
+            {/* Dynamic field list with Drag and Drop */}
+            {enabled ? (
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="fields-list">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar"
+                    >
+                      {fields.map((field, index) => (
+                        <Draggable
+                          key={field.id}
+                          draggableId={field.id}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                            >
+                              <FieldCard
+                                index={index}
+                                onRemove={() => remove(index)}
+                                dragHandleProps={provided.dragHandleProps}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            ) : (
+              <div className="space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar">
+                {fields.map((field, index) => (
+                  <FieldCard
+                    key={field.id}
+                    index={index}
+                    onRemove={() => remove(index)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Form builder actions */}
             <AddFieldButton onAddField={handleAddField} />

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.7",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

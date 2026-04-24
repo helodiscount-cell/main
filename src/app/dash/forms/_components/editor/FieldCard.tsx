@@ -1,20 +1,25 @@
 "use client";
 
 import React from "react";
-import { Trash2, Plus, X, Star } from "lucide-react";
+import { Trash2, Plus, X, Star, GripVertical } from "lucide-react";
 import { FIELD_TYPE_LABELS } from "./config";
 import { useFieldCardLogic } from "../../_hooks/useFieldCardLogic";
 
 type FieldCardProps = {
   index: number;
   onRemove: () => void;
+  dragHandleProps?: any;
 };
 
 /**
  * Single field card — dynamically renders its configuration inputs based on type.
  * Optimized for clean code and performance using the useFieldCardLogic hook.
  */
-export default function FieldCard({ index, onRemove }: FieldCardProps) {
+export default function FieldCard({
+  index,
+  onRemove,
+  dragHandleProps,
+}: FieldCardProps) {
   const {
     register,
     fieldType,
@@ -33,7 +38,15 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
   };
 
   return (
-    <div className="relative flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="relative flex items-center gap-2 group animate-in fade-in slide-in-from-top-2 duration-200">
+      {/* DRAG HANDLE */}
+      <div
+        {...dragHandleProps}
+        className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition-colors p-1"
+      >
+        <GripVertical className="text-slate-500" size={20} />
+      </div>
+
       {/* FIELD CONTAINER */}
       <div className="flex-1 bg-white rounded-xl border border-slate-100 px-4 py-3 space-y-3 hover:border-[#6A06E4]/20 transition-colors">
         {/* HEADER SECTION: Displays field type, Required toggle and Delete button */}
@@ -64,15 +77,6 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
                   isRequired ? "translate-x-4" : "translate-x-0.5"
                 }`}
               />
-            </button>
-            {/* DELETE BUTTON: Integrated into header based on user tweak */}
-            <button
-              type="button"
-              onClick={onRemove}
-              className="text-red-400 hover:text-red-500 shrink-0 transition-colors h-fit p-1.5 cursor-pointer ml-1"
-              aria-label="Remove field"
-            >
-              <Trash2 size={15} />
             </button>
           </div>
         </div>
@@ -183,6 +187,16 @@ export default function FieldCard({ index, onRemove }: FieldCardProps) {
           )}
         </div>
       </div>
+
+      {/* DELETE BUTTON: Integrated into header based on user tweak */}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-red-400 hover:text-red-500 shrink-0 transition-colors h-fit p-1.5 cursor-pointer ml-1"
+        aria-label="Remove field"
+      >
+        <Trash2 size={15} />
+      </button>
     </div>
   );
 }

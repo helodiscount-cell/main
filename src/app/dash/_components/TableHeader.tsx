@@ -1,26 +1,15 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
 import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 import ColHeader from "./ColHeader";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
-export type StatusFilter =
-  | "ACTIVE"
-  | "STOPPED"
-  | "EXPIRED"
-  | "PUBLISHED"
-  | "DRAFT"
-  | "POST"
-  | "REEL"
-  | "STORY"
-  | "ALL";
-export type TriggerFilter = "COMMENT" | "DM" | "STORY" | "ALL";
+import {
+  StatusFilter,
+  TriggerFilter,
+  TableFilterMenu,
+} from "./TableFilterMenu";
+
+export type { StatusFilter, TriggerFilter };
 export type SortField = "count" | "date" | "newFollowers";
 export type SortOrder = "asc" | "desc" | null;
 
@@ -46,40 +35,6 @@ interface GenericProps extends BaseProps {
 
 type Props = AutomationProps | GenericProps;
 
-export const getStatusOptions = (
-  variant: TableVariant,
-): { label: string; value: Exclude<StatusFilter, "ALL"> }[] => {
-  if (variant === "forms") {
-    return [
-      { label: "Live", value: "PUBLISHED" },
-      { label: "Draft", value: "DRAFT" },
-    ];
-  }
-  if (variant === "contacts") {
-    return [
-      { label: "Post", value: "POST" },
-      { label: "Reel", value: "REEL" },
-      { label: "Story", value: "STORY" },
-    ];
-  }
-  return [
-    { label: "Live", value: "ACTIVE" },
-    { label: "Stopped", value: "STOPPED" },
-    { label: "Expired", value: "EXPIRED" },
-  ];
-};
-
-export const getTriggerOptions = (): {
-  label: string;
-  value: Exclude<TriggerFilter, "ALL">;
-}[] => {
-  return [
-    { label: "Comment", value: "COMMENT" },
-    { label: "DM", value: "DM" },
-    { label: "Story", value: "STORY" },
-  ];
-};
-
 const TableHeader = (props: Props) => {
   const {
     variant,
@@ -95,7 +50,7 @@ const TableHeader = (props: Props) => {
     <div
       className={`grid ${config.gridClass} items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg`}
     >
-      {config.columns.map((col) => {
+      {config.columns.map((col: any) => {
         if (col.type === "main") {
           return (
             <span
@@ -147,61 +102,27 @@ const TableHeader = (props: Props) => {
         }
 
         if (col.type === "actions") {
-          const toggleStatus = (val: Exclude<StatusFilter, "ALL">) => {
-            setStatusFilter(statusFilter === val ? "ALL" : val);
-          };
-
-          const toggleTrigger = (val: Exclude<TriggerFilter, "ALL">) => {
-            if (props.variant === "automations") {
-              props.setTriggerFilter(props.triggerFilter === val ? "ALL" : val);
-            }
-          };
-
           return (
-            <DropdownMenu key={col.id}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Open filters"
-                  className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
-                >
-                  <SlidersHorizontal size={14} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="min-w-[150px] p-1.5 rounded-2xl bg-white border border-slate-100 shadow-xl"
+            <TableFilterMenu
+              key={col.id}
+              variant={variant}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              triggerFilter={props.triggerFilter}
+              onTriggerChange={
+                props.variant === "automations"
+                  ? props.setTriggerFilter
+                  : undefined
+              }
+            >
+              <button
+                type="button"
+                aria-label="Open filters"
+                className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
               >
-                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-sm font-medium text-slate-900 border-b border-slate-50 mb-1">
-                  Filter By
-                </DropdownMenuLabel>
-
-                {/* Trigger Filters */}
-                {props.variant === "automations" &&
-                  getTriggerOptions().map((opt) => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={props.triggerFilter === opt.value}
-                      onCheckedChange={() => toggleTrigger(opt.value)}
-                      className="cursor-pointer font-medium text-slate-500 data-[state=checked]:text-[#6A06E4]"
-                    >
-                      {opt.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-
-                {/* Status Filters */}
-                {getStatusOptions(variant).map((opt) => (
-                  <DropdownMenuCheckboxItem
-                    key={opt.value}
-                    checked={statusFilter === opt.value}
-                    onCheckedChange={() => toggleStatus(opt.value)}
-                    className="cursor-pointer font-medium text-slate-500 data-[state=checked]:text-[#6A06E4]"
-                  >
-                    {opt.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <SlidersHorizontal size={14} />
+              </button>
+            </TableFilterMenu>
           );
         }
 

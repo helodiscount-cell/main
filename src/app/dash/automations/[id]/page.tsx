@@ -19,15 +19,15 @@ import {
   respondToAllDmsSchema,
   UPDATE_SUCCESS_MESSAGE,
 } from "@/configs/automations.config";
-import { BaseAutomationEditor } from "@/features/automations/components/editor/BaseAutomationEditor";
-import { AutomationRightCol } from "@/features/automations/components/editor/AutomationRightCol";
-import { AddKeywords } from "@/features/automations/components/widgets";
-import { KeywordsLeftCol } from "@/features/automations/components/editor/KeywordsLeftCol";
+import {
+  BaseAutomationEditor,
+  AutomationRightCol,
+  KeywordsLeftCol,
+} from "@/app/dash/automations/_components";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
-import { AutomationListItem } from "@/api/services/automations/types";
 
-import { buildAutomationPayload } from "@/features/automations/utils/automation-payload";
+import { buildAutomationPayload } from "@/app/dash/automations/_components/automation-payload";
 
 const Page = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);

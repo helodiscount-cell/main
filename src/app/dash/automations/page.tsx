@@ -6,13 +6,16 @@ import { useQuery } from "@tanstack/react-query";
 import { automationService } from "@/api/services/automations";
 import { automationKeys } from "@/keys/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { TableRow, MobilePageLayout, TablePageLayout } from "../_components";
-import { AutomationStatus } from "@/api/services/automations/types";
 import {
-  StatusFilter,
-  TriggerFilter,
-  SortField,
-} from "../_components/TableHeader";
+  TableRow,
+  MobilePageLayout,
+  TablePageLayout,
+  TableFilterMenu,
+} from "../_components";
+import { AutomationStatus } from "@/api/services/automations/types";
+import { StatusFilter, TriggerFilter } from "../_components/TableFilterMenu";
+import { SortField } from "../_components/TableHeader";
+import { SlidersHorizontal } from "lucide-react";
 import { useTableState } from "@/hooks/use-table-state";
 import { useSearchSync } from "@/hooks/use-search-sync";
 import { APP_CONFIG } from "@/configs/app.config";
@@ -131,17 +134,22 @@ const AutomationPage = () => {
             toggleSort(normalizedKey);
           }
         }}
-        onFilterToggle={() => {
-          const nextStatus: StatusFilter =
-            statusFilter === "ALL"
-              ? "ACTIVE"
-              : statusFilter === "ACTIVE"
-                ? "STOPPED"
-                : statusFilter === "STOPPED"
-                  ? "EXPIRED"
-                  : "ALL";
-          handleStatusChange(nextStatus);
-        }}
+        filterMenu={
+          <TableFilterMenu
+            variant="automations"
+            statusFilter={statusFilter}
+            onStatusChange={handleStatusChange}
+            triggerFilter={triggerFilter}
+            onTriggerChange={handleTriggerChange}
+          >
+            <button
+              className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal size={16} />
+            </button>
+          </TableFilterMenu>
+        }
       />
     );
   }
