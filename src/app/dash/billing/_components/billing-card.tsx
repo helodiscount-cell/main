@@ -49,7 +49,7 @@ export function BillingCard({ plan, isCurrent }: BillingCardProps) {
         const popup = window.open(
           data.checkoutUrl,
           "Checkout",
-          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no`,
+          `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no,noopener,noreferrer`,
         );
 
         // Fallback if popup was blocked

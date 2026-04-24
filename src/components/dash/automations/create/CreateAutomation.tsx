@@ -27,7 +27,7 @@ import Link from "next/link";
 export function CreateAutomationModal({
   children,
 }: {
-  children?: React.ReactNode;
+  children?: React.ReactElement;
 }) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);

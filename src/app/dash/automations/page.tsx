@@ -118,10 +118,7 @@ const AutomationPage = () => {
         emptyMessage={search ? "No matches found." : "No automations found."}
         actionButton={
           <div className="w-full">
-            <CreateAutomationDialog
-              title="New Automation"
-              triggerClassName="w-full h-14 text-lg font-bold border-purple-200 bg-[#6A06E4] hover:bg-[#5a05c4] text-white"
-            />
+            <CreateAutomationDialog title="New Automation" />
           </div>
         }
         searchValue={search}

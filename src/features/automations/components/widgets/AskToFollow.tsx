@@ -37,7 +37,7 @@ const AskToFollow = ({
                 src={CrownIcon}
                 width={16}
                 height={16}
-                alt={isLocked ? "Feature locked" : "Premium feature"}
+                alt={"Feature locked"}
               />
             )}
           </div>
