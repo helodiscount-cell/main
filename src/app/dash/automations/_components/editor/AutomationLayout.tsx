@@ -11,6 +11,7 @@ type AutomationLayoutProps = {
   rightCol: React.ReactNode;
   post?: { mediaUrl: string | null; mediaType: string | null } | null;
   triggerType?: string;
+  isMobile?: boolean; // Mobile layout flag
 };
 
 // Placeholder shown when trigger is account-wide (Respond to All DMs)
@@ -62,6 +63,7 @@ export function AutomationLayout({
   rightCol,
   post,
   triggerType,
+  isMobile = false,
 }: AutomationLayoutProps) {
   const [mediaError, setMediaError] = useState(false);
 
@@ -80,7 +82,7 @@ export function AutomationLayout({
       }
 
       return (
-        <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
+        <div className="relative w-full aspect-9/16 overflow-hidden border-8 border-zinc-900 bg-zinc-100 flex flex-col items-center justify-center p-6 text-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-zinc-200 flex items-center justify-center text-zinc-400">
             {mediaError ? (
               <AlertCircle size={24} />
@@ -106,7 +108,7 @@ export function AutomationLayout({
     // Video handles Reels and standard videos
     if (post.mediaType === "VIDEO") {
       return (
-        <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+        <div className="relative w-full aspect-9/16 rounded-4xl overflow-hidden border-4 border-zinc-900 bg-black">
           <video
             src={post.mediaUrl || ""}
             autoPlay
@@ -122,7 +124,7 @@ export function AutomationLayout({
 
     // Static image or carousel (first frame)
     return (
-      <div className="relative w-full aspect-9/16 rounded-[2.5rem] overflow-hidden border-8 border-zinc-900 bg-black">
+      <div className="relative w-full aspect-9/16 rounded-4xl overflow-hidden border-4 border-zinc-900 bg-black">
         <Image
           src={post.mediaUrl || ""}
           alt="Post preview"
@@ -138,11 +140,11 @@ export function AutomationLayout({
 
   return (
     <>
-      <header className="flex h-10 items-center gap-2">{header}</header>
+      <header className="flex h-auto items-center gap-2">{header}</header>
 
-      {/* 3-column editor canvas */}
+      {/* 3-column editor canvas or stacked mobile canvas */}
       <div
-        className="flex-1 rounded-xl overflow-hidden"
+        className="flex-1 rounded-lg overflow-hidden shadow-inner relative"
         style={{
           backgroundColor: "#D4D4D4",
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 8v8M8 12h8' stroke='%23BEBEBE' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,
@@ -150,21 +152,43 @@ export function AutomationLayout({
           backgroundSize: "24px 24px",
         }}
       >
-        <div className="justify-center h-full grid grid-cols-[280px_30rem_280px] gap-4 p-4 overflow-hidden">
-          <div className="flex flex-col justify-center gap-3 overflow-y-auto pr-1">
-            {leftCol}
-          </div>
-
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative w-full max-w-[280px] flex items-start justify-center">
-              {renderMedia()}
+        {isMobile ? (
+          <div className="flex flex-col h-full overflow-hidden">
+            {/* Phone preview stays on top */}
+            <div
+              className="flex justify-center p-4 shrink-0 transition-all duration-300 z-10 sticky top-0"
+              style={{ height: "50vh" }}
+            >
+              <div className="relative h-full w-auto aspect-9/16 max-w-full flex items-start justify-center">
+                {renderMedia()}
+              </div>
+            </div>
+            {/* Widgets scroll below */}
+            <div
+              style={{ height: "30vh" }}
+              className="overflow-y-auto p-4 flex flex-col gap-4"
+            >
+              {leftCol}
+              {rightCol}
             </div>
           </div>
+        ) : (
+          <div className="justify-center h-full grid grid-cols-[280px_30rem_280px] gap-4 p-4 overflow-hidden">
+            <div className="flex flex-col justify-center gap-3 overflow-y-auto pr-1">
+              {leftCol}
+            </div>
 
-          <div className="flex flex-col justify-center gap-3 overflow-y-auto pr-1">
-            {rightCol}
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative w-full max-w-[280px] flex items-start justify-center">
+                {renderMedia()}
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-center gap-3 overflow-y-auto pr-1">
+              {rightCol}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

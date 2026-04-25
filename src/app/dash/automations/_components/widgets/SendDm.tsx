@@ -297,20 +297,23 @@ const SendDm = ({
                 </Button>
               </DialogTrigger>
             )}
-            <DialogContent className="sm:max-w-[425px] rounded-3xl pb-6">
+
+            <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[425px] rounded-2xl sm:rounded-3xl pb-5 sm:pb-6 px-4 sm:px-6">
               <DialogHeader className="pb-2">
-                <DialogTitle className="text-xl font-bold text-slate-800">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-slate-800">
                   {editingIndex !== null ? "Edit Link" : "Add Link"}
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50 bg-slate-50/50">
-                  <div className="flex items-center gap-4 px-4 py-3.5 bg-white group transition-colors hover:bg-slate-50">
-                    <div className="text-slate-400 group-hover:text-purple-500 transition-colors">
-                      <Type size={18} />
+
+              <div className="space-y-3 sm:space-y-4 pt-2">
+                <div className="rounded-xl sm:rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50 bg-slate-50/50">
+                  {/* Title Row */}
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-3.5 bg-white group transition-colors hover:bg-slate-50">
+                    <div className="text-slate-400 group-hover:text-purple-500 transition-colors mt-0.5 sm:mt-0 shrink-0">
+                      <Type size={17} />
                     </div>
-                    <div className="flex-1 flex items-center gap-3">
-                      <span className="text-sm font-medium text-slate-400 min-w-20">
+                    <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                      <span className="text-xs sm:text-sm font-medium text-slate-400 sm:min-w-20">
                         Enter Title
                       </span>
                       <AutomationInput
@@ -319,23 +322,25 @@ const SendDm = ({
                         placeholder="Open Link"
                         value={title}
                         onChange={setTitle}
-                        className="flex-1"
+                        className="flex-1 text-sm"
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 px-4 py-3.5 bg-white group transition-colors hover:bg-slate-50">
-                    <div className="text-slate-400 group-hover:text-purple-500 transition-colors">
-                      <LinkIcon size={18} />
+
+                  {/* URL Row */}
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-3.5 bg-white group transition-colors hover:bg-slate-50">
+                    <div className="text-slate-400 group-hover:text-purple-500 transition-colors mt-0.5 sm:mt-0 shrink-0">
+                      <LinkIcon size={17} />
                     </div>
-                    <div className="flex-1 flex items-center gap-3">
-                      <span className="text-sm font-medium text-slate-400 min-w-20">
+                    <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                      <span className="text-xs sm:text-sm font-medium text-slate-400 sm:min-w-20">
                         Enter Link
                       </span>
                       <input
                         placeholder="https://example.com"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
-                        className="flex-1 bg-transparent text-sm text-slate-800 font-medium placeholder:text-slate-300 outline-none"
+                        className="flex-1 bg-transparent text-sm text-slate-800 font-medium placeholder:text-slate-300 outline-none w-full"
                       />
                     </div>
                   </div>
@@ -348,7 +353,7 @@ const SendDm = ({
                     editingIndex === null &&
                     links.length >= SEND_DM_CONFIG.MAX_LINKS
                   }
-                  className="w-full bg-[#6A06E4] hover:bg-[#5805BD] text-white rounded-xl py-6 font-bold text-base transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#6A06E4] hover:bg-[#5805BD] text-white rounded-xl py-5 sm:py-6 font-bold text-sm sm:text-base transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingIndex !== null ? "Update Link" : "Add Link"}
                 </Button>

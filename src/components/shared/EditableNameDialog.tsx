@@ -110,9 +110,9 @@ export function EditableNameDialog({
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
-        className="bg-transparent border-none max-w-[420px] flex flex-col justify-center items-center"
+        className="bg-transparent border-none flex flex-col justify-center items-center"
       >
-        <div className="w-120 rounded-3xl gap-8 p-8 flex flex-col items-center bg-white border-none shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="w-72 md:w-120 rounded-3xl gap-8 p-8 flex flex-col items-center bg-white border-none shadow-2xl animate-in zoom-in-95 duration-200">
           <DialogHeader className="w-full">
             <DialogTitle className="text-2xl font-semibold text-[#212121] text-center">
               {title}

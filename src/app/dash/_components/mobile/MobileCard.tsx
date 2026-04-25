@@ -139,7 +139,7 @@ export const MobileCard = React.memo(({ data }: MobileCardProps) => {
       {/* Bottom Row: Stats + Date + Copy Link */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
-          <div className="flex flex-col gap-1 min-w-fit">
+          <div className="flex gap-4 min-w-fit">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                 {mapped.statsLabel}
