@@ -13,11 +13,15 @@ import {
 export const getUserPostsFromInstagram = async (
   instagramUserId: string,
   accessToken: string,
+  after?: string,
 ) => {
   const url = buildGraphApiUrl(GRAPH_API.ENDPOINTS.USER_MEDIA(instagramUserId));
   url.searchParams.set("fields", GRAPH_API_FIELDS.POSTS.join(","));
   url.searchParams.set("limit", RATE_LIMITS.POSTS_PER_REQUEST.toString());
   url.searchParams.set("access_token", accessToken);
+  if (after) {
+    url.searchParams.set("after", after);
+  }
 
   const result = await fetchWithTimeout<InstagramPostsResponse>(
     url.toString(),
@@ -33,6 +37,7 @@ export const getUserPostsFromInstagram = async (
 export const getUserStoriesFromInstagram = async (
   instagramUserId: string,
   accessToken: string,
+  after?: string,
 ) => {
   const url = buildGraphApiUrl(
     GRAPH_API.ENDPOINTS.USER_STORIES(instagramUserId),
@@ -40,6 +45,9 @@ export const getUserStoriesFromInstagram = async (
   url.searchParams.set("fields", GRAPH_API_FIELDS.STORIES.join(","));
   url.searchParams.set("limit", RATE_LIMITS.STORIES_PER_REQUEST.toString());
   url.searchParams.set("access_token", accessToken);
+  if (after) {
+    url.searchParams.set("after", after);
+  }
 
   const result = await fetchWithTimeout<InstagramStoriesResponse>(
     url.toString(),

@@ -1,101 +1,52 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
 import { SlidersHorizontal } from "lucide-react";
 import React from "react";
 import ColHeader from "./ColHeader";
 import { TABLE_CONFIGS, TableVariant } from "@/configs/table.config";
 
-export type StatusFilter =
-  | "ACTIVE"
-  | "STOPPED"
-  | "EXPIRED"
-  | "PUBLISHED"
-  | "DRAFT"
-  | "POST"
-  | "REEL"
-  | "STORY"
-  | "ALL";
-export type TriggerFilter = "COMMENT" | "DM" | "STORY" | "ALL";
+import {
+  TableFilterMenu,
+  StatusFilterMap,
+  TriggerFilter,
+} from "./TableFilterMenu";
+
 export type SortField = "count" | "date" | "newFollowers";
 export type SortOrder = "asc" | "desc" | null;
 
-interface BaseProps {
-  statusFilter: StatusFilter;
-  setStatusFilter: (value: StatusFilter) => void;
+interface BaseProps<V extends TableVariant> {
+  statusFilter: StatusFilterMap[V] | "ALL";
+  setStatusFilter: (value: StatusFilterMap[V] | "ALL") => void;
   sortField?: SortField;
   sortOrder?: SortOrder;
   onSort?: (field: SortField) => void;
 }
 
-interface AutomationProps extends BaseProps {
+interface AutomationProps extends BaseProps<"automations"> {
   variant: "automations";
   triggerFilter: TriggerFilter;
   setTriggerFilter: (value: TriggerFilter) => void;
 }
 
-interface GenericProps extends BaseProps {
-  variant: Exclude<TableVariant, "automations">;
+interface GenericProps<
+  V extends Exclude<TableVariant, "automations">,
+> extends BaseProps<V> {
+  variant: V;
   triggerFilter?: never;
   setTriggerFilter?: never;
 }
 
-type Props = AutomationProps | GenericProps;
-
-export const getStatusOptions = (
-  variant: TableVariant,
-): { label: string; value: Exclude<StatusFilter, "ALL"> }[] => {
-  if (variant === "forms") {
-    return [
-      { label: "Live", value: "PUBLISHED" },
-      { label: "Draft", value: "DRAFT" },
-    ];
-  }
-  if (variant === "contacts") {
-    return [
-      { label: "Post", value: "POST" },
-      { label: "Reel", value: "REEL" },
-      { label: "Story", value: "STORY" },
-    ];
-  }
-  return [
-    { label: "Live", value: "ACTIVE" },
-    { label: "Stopped", value: "STOPPED" },
-    { label: "Expired", value: "EXPIRED" },
-  ];
-};
-
-export const getTriggerOptions = (): {
-  label: string;
-  value: Exclude<TriggerFilter, "ALL">;
-}[] => {
-  return [
-    { label: "Comment", value: "COMMENT" },
-    { label: "DM", value: "DM" },
-    { label: "Story", value: "STORY" },
-  ];
-};
+type Props = AutomationProps | GenericProps<"forms"> | GenericProps<"contacts">;
 
 const TableHeader = (props: Props) => {
-  const {
-    variant,
-    statusFilter,
-    setStatusFilter,
-    sortField,
-    sortOrder,
-    onSort,
-  } = props;
+  const { variant } = props;
   const config = TABLE_CONFIGS[variant];
+
+  type TableColumn = (typeof TABLE_CONFIGS)[TableVariant]["columns"][number];
 
   return (
     <div
-      className={`grid ${config.gridClass} items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg`}
+      className={`grid ${config.gridClass} hidden md:grid items-center p-4 gap-4 border-b border-slate-100 m-4 bg-[#F9F9F9] rounded-lg`}
     >
-      {config.columns.map((col) => {
+      {config.columns.map((col: TableColumn) => {
         if (col.type === "main") {
           return (
             <span
@@ -139,27 +90,24 @@ const TableHeader = (props: Props) => {
             <ColHeader
               key={col.id}
               label={col.label}
-              sortable={(col as any).sortable}
-              sortOrder={sortField === field ? sortOrder : null}
-              onSort={() => onSort?.(field)}
+              sortable={"sortable" in col ? !!col.sortable : false}
+              sortOrder={props.sortField === field ? props.sortOrder : null}
+              onSort={() => props.onSort?.(field)}
             />
           );
         }
 
         if (col.type === "actions") {
-          const toggleStatus = (val: Exclude<StatusFilter, "ALL">) => {
-            setStatusFilter(statusFilter === val ? "ALL" : val);
-          };
-
-          const toggleTrigger = (val: Exclude<TriggerFilter, "ALL">) => {
-            if (props.variant === "automations") {
-              props.setTriggerFilter(props.triggerFilter === val ? "ALL" : val);
-            }
-          };
-
-          return (
-            <DropdownMenu key={col.id}>
-              <DropdownMenuTrigger asChild>
+          if (props.variant === "automations") {
+            return (
+              <TableFilterMenu
+                key={col.id}
+                variant="automations"
+                statusFilter={props.statusFilter}
+                onStatusChange={props.setStatusFilter}
+                triggerFilter={props.triggerFilter}
+                onTriggerChange={props.setTriggerFilter}
+              >
                 <button
                   type="button"
                   aria-label="Open filters"
@@ -167,42 +115,45 @@ const TableHeader = (props: Props) => {
                 >
                   <SlidersHorizontal size={14} />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="min-w-[150px] p-1.5 rounded-2xl bg-white border border-slate-100 shadow-xl"
+              </TableFilterMenu>
+            );
+          }
+          if (props.variant === "forms") {
+            return (
+              <TableFilterMenu
+                key={col.id}
+                variant="forms"
+                statusFilter={props.statusFilter}
+                onStatusChange={props.setStatusFilter}
               >
-                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-sm font-medium text-slate-900 border-b border-slate-50 mb-1">
-                  Filter By
-                </DropdownMenuLabel>
-
-                {/* Trigger Filters */}
-                {props.variant === "automations" &&
-                  getTriggerOptions().map((opt) => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={props.triggerFilter === opt.value}
-                      onCheckedChange={() => toggleTrigger(opt.value)}
-                      className="cursor-pointer font-medium text-slate-500 data-[state=checked]:text-[#6A06E4]"
-                    >
-                      {opt.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-
-                {/* Status Filters */}
-                {getStatusOptions(variant).map((opt) => (
-                  <DropdownMenuCheckboxItem
-                    key={opt.value}
-                    checked={statusFilter === opt.value}
-                    onCheckedChange={() => toggleStatus(opt.value)}
-                    className="cursor-pointer font-medium text-slate-500 data-[state=checked]:text-[#6A06E4]"
-                  >
-                    {opt.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
+                <button
+                  type="button"
+                  aria-label="Open filters"
+                  className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                >
+                  <SlidersHorizontal size={14} />
+                </button>
+              </TableFilterMenu>
+            );
+          }
+          if (props.variant === "contacts") {
+            return (
+              <TableFilterMenu
+                key={col.id}
+                variant="contacts"
+                statusFilter={props.statusFilter}
+                onStatusChange={props.setStatusFilter}
+              >
+                <button
+                  type="button"
+                  aria-label="Open filters"
+                  className="p-2 bg-slate-800 text-white rounded-md w-fit justify-self-end cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                >
+                  <SlidersHorizontal size={14} />
+                </button>
+              </TableFilterMenu>
+            );
+          }
         }
 
         return null;

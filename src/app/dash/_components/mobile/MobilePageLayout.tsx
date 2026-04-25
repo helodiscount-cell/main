@@ -18,6 +18,7 @@ interface MobilePageLayoutProps {
   onSortChange?: (sortKey: string) => void;
   sortOrder?: "asc" | "desc" | null;
   onFilterToggle?: () => void;
+  filterMenu?: React.ReactNode;
 }
 
 /**
@@ -35,9 +36,10 @@ export const MobilePageLayout = ({
   onSortChange,
   sortOrder = "desc",
   onFilterToggle,
+  filterMenu,
 }: MobilePageLayoutProps) => {
   return (
-    <div className="flex flex-col gap-4 h-screen overflow-hidden relative">
+    <div className="flex flex-col gap-4 h-full overflow-hidden relative">
       <MobileDashboardHeader
         title={title}
         searchValue={searchValue}
@@ -63,15 +65,17 @@ export const MobilePageLayout = ({
                 )}
               </button>
             )}
-            {onFilterToggle && (
-              <button
-                onClick={onFilterToggle}
-                className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
-                aria-label="Toggle filters"
-              >
-                <SlidersHorizontal size={16} />
-              </button>
-            )}
+            {filterMenu
+              ? filterMenu
+              : onFilterToggle && (
+                  <button
+                    onClick={onFilterToggle}
+                    className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
+                    aria-label="Toggle filters"
+                  >
+                    <SlidersHorizontal size={16} />
+                  </button>
+                )}
           </div>
         )}
         {/* Content */}
@@ -94,7 +98,7 @@ export const MobilePageLayout = ({
       </div>
 
       {/* Sticky Bottom Action Button */}
-      {actionButton && <div>{actionButton}</div>}
+      {actionButton && <div className="w-full">{actionButton}</div>}
     </div>
   );
 };

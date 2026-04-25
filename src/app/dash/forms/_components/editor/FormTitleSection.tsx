@@ -33,7 +33,7 @@ export default function FormTitleSection() {
   const { ref: registerDescRef, ...descRegister } = register("description");
 
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-0.5 w-[90%]">
       {/* Title */}
       <div className="flex items-center justify-between gap-2">
         <input

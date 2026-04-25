@@ -43,23 +43,24 @@ export function CreateAutomationModal({
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
 
       <DialogContent
-        className="sm:max-w-3xl overflow-hidden rounded-2xl"
+        className="w-[95vw] sm:max-w-3xl overflow-hidden rounded-2xl p-4 sm:p-6"
         showCloseButton={false}
       >
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-[#212121] text-xl font-semibold tracking-tight flex flex-1 justify-between">
+        <DialogHeader className="flex flex-row items-center justify-between mb-2">
+          <DialogTitle className="text-[#212121] text-lg sm:text-xl font-semibold tracking-tight">
             {activeTab ? "Configure Automation" : "Templates"}
           </DialogTitle>
           <DialogClose asChild>
             <Button
               variant="ghost"
-              className="rounded-full w-8 h-8 border-2 border-gray-200"
+              aria-label="Close automation modal"
+              className="rounded-full w-8 h-8 border-2 border-gray-200 p-0 flex items-center justify-center"
             >
-              <X className="text-gray-500" size={20} />
+              <X className="text-gray-500" size={18} />
             </Button>
           </DialogClose>
         </DialogHeader>
-        <div className="w-2xl">
+        <div className="w-full max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
           {activeTab === "dm-from-comments" ? (
             <DMForComments onBack={() => setActiveTab(null)} />
           ) : activeTab === "dm-from-stories" ? (
@@ -84,7 +85,7 @@ export default function CreateAutomationDialog({ title }: { title: string }) {
   const hasAutomations = automations.length > 0;
 
   const buttonClass = cn(
-    "bg-[#6A06E4] hover:bg-[#5a05c4] text-white px-6 py-2 transition-all font-medium border-none outline-none h-full flex items-center gap-2",
+    "w-auto bg-[#6A06E4] hover:bg-[#5a05c4] text-white px-6 py-2 transition-all font-medium border-none outline-none h-full flex items-center gap-2",
     isPending && !data && "opacity-70 cursor-wait",
   );
 

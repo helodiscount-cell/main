@@ -43,25 +43,21 @@ export const MobileEditorHeader = ({ activeTab }: MobileEditorHeaderProps) => {
       </div>
 
       {activeTab === "editor" && (
-        <div className="flex items-center gap-3">
-          <div className="flex items-center h-[52px] bg-white rounded-xl px-4 flex-1 min-w-0 shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-slate-50">
-            <span className="text-[15px] font-medium text-slate-300">
-              Forms
-            </span>
-            <span className="text-[15px] font-medium text-slate-300 mx-1.5">
-              /
-            </span>
-            <span className="text-[15px] font-bold text-[#0F172A] truncate">
+        <div className="flex items-center gap-3 h-12">
+          <div className="h-full flex items-center bg-white rounded-lg px-4 flex-1 min-w-0 border border-slate-50">
+            <span className="text-xs font-medium text-[#9E9E9E]">Forms</span>
+            <span className="text-xs font-medium text-[#071329] mx-1.5">/</span>
+            <span className="text-xs font-bold text-[#0F172A] truncate">
               Editor
             </span>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="h-full flex items-center gap-2 shrink-0">
             <Button
               onClick={handleUnpublish}
               disabled={isLoading || !isPublished}
               size="icon"
-              className="h-[52px] w-[52px] rounded-xl bg-red-500 hover:bg-red-600 text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              className="h-full w-[52px] rounded-md bg-red-500 hover:bg-red-600 text-white shrink-0 border-none transition-all active:scale-95 disabled:opacity-40"
             >
               <Square size={22} fill="currentColor" />
             </Button>
@@ -69,7 +65,7 @@ export const MobileEditorHeader = ({ activeTab }: MobileEditorHeaderProps) => {
             <Button
               size="icon"
               disabled={!form?.slug}
-              className="h-[52px] w-[52px] rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              className="h-full w-[52px] rounded-md bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none transition-all active:scale-95 disabled:opacity-40"
               onClick={handleCopyLink}
             >
               <Link2 size={22} />
@@ -78,7 +74,7 @@ export const MobileEditorHeader = ({ activeTab }: MobileEditorHeaderProps) => {
             <Button
               size="icon"
               disabled={!form?.slug}
-              className="h-[52px] w-[52px] rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              className="h-full w-[52px] rounded-md bg-[#0F172A] hover:bg-[#1E293B] text-white shrink-0 border-none transition-all active:scale-95 disabled:opacity-40"
               onClick={handlePreview}
             >
               <Eye size={22} />
@@ -88,7 +84,7 @@ export const MobileEditorHeader = ({ activeTab }: MobileEditorHeaderProps) => {
               onClick={isPublished ? handleUpdate : handlePublish}
               disabled={isLoading || isSaving || isMediaUploading}
               size="icon"
-              className="h-[52px] w-[52px] rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none shadow-lg transition-all active:scale-95 disabled:opacity-50"
+              className="h-full w-[52px] rounded-md bg-[#16A34A] hover:bg-[#15803D] text-white shrink-0 border-none transition-all active:scale-95 disabled:opacity-50"
             >
               {isSaving || isMediaUploading ? (
                 <RefreshCw size={22} className="animate-spin" />

@@ -2,12 +2,11 @@
 
 import React from "react";
 import { FormEditorProvider } from "../../../../../providers/FormEditorProvider";
-import { MobileEditorHeader } from "./mobile/MobileEditorHeader";
 import { FormTabs } from "./FormTabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "next/navigation";
-import { PatternedBackground } from "./mobile/PatternedBackground";
 import EditorHeader from "./EditorHeader";
+import MobileLayout from "./mobile/MobileLayout";
 
 interface BaseFormLayoutProps {
   children: React.ReactNode;
@@ -48,30 +47,6 @@ export default function BaseFormLayout({
     </FormEditorProvider>
   );
 }
-
-const MobileLayout = ({
-  formId,
-  activeTab,
-  children,
-}: {
-  formId?: string;
-  activeTab: "editor" | "submissions";
-  children: React.ReactNode;
-}) => {
-  return (
-    <div className="flex flex-col gap-4 bg-[#F3F4F6] min-h-screen">
-      <MobileEditorHeader formId={formId} activeTab={activeTab} />
-      <FormTabs formId={formId} activeTab={activeTab} />
-      <PatternedBackground>
-        <div className="p-4 flex-1">
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-            {children}
-          </div>
-        </div>
-      </PatternedBackground>
-    </div>
-  );
-};
 
 const DesktopLayout = ({
   formId,
