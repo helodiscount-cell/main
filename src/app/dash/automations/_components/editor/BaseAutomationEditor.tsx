@@ -51,6 +51,9 @@ interface BaseAutomationEditorProps<
   renderRightCol: (form: RightColForm<TFormValues>) => React.ReactNode;
 }
 
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileDashboardHeader } from "@/app/dash/_components/mobile/MobileDashboardHeader";
+
 /**
  * Unified skeleton for all automation editor pages.
  * Handles create vs edit mode, loading/not-found states, and the shared layout.
@@ -87,6 +90,8 @@ export function BaseAutomationEditor<
     startAutomation,
     handleSubmit,
     handleNameChange,
+    isNameDialogOpen,
+    setIsNameDialogOpen,
   } = useAutomationManager<TFormValues>({
     schema,
     defaultValues,
@@ -98,6 +103,8 @@ export function BaseAutomationEditor<
     stopMessage,
     onCreateSuccess,
   });
+
+  const isMobile = useIsMobile();
 
   // Watch name separately to avoid re-rendering the whole form on every keystroke
   const automationName = form.watch(
@@ -132,6 +139,9 @@ export function BaseAutomationEditor<
         isMediaUploading={isMediaUploading}
         onNameChange={handleNameChange}
         breadcrumb={breadcrumb}
+        isMobile={isMobile}
+        isNameDialogOpen={isNameDialogOpen}
+        setIsNameDialogOpen={setIsNameDialogOpen}
       />
     ) : (
       <FreshHeader
@@ -140,23 +150,36 @@ export function BaseAutomationEditor<
         automationName={automationName ?? ""}
         onNameChange={handleNameChange}
         breadcrumb={breadcrumb}
+        isMobile={isMobile}
+        isNameDialogOpen={isNameDialogOpen}
+        setIsNameDialogOpen={setIsNameDialogOpen}
       />
     );
 
   return (
-    <FormProvider {...form}>
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col h-full overflow-hidden gap-4"
-      >
-        <AutomationLayout
-          header={header}
-          triggerType={triggerType}
-          post={post}
-          leftCol={renderLeftCol(form)}
-          rightCol={renderRightCol({ ...form, setIsMediaUploading })}
-        />
-      </form>
-    </FormProvider>
+    <div className="flex flex-col h-full bg-[#f1f1f1]">
+      {isMobile && (
+        <MobileDashboardHeader title="Automation Config" showSearch={false} />
+      )}
+      <FormProvider {...form}>
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col flex-1 overflow-hidden"
+        >
+          <div
+            className={`flex flex-col h-full ${isMobile ? "pt-4 gap-4" : "pt-0 gap-4"}`}
+          >
+            <AutomationLayout
+              header={header}
+              triggerType={triggerType}
+              post={post}
+              leftCol={renderLeftCol(form)}
+              rightCol={renderRightCol({ ...form, setIsMediaUploading })}
+              isMobile={isMobile}
+            />
+          </div>
+        </form>
+      </FormProvider>
+    </div>
   );
 }

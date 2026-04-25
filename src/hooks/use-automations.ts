@@ -227,7 +227,15 @@ export function useAutomationManager<
     }
   };
 
+  const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
+
   const onInvalid = (errs: Record<string, unknown>) => {
+    // If the name is missing and there is a specific error for it, open the name dialog directly
+    if (errs.automationName) {
+      setIsNameDialogOpen(true);
+      return;
+    }
+
     const getFirstErrorMessage = (obj: unknown): string | null => {
       // Return bare strings or guard against null/non-objects
       if (typeof obj === "string") return obj;
@@ -282,6 +290,8 @@ export function useAutomationManager<
     isReRunning,
     handleReRun,
     handleSubmit,
+    isNameDialogOpen,
+    setIsNameDialogOpen,
     handleNameChange: (name: string) => {
       form.setValue("automationName" as never, name as never);
       if (pageState === "live" && automationDetails?.id) {
