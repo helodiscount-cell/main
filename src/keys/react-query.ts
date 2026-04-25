@@ -3,6 +3,7 @@ export const instagramKeys = {
   account: () => [...instagramKeys.all, "account"] as const,
   profile: () => [...instagramKeys.all, "profile"] as const,
   posts: () => [...instagramKeys.all, "posts"] as const,
+  infinitePosts: () => [...instagramKeys.all, "posts", "infinite"] as const,
   stories: () => [...instagramKeys.all, "stories"] as const,
 };
 

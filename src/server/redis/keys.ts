@@ -83,8 +83,10 @@ export const KEYS = {
     `ig:automation:account_dm:${webhookUserId}`,
 
   // Domain: Instagram Data (keyed by webhookUserId (178...))
-  INSTAGRAM_POSTS: (webhookUserId: string) => `ig:posts:${webhookUserId}`,
-  INSTAGRAM_STORIES: (webhookUserId: string) => `ig:stories:${webhookUserId}`,
+  INSTAGRAM_POSTS: (webhookUserId: string, cursor?: string) =>
+    `ig:posts:${webhookUserId}${cursor ? `:${cursor}` : ""}`,
+  INSTAGRAM_STORIES: (webhookUserId: string, cursor?: string) =>
+    `ig:stories:${webhookUserId}${cursor ? `:${cursor}` : ""}`,
 
   // Domain: Predicted API Metrics
   PREDICTED_USAGE: (webhookUserId: string) =>

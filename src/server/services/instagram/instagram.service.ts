@@ -36,6 +36,7 @@ async function resolveActiveAccount(instaAccountId: string) {
 export async function getUserPosts(
   instaAccountId: string,
   forceRefresh?: boolean,
+  after?: string,
 ) {
   const account = await resolveActiveAccount(instaAccountId);
   const accessToken = await getValidAccessToken(account);
@@ -46,8 +47,11 @@ export async function getUserPosts(
   }
 
   // Cache by webhookUserId to align with standardized Redis key architecture
-  const result = await getCachedPosts(identifier, async () =>
-    getUserPostsFromInstagram(account.instagramUserId, accessToken),
+  const result = await getCachedPosts(
+    identifier,
+    async () =>
+      getUserPostsFromInstagram(account.instagramUserId, accessToken, after),
+    after,
   );
 
   return {
@@ -60,6 +64,7 @@ export async function getUserPosts(
 export async function getUserStories(
   instaAccountId: string,
   forceRefresh?: boolean,
+  after?: string,
 ) {
   const account = await resolveActiveAccount(instaAccountId);
   const accessToken = await getValidAccessToken(account);
@@ -69,8 +74,11 @@ export async function getUserStories(
     await invalidateInstagramStoriesCache(identifier);
   }
 
-  const result = await getCachedStories(identifier, async () =>
-    getUserStoriesFromInstagram(account.instagramUserId, accessToken),
+  const result = await getCachedStories(
+    identifier,
+    async () =>
+      getUserStoriesFromInstagram(account.instagramUserId, accessToken, after),
+    after,
   );
 
   return {

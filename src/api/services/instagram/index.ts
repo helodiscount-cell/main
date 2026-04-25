@@ -15,19 +15,21 @@ export const instagramService = {
   profile: {
     getUserPosts: async (
       forceRefresh?: boolean,
+      after?: string,
     ): Promise<ApiResponse<PostsResult>> => {
       return request(
         api.get<ApiResponse<PostsResult>>("/instagram/profile/posts", {
-          params: { forceRefresh },
+          params: { forceRefresh, after },
         }),
       );
     },
     getUserStories: async (
       forceRefresh?: boolean,
+      after?: string,
     ): Promise<ApiResponse<StoriesResult>> => {
       return request(
         api.get<ApiResponse<StoriesResult>>("/instagram/profile/story", {
-          params: { forceRefresh },
+          params: { forceRefresh, after },
         }),
       );
     },

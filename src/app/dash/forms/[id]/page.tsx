@@ -40,7 +40,7 @@ export default function EditFormPage() {
         <FormProvider {...methods}>
           <form
             onSubmit={handleCanvasSubmit}
-            className="max-w-lg mx-auto space-y-4 h-full flex flex-col justify-center py-4"
+            className="max-w-xl mx-auto space-y-4 h-full flex flex-col justify-center items-center py-4"
           >
             {/* Form fixed elements */}
             <CoverImageUpload />
@@ -54,7 +54,7 @@ export default function EditFormPage() {
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className="space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar"
+                      className="w-full space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar"
                     >
                       {fields.map((field, index) => (
                         <Draggable

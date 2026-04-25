@@ -56,9 +56,10 @@ export async function invalidateInstagramCache(
 export async function getCachedPosts<T>(
   identifier: string,
   fetchNative: () => Promise<T>,
+  after?: string,
 ): Promise<T> {
   const redis = getRedisClient();
-  const key = KEYS.INSTAGRAM_POSTS(identifier);
+  const key = KEYS.INSTAGRAM_POSTS(identifier, after);
 
   if (!redis) return fetchNative();
 
@@ -97,9 +98,10 @@ export async function getCachedPosts<T>(
 export async function getCachedStories<T>(
   identifier: string,
   fetchNative: () => Promise<T>,
+  after?: string,
 ): Promise<T> {
   const redis = getRedisClient();
-  const key = KEYS.INSTAGRAM_STORIES(identifier);
+  const key = KEYS.INSTAGRAM_STORIES(identifier, after);
 
   if (!redis) return fetchNative();
 
