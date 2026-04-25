@@ -2,7 +2,8 @@
 
 import { instagramService } from "@/api/services/instagram";
 import { instagramKeys } from "@/keys/react-query";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef } from "react";
@@ -10,32 +11,45 @@ import TemplateHeader from "./TemplateHeader";
 
 export default function DMForComments({ onBack }: { onBack: () => void }) {
   const queryClient = useQueryClient();
-
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const { data } = useQuery({
-    queryKey: instagramKeys.posts(),
-    queryFn: () => instagramService.profile.getUserPosts(),
-  });
-
   const refreshingRef = useRef(false);
+
+  // useInfiniteQuery handles batch-by-batch fetching and anti-spam state automatically
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isFetching,
+  } = useInfiniteQuery({
+    queryKey: instagramKeys.infinitePosts(),
+    queryFn: ({ pageParam }) =>
+      instagramService.profile.getUserPosts(false, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.result.paging?.cursors?.after,
+  });
 
   const handleRefresh = async () => {
     if (refreshingRef.current) return;
     try {
       refreshingRef.current = true;
       setIsRefreshing(true);
-      const res = await instagramService.profile.getUserPosts(true);
-      queryClient.setQueryData(instagramKeys.posts(), res);
+      // Trigger server-side sync
+      await instagramService.profile.getUserPosts(true);
+      // Refresh the entire infinite query list
+      await queryClient.invalidateQueries({
+        queryKey: instagramKeys.infinitePosts(),
+      });
     } catch (e) {
-      console.error("Failed to refresh posts:", e);
-      // Background refetch if direct update fails
-      await queryClient.invalidateQueries({ queryKey: instagramKeys.posts() });
+      console.error("[DMForComments] Failed to refresh posts:", e);
     } finally {
       refreshingRef.current = false;
       setIsRefreshing(false);
     }
   };
+
+  const posts = data?.pages.flatMap((page) => page.result.data) ?? [];
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -43,10 +57,10 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
         title="Select Post/Reel"
         onBack={onBack}
         onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={isRefreshing || (isFetching && !isFetchingNextPage)}
       />
       <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-        {data?.result.data.map((item) => {
+        {posts.map((item) => {
           const previewUrl = item.thumbnail_url || item.media_url || "";
 
           return (
@@ -70,6 +84,24 @@ export default function DMForComments({ onBack }: { onBack: () => void }) {
           );
         })}
       </div>
+
+      {hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+          >
+            {isFetchingNextPage ? (
+              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+            ) : (
+              <span className="group-hover:translate-y-0.5 transition-transform">
+                Show more posts
+              </span>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

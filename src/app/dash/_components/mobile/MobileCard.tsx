@@ -19,7 +19,7 @@ interface MobileCardProps {
  * Mobile-specific card UI for Forms and Automations.
  * Matches the design requested by the user.
  */
-export const MobileCard = ({ data }: MobileCardProps) => {
+export const MobileCard = React.memo(({ data }: MobileCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
   const isAutomation = data.type === "automation";
@@ -171,9 +171,9 @@ export const MobileCard = ({ data }: MobileCardProps) => {
           </div>
 
           <div className="ml-auto flex flex-col items-end gap-0.5">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+            {/* <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
               {mapped.dateLabel}
-            </span>
+            </span> */}
             <div className="text-sm text-slate-500 font-semibold italic">
               {mapped.date}
             </div>
@@ -192,4 +192,4 @@ export const MobileCard = ({ data }: MobileCardProps) => {
       </div>
     </div>
   );
-};
+});

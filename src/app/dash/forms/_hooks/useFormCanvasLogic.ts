@@ -12,7 +12,7 @@ export const useFormCanvasLogic = (
   control: Control<FormValues>,
   save: (status: "DRAFT" | "PUBLISHED") => void,
 ) => {
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control,
     name: "fields",
   });
@@ -43,6 +43,7 @@ export const useFormCanvasLogic = (
     fields,
     append,
     remove,
+    move,
     handleAddField,
     handleCanvasSubmit,
   };

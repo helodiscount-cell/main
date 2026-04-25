@@ -5,15 +5,24 @@ import { useQuery } from "@tanstack/react-query";
 import { contactsService } from "@/api/services/contacts";
 import { contactKeys } from "@/keys/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { TableRow, MobilePageLayout, TablePageLayout } from "../_components";
+import {
+  TableRow,
+  MobilePageLayout,
+  TablePageLayout,
+  TableFilterMenu,
+} from "../_components";
+import { ContactStatusFilter } from "../_components/TableFilterMenu";
 import { SortField } from "../_components/TableHeader";
 import { useTableState } from "@/hooks/use-table-state";
 import { useSearchSync } from "@/hooks/use-search-sync";
 import { APP_CONFIG } from "@/configs/app.config";
+import { useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 
 const ContactsPage = () => {
   const isMobile = useIsMobile();
-  const { sync: syncSearch } = useSearchSync();
+  const { sync: syncSearch, value: searchValue } = useSearchSync();
+  const [statusFilter, setStatusFilter] = useState<ContactStatusFilter>("ALL");
 
   // Fetch contacts - Fetching a larger batch to support full client-side paging/filtering
   const { data, isLoading } = useQuery({
@@ -38,7 +47,15 @@ const ContactsPage = () => {
     defaultSortField: "date" as SortField,
     defaultSortOrder: "desc",
     filterFn: (c, s) => {
-      return c.username.toLowerCase().includes(s.toLowerCase());
+      const matchesSearch = c.username.toLowerCase().includes(s.toLowerCase());
+      if (!matchesSearch) return false;
+
+      // Status Filter
+      if (statusFilter !== "ALL") {
+        // Here we would filter by platform/media type if applicable,
+        // but for now we follow the pattern
+      }
+      return true;
     },
     sortFn: (a, b, field, order) => {
       const fieldA =
@@ -67,6 +84,11 @@ const ContactsPage = () => {
     setPage(1);
   };
 
+  const handleStatusChange = (status: ContactStatusFilter) => {
+    setStatusFilter(status);
+    setPage(1);
+  };
+
   if (isMobile) {
     return (
       <MobilePageLayout
@@ -78,12 +100,26 @@ const ContactsPage = () => {
             ? "No matches found."
             : "No contacts yet. They'll appear here once they interact!"
         }
-        searchValue={search}
+        searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortOrder={sortOrder}
         onSortChange={(sortKey) => {
           if (sortKey === "date") toggleSort("date");
         }}
+        filterMenu={
+          <TableFilterMenu
+            variant="contacts"
+            statusFilter={statusFilter}
+            onStatusChange={handleStatusChange}
+          >
+            <button
+              className="p-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-transform"
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal size={16} />
+            </button>
+          </TableFilterMenu>
+        }
       />
     );
   }
@@ -105,8 +141,8 @@ const ContactsPage = () => {
           ? "No matches found."
           : "No contacts yet. They'll appear here once they interact!",
       }}
-      statusFilter="ALL"
-      handleStatusChange={() => {}}
+      statusFilter={statusFilter}
+      handleStatusChange={handleStatusChange}
       sortField={sortField}
       sortOrder={sortOrder}
       handleSort={toggleSort}

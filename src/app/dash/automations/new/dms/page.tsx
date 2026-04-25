@@ -11,9 +11,9 @@ import {
 import {
   BaseAutomationEditor,
   RightColForm,
-} from "@/features/automations/components/editor/BaseAutomationEditor";
-import { AutomationRightCol } from "@/features/automations/components/editor/AutomationRightCol";
-import { AddKeywords } from "@/features/automations/components/widgets";
+  AutomationRightCol,
+  AddKeywords,
+} from "@/app/dash/automations/_components";
 
 const Page = () => {
   const router = useRouter();

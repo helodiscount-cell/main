@@ -17,11 +17,11 @@ import {
 import {
   BaseAutomationEditor,
   RightColForm,
-} from "@/features/automations/components/editor/BaseAutomationEditor";
-import { AutomationRightCol } from "@/features/automations/components/editor/AutomationRightCol";
-import { KeywordsLeftCol } from "@/features/automations/components/editor/KeywordsLeftCol";
+  AutomationRightCol,
+  KeywordsLeftCol,
+} from "@/app/dash/automations/_components";
 
-import { buildAutomationPayload } from "@/features/automations/utils/automation-payload";
+import { buildAutomationPayload } from "@/app/dash/automations/_components/automation-payload";
 
 const Page = ({ params }: { params: Promise<{ post_id: string }> }) => {
   const { post_id } = use(params);

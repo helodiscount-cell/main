@@ -14,7 +14,7 @@ export default function SubmitButton({ disabled }: SubmitButtonProps) {
   const label = watch("submitButtonLabel") || "Submit";
 
   return (
-    <div className="relative group mt-auto pt-4 flex items-center justify-center">
+    <div className="relative group mt-auto pt-4 flex items-center justify-center w-[90%]">
       {/* Floating Pencil Icon Dialog */}
       <div className="absolute -left-12 -bottom-2 -translate-y-1/2">
         <div className="w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-all active:scale-90">
