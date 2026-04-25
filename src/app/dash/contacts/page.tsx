@@ -11,7 +11,8 @@ import {
   TablePageLayout,
   TableFilterMenu,
 } from "../_components";
-import { SortField, StatusFilter } from "../_components/TableHeader";
+import { ContactStatusFilter } from "../_components/TableFilterMenu";
+import { SortField } from "../_components/TableHeader";
 import { useTableState } from "@/hooks/use-table-state";
 import { useSearchSync } from "@/hooks/use-search-sync";
 import { APP_CONFIG } from "@/configs/app.config";
@@ -20,8 +21,8 @@ import { SlidersHorizontal } from "lucide-react";
 
 const ContactsPage = () => {
   const isMobile = useIsMobile();
-  const { sync: syncSearch } = useSearchSync();
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const { sync: syncSearch, value: searchValue } = useSearchSync();
+  const [statusFilter, setStatusFilter] = useState<ContactStatusFilter>("ALL");
 
   // Fetch contacts - Fetching a larger batch to support full client-side paging/filtering
   const { data, isLoading } = useQuery({
@@ -83,7 +84,7 @@ const ContactsPage = () => {
     setPage(1);
   };
 
-  const handleStatusChange = (status: StatusFilter) => {
+  const handleStatusChange = (status: ContactStatusFilter) => {
     setStatusFilter(status);
     setPage(1);
   };
@@ -99,7 +100,7 @@ const ContactsPage = () => {
             ? "No matches found."
             : "No contacts yet. They'll appear here once they interact!"
         }
-        searchValue={search}
+        searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortOrder={sortOrder}
         onSortChange={(sortKey) => {

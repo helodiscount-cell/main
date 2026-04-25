@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     async ({ instaAccountId }) => {
       const { searchParams } = new URL(request.url);
       const forceRefresh = searchParams.get("forceRefresh") === "true";
-      const after = searchParams.get("after") || undefined;
+      const rawAfter = searchParams.get("after")?.trim();
+      const after = rawAfter || undefined;
 
       return await getUserPosts(instaAccountId!, forceRefresh, after);
     },

@@ -39,7 +39,7 @@ export const MobilePageLayout = ({
   filterMenu,
 }: MobilePageLayoutProps) => {
   return (
-    <div className="flex flex-col gap-4 h-screen overflow-hidden relative">
+    <div className="flex flex-col gap-4 h-full overflow-hidden relative">
       <MobileDashboardHeader
         title={title}
         searchValue={searchValue}
@@ -98,7 +98,7 @@ export const MobilePageLayout = ({
       </div>
 
       {/* Sticky Bottom Action Button */}
-      {actionButton && <div>{actionButton}</div>}
+      {actionButton && <div className="w-full">{actionButton}</div>}
     </div>
   );
 };

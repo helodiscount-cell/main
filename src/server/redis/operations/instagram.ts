@@ -3,6 +3,31 @@ import { KEYS, TTL } from "../keys";
 import { logger } from "../../utils/pino";
 
 /**
+ * Helper to delete all keys matching a prefix using SCAN (cursor-safe)
+ */
+async function deleteByPrefix(
+  redis: NonNullable<ReturnType<typeof getRedisClient>>,
+  baseKey: string,
+) {
+  await redis.del(baseKey);
+
+  let cursor = "0";
+  do {
+    const [next, keys] = await redis.scan(
+      cursor,
+      "MATCH",
+      `${baseKey}:*`,
+      "COUNT",
+      200,
+    );
+    cursor = next;
+    if (keys.length) {
+      await redis.del(...keys);
+    }
+  } while (cursor !== "0");
+}
+
+/**
  * Domain: Instagram
  * Caches Instagram posts and stories to respect rate limits and speed up the dashboard.
  */
@@ -16,7 +41,7 @@ export async function invalidateInstagramPostsCache(
   const redis = getRedisClient();
   if (!redis) return;
 
-  await redis.del(KEYS.INSTAGRAM_POSTS(identifier));
+  await deleteByPrefix(redis, KEYS.INSTAGRAM_POSTS(identifier));
   logger.info({ identifier }, "[Redis:Instagram] Posts cache invalidated");
 }
 
@@ -29,7 +54,7 @@ export async function invalidateInstagramStoriesCache(
   const redis = getRedisClient();
   if (!redis) return;
 
-  await redis.del(KEYS.INSTAGRAM_STORIES(identifier));
+  await deleteByPrefix(redis, KEYS.INSTAGRAM_STORIES(identifier));
   logger.info({ identifier }, "[Redis:Instagram] Stories cache invalidated");
 }
 
@@ -42,11 +67,11 @@ export async function invalidateInstagramCache(
   const redis = getRedisClient();
   if (!redis) return;
 
-  const pipeline = redis.pipeline();
-  pipeline.del(KEYS.INSTAGRAM_POSTS(identifier));
-  pipeline.del(KEYS.INSTAGRAM_STORIES(identifier));
+  await Promise.all([
+    deleteByPrefix(redis, KEYS.INSTAGRAM_POSTS(identifier)),
+    deleteByPrefix(redis, KEYS.INSTAGRAM_STORIES(identifier)),
+  ]);
 
-  await pipeline.exec();
   logger.info({ identifier }, "[Redis:Instagram] Complete cache invalidated");
 }
 

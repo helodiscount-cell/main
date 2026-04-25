@@ -4,11 +4,12 @@ import React from "react";
 import { Trash2, Plus, X, Star, GripVertical } from "lucide-react";
 import { FIELD_TYPE_LABELS } from "./config";
 import { useFieldCardLogic } from "../../_hooks/useFieldCardLogic";
+import { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 
 type FieldCardProps = {
   index: number;
   onRemove: () => void;
-  dragHandleProps?: any;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
 };
 
 /**
@@ -40,12 +41,19 @@ export default function FieldCard({
   return (
     <div className="relative flex items-center gap-2 group animate-in fade-in slide-in-from-top-2 duration-200">
       {/* DRAG HANDLE */}
-      <div
-        {...dragHandleProps}
-        className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition-colors p-1"
-      >
-        <GripVertical className="text-slate-500" size={20} />
-      </div>
+      {dragHandleProps ? (
+        <div
+          {...dragHandleProps}
+          className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 transition-colors p-1"
+          aria-label="Drag to reorder field"
+        >
+          <GripVertical className="text-slate-500" size={20} />
+        </div>
+      ) : (
+        <div className="text-slate-300 p-1" aria-hidden="true">
+          <GripVertical className="text-slate-500" size={20} />
+        </div>
+      )}
 
       {/* FIELD CONTAINER */}
       <div className="flex-1 bg-white rounded-xl border border-slate-100 px-4 py-3 space-y-3 hover:border-[#6A06E4]/20 transition-colors">

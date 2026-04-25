@@ -32,7 +32,7 @@ function DashboardHeader() {
       : "Dashboard";
 
   return (
-    <header className="flex items-center justify-between gap-4">
+    <header className="hidden md:flex items-center justify-between gap-4">
       <div className="flex w-full gap-4 items-center h-10">
         <div className="h-full px-4 flex-1 bg-white rounded-lg flex items-center">
           <p className="text-sm font-bold text-[#1A1D1F]">

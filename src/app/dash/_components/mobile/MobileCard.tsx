@@ -19,7 +19,7 @@ interface MobileCardProps {
  * Mobile-specific card UI for Forms and Automations.
  * Matches the design requested by the user.
  */
-export const MobileCard = ({ data }: MobileCardProps) => {
+export const MobileCard = React.memo(({ data }: MobileCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const mapped = mapDashboardItem(data);
   const isAutomation = data.type === "automation";
@@ -192,4 +192,4 @@ export const MobileCard = ({ data }: MobileCardProps) => {
       </div>
     </div>
   );
-};
+});

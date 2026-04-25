@@ -18,14 +18,15 @@ import {
   TablePageLayout,
   TableFilterMenu,
 } from "../_components";
-import { StatusFilter, SortField } from "../_components/TableHeader";
+import { FormStatusFilter } from "../_components/TableFilterMenu";
+import { SortField } from "../_components/TableHeader";
 
 export default function FormsPage() {
   const isMobile = useIsMobile();
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<FormStatusFilter>("ALL");
 
-  const { sync: syncSearch } = useSearchSync();
+  const { sync: syncSearch, value: searchValue } = useSearchSync();
 
   // query to fetch forms list
   const { data: forms = [], isLoading } = useQuery({
@@ -80,7 +81,7 @@ export default function FormsPage() {
     setPage(1);
   };
 
-  const handleStatusChange = (status: StatusFilter) => {
+  const handleStatusChange = (status: FormStatusFilter) => {
     setStatusFilter(status);
     setPage(1);
   };
@@ -104,7 +105,7 @@ export default function FormsPage() {
             </Link>
           </Button>
         }
-        searchValue={search}
+        searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortOrder={sortOrder}
         onSortChange={(sortKey) =>

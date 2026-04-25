@@ -10,41 +10,49 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TableVariant } from "@/configs/table.config";
 
-export type StatusFilter =
-  | "ACTIVE"
-  | "STOPPED"
-  | "EXPIRED"
-  | "PUBLISHED"
-  | "DRAFT"
-  | "POST"
-  | "REEL"
-  | "STORY"
-  | "ALL";
+export type AutomationStatus = "ACTIVE" | "STOPPED" | "EXPIRED";
+export type FormStatus = "PUBLISHED" | "DRAFT";
+export type ContactStatus = "POST" | "REEL" | "STORY";
+
+export type StatusFilterMap = {
+  automations: AutomationStatus;
+  forms: FormStatus;
+  contacts: ContactStatus;
+};
+
+export type StatusFilter = StatusFilterMap[TableVariant] | "ALL";
+
+export type AutomationStatusFilter = AutomationStatus | "ALL";
+export type FormStatusFilter = FormStatus | "ALL";
+export type ContactStatusFilter = ContactStatus | "ALL";
 
 export type TriggerFilter = "COMMENT" | "DM" | "STORY" | "ALL";
 
-export const getStatusOptions = (
-  variant: TableVariant,
-): { label: string; value: Exclude<StatusFilter, "ALL"> }[] => {
+/**
+ * Gets the status options for a specific table variant, typed to that variant.
+ */
+export function getStatusOptions<V extends TableVariant>(
+  variant: V,
+): { label: string; value: StatusFilterMap[V] }[] {
   if (variant === "forms") {
     return [
-      { label: "Live", value: "PUBLISHED" },
-      { label: "Draft", value: "DRAFT" },
+      { label: "Live", value: "PUBLISHED" as StatusFilterMap[V] },
+      { label: "Draft", value: "DRAFT" as StatusFilterMap[V] },
     ];
   }
   if (variant === "contacts") {
     return [
-      { label: "Post", value: "POST" },
-      { label: "Reel", value: "REEL" },
-      { label: "Story", value: "STORY" },
+      { label: "Post", value: "POST" as StatusFilterMap[V] },
+      { label: "Reel", value: "REEL" as StatusFilterMap[V] },
+      { label: "Story", value: "STORY" as StatusFilterMap[V] },
     ];
   }
   return [
-    { label: "Live", value: "ACTIVE" },
-    { label: "Stopped", value: "STOPPED" },
-    { label: "Expired", value: "EXPIRED" },
-  ];
-};
+    { label: "Live", value: "ACTIVE" as StatusFilterMap[V] },
+    { label: "Stopped", value: "STOPPED" as StatusFilterMap[V] },
+    { label: "Expired", value: "EXPIRED" as StatusFilterMap[V] },
+  ] as { label: string; value: StatusFilterMap[V] }[];
+}
 
 export const getTriggerOptions = (): {
   label: string;
@@ -57,28 +65,30 @@ export const getTriggerOptions = (): {
   ];
 };
 
-interface TableFilterMenuProps {
-  variant: TableVariant;
-  statusFilter: StatusFilter;
-  onStatusChange: (status: StatusFilter) => void;
+interface TableFilterMenuProps<V extends TableVariant> {
+  variant: V;
+  statusFilter: StatusFilterMap[V] | "ALL";
+  onStatusChange: (status: StatusFilterMap[V] | "ALL") => void;
   triggerFilter?: TriggerFilter;
   onTriggerChange?: (trigger: TriggerFilter) => void;
-  children: React.ReactNode;
+  children: React.ReactElement;
 }
 
 /**
  * Reusable filter menu for dashboard tables (Desktop and Mobile).
  */
-export const TableFilterMenu = ({
+export const TableFilterMenu = <V extends TableVariant>({
   variant,
   statusFilter,
   onStatusChange,
   triggerFilter,
   onTriggerChange,
   children,
-}: TableFilterMenuProps) => {
-  const toggleStatus = (val: Exclude<StatusFilter, "ALL">) => {
-    onStatusChange(statusFilter === val ? "ALL" : val);
+}: TableFilterMenuProps<V>) => {
+  const toggleStatus = (val: StatusFilterMap[V]) => {
+    onStatusChange(
+      statusFilter === val ? ("ALL" as StatusFilterMap[V] | "ALL") : val,
+    );
   };
 
   const toggleTrigger = (val: Exclude<TriggerFilter, "ALL">) => {

@@ -3,7 +3,12 @@
 import { useFormEditor } from "@/providers/FormEditorProvider";
 import React, { useEffect, useState } from "react";
 import { FormProvider } from "react-hook-form";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 import { useFormCanvasLogic } from "../_hooks/useFormCanvasLogic";
 import {
   CoverImageUpload,
@@ -28,8 +33,9 @@ export default function EditFormPage() {
     setEnabled(true);
   }, []);
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
+    if (result.source.index === result.destination.index) return;
     move(result.source.index, result.destination.index);
   };
 
@@ -50,10 +56,10 @@ export default function EditFormPage() {
             {enabled ? (
               <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="fields-list">
-                  {(provided) => (
+                  {(droppableProvided) => (
                     <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
+                      {...droppableProvided.droppableProps}
+                      ref={droppableProvided.innerRef}
                       className="w-full space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar"
                     >
                       {fields.map((field, index) => (
@@ -62,27 +68,29 @@ export default function EditFormPage() {
                           draggableId={field.id}
                           index={index}
                         >
-                          {(provided) => (
+                          {(draggableProvided) => (
                             <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
+                              ref={draggableProvided.innerRef}
+                              {...draggableProvided.draggableProps}
                             >
                               <FieldCard
                                 index={index}
                                 onRemove={() => remove(index)}
-                                dragHandleProps={provided.dragHandleProps}
+                                dragHandleProps={
+                                  draggableProvided.dragHandleProps
+                                }
                               />
                             </div>
                           )}
                         </Draggable>
                       ))}
-                      {provided.placeholder}
+                      {droppableProvided.placeholder}
                     </div>
                   )}
                 </Droppable>
               </DragDropContext>
             ) : (
-              <div className="space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar">
+              <div className="w-full space-y-4 flex-1 min-h-0 overflow-y-auto no-scrollbar">
                 {fields.map((field, index) => (
                   <FieldCard
                     key={field.id}

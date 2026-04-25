@@ -13,7 +13,10 @@ import {
   TableFilterMenu,
 } from "../_components";
 import { AutomationStatus } from "@/api/services/automations/types";
-import { StatusFilter, TriggerFilter } from "../_components/TableFilterMenu";
+import {
+  AutomationStatusFilter,
+  TriggerFilter,
+} from "../_components/TableFilterMenu";
 import { SortField } from "../_components/TableHeader";
 import { SlidersHorizontal } from "lucide-react";
 import { useTableState } from "@/hooks/use-table-state";
@@ -23,10 +26,11 @@ import { APP_CONFIG } from "@/configs/app.config";
 const AutomationPage = () => {
   const isMobile = useIsMobile();
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [statusFilter, setStatusFilter] =
+    useState<AutomationStatusFilter>("ALL");
   const [triggerFilter, setTriggerFilter] = useState<TriggerFilter>("ALL");
 
-  const { sync: syncSearch } = useSearchSync();
+  const { sync: syncSearch, value: searchValue } = useSearchSync();
 
   // Maps UI filters to server-supported status filters to avoid query key fragmentation
   const serverStatus =
@@ -102,7 +106,7 @@ const AutomationPage = () => {
     setPage(1);
   };
 
-  const handleStatusChange = (status: StatusFilter) => {
+  const handleStatusChange = (status: AutomationStatusFilter) => {
     setStatusFilter(status);
     setPage(1);
   };
@@ -119,12 +123,8 @@ const AutomationPage = () => {
         items={filteredAndSorted}
         isLoading={isLoading}
         emptyMessage={search ? "No matches found." : "No automations found."}
-        actionButton={
-          <div className="w-full">
-            <CreateAutomationDialog title="New Automation" />
-          </div>
-        }
-        searchValue={search}
+        actionButton={<CreateAutomationDialog title="New Automation" />}
+        searchValue={searchValue}
         onSearchChange={handleSearchChange}
         sortOrder={sortOrder}
         onSortChange={(sortKey) => {
