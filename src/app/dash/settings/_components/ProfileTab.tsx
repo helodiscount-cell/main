@@ -25,7 +25,7 @@ export function ProfileTab({ data }: ProfileTabProps) {
   };
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 text-left">
+    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 text-left">
       {/* Left Column: Email */}
       <div className="flex flex-col gap-6">
         <div className="space-y-1">

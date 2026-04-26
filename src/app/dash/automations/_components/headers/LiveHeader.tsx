@@ -1,6 +1,6 @@
 import { AutomationListItem } from "@/api/services/automations/types";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Square } from "lucide-react";
+import { Play, RefreshCw, Square } from "lucide-react";
 import EditableAutomationName from "./EditableAutomationName";
 
 interface LiveHeaderProps {
@@ -108,19 +108,7 @@ export default function LiveHeader({
               <RefreshCw size={18} className="animate-spin" />
             ) : (
               // Wait, the mobile design screenshot image showed a Play button in dark background for play, and some green Live label.
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
+              <Play />
             )}
           </Button>
         )}

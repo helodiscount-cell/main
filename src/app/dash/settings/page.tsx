@@ -5,6 +5,7 @@ import { SettingsTab, ProfileData } from "./types";
 import { SETTINGS_CONFIG } from "./config";
 import { prisma } from "@/server/db";
 import { PlanId } from "@/configs/plans.config";
+import { MobileDashboardHeader } from "../_components/mobile/MobileDashboardHeader";
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
@@ -73,18 +74,20 @@ export default async function SettingsPage({ searchParams }: PageProps) {
   };
 
   return (
-    <div
-      className="h-full w-full flex flex-col items-center justify-center rounded-2xl"
-      // style={{ backgroundColor: SETTINGS_CONFIG.BACKGROUND_COLOR }}
-    >
-      <div className="max-w-4xl flex flex-col gap-4 w-1/2">
-        {/* Navigation/Header Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center justify-between">
+    <div className="min-h-full w-full flex flex-col items-center md:py-8 px-4 md:px-8 gap-6">
+      {/* Mobile-only header to provide sidebar trigger */}
+      <div className="md:hidden w-full">
+        <MobileDashboardHeader title="Settings" showSearch={false} />
+      </div>
+
+      <div className="w-full max-w-4xl flex flex-col gap-4">
+        {/* Navigation/Header Card (Desktop Only effectively, but keeping for tab switching) */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 flex items-center justify-between overflow-x-auto">
           <SettingsTabNav />
         </div>
 
         {/* Content Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-10">
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10">
           {renderTabContent()}
         </div>
       </div>

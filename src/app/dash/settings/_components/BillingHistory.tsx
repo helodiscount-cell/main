@@ -17,7 +17,7 @@ const statusConfig = {
  */
 export function BillingHistory({ invoices }: BillingHistoryProps) {
   return (
-    <div className="w-full bg-white border border-[#E5E7EB] rounded-xl p-8 h-full flex flex-col">
+    <div className="w-full bg-white border border-[#E5E7EB] rounded-2xl p-5 md:p-8 h-full flex flex-col">
       <h3 className="text-lg font-semibold text-[#111827] tracking-tight">
         History
       </h3>

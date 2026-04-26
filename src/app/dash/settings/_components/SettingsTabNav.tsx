@@ -19,9 +19,11 @@ export async function SettingsTabNav() {
     : SETTINGS_CONFIG.DEFAULT_TAB;
 
   return (
-    <div className="flex items-center gap-6 w-full">
-      <h1 className="text-xl font-bold text-[#071329]">Setting</h1>
-      <div className="flex items-center gap-2 w-full" role="tablist">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full">
+      <h1 className="hidden md:block text-xl font-bold text-[#071329] shrink-0">
+        Setting
+      </h1>
+      <div className="flex flex-wrap items-center gap-2 w-full" role="tablist">
         {SETTINGS_CONFIG.TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const { Icon } = tab;
@@ -33,7 +35,7 @@ export async function SettingsTabNav() {
               role="tab"
               aria-selected={isActive}
               className={cn(
-                "flex flex-1 items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 font-medium",
+                "flex flex-1 sm:flex-initial items-center justify-center sm:justify-start gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base whitespace-nowrap",
                 isActive
                   ? "bg-[#F3E8FF] text-[#6A06E4]"
                   : "bg-[#F7FAFC] text-[#4A5568] hover:bg-gray-100",
@@ -41,7 +43,10 @@ export async function SettingsTabNav() {
             >
               <Icon
                 size={18}
-                className={isActive ? "text-[#6A06E4]" : "text-[#4A5568]"}
+                className={cn(
+                  "shrink-0",
+                  isActive ? "text-[#6A06E4]" : "text-[#4A5568]",
+                )}
               />
               <span>{tab.label}</span>
             </Link>
