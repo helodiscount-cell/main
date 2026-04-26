@@ -16,7 +16,7 @@ export function PaymentMethod({ method, detail }: PaymentMethodProps) {
   if (!method) return null;
 
   return (
-    <div className="w-full bg-white border border-[#E5E7EB] rounded-xl p-8">
+    <div className="w-full bg-white border border-[#E5E7EB] rounded-2xl p-5 md:p-8">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-4">
           <h3 className="text-lg font-semibold text-[#111827] tracking-tight">

@@ -55,19 +55,19 @@ export async function BillingTab({ userId }: { userId: string }) {
   const hasBottomRow = hasPayment || hasHistory;
 
   return (
-    <div className="flex flex-col items-center max-w-4xl mx-auto w-full py-6 gap-6">
-      <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-[#111827] mb-2 tracking-tight">
+    <div className="flex flex-col items-center max-w-4xl mx-auto w-full py-4 md:py-6 gap-6">
+      <div className="text-center mb-4 px-2">
+        <h2 className="text-xl md:text-2xl font-bold text-[#111827] mb-2 tracking-tight">
           Billing Information
         </h2>
-        <p className="text-[#4B5563] text-[15px] max-w-lg mx-auto leading-relaxed">
+        <p className="text-[#4B5563] text-sm md:text-[15px] max-w-lg mx-auto leading-relaxed">
           Update your payment information or switch plans according to your
           needs.
         </p>
       </div>
 
       {/* Main Plan Card */}
-      <div className="w-full bg-white border border-[#E5E7EB] rounded-xl p-8">
+      <div className="w-full bg-white border border-[#E5E7EB] rounded-2xl p-5 md:p-8">
         <div className="flex flex-col gap-6">
           {/* Plan Header */}
           <div className="flex items-start justify-between">
