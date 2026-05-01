@@ -104,7 +104,7 @@ export async function getFollowersGrowthStats(
     // Default delta to 0 if data is missing
     let dailyDelta = 0;
     if (currentCount !== undefined && prevCount !== undefined) {
-      dailyDelta = Math.max(0, currentCount - prevCount);
+      dailyDelta = currentCount - prevCount;
     }
 
     const dateObj = new Date(currentDayTime);

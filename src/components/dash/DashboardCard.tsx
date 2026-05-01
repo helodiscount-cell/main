@@ -21,7 +21,7 @@ export function DashboardCard({
   return (
     <div
       className={cn(
-        "bg-white rounded-xl p-6 border border-gray-100 flex flex-col gap-2 min-h-[380px] w-full max-w-sm",
+        "bg-white rounded-lg p-6 border border-gray-100 flex flex-col gap-2 min-h-[380px] w-full max-w-sm",
         className,
       )}
     >

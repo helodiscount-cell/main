@@ -7,7 +7,7 @@ import GoogleButton from "./_components/GoogleButton";
 import { useSignIn, useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type AuthMode = "login" | "signup";
 type AuthStep = "input" | "verify";
@@ -37,12 +37,41 @@ const AuthPage = () => {
   const [code, setCode] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [canResend, setCanResend] = useState(false);
   const router = useRouter();
 
   // Reset step when switching modes
   useEffect(() => {
     setStep("input");
+    setTimeLeft(15);
+    setCanResend(false);
   }, [mode]);
+
+  // Timer logic for OTP resend
+  useEffect(() => {
+    if (step === "verify" && timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0) {
+      setCanResend(true);
+    }
+  }, [step, timeLeft]);
+
+  const handleResend = async () => {
+    if (!canResend || !isSignUpLoaded) return;
+    setIsLoading(true);
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setTimeLeft(15);
+      setCanResend(false);
+      toast.success("Verification code resent!");
+    } catch (err: any) {
+      toast.error(err.errors?.[0]?.message || "Failed to resend code");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   /**
    * Handles the primary action (Login or Sign Up)
@@ -57,9 +86,6 @@ const AuthPage = () => {
     }
 
     setIsLoading(true);
-    console.info(`Authentication ${mode} attempt started`, {
-      identifier: email,
-    });
 
     try {
       if (mode === "login") {
@@ -72,7 +98,6 @@ const AuthPage = () => {
           await setSignInActive({ session: result.createdSessionId });
           router.push("/auth/connect");
         } else {
-          console.warn("Login incomplete", { status: result.status });
           toast.info(
             "Additional steps required. Please use Google login or check your email.",
           );
@@ -89,19 +114,10 @@ const AuthPage = () => {
           strategy: "email_code",
         });
 
-        console.info("Sign-up initiated, verification email sent", {
-          identifier: email,
-        });
         setStep("verify");
         toast.success("Verification code sent to your email!");
       }
     } catch (err: any) {
-      console.error(`${mode === "login" ? "Login" : "Sign-up"} failed`, {
-        error: err,
-        identifier: email,
-        code: err.errors?.[0]?.code,
-      });
-
       const errorMessage =
         err.errors?.[0]?.longMessage ||
         err.errors?.[0]?.message ||
@@ -120,21 +136,17 @@ const AuthPage = () => {
     if (!isSignUpLoaded || !code) return;
 
     setIsLoading(true);
-    console.info("Email verification attempt started", { identifier: email });
 
     try {
       const result = await signUp.attemptEmailAddressVerification({ code });
 
       if (result.status === "complete") {
-        console.info("Sign-up successful", { userId: result.createdUserId });
         await setSignUpActive({ session: result.createdSessionId });
         router.push("/auth/connect");
       } else {
-        console.warn("Verification incomplete", { status: result.status });
         toast.error("Verification failed. Please try again.");
       }
     } catch (err: any) {
-      console.error("Verification failed", { error: err, identifier: email });
       toast.error(err.errors?.[0]?.message || "Verification failed");
     } finally {
       setIsLoading(false);
@@ -145,13 +157,11 @@ const AuthPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#F1F1F1] p-4">
       <div className="w-full max-w-5xl overflow-hidden flex flex-col md:flex-row animate-fade-in gap-8">
         {/* Left Side - Auth Form */}
-        <div className="bg-white rounded-3xl p-12 w-full md:w-[50%] flex flex-col justify-center transition-all duration-500">
+        <div className="bg-white rounded-lg p-12 w-full md:w-[50%] flex flex-col justify-center transition-all duration-500">
           <div className="max-w-md mx-auto w-full space-y-8">
             {/* Branding */}
             <div className="text-center animation-delay-100 animate-fade-in">
-              <h1 className="text-4xl font-bold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                DmBroo
-              </h1>
+              <h1 className="text-2xl font-medium text-[#6A06E4]">DmBroo</h1>
             </div>
 
             {step === "input" ? (
@@ -185,34 +195,38 @@ const AuthPage = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2 animation-delay-500 animate-fade-in">
-                      <label
+                      {/* <label
                         htmlFor="email"
                         className="block text-sm font-medium text-gray-700"
                       >
                         Email ID
-                      </label>
+                      </label> */}
                       <input
                         type="email"
                         id="email"
+                        autoComplete="email"
                         placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-purple-500 outline-none transition-all duration-300"
+                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-purple-500 outline-none transition-all duration-300"
                       />
                     </div>
 
                     <div className="space-y-2 animation-delay-500 animate-fade-in">
-                      <label
+                      {/* <label
                         htmlFor="password"
                         id="password-label"
                         className="block text-sm font-medium text-gray-700"
                       >
                         Password
-                      </label>
+                      </label> */}
                       <input
                         type="password"
                         id="password"
+                        autoComplete={
+                          mode === "login" ? "current-password" : "new-password"
+                        }
                         placeholder={
                           mode === "login"
                             ? "Enter your password"
@@ -221,7 +235,7 @@ const AuthPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-purple-500 outline-none transition-all duration-300"
+                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-purple-500 outline-none transition-all duration-300"
                       />
                     </div>
                   </div>
@@ -230,7 +244,7 @@ const AuthPage = () => {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full bg-linear-to-r from-purple-600 to-pink-600 text-white font-semibold py-3.5 rounded-xl transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70"
+                      className="w-full bg-[#6A06E4] text-white font-semibold py-2.5 rounded-lg transform  hover:opacity-80 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70"
                     >
                       {isLoading && (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -257,54 +271,83 @@ const AuthPage = () => {
               </>
             ) : (
               /* Verification Step */
-              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                <button
-                  onClick={() => setStep("input")}
-                  className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back</span>
-                </button>
-
+              <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
                 <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Verify Email
+                  <h2 className="text-lg font-bold text-gray-900">
+                    OTP Sent Successfully!
                   </h2>
-                  <p className="text-gray-600">
-                    We've sent a 6-digit code to{" "}
-                    <span className="font-semibold">{email}</span>
+                  <p className="text-gray-500 text-sm">
+                    OTP has been sent on <br />
+                    <span className="text-gray-600 font-medium">{email}</span>
                   </p>
                 </div>
 
-                <form onSubmit={handleVerify} className="space-y-6">
-                  <div className="space-y-2">
+                <form onSubmit={handleVerify} className="space-y-4">
+                  <div className="space-y-4 text-center">
                     <label
                       htmlFor="code"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-600"
                     >
-                      Verification Code
+                      Enter 6-Digit OTP
                     </label>
                     <input
                       type="text"
                       id="code"
-                      placeholder="000000"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]*"
+                      placeholder="OTP"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       maxLength={6}
                       required
-                      className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 outline-none transition-all duration-300 text-center text-2xl tracking-[1em] font-mono"
+                      className="w-full px-4 py-3 bg-[#F9F9F9] border-none rounded-lg focus:ring-1 focus:ring-purple-500 outline-none transition-all duration-300 text-center text-lg tracking-[0.5em] text-gray-400 font-medium placeholder:tracking-normal"
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-linear-to-r from-purple-600 to-pink-600 text-white font-semibold py-3.5 rounded-xl transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-                    Verify & Continue
-                  </button>
+                  <div className="space-y-4">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-[#6A06E4] text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70"
+                    >
+                      {isLoading && (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      )}
+                      Continue
+                    </button>
+
+                    <div className="text-center text-sm">
+                      <span className="text-gray-500">
+                        {timeLeft > 0
+                          ? `00:${timeLeft.toString().padStart(2, "0")}`
+                          : ""}
+                      </span>{" "}
+                      <button
+                        type="button"
+                        onClick={handleResend}
+                        disabled={!canResend || isLoading}
+                        className={`font-medium transition-colors ${
+                          canResend
+                            ? "text-red-500 hover:underline"
+                            : "text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        Resend OTP
+                      </button>
+                    </div>
+                  </div>
                 </form>
+
+                <p className="text-center text-sm text-gray-600">
+                  Want to change the Email?{" "}
+                  <button
+                    onClick={() => setStep("input")}
+                    className="text-[#6A06E4] font-semibold hover:underline transition-colors"
+                  >
+                    Back
+                  </button>
+                </p>
               </div>
             )}
 
@@ -317,7 +360,7 @@ const AuthPage = () => {
         </div>
 
         {/* Right Side - Visual Asset */}
-        <div className="hidden md:block md:w-[50%] relative rounded-3xl bg-[#88769c] h-inherit animation-delay-200 animate-fade-in min-h-[500px]">
+        <div className="hidden md:block md:w-[50%] relative rounded-lg bg-[#88769c] h-inherit animation-delay-200 animate-fade-in min-h-[500px]">
           <div className="absolute right-32 w-full h-full max-w-md -bottom-[10%]">
             <Image
               src={GirlImage}
