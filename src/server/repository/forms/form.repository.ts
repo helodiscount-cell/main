@@ -47,6 +47,13 @@ export async function createForm(
   throw new Error("Failed to generate a unique slug after 5 attempts");
 }
 
+// Returns total form count for a workspace — used for FREE plan cap enforcement
+export async function countFormsByInstaAccountId(
+  instaAccountId: string,
+): Promise<number> {
+  return prisma.form.count({ where: { instaAccountId } });
+}
+
 // All forms for a workspace, ordered newest first. Optionally filter by status.
 export async function findFormsByInstaAccountId(
   instaAccountId: string,
