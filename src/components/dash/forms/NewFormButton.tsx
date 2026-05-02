@@ -17,20 +17,31 @@ import { cn } from "@/server/utils";
  * Used in the Dashboard Header.
  */
 export function NewFormButton() {
-  const { data: gates, isLoading: isLoadingGates } = useFeatureGates();
+  const {
+    data: gates,
+    isLoading: isLoadingGates,
+    isError: isErrorGates,
+  } = useFeatureGates();
 
   // We fetch the forms list to count them
-  const { data: forms = [], isLoading: isLoadingForms } = useQuery({
+  const {
+    data: forms,
+    isLoading: isLoadingForms,
+    isError: isErrorForms,
+  } = useQuery({
     queryKey: formKeys.list(),
     queryFn: () => formService.list(),
   });
 
   const isLoading = isLoadingGates || isLoadingForms;
 
-  const maxForms = gates?.state.maxForms ?? -1;
-  const currentCount = forms.length;
-
-  const isAtLimit = maxForms !== -1 && currentCount >= maxForms;
+  // treat missing/errored responses as "at limit" to be safe
+  const isAtLimit =
+    isErrorGates ||
+    isErrorForms ||
+    !gates ||
+    !forms ||
+    (gates.state.maxForms !== -1 && forms.length >= gates.state.maxForms);
 
   if (isLoading) {
     return (
@@ -41,6 +52,8 @@ export function NewFormButton() {
     );
   }
 
+  const maxForms = gates?.state.maxForms;
+
   return (
     <Button
       className={cn(
@@ -48,9 +61,13 @@ export function NewFormButton() {
         isAtLimit && "opacity-70 cursor-not-allowed grayscale-[0.5]",
       )}
       asChild={!isAtLimit}
+      disabled={isAtLimit}
+      aria-disabled={isAtLimit}
       title={
         isAtLimit
-          ? `Free plan allows up to ${maxForms} forms. Upgrade to create more.`
+          ? isErrorGates || isErrorForms || !gates || !forms
+            ? "Unable to verify plan limits. Please try again later."
+            : `Free plan allows up to ${maxForms} forms. Upgrade to create more.`
           : undefined
       }
     >

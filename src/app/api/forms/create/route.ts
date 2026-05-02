@@ -38,20 +38,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // CHECK FORM COUNT LIMIT (FREE plan cap)
-    if (state.maxForms !== -1) {
-      const { countFormsByInstaAccountId } =
-        await import("@/server/repository/forms");
-      const currentCount = await countFormsByInstaAccountId(instaAccountId!);
-      if (currentCount >= state.maxForms) {
-        throw new ApiRouteError(
-          `Free plan allows up to ${state.maxForms} forms. Upgrade to create more.`,
-          "FORM_LIMIT_REACHED",
-          403,
-        );
-      }
-    }
-
-    return createForm(clerkId!, instaAccountId!, validation.data);
+    return createForm(
+      clerkId!,
+      instaAccountId!,
+      validation.data,
+      state.maxForms,
+    );
   });
 }

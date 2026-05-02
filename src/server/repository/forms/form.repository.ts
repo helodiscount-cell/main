@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db";
 import { executeWithErrorHandling } from "../repository-utils";
+import { ApiRouteError } from "@/server/middleware/errors/classes";
 import type { CreateFormInput, FormStatus } from "@dm-broo/common-types";
 import type { Form, FormSubmission } from "@prisma/client";
 
@@ -9,42 +10,60 @@ function generateSlug(): string {
 }
 
 // Creates a form scoped to a workspace. Retries up to 5 times on slug collision (P2002)
+// Enforces maxForms limit atomically within a transaction
 export async function createForm(
   userId: string,
   instaAccountId: string,
   data: CreateFormInput,
+  maxForms: number = -1,
 ): Promise<Form> {
-  let attempts = 0;
-
-  while (attempts < 5) {
-    const slug = generateSlug();
-
-    try {
-      return await prisma.form.create({
-        data: {
-          userId,
-          instaAccountId,
-          name: data.name || data.title,
-          title: data.title,
-          description: data.description ?? "",
-          coverImage: data.coverImage ?? null,
-          fields: (data.fields ?? []) as any,
-          slug,
-          status: data.status ?? "DRAFT",
-          submitButtonLabel: data.submitButtonLabel ?? "Submit",
-        },
+  return await prisma.$transaction(async (tx) => {
+    // 1. ATOMIC LIMIT CHECK
+    if (maxForms !== -1) {
+      const currentCount = await tx.form.count({
+        where: { instaAccountId },
       });
-    } catch (error: any) {
-      // Retry only on unique constraint violation (slug collision)
-      if (error?.code === "P2002") {
-        attempts++;
-        continue;
-      }
-      throw error;
-    }
-  }
 
-  throw new Error("Failed to generate a unique slug after 5 attempts");
+      if (currentCount >= maxForms) {
+        throw new ApiRouteError(
+          `Free plan allows up to ${maxForms} forms. Upgrade to create more.`,
+          "FORM_LIMIT_REACHED",
+          403,
+        );
+      }
+    }
+
+    let attempts = 0;
+    while (attempts < 5) {
+      const slug = generateSlug();
+
+      try {
+        return await tx.form.create({
+          data: {
+            userId,
+            instaAccountId,
+            name: data.name || data.title,
+            title: data.title,
+            description: data.description ?? "",
+            coverImage: data.coverImage ?? null,
+            fields: (data.fields ?? []) as any,
+            slug,
+            status: data.status ?? "DRAFT",
+            submitButtonLabel: data.submitButtonLabel ?? "Submit",
+          },
+        });
+      } catch (error: any) {
+        // Retry only on unique constraint violation (slug collision)
+        if (error?.code === "P2002") {
+          attempts++;
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error("Failed to generate a unique slug after 5 attempts");
+  });
 }
 
 // Returns total form count for a workspace — used for FREE plan cap enforcement

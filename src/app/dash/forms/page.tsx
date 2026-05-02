@@ -31,7 +31,7 @@ export default function FormsPage() {
 
   const { sync: syncSearch, value: searchValue } = useSearchSync();
 
-  // query to fetch forms list
+  // query to fetch forms list (filtered by status)
   const { data: forms = [], isLoading } = useQuery({
     queryKey: formKeys.list(
       statusFilter !== "ALL" ? { status: statusFilter } : undefined,
@@ -44,8 +44,15 @@ export default function FormsPage() {
       ),
   });
 
+  // separate query for total forms count (unfiltered) to enforce plan limits correctly
+  const { data: allForms = [] } = useQuery({
+    queryKey: formKeys.list(),
+    queryFn: () => formService.list(),
+  });
+
   const maxForms = gates?.state.maxForms ?? -1;
-  const isAtFormLimit = maxForms !== -1 && forms.length >= maxForms;
+  const totalCount = allForms.length;
+  const isAtFormLimit = maxForms !== -1 && totalCount >= maxForms;
 
   const {
     search,

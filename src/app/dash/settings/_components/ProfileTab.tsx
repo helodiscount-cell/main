@@ -88,7 +88,9 @@ export function ProfileTab({ data }: ProfileTabProps) {
             </UpgradeTooltip>
           ) : canAddAccount ? (
             <Link
-              href="/auth/connect/workspace"
+              href={
+                accountsCount > 0 ? "/auth/connect/workspace" : "/auth/connect"
+              }
               className="w-full py-3 bg-[#6A06E4] hover:bg-[#5B05C2] text-white rounded-sm flex items-center justify-center gap-2 font-bold text-[16px] transition-all active:scale-[0.98] mt-2"
             >
               Add New Account
