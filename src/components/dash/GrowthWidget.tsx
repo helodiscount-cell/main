@@ -119,7 +119,7 @@ export function GrowthWidget({
       {/* Main metric display */}
       <div className="flex-1 flex flex-col items-center justify-center">
         {isLoading ? (
-          <div className="w-32 h-16 bg-muted animate-pulse rounded-xl" />
+          <div className="w-32 h-16 bg-muted animate-pulse rounded-lg" />
         ) : (
           <div className="flex items-center gap-3">
             <span className="text-[68px] font-bold text-[#7C3AED] leading-none tracking-tight">
